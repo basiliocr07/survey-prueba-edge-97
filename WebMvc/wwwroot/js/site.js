@@ -1,105 +1,79 @@
 
-// This file is for basic JavaScript functionality
-
-// Tab switching functionality
+// Site JavaScript
 document.addEventListener('DOMContentLoaded', function() {
-    const tabButtons = document.querySelectorAll('.tab-item');
-    const tabPanes = document.querySelectorAll('.tab-pane');
+    // Toast notification function
+    window.showToast = function(message, type = 'info', duration = 5000) {
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    ${type === 'success' ? '<i class="fas fa-check-circle"></i>' : ''}
+                    ${type === 'error' ? '<i class="fas fa-exclamation-circle"></i>' : ''}
+                    ${type === 'info' ? '<i class="fas fa-info-circle"></i>' : ''}
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium">${message}</p>
+                </div>
+                <div class="ml-auto pl-3">
+                    <div class="-mx-1.5 -my-1.5">
+                        <button class="close-toast inline-flex rounded-md p-1.5 text-gray-500 hover:text-gray-700 focus:outline-none">
+                            <span class="sr-only">Dismiss</span>
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        // Animate in
+        setTimeout(() => {
+            toast.classList.add('active');
+        }, 10);
+        
+        // Auto dismiss
+        const timeout = setTimeout(() => {
+            dismissToast(toast);
+        }, duration);
+        
+        // Close button
+        toast.querySelector('.close-toast').addEventListener('click', () => {
+            clearTimeout(timeout);
+            dismissToast(toast);
+        });
+        
+        function dismissToast(toast) {
+            toast.classList.remove('active');
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }
+    };
     
-    if (tabButtons && tabPanes) {
+    // Initialize any components that need JavaScript
+    initializeTabsComponents();
+});
+
+function initializeTabsComponents() {
+    const tabContainers = document.querySelectorAll('.tabs-container');
+    
+    tabContainers.forEach(container => {
+        const tabButtons = container.querySelectorAll('.tab-button');
+        const tabPanels = container.querySelectorAll('.tab-panel');
+        
         tabButtons.forEach(button => {
             button.addEventListener('click', () => {
                 const tabId = button.getAttribute('data-tab');
                 
-                // Hide all panes
-                tabPanes.forEach(pane => pane.classList.remove('active'));
-                
-                // Show selected pane
-                if (tabId && document.getElementById(`${tabId}-tab`)) {
-                    document.getElementById(`${tabId}-tab`).classList.add('active');
-                }
-                
-                // Update active tab button
+                // Update active states
                 tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabPanels.forEach(panel => panel.classList.remove('active'));
+                
                 button.classList.add('active');
+                container.querySelector(`.tab-panel[data-tab="${tabId}"]`).classList.add('active');
             });
         });
-    }
-});
-
-// Survey form functionality
-function updateHiddenField(input, targetId) {
-    const target = document.getElementById(targetId);
-    if (target) {
-        target.value = input.value;
-    }
+    });
 }
-
-function updateQuestionType(select, index) {
-    const questionContainer = select.closest('.question-item');
-    const optionsContainer = questionContainer.querySelector('.options-container');
-    const typeHiddenInput = document.getElementById(`Questions_${index}__Type`);
-    
-    if (typeHiddenInput) {
-        typeHiddenInput.value = select.value;
-    }
-    
-    if (optionsContainer) {
-        if (select.value === 'Text' || select.value === 'Rating') {
-            optionsContainer.classList.add('hidden');
-        } else {
-            optionsContainer.classList.remove('hidden');
-        }
-    }
-}
-
-function updateRequiredField(checkbox, index) {
-    const requiredInput = document.getElementById(`Questions_${index}__Required`);
-    if (requiredInput) {
-        requiredInput.value = checkbox.checked.toString().toLowerCase();
-    }
-}
-
-function updateOptionValue(input, questionIndex, optionIndex) {
-    const optionInput = document.querySelector(`input[name="Questions[${questionIndex}].Options[${optionIndex}]"]`);
-    if (optionInput) {
-        optionInput.value = input.value;
-    }
-}
-
-// Add option to question
-document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('add-option')) {
-        const questionItem = e.target.closest('.question-item');
-        const optionsList = questionItem.querySelector('.options-list');
-        const questionIndex = questionItem.getAttribute('data-index');
-        
-        const optionsCount = optionsList.children.length;
-        const optionHtml = `
-            <div class="flex items-center">
-                <input type="hidden" name="Questions[${questionIndex}].Options[${optionsCount}]" value="New Option" />
-                <input type="text" class="option-input flex-1 px-3 py-1 border border-gray-300 rounded-md"
-                       value="New Option"
-                       onchange="updateOptionValue(this, ${questionIndex}, ${optionsCount})" />
-                <button type="button" class="remove-option ml-2 text-red-500">×</button>
-            </div>
-        `;
-        
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = optionHtml;
-        optionsList.appendChild(tempDiv.firstElementChild);
-    }
-});
-
-// Remove option from question
-document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('remove-option')) {
-        const questionItem = e.target.closest('.question-item');
-        const optionsList = questionItem.querySelector('.options-list');
-        
-        if (optionsList.children.length > 2) {
-            const optionItem = e.target.closest('.flex');
-            optionItem.remove();
-        }
-    }
-});

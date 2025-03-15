@@ -5,61 +5,243 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Survey Application</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                            950: '#082f49',
+                        },
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+    
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Survey App</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Home" asp-action="Index">Home</a>
+<body class="min-h-screen flex flex-col bg-gray-50">
+    <header class="bg-white shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <a asp-area="" asp-controller="Home" asp-action="Index" class="text-blue-600 font-bold text-xl">
+                            SurveyApp
+                        </a>
+                    </div>
+                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                        <a asp-controller="Home" asp-action="Index" 
+                           class="@(ViewContext.RouteData.Values["Controller"].ToString() == "Home" && ViewContext.RouteData.Values["Action"].ToString() == "Index" ? "border-blue-500 text-gray-900" : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700") inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Home
+                        </a>
+                        <a asp-controller="Survey" asp-action="Index" 
+                           class="@(ViewContext.RouteData.Values["Controller"].ToString() == "Survey" ? "border-blue-500 text-gray-900" : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700") inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Surveys
+                        </a>
+                        <a asp-controller="Suggestions" asp-action="Index" 
+                           class="@(ViewContext.RouteData.Values["Controller"].ToString() == "Suggestions" ? "border-blue-500 text-gray-900" : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700") inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Suggestions
+                        </a>
+                        <a asp-controller="Customers" asp-action="Index" 
+                           class="@(ViewContext.RouteData.Values["Controller"].ToString() == "Customers" ? "border-blue-500 text-gray-900" : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700") inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Customers
+                        </a>
+                        <a asp-controller="Analytics" asp-action="Index" 
+                           class="@(ViewContext.RouteData.Values["Controller"].ToString() == "Analytics" ? "border-blue-500 text-gray-900" : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700") inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Analytics
+                        </a>
+                        <a asp-controller="Requirements" asp-action="Index" 
+                           class="@(ViewContext.RouteData.Values["Controller"].ToString() == "Requirements" ? "border-blue-500 text-gray-900" : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700") inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Requirements
+                        </a>
+                    </div>
+                </div>
+                <div class="hidden sm:ml-6 sm:flex sm:items-center">
+                    <div class="ml-3 relative">
+                        <div>
+                            <button type="button" class="flex rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" id="user-menu-button">
+                                <span class="sr-only">Open user menu</span>
+                                <img class="h-8 w-8 rounded-full" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="">
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="-mr-2 flex items-center sm:hidden">
+                    <button type="button" class="inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500" id="mobile-menu-button">
+                        <span class="sr-only">Open main menu</span>
+                        <i class="fas fa-bars block h-6 w-6"></i>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Mobile menu, show/hide based on menu state -->
+        <div class="sm:hidden hidden" id="mobile-menu">
+            <div class="space-y-1 pt-2 pb-3">
+                <a asp-controller="Home" asp-action="Index" 
+                   class="@(ViewContext.RouteData.Values["Controller"].ToString() == "Home" && ViewContext.RouteData.Values["Action"].ToString() == "Index" ? "bg-blue-50 border-blue-500 text-blue-700" : "border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800") block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    Home
+                </a>
+                <a asp-controller="Survey" asp-action="Index" 
+                   class="@(ViewContext.RouteData.Values["Controller"].ToString() == "Survey" ? "bg-blue-50 border-blue-500 text-blue-700" : "border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800") block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    Surveys
+                </a>
+                <a asp-controller="Suggestions" asp-action="Index" 
+                   class="@(ViewContext.RouteData.Values["Controller"].ToString() == "Suggestions" ? "bg-blue-50 border-blue-500 text-blue-700" : "border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800") block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    Suggestions
+                </a>
+                <a asp-controller="Customers" asp-action="Index" 
+                   class="@(ViewContext.RouteData.Values["Controller"].ToString() == "Customers" ? "bg-blue-50 border-blue-500 text-blue-700" : "border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800") block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    Customers
+                </a>
+                <a asp-controller="Analytics" asp-action="Index" 
+                   class="@(ViewContext.RouteData.Values["Controller"].ToString() == "Analytics" ? "bg-blue-50 border-blue-500 text-blue-700" : "border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800") block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    Analytics
+                </a>
+                <a asp-controller="Requirements" asp-action="Index" 
+                   class="@(ViewContext.RouteData.Values["Controller"].ToString() == "Requirements" ? "bg-blue-50 border-blue-500 text-blue-700" : "border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800") block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    Requirements
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow">
+        @RenderBody()
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 py-8">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div class="space-y-4">
+                    <h4 class="text-lg font-semibold tracking-tight">SurveyApp</h4>
+                    <p class="text-sm text-gray-500">
+                        Create beautiful surveys and analyze results with our simple yet powerful platform.
+                    </p>
+                </div>
+                
+                <div>
+                    <h5 class="text-sm font-medium mb-4 text-gray-500">Product</h5>
+                    <ul class="space-y-2">
+                        <li>
+                            <a href="#" class="text-sm hover:text-blue-600 transition-colors">
+                                Create Surveys
+                            </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Survey" asp-action="Index">Surveys</a>
+                        <li>
+                            <a href="#" class="text-sm hover:text-blue-600 transition-colors">
+                                Analysis
+                            </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Suggestions" asp-action="Index">Suggestions</a>
+                        <li>
+                            <a href="#" class="text-sm hover:text-blue-600 transition-colors">
+                                Templates
+                            </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Customers" asp-action="Index">Customers</a>
+                        <li>
+                            <a href="#" class="text-sm hover:text-blue-600 transition-colors">
+                                Pricing
+                            </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Analytics" asp-action="Index">Analytics</a>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h5 class="text-sm font-medium mb-4 text-gray-500">Resources</h5>
+                    <ul class="space-y-2">
+                        <li>
+                            <a href="#" class="text-sm hover:text-blue-600 transition-colors">
+                                Documentation
+                            </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Requirements" asp-action="Index">Requirements</a>
+                        <li>
+                            <a href="#" class="text-sm hover:text-blue-600 transition-colors">
+                                Guides
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="text-sm hover:text-blue-600 transition-colors">
+                                API
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="text-sm hover:text-blue-600 transition-colors">
+                                Help Center
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h5 class="text-sm font-medium mb-4 text-gray-500">Company</h5>
+                    <ul class="space-y-2">
+                        <li>
+                            <a href="#" class="text-sm hover:text-blue-600 transition-colors">
+                                About
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="text-sm hover:text-blue-600 transition-colors">
+                                Blog
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="text-sm hover:text-blue-600 transition-colors">
+                                Careers
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="text-sm hover:text-blue-600 transition-colors">
+                                Contact
+                            </a>
                         </li>
                     </ul>
                 </div>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; @DateTime.Now.Year - Survey Application - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            
+            <div class="flex flex-col md:flex-row justify-between items-center mt-10 pt-6 border-t text-sm text-gray-500">
+                <p>&copy; @DateTime.Now.Year SurveyApp. All rights reserved.</p>
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <a href="#" class="hover:text-blue-600 transition-colors">Terms</a>
+                    <a href="#" class="hover:text-blue-600 transition-colors">Privacy</a>
+                    <a href="#" class="hover:text-blue-600 transition-colors">Cookies</a>
+                </div>
+            </div>
         </div>
     </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        });
+    </script>
+    
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

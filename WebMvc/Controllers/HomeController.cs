@@ -17,37 +17,37 @@ namespace SurveyApp.WebMvc.Controllers
                     {
                         Title = "Intuitive Survey Builder",
                         Description = "Create beautiful surveys with our drag-and-drop interface. No coding required.",
-                        Icon = "FileText"
+                        Icon = "file-lines"
                     },
                     new FeatureViewModel
                     {
                         Title = "Powerful Analytics",
                         Description = "Get real-time insights with customizable reports and advanced visualizations.",
-                        Icon = "BarChart3"
+                        Icon = "chart-bar"
                     },
                     new FeatureViewModel
                     {
                         Title = "Multiple Question Types",
                         Description = "Choose from a variety of question types to gather the precise data you need.",
-                        Icon = "CheckSquare"
+                        Icon = "check-square"
                     },
                     new FeatureViewModel
                     {
-                        Title = "Rating Scales",
-                        Description = "Measure sentiment and satisfaction with customizable rating scales.",
-                        Icon = "Star"
+                        Title = "Customer Feedback",
+                        Description = "Collect and manage customer suggestions to improve your products.",
+                        Icon = "message"
                     },
                     new FeatureViewModel
                     {
-                        Title = "Ranking Questions",
-                        Description = "Allow respondents to rank items in order of preference or importance.",
-                        Icon = "MoveVertical"
+                        Title = "Customer Growth",
+                        Description = "Track your customer base growth and analyze service usage trends.",
+                        Icon = "users"
                     },
                     new FeatureViewModel
                     {
-                        Title = "Logic Branching",
-                        Description = "Create dynamic surveys that adapt based on previous answers.",
-                        Icon = "PlusCircle"
+                        Title = "Knowledge Base",
+                        Description = "Build and maintain a comprehensive knowledge base for your team and customers.",
+                        Icon = "book"
                     }
                 }
             };

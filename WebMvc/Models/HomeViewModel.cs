@@ -8,14 +8,14 @@ namespace SurveyApp.WebMvc.Models
 
     public class FeatureViewModel
     {
-        public string Title { get; set; }
-        public string Description { get; set; }
-        public string Icon { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string Icon { get; set; } = string.Empty;
     }
 
     public class ErrorViewModel
     {
-        public string RequestId { get; set; }
+        public string? RequestId { get; set; }
         public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
     }
 }

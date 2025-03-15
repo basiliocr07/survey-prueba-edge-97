@@ -4,69 +4,60 @@
     ViewData["Title"] = "Home";
 }
 
-<div class="min-h-screen bg-background">
-    <!-- Hero Section -->
-    <section class="w-full pt-32 pb-20 px-6">
-        <div class="max-w-7xl mx-auto flex flex-col items-center text-center">
-            <div class="animate-slide-down">
-                <div class="inline-block px-3 py-1 mb-6 rounded-full bg-primary/10 text-primary text-sm font-medium">
-                    The future of surveys is here
-                </div>
-                <h1 class="text-4xl md:text-6xl font-bold tracking-tight mb-6">
-                    Survey creation & analytics made <span class="text-primary">simple</span>
-                </h1>
-                <p class="text-xl text-muted-foreground max-w-3xl mx-auto mb-10">
-                    Build beautiful surveys, collect responses, and analyze results with our intuitive platform. No coding required.
-                </p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a asp-controller="Survey" asp-action="Create" class="btn btn-primary">
-                        <i class="icon-plus-circle mr-2"></i> Create a Survey
-                    </a>
-                    <a asp-controller="Analytics" asp-action="Index" class="btn btn-outline">
-                        <i class="icon-bar-chart-3 mr-2"></i> Explore Analytics
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Features Section -->
-    <section class="w-full py-20 px-6 bg-accent/50">
-        <div class="max-w-7xl mx-auto">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl font-bold mb-4">Powerful Features</h2>
-                <p class="text-lg text-muted-foreground max-w-2xl mx-auto">
-                    Everything you need to create professional surveys and gain valuable insights
-                </p>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                @foreach (var feature in Model.Features)
-                {
-                    <div class="card hover-lift hover:border-primary/20 hover:bg-accent/70">
-                        <div class="card-content p-6 flex flex-col items-start">
-                            <div class="p-3 rounded-lg bg-primary/10 text-primary mb-4">
-                                <i class="icon-@feature.Icon w-8 h-8"></i>
-                            </div>
-                            <h3 class="text-xl font-semibold mb-2">@feature.Title</h3>
-                            <p class="text-muted-foreground">@feature.Description</p>
-                        </div>
-                    </div>
-                }
-            </div>
-        </div>
-    </section>
-
-    <!-- CTA Section -->
-    <section class="w-full py-24 px-6">
-        <div class="max-w-6xl mx-auto text-center">
-            <h2 class="text-3xl md:text-4xl font-bold mb-6">Ready to create your first survey?</h2>
-            <p class="text-lg text-muted-foreground max-w-3xl mx-auto mb-10">
-                Join thousands of users who are already collecting valuable insights with our platform.
+<div class="bg-gradient-to-b from-white to-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-16">
+        <div class="text-center mb-16 space-y-4">
+            <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-gray-900">
+                Create beautiful surveys <span class="text-blue-600">in minutes</span>
+            </h1>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                Get actionable insights with our easy-to-use survey platform. Design, collect, and analyze results all in one place.
             </p>
-            <a asp-controller="Survey" asp-action="Create" class="btn btn-primary btn-lg animate-pulse-slow">
-                Get Started Now
-            </a>
+            <div class="mt-8 flex flex-col sm:flex-row justify-center gap-4">
+                <a asp-controller="Survey" asp-action="Create" 
+                   class="inline-flex items-center justify-center rounded-md bg-blue-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    <i class="fas fa-plus-circle mr-2"></i> Create Survey
+                </a>
+                <a asp-controller="Survey" asp-action="Index"
+                   class="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-6 py-3 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    <i class="fas fa-search mr-2"></i> Browse Surveys
+                </a>
+            </div>
         </div>
-    </section>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            @foreach (var feature in Model.Features)
+            {
+                <div class="bg-white rounded-lg shadow-md p-6 transition-all hover:shadow-lg">
+                    <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-4">
+                        <i class="fas fa-@feature.Icon text-blue-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">@feature.Title</h3>
+                    <p class="text-gray-600">@feature.Description</p>
+                </div>
+            }
+        </div>
+
+        <div class="mt-20 bg-blue-600 rounded-xl shadow-xl overflow-hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2">
+                <div class="p-8 md:p-12 text-white space-y-6">
+                    <h2 class="text-3xl font-bold">Ready to get started?</h2>
+                    <p class="text-blue-100">Join thousands of users who are already collecting valuable feedback and insights.</p>
+                    <div class="flex flex-col sm:flex-row gap-4 mt-8">
+                        <a href="#" class="inline-flex items-center justify-center rounded-md bg-white px-6 py-3 text-base font-medium text-blue-600 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600">
+                            <i class="fas fa-user-plus mr-2"></i> Sign Up Free
+                        </a>
+                        <a href="#" class="inline-flex items-center justify-center rounded-md border border-white px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600">
+                            <i class="fas fa-book mr-2"></i> Learn More
+                        </a>
+                    </div>
+                </div>
+                <div class="hidden md:block relative">
+                    <div class="absolute inset-0 bg-gradient-to-r from-blue-600 to-transparent"></div>
+                    <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80" 
+                         alt="Survey in action" class="h-full w-full object-cover" />
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
