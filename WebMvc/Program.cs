@@ -80,6 +80,11 @@ app.MapControllerRoute(
     pattern: "requirements/{action=Index}/{id?}",
     defaults: new { controller = "Requirements" });
 
+app.MapControllerRoute(
+    name: "knowledgebase",
+    pattern: "kb/{action=Index}/{id?}",
+    defaults: new { controller = "KnowledgeBase" });
+
 app.MapControllers(); // Map API controllers
 
 app.Run();

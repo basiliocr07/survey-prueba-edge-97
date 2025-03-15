@@ -11,43 +11,50 @@ namespace SurveyApp.WebMvc.Controllers
         {
             var featuresViewModel = new HomeViewModel
             {
+                ShowWelcomeBanner = true,
                 Features = new List<FeatureViewModel>
                 {
                     new FeatureViewModel
                     {
                         Title = "Intuitive Survey Builder",
                         Description = "Create beautiful surveys with our drag-and-drop interface. No coding required.",
-                        Icon = "file-lines"
+                        Icon = "file-lines",
+                        LinkUrl = "/surveys/create"
                     },
                     new FeatureViewModel
                     {
                         Title = "Powerful Analytics",
                         Description = "Get real-time insights with customizable reports and advanced visualizations.",
-                        Icon = "chart-bar"
+                        Icon = "chart-bar",
+                        LinkUrl = "/analytics"
                     },
                     new FeatureViewModel
                     {
                         Title = "Multiple Question Types",
                         Description = "Choose from a variety of question types to gather the precise data you need.",
-                        Icon = "check-square"
+                        Icon = "check-square",
+                        LinkUrl = "/surveys/question-types"
                     },
                     new FeatureViewModel
                     {
                         Title = "Customer Feedback",
                         Description = "Collect and manage customer suggestions to improve your products.",
-                        Icon = "message"
+                        Icon = "message",
+                        LinkUrl = "/suggestions"
                     },
                     new FeatureViewModel
                     {
                         Title = "Customer Growth",
                         Description = "Track your customer base growth and analyze service usage trends.",
-                        Icon = "users"
+                        Icon = "users",
+                        LinkUrl = "/customers"
                     },
                     new FeatureViewModel
                     {
                         Title = "Knowledge Base",
                         Description = "Build and maintain a comprehensive knowledge base for your team and customers.",
-                        Icon = "book"
+                        Icon = "book",
+                        LinkUrl = "/kb"
                     }
                 }
             };
