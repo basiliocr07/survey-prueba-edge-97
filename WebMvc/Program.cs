@@ -61,9 +61,9 @@ app.MapControllerRoute(
 
 // Register additional routes
 app.MapControllerRoute(
-    name: "customers",
-    pattern: "customers/{action=Index}/{id?}",
-    defaults: new { controller = "Customers" });
+    name: "surveys",
+    pattern: "surveys/{action=Index}/{id?}",
+    defaults: new { controller = "Survey" });
 
 app.MapControllerRoute(
     name: "analytics",
