@@ -35,6 +35,9 @@ builder.Services.AddScoped<IKnowledgeBaseService, KnowledgeBaseService>();
 // Add API controllers
 builder.Services.AddControllers();
 
+// Add Tailwind CSS configuration services
+builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -84,6 +87,11 @@ app.MapControllerRoute(
     name: "knowledgebase",
     pattern: "kb/{action=Index}/{id?}",
     defaults: new { controller = "KnowledgeBase" });
+
+app.MapControllerRoute(
+    name: "customers",
+    pattern: "customers/{action=Index}/{id?}",
+    defaults: new { controller = "Customers" });
 
 app.MapControllers(); // Map API controllers
 
