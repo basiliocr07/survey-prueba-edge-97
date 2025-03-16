@@ -15,9 +15,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     
     <!-- Estilos -->
-    <link rel="stylesheet" href="~/css/site.css" />
-    <link rel="stylesheet" href="~/css/tailwind-custom.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/tailwind-custom.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/utility-fixes.css" asp-append-version="true" />
     
+    <!-- Asegurarse de que Tailwind se cargue correctamente -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -54,6 +56,8 @@
                     animation: {
                         'fade-in': 'fadeIn 0.5s ease-out',
                         'slide-up': 'slideUp 0.4s ease-out',
+                        'slide-down': 'slideDown 0.4s ease-out',
+                        'pulse-slow': 'pulseSlow 3s infinite',
                     },
                     keyframes: {
                         fadeIn: {
@@ -63,12 +67,48 @@
                         slideUp: {
                             '0%': { transform: 'translateY(10px)', opacity: 0 },
                             '100%': { transform: 'translateY(0)', opacity: 1 },
+                        },
+                        slideDown: {
+                            '0%': { transform: 'translateY(-10px)', opacity: 0 },
+                            '100%': { transform: 'translateY(0)', opacity: 1 },
+                        },
+                        pulseSlow: {
+                            '0%, 100%': { opacity: 1 },
+                            '50%': { opacity: 0.8 },
                         }
                     }
                 },
             },
+            safelist: [
+                'bg-primary', 'text-primary', 'border-primary',
+                'bg-secondary', 'text-secondary', 'border-secondary',
+                'bg-accent', 'text-accent', 'border-accent',
+                'bg-muted', 'text-muted-foreground',
+                'hover:bg-primary', 'hover:text-primary', 'hover:border-primary'
+            ]
         }
     </script>
+    <style>
+        /* Estilos críticos en línea */
+        body {
+            background-color: hsl(210, 40%, 98%);
+            color: hsl(222.2, 84%, 4.9%);
+            font-family: 'Lato', 'Inter', sans-serif;
+        }
+        .btn-primary {
+            background-color: hsl(215, 25%, 27%);
+            color: hsl(210, 40%, 98%);
+        }
+        .text-primary {
+            color: hsl(215, 25%, 27%);
+        }
+        .bg-primary {
+            background-color: hsl(215, 25%, 27%);
+        }
+        .border-primary {
+            border-color: hsl(215, 25%, 27%);
+        }
+    </style>
 </head>
 <body class="bg-background text-foreground font-sans min-h-screen flex flex-col">
     <header class="animate-fade-in">

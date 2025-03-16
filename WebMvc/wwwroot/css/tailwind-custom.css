@@ -74,179 +74,270 @@
   --ring: 212.7 26.8% 83.9%;
 }
 
-/* Base styles */
-* {
-  @apply border-border;
-}
-
+/* Define estilos base explícitamente para asegurar que se apliquen */
 body {
-  @apply bg-background text-foreground;
-  font-feature-settings: "rlig" 1, "calt" 1;
+  background-color: hsl(210, 40%, 98%);
+  color: hsl(222.2, 84%, 4.9%);
+  font-family: 'Lato', 'Inter', sans-serif;
 }
 
 /* Card Components */
 .card {
-  @apply bg-card rounded-lg border shadow-sm overflow-hidden;
+  background-color: white;
+  border-radius: 0.75rem;
+  border: 1px solid hsl(214.3, 31.8%, 91.4%);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
 .card-header {
-  @apply flex flex-col space-y-1.5 p-6 border-b;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  border-bottom: 1px solid hsl(214.3, 31.8%, 91.4%);
 }
 
 .card-title {
-  @apply text-2xl font-semibold leading-none tracking-tight;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.025em;
 }
 
 .card-description {
-  @apply text-sm text-muted-foreground;
+  font-size: 0.875rem;
+  color: hsl(215.4, 16.3%, 46.9%);
 }
 
 .card-content {
-  @apply p-6;
+  padding: 1.5rem;
 }
 
 .card-footer {
-  @apply flex items-center p-6 pt-0;
+  display: flex;
+  align-items: center;
+  padding: 1.5rem;
+  padding-top: 0;
 }
 
 /* Button Components */
 .btn {
-  @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition-property: color, background-color, border-color;
+  transition-duration: 150ms;
 }
 
 .btn-primary {
-  @apply bg-primary text-primary-foreground hover:bg-primary/90;
+  background-color: hsl(215, 25%, 27%);
+  color: hsl(210, 40%, 98%);
+}
+
+.btn-primary:hover {
+  background-color: hsl(215, 25%, 22%);
 }
 
 .btn-destructive {
-  @apply bg-destructive text-destructive-foreground hover:bg-destructive/90;
+  background-color: hsl(0, 84.2%, 60.2%);
+  color: hsl(210, 40%, 98%);
+}
+
+.btn-destructive:hover {
+  background-color: hsl(0, 84.2%, 55%);
 }
 
 .btn-outline {
-  @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground;
+  border: 1px solid hsl(214.3, 31.8%, 91.4%);
+  background-color: transparent;
+}
+
+.btn-outline:hover {
+  background-color: hsl(210, 30%, 92%);
+  color: hsl(222.2, 47.4%, 11.2%);
 }
 
 .btn-secondary {
-  @apply bg-secondary text-secondary-foreground hover:bg-secondary/80;
+  background-color: hsl(210, 40%, 96.1%);
+  color: hsl(222.2, 47.4%, 11.2%);
+}
+
+.btn-secondary:hover {
+  background-color: hsl(210, 40%, 90%);
 }
 
 .btn-ghost {
-  @apply hover:bg-accent hover:text-accent-foreground;
+  background-color: transparent;
+}
+
+.btn-ghost:hover {
+  background-color: hsl(210, 30%, 92%);
+  color: hsl(222.2, 47.4%, 11.2%);
 }
 
 .btn-link {
-  @apply text-primary underline-offset-4 hover:underline;
+  color: hsl(215, 25%, 27%);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.btn-link:hover {
+  text-decoration: none;
 }
 
 /* Button sizes */
 .btn-default {
-  @apply h-10 px-4 py-2;
+  height: 2.5rem;
+  padding: 0.5rem 1rem;
 }
 
 .btn-sm {
-  @apply h-9 rounded-md px-3;
+  height: 2.25rem;
+  border-radius: 0.375rem;
+  padding: 0 0.75rem;
 }
 
 .btn-lg {
-  @apply h-11 rounded-md px-8;
+  height: 2.75rem;
+  border-radius: 0.375rem;
+  padding: 0 2rem;
 }
 
 .btn-icon {
-  @apply h-10 w-10;
-}
-
-/* Form Components */
-.form-label {
-  @apply block text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70;
-}
-
-.form-input,
-.form-select,
-.form-textarea {
-  @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
-}
-
-.form-checkbox {
-  @apply h-4 w-4 rounded border border-primary text-primary focus:ring-primary;
-}
-
-/* Tab Components */
-.tab-list {
-  @apply inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground;
-}
-
-.tab-item {
-  @apply inline-flex items-center justify-center whitespace-nowrap px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm;
-}
-
-/* Alert Components */
-.alert {
-  @apply relative w-full rounded-lg border p-4;
-}
-
-.alert-success {
-  @apply bg-green-50 text-green-900 border-green-200;
-}
-
-.alert-danger {
-  @apply bg-red-50 text-red-900 border-red-200;
-}
-
-.alert-info {
-  @apply bg-blue-50 text-blue-900 border-blue-200;
-}
-
-.alert-warning {
-  @apply bg-yellow-50 text-yellow-900 border-yellow-200;
-}
-
-/* Badge */
-.badge {
-  @apply inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+  height: 2.5rem;
+  width: 2.5rem;
 }
 
 /* Animations */
-.animated {
-  @apply animate-fade-in;
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-slide-down {
+  animation: slideDown 0.4s ease-out;
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-pulse-slow {
+  animation: pulseSlow 3s infinite;
+}
+
+@keyframes pulseSlow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+/* Hover effect */
 .hover-lift {
-  @apply transition-transform duration-200 hover:-translate-y-1;
+  transition: transform 0.2s ease;
 }
 
-.page-transition-enter {
-  @apply opacity-0 translate-y-2;
-}
-
-.page-transition-enter-active {
-  @apply opacity-100 translate-y-0 transition-all duration-300;
-}
-
-.page-transition-exit {
-  @apply opacity-100 translate-y-0;
-}
-
-.page-transition-exit-active {
-  @apply opacity-0 translate-y-2 transition-all duration-300;
+.hover-lift:hover {
+  transform: translateY(-4px);
 }
 
 /* Glassmorphism */
 .glass {
-  @apply bg-white/40 backdrop-blur-md border border-white/20 shadow-md;
+  background-color: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Responsive Utilities */
-@media (max-width: 640px) {
-  .card-header,
-  .card-content,
-  .card-footer {
-    @apply p-4;
-  }
+/* Utility Classes */
+.flex {
+  display: flex;
 }
 
-/* Icons */
-.icon,
-[class^="icon-"],
-[class*=" icon-"] {
-  @apply inline-flex w-4 h-4 stroke-current fill-none;
+.flex-col {
+  flex-direction: column;
 }
+
+.items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.mx-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.my-auto {
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+.gap-4 {
+  gap: 1rem;
+}
+
+.p-6 {
+  padding: 1.5rem;
+}
+
+.px-6 {
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.py-20 {
+  padding-top: 5rem;
+  padding-bottom: 5rem;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.max-w-7xl {
+  max-width: 80rem;
+}
+
+.min-h-screen {
+  min-height: 100vh;
+}
+
+.text-primary {
+  color: hsl(215, 25%, 27%);
+}
+
+.bg-primary {
+  background-color: hsl(215, 25%, 27%);
+}
+
+/* ... keep existing code */
