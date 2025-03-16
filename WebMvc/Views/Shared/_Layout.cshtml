@@ -306,20 +306,20 @@
     </header>
 
     <main role="main" class="pb-3 flex-grow mt-16">
-        <div class="flex justify-center">
-            @if (ViewContext.RouteData.Values["Controller"].ToString() == "Home" && ViewContext.RouteData.Values["Action"].ToString() == "Index")
-            {
-                <div class="w-full">
-                    @RenderBody()
-                </div>
-            }
-            else
-            {
+        @if (ViewContext.RouteData.Values["Controller"].ToString() == "Home" && ViewContext.RouteData.Values["Action"].ToString() == "Index")
+        {
+            <div class="w-full">
+                @RenderBody()
+            </div>
+        }
+        else
+        {
+            <div class="flex justify-center">
                 <div class="w-[900px] max-w-[900px] h-full bg-white p-1 py-8">
                     @RenderBody()
                 </div>
-            }
-        </div>
+            </div>
+        }
     </main>
 
     <footer class="border-t border-gray-200 bg-white mt-auto animate-fade-in">
