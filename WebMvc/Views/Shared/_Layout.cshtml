@@ -306,7 +306,12 @@
     </header>
 
     <main role="main" class="pb-3 flex-grow mt-16">
-        @if (ViewContext.RouteData.Values["Controller"].ToString() == "Home" && ViewContext.RouteData.Values["Action"].ToString() == "Index")
+        @{
+            var isHomePage = ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" && 
+                             ViewContext.RouteData.Values["Action"]?.ToString() == "Index";
+        }
+        
+        @if (isHomePage)
         {
             <div class="w-full">
                 @RenderBody()
