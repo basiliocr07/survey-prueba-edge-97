@@ -434,7 +434,7 @@
         // Validar formato de email
         function isValidEmail(email) {
             const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return re.test(email);
+            return re.test(String(email));
         }
     </script>
 }
