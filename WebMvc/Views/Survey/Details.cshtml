@@ -1,5 +1,5 @@
 
-@model SurveyApp.Application.DTOs.SurveyDto
+@model SurveyApp.WebMvc.Models.SurveyViewModel
 
 @{
     ViewData["Title"] = "Survey Details";
@@ -124,7 +124,7 @@
                             <dd>@Model.DeliveryConfig.Schedule.Frequency</dd>
                         </div>
                         
-                        @if (!string.IsNullOrEmpty(Model.DeliveryConfig.Schedule.DayOfMonth.ToString()))
+                        @if (Model.DeliveryConfig.Schedule.DayOfMonth > 0)
                         {
                             <div>
                                 <dt class="text-sm font-medium text-gray-500">Day of Month</dt>
@@ -174,7 +174,7 @@
                 <h3 class="text-lg font-medium mb-2">Send Test Email</h3>
                 <form asp-action="SendTestEmail" asp-route-id="@Model.Id" method="post" class="flex space-x-2">
                     @Html.AntiForgeryToken()
-                    <input type="email" name="email" value="ubcruz2@gmail.com" placeholder="Email address" class="px-4 py-2 border rounded" />
+                    <input type="email" name="email" value="test@example.com" placeholder="Email address" class="px-4 py-2 border rounded" />
                     <button type="submit" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
                         Send Test
                     </button>

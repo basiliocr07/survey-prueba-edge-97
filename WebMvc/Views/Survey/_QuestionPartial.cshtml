@@ -22,6 +22,7 @@
     </div>
     
     <div class="space-y-3">
+        <input type="hidden" name="Questions[@index].Id" id="Questions_@(index)__Id" value="@question.Id" />
         <input type="hidden" name="Questions[@index].Title" id="Questions_@(index)__Title" value="@question.Title" />
         <input type="hidden" name="Questions[@index].Description" id="Questions_@(index)__Description" value="@question.Description" />
         <input type="hidden" name="Questions[@index].Type" id="Questions_@(index)__Type" value="@question.Type" />

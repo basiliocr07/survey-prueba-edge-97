@@ -43,6 +43,15 @@ namespace SurveyApp.WebMvc.Controllers
                     CreatedAt = dto.CreatedAt,
                     Responses = dto.Responses,
                     CompletionRate = dto.CompletionRate,
+                    Questions = dto.Questions?.Select(q => new QuestionViewModel
+                    {
+                        Id = q.Id,
+                        Title = q.Title,
+                        Description = q.Description,
+                        Type = q.Type,
+                        Required = q.Required,
+                        Options = q.Options?.ToList() ?? new List<string>()
+                    }).ToList() ?? new List<QuestionViewModel>(),
                     DeliveryConfig = new DeliveryConfigViewModel
                     {
                         Type = dto.DeliveryConfig?.Type,
@@ -71,6 +80,72 @@ namespace SurveyApp.WebMvc.Controllers
                 _logger.LogError(ex, "Error retrieving surveys for Index view: {ErrorMessage}", ex.Message);
                 TempData["ErrorMessage"] = "Error retrieving surveys. Please try again later.";
                 return View(new List<SurveyViewModel>());
+            }
+        }
+
+        // GET: /Survey/Details/{id}
+        public async Task<IActionResult> Details(Guid id)
+        {
+            _logger.LogInformation("Details action invoked for survey ID: {SurveyId}", id);
+            try
+            {
+                var surveyDto = await _surveyService.GetSurveyByIdAsync(id);
+                if (surveyDto == null)
+                {
+                    _logger.LogWarning("Survey not found for ID: {SurveyId}", id);
+                    return NotFound();
+                }
+
+                var viewModel = new SurveyViewModel
+                {
+                    Id = surveyDto.Id,
+                    Title = surveyDto.Title,
+                    Description = surveyDto.Description,
+                    CreatedAt = surveyDto.CreatedAt,
+                    Responses = surveyDto.Responses,
+                    CompletionRate = surveyDto.CompletionRate,
+                    Questions = surveyDto.Questions?.Select(q => new QuestionViewModel
+                    {
+                        Id = q.Id,
+                        Title = q.Title,
+                        Description = q.Description,
+                        Type = q.Type,
+                        Required = q.Required,
+                        Options = q.Options?.ToList() ?? new List<string>()
+                    }).ToList() ?? new List<QuestionViewModel>(),
+                    DeliveryConfig = new DeliveryConfigViewModel
+                    {
+                        Type = surveyDto.DeliveryConfig?.Type,
+                        EmailAddresses = surveyDto.DeliveryConfig?.EmailAddresses?.ToList() ?? new List<string>(),
+                        Schedule = surveyDto.DeliveryConfig?.Schedule != null ? new ScheduleViewModel
+                        {
+                            Frequency = surveyDto.DeliveryConfig.Schedule.Frequency,
+                            DayOfMonth = surveyDto.DeliveryConfig.Schedule.DayOfMonth ?? 1,
+                            DayOfWeek = surveyDto.DeliveryConfig.Schedule.DayOfWeek,
+                            Time = surveyDto.DeliveryConfig.Schedule.Time,
+                            StartDate = surveyDto.DeliveryConfig.Schedule.StartDate
+                        } : new ScheduleViewModel(),
+                        Trigger = surveyDto.DeliveryConfig?.Trigger != null ? new TriggerViewModel
+                        {
+                            Type = surveyDto.DeliveryConfig.Trigger.Type,
+                            DelayHours = surveyDto.DeliveryConfig.Trigger.DelayHours,
+                            SendAutomatically = surveyDto.DeliveryConfig.Trigger.SendAutomatically
+                        } : new TriggerViewModel()
+                    }
+                };
+
+                return View(viewModel);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                _logger.LogWarning(ex, "Survey not found: {SurveyId}", id);
+                return NotFound();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving survey details: {SurveyId}", id);
+                TempData["ErrorMessage"] = "Error retrieving survey details. Please try again later.";
+                return RedirectToAction(nameof(Index));
             }
         }
 
@@ -311,33 +386,6 @@ namespace SurveyApp.WebMvc.Controllers
             }
 
             return View(model);
-        }
-
-        // GET: /Survey/Details/{id}
-        public async Task<IActionResult> Details(Guid id)
-        {
-            _logger.LogInformation("Details action invoked for survey ID: {SurveyId}", id);
-            try
-            {
-                var survey = await _surveyService.GetSurveyByIdAsync(id);
-                if (survey == null)
-                {
-                    _logger.LogWarning("Survey not found for ID: {SurveyId}", id);
-                    return NotFound();
-                }
-                return View(survey);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                _logger.LogWarning(ex, "Survey not found: {SurveyId}", id);
-                return NotFound();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving survey details: {SurveyId}", id);
-                TempData["ErrorMessage"] = "Error retrieving survey details. Please try again later.";
-                return RedirectToAction(nameof(Index));
-            }
         }
 
         // GET: /Survey/Delete/{id}

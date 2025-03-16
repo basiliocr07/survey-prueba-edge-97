@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Application.Services;
 using SurveyApp.WebMvc.Models;
+using System.Linq;
 
 namespace SurveyApp.WebMvc.Controllers
 {
