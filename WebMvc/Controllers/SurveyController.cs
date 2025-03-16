@@ -1,26 +1,40 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using SurveyApp.Application.DTOs;
 using SurveyApp.Application.Services;
 using SurveyApp.WebMvc.Models;
+using System.Net.Mail;
+using System.Collections.Generic;
 
 namespace SurveyApp.WebMvc.Controllers
 {
     public class SurveyController : Controller
     {
         private readonly ISurveyService _surveyService;
+        private readonly ILogger<SurveyController> _logger;
 
-        public SurveyController(ISurveyService surveyService)
+        public SurveyController(ISurveyService surveyService, ILogger<SurveyController> logger)
         {
-            _surveyService = surveyService;
+            _surveyService = surveyService ?? throw new ArgumentNullException(nameof(surveyService));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         // GET: /Survey
         public async Task<IActionResult> Index()
         {
-            var surveys = await _surveyService.GetAllSurveysAsync();
-            return View(surveys);
+            try
+            {
+                var surveys = await _surveyService.GetAllSurveysAsync();
+                return View(surveys);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving surveys");
+                TempData["ErrorMessage"] = "Error retrieving surveys. Please try again later.";
+                return View(new List<SurveyDto>());
+            }
         }
 
         // GET: /Survey/Create
@@ -106,6 +120,7 @@ namespace SurveyApp.WebMvc.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Error creating survey");
                     ModelState.AddModelError("", $"Error creating survey: {ex.Message}");
                 }
             }
@@ -153,9 +168,16 @@ namespace SurveyApp.WebMvc.Controllers
                 };
                 return View(viewModel);
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
+                _logger.LogWarning(ex, "Survey not found: {SurveyId}", id);
                 return NotFound();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving survey for edit: {SurveyId}", id);
+                TempData["ErrorMessage"] = "Error retrieving survey. Please try again later.";
+                return RedirectToAction(nameof(Index));
             }
         }
 
@@ -205,12 +227,14 @@ namespace SurveyApp.WebMvc.Controllers
                     TempData["SuccessMessage"] = "Survey updated successfully!";
                     return RedirectToAction(nameof(Details), new { id });
                 }
-                catch (KeyNotFoundException)
+                catch (KeyNotFoundException ex)
                 {
+                    _logger.LogWarning(ex, "Survey not found during update: {SurveyId}", id);
                     return NotFound();
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Error updating survey: {SurveyId}", id);
                     ModelState.AddModelError("", $"Error updating survey: {ex.Message}");
                 }
             }
@@ -226,9 +250,16 @@ namespace SurveyApp.WebMvc.Controllers
                 var survey = await _surveyService.GetSurveyByIdAsync(id);
                 return View(survey);
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
+                _logger.LogWarning(ex, "Survey not found: {SurveyId}", id);
                 return NotFound();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving survey details: {SurveyId}", id);
+                TempData["ErrorMessage"] = "Error retrieving survey details. Please try again later.";
+                return RedirectToAction(nameof(Index));
             }
         }
 
@@ -240,9 +271,16 @@ namespace SurveyApp.WebMvc.Controllers
                 var survey = await _surveyService.GetSurveyByIdAsync(id);
                 return View(survey);
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
+                _logger.LogWarning(ex, "Survey not found for deletion: {SurveyId}", id);
                 return NotFound();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving survey for deletion: {SurveyId}", id);
+                TempData["ErrorMessage"] = "Error retrieving survey. Please try again later.";
+                return RedirectToAction(nameof(Index));
             }
         }
 
@@ -257,12 +295,14 @@ namespace SurveyApp.WebMvc.Controllers
                 TempData["SuccessMessage"] = "Survey deleted successfully!";
                 return RedirectToAction(nameof(Index));
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
+                _logger.LogWarning(ex, "Survey not found during deletion: {SurveyId}", id);
                 return NotFound();
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error deleting survey: {SurveyId}", id);
                 TempData["ErrorMessage"] = $"Error deleting survey: {ex.Message}";
                 return RedirectToAction(nameof(Delete), new { id });
             }
@@ -279,12 +319,14 @@ namespace SurveyApp.WebMvc.Controllers
                 TempData["SuccessMessage"] = "Emails sent successfully!";
                 return RedirectToAction(nameof(Details), new { id });
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
+                _logger.LogWarning(ex, "Survey not found when sending emails: {SurveyId}", id);
                 return NotFound();
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error sending emails: {SurveyId}", id);
                 TempData["ErrorMessage"] = $"Error sending emails: {ex.Message}";
                 return RedirectToAction(nameof(Details), new { id });
             }
@@ -295,14 +337,30 @@ namespace SurveyApp.WebMvc.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SendOnTicketClosed(string customerEmail, Guid? surveyId = null)
         {
+            if (string.IsNullOrWhiteSpace(customerEmail) || !IsValidEmail(customerEmail))
+            {
+                TempData["ErrorMessage"] = "Please provide a valid email address.";
+                return RedirectToAction(nameof(Index));
+            }
+
             try
             {
-                await _surveyService.SendSurveyOnTicketClosedAsync(customerEmail, surveyId);
-                TempData["SuccessMessage"] = "Survey email sent on ticket closed event!";
+                bool success = await _surveyService.SendSurveyOnTicketClosedAsync(customerEmail, surveyId);
+                
+                if (success)
+                {
+                    TempData["SuccessMessage"] = "Survey email sent on ticket closed event!";
+                }
+                else
+                {
+                    TempData["WarningMessage"] = "No eligible surveys found for ticket closed event.";
+                }
+                
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error sending survey on ticket closed event");
                 TempData["ErrorMessage"] = $"Error sending survey email: {ex.Message}";
                 return RedirectToAction(nameof(Index));
             }
@@ -313,18 +371,35 @@ namespace SurveyApp.WebMvc.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SendTestEmail(Guid id, string email)
         {
-            try
+            if (string.IsNullOrWhiteSpace(email) || !IsValidEmail(email))
             {
-                await _surveyService.SendTestSurveyEmailAsync(email, id);
-                TempData["SuccessMessage"] = $"Test survey email sent to {email} successfully!";
+                TempData["ErrorMessage"] = "Please provide a valid email address.";
                 return RedirectToAction(nameof(Details), new { id });
             }
-            catch (KeyNotFoundException)
+
+            try
             {
+                bool success = await _surveyService.SendTestSurveyEmailAsync(email, id);
+                
+                if (success)
+                {
+                    TempData["SuccessMessage"] = $"Test survey email sent to {email} successfully!";
+                }
+                else
+                {
+                    TempData["WarningMessage"] = "Test email could not be sent. Please check your email settings.";
+                }
+                
+                return RedirectToAction(nameof(Details), new { id });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                _logger.LogWarning(ex, "Survey not found when sending test email: {SurveyId}", id);
                 return NotFound();
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error sending test email for survey: {SurveyId}", id);
                 TempData["ErrorMessage"] = $"Error sending test email: {ex.Message}";
                 return RedirectToAction(nameof(Details), new { id });
             }
@@ -342,6 +417,20 @@ namespace SurveyApp.WebMvc.Controllers
             };
             
             return PartialView("_QuestionPartial", new Tuple<QuestionViewModel, int>(question, index));
+        }
+        
+        // Helper method to validate email format
+        private bool IsValidEmail(string email)
+        {
+            try
+            {
+                var mailAddress = new MailAddress(email);
+                return mailAddress.Address == email;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SurveyApp.Domain.Entities
 {
@@ -15,11 +16,17 @@ namespace SurveyApp.Domain.Entities
         public int CompletionRate { get; private set; }
         public DeliveryConfig DeliveryConfig { get; private set; }
 
+        // Parameterless constructor for EF Core
+        private Survey() { }
+
         public Survey(string title, string description)
         {
+            if (string.IsNullOrWhiteSpace(title))
+                throw new ArgumentException("Survey title cannot be empty", nameof(title));
+                
             Id = Guid.NewGuid();
             Title = title;
-            Description = description;
+            Description = description ?? string.Empty;
             CreatedAt = DateTime.UtcNow;
             Responses = 0;
             CompletionRate = 0;
@@ -28,27 +35,80 @@ namespace SurveyApp.Domain.Entities
 
         public void UpdateTitle(string title)
         {
+            if (string.IsNullOrWhiteSpace(title))
+                throw new ArgumentException("Survey title cannot be empty", nameof(title));
+                
             Title = title;
         }
 
         public void UpdateDescription(string description)
         {
-            Description = description;
+            Description = description ?? string.Empty;
         }
 
         public void AddQuestion(Question question)
         {
+            if (question == null)
+                throw new ArgumentNullException(nameof(question));
+                
             Questions.Add(question);
         }
 
         public void RemoveQuestion(Question question)
         {
+            if (question == null)
+                throw new ArgumentNullException(nameof(question));
+                
             Questions.Remove(question);
+        }
+
+        public void RemoveQuestionById(Guid questionId)
+        {
+            var question = Questions.FirstOrDefault(q => q.Id == questionId);
+            if (question != null)
+            {
+                Questions.Remove(question);
+            }
+        }
+
+        public void ClearQuestions()
+        {
+            Questions.Clear();
         }
 
         public void SetDeliveryConfig(DeliveryConfig deliveryConfig)
         {
-            DeliveryConfig = deliveryConfig;
+            DeliveryConfig = deliveryConfig ?? new DeliveryConfig();
+        }
+
+        public void IncrementResponses()
+        {
+            Responses++;
+            RecalculateCompletionRate();
+        }
+
+        public void SetCompletionRate(int completionPercentage)
+        {
+            if (completionPercentage < 0 || completionPercentage > 100)
+                throw new ArgumentOutOfRangeException(nameof(completionPercentage), "Completion rate must be between 0 and 100");
+                
+            CompletionRate = completionPercentage;
+        }
+
+        private void RecalculateCompletionRate()
+        {
+            // This is a placeholder for actual completion rate calculation logic
+            // In a real application, this would calculate based on completed vs. partial responses
+            // For now, we'll assume a fixed rate based on the number of responses
+            if (Responses > 0)
+            {
+                // This is just an example calculation
+                CompletionRate = Math.Min(100, (int)(80 + (Responses * 2.0 / 10.0)));
+            }
+            else
+            {
+                CompletionRate = 0;
+            }
         }
     }
 }

@@ -14,7 +14,7 @@ namespace SurveyApp.Application.Services
         Task UpdateSurveyAsync(Guid id, CreateSurveyDto updateSurveyDto);
         Task DeleteSurveyAsync(Guid id);
         Task SendSurveyEmailsAsync(Guid id);
-        Task SendSurveyOnTicketClosedAsync(string customerEmail, Guid? specificSurveyId = null);
-        Task SendTestSurveyEmailAsync(string email, Guid surveyId);
+        Task<bool> SendSurveyOnTicketClosedAsync(string customerEmail, Guid? specificSurveyId = null);
+        Task<bool> SendTestSurveyEmailAsync(string email, Guid surveyId);
     }
 }
