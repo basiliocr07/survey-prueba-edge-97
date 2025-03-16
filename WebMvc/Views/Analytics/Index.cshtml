@@ -1,125 +1,124 @@
+
 @model AnalyticsViewModel
 @{
     ViewData["Title"] = "Analytics";
 }
 
-<div>
-    <h1 class="text-3xl font-bold mb-8">Analytics Dashboard</h1>
+<h1 class="text-3xl font-bold mb-8">Analytics Dashboard</h1>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <!-- Summary Cards -->
-        <div class="card">
-            <div class="card-content p-6">
-                <div class="flex justify-between items-center mb-2">
-                    <h3 class="text-lg font-medium">Total Surveys</h3>
-                    <i class="icon-file-text text-primary"></i>
-                </div>
-                <p class="text-3xl font-bold">@Model.TotalSurveys</p>
-                <p class="text-sm text-muted-foreground">Active surveys in your account</p>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <!-- Summary Cards -->
+    <div class="card">
+        <div class="card-content p-6">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-lg font-medium">Total Surveys</h3>
+                <i class="icon-file-text text-primary"></i>
             </div>
-        </div>
-
-        <div class="card">
-            <div class="card-content p-6">
-                <div class="flex justify-between items-center mb-2">
-                    <h3 class="text-lg font-medium">Total Responses</h3>
-                    <i class="icon-users text-primary"></i>
-                </div>
-                <p class="text-3xl font-bold">@Model.TotalResponses</p>
-                <p class="text-sm text-muted-foreground">Responses collected</p>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-content p-6">
-                <div class="flex justify-between items-center mb-2">
-                    <h3 class="text-lg font-medium">Completion Rate</h3>
-                    <i class="icon-percent text-primary"></i>
-                </div>
-                <p class="text-3xl font-bold">@Model.AverageCompletionRate.ToString("0.0")%</p>
-                <p class="text-sm text-muted-foreground">Average across all surveys</p>
-            </div>
+            <p class="text-3xl font-bold">@Model.TotalSurveys</p>
+            <p class="text-sm text-muted-foreground">Active surveys in your account</p>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <!-- Response Trends Chart -->
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Response Trends</h3>
-                <p class="card-description">Responses collected over time</p>
+    <div class="card">
+        <div class="card-content p-6">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-lg font-medium">Total Responses</h3>
+                <i class="icon-users text-primary"></i>
             </div>
-            <div class="card-content p-6">
-                <div id="responseTrendsChart" style="height: 300px;"></div>
-            </div>
-        </div>
-
-        <!-- Question Type Distribution Chart -->
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Question Types</h3>
-                <p class="card-description">Distribution of question types across surveys</p>
-            </div>
-            <div class="card-content p-6">
-                <div id="questionTypeChart" style="height: 300px;"></div>
-            </div>
+            <p class="text-3xl font-bold">@Model.TotalResponses</p>
+            <p class="text-sm text-muted-foreground">Responses collected</p>
         </div>
     </div>
 
-    <!-- Recent Surveys Table -->
-    <div class="card mb-8">
+    <div class="card">
+        <div class="card-content p-6">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-lg font-medium">Completion Rate</h3>
+                <i class="icon-percent text-primary"></i>
+            </div>
+            <p class="text-3xl font-bold">@Model.AverageCompletionRate.ToString("0.0")%</p>
+            <p class="text-sm text-muted-foreground">Average across all surveys</p>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+    <!-- Response Trends Chart -->
+    <div class="card">
         <div class="card-header">
-            <h3 class="card-title">Recent Surveys</h3>
-            <p class="card-description">Your most recently created surveys</p>
+            <h3 class="card-title">Response Trends</h3>
+            <p class="card-description">Responses collected over time</p>
         </div>
-        <div class="card-content p-0">
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead>
-                        <tr class="bg-muted/50">
-                            <th class="p-4 text-left">Title</th>
-                            <th class="p-4 text-left">Created</th>
-                            <th class="p-4 text-left">Responses</th>
-                            <th class="p-4 text-left">Completion Rate</th>
-                            <th class="p-4 text-left">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var survey in Model.RecentSurveys)
-                        {
-                            <tr class="border-t hover:bg-muted/20">
-                                <td class="p-4 font-medium">@survey.Title</td>
-                                <td class="p-4">@survey.CreatedAt.ToString("MMM d, yyyy")</td>
-                                <td class="p-4">@survey.Responses</td>
-                                <td class="p-4">@survey.CompletionRate%</td>
-                                <td class="p-4">
-                                    <a asp-controller="Survey" asp-action="Results" asp-route-id="@survey.Id" class="btn btn-sm btn-outline">
-                                        View Results
-                                    </a>
-                                </td>
-                            </tr>
-                        }
-                        @if (Model.RecentSurveys.Count == 0)
-                        {
-                            <tr class="border-t">
-                                <td colspan="5" class="p-4 text-center text-muted-foreground">
-                                    No surveys created yet
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+        <div class="card-content p-6">
+            <div id="responseTrendsChart" style="height: 300px;"></div>
         </div>
     </div>
 
-    <div class="text-center">
-        <form asp-controller="Analytics" asp-action="RefreshAnalytics" method="post">
-            <button type="submit" class="btn btn-outline">
-                <i class="icon-refresh-cw mr-2"></i> Refresh Analytics
-            </button>
-        </form>
+    <!-- Question Type Distribution Chart -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Question Types</h3>
+            <p class="card-description">Distribution of question types across surveys</p>
+        </div>
+        <div class="card-content p-6">
+            <div id="questionTypeChart" style="height: 300px;"></div>
+        </div>
     </div>
+</div>
+
+<!-- Recent Surveys Table -->
+<div class="card mb-8">
+    <div class="card-header">
+        <h3 class="card-title">Recent Surveys</h3>
+        <p class="card-description">Your most recently created surveys</p>
+    </div>
+    <div class="card-content p-0">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="bg-muted/50">
+                        <th class="p-4 text-left">Title</th>
+                        <th class="p-4 text-left">Created</th>
+                        <th class="p-4 text-left">Responses</th>
+                        <th class="p-4 text-left">Completion Rate</th>
+                        <th class="p-4 text-left">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var survey in Model.RecentSurveys)
+                    {
+                        <tr class="border-t hover:bg-muted/20">
+                            <td class="p-4 font-medium">@survey.Title</td>
+                            <td class="p-4">@survey.CreatedAt.ToString("MMM d, yyyy")</td>
+                            <td class="p-4">@survey.Responses</td>
+                            <td class="p-4">@survey.CompletionRate%</td>
+                            <td class="p-4">
+                                <a asp-controller="Survey" asp-action="Results" asp-route-id="@survey.Id" class="btn btn-sm btn-outline">
+                                    View Results
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                    @if (Model.RecentSurveys.Count == 0)
+                    {
+                        <tr class="border-t">
+                            <td colspan="5" class="p-4 text-center text-muted-foreground">
+                                No surveys created yet
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="text-center">
+    <form asp-controller="Analytics" asp-action="RefreshAnalytics" method="post">
+        <button type="submit" class="btn btn-outline">
+            <i class="icon-refresh-cw mr-2"></i> Refresh Analytics
+        </button>
+    </form>
 </div>
 
 @section Scripts {
