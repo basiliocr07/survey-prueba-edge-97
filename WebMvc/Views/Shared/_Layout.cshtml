@@ -108,42 +108,151 @@
         .border-primary {
             border-color: hsl(215, 25%, 27%);
         }
+        
+        /* Animaciones adaptadas del navbar de React */
+        .glass {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        
+        .nav-link {
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: hsl(215, 25%, 27%);
+            transform: scaleX(0);
+            transform-origin: right center;
+            transition: transform 0.3s ease;
+        }
+        
+        .nav-link:hover::after, 
+        .nav-link.active::after {
+            transform: scaleX(1);
+            transform-origin: left center;
+        }
+        
+        .nav-link-mobile {
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link-mobile:hover, 
+        .nav-link-mobile.active {
+            background-color: rgba(0, 0, 0, 0.05);
+            padding-left: 1rem;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        @keyframes slideDown {
+            from { transform: translateY(-10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        @keyframes pulseSlow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        
+        .animate-slide-up {
+            animation: slideUp 0.4s ease-out forwards;
+        }
+        
+        .animate-slide-down {
+            animation: slideDown 0.4s ease-out forwards;
+        }
+        
+        .animate-pulse-slow {
+            animation: pulseSlow 3s infinite;
+        }
+        
+        .animate-fade-out {
+            animation: fadeIn 0.3s ease-out forwards reverse;
+        }
+        
+        .mobile-menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 40;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        
+        .mobile-menu-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .mobile-menu {
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .mobile-menu.show {
+            transform: translateX(0);
+        }
     </style>
 </head>
 <body class="bg-background text-foreground font-sans min-h-screen flex flex-col">
     <header class="animate-fade-in">
-        <nav class="bg-white shadow-sm">
+        <nav class="bg-white shadow-sm fixed w-full top-0 z-50 transition-all duration-300">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between h-16">
                     <div class="flex">
                         <div class="flex-shrink-0 flex items-center">
-                            <a asp-controller="Home" asp-action="Index" class="text-2xl font-bold text-primary">
+                            <a asp-controller="Home" asp-action="Index" class="text-2xl font-bold text-primary transition-all duration-200 hover:opacity-80">
                                 <i class="fas fa-chart-bar mr-2"></i>SurveyApp
                             </a>
                         </div>
                         <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
-                            <a asp-controller="Home" asp-action="Index" class="border-primary text-primary inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors">
+                            <a asp-controller="Home" asp-action="Index" class="nav-link border-primary text-primary inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium @(ViewContext.RouteData.Values["Controller"].ToString() == "Home" ? "active" : "")">
                                 <i class="fas fa-home mr-1"></i> Home
                             </a>
-                            <a asp-controller="Survey" asp-action="Index" class="border-transparent text-secondary hover:border-primary hover:text-primary inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors">
+                            <a asp-controller="Survey" asp-action="Index" class="nav-link border-transparent text-secondary hover:text-primary inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium @(ViewContext.RouteData.Values["Controller"].ToString() == "Survey" ? "active" : "")">
                                 <i class="fas fa-file-alt mr-1"></i> Surveys
                             </a>
-                            <a asp-controller="Analytics" asp-action="Index" class="border-transparent text-secondary hover:border-primary hover:text-primary inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors">
+                            <a asp-controller="Analytics" asp-action="Index" class="nav-link border-transparent text-secondary hover:text-primary inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium @(ViewContext.RouteData.Values["Controller"].ToString() == "Analytics" ? "active" : "")">
                                 <i class="fas fa-chart-line mr-1"></i> Analytics
                             </a>
-                            <a asp-controller="Suggestions" asp-action="Index" class="border-transparent text-secondary hover:border-primary hover:text-primary inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors">
+                            <a asp-controller="Suggestions" asp-action="Index" class="nav-link border-transparent text-secondary hover:text-primary inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium @(ViewContext.RouteData.Values["Controller"].ToString() == "Suggestions" ? "active" : "")">
                                 <i class="fas fa-lightbulb mr-1"></i> Suggestions
                             </a>
-                            <a asp-controller="Customers" asp-action="Index" class="border-transparent text-secondary hover:border-primary hover:text-primary inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors">
+                            <a asp-controller="Customers" asp-action="Index" class="nav-link border-transparent text-secondary hover:text-primary inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium @(ViewContext.RouteData.Values["Controller"].ToString() == "Customers" ? "active" : "")">
                                 <i class="fas fa-users mr-1"></i> Customers
                             </a>
-                            <a asp-controller="KnowledgeBase" asp-action="Index" class="border-transparent text-secondary hover:border-primary hover:text-primary inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors">
+                            <a asp-controller="KnowledgeBase" asp-action="Index" class="nav-link border-transparent text-secondary hover:text-primary inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium @(ViewContext.RouteData.Values["Controller"].ToString() == "KnowledgeBase" ? "active" : "")">
                                 <i class="fas fa-book mr-1"></i> Knowledge Base
                             </a>
                         </div>
                     </div>
                     <div class="hidden sm:ml-6 sm:flex sm:items-center">
-                        <button type="button" class="bg-white p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors">
+                        <button type="button" class="bg-white p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors hover:scale-110">
                             <span class="sr-only">View notifications</span>
                             <i class="fas fa-bell"></i>
                         </button>
@@ -171,24 +280,24 @@
             </div>
 
             <!-- Mobile menu, show/hide based on menu state. -->
-            <div id="mobile-menu" class="sm:hidden hidden animate-slide-down">
+            <div id="mobile-menu" class="sm:hidden hidden mobile-menu">
                 <div class="pt-2 pb-3 space-y-1">
-                    <a asp-controller="Home" asp-action="Index" class="bg-primary/10 border-primary text-primary block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    <a asp-controller="Home" asp-action="Index" class="nav-link-mobile bg-primary/10 border-primary text-primary block pl-3 pr-4 py-2 border-l-4 text-base font-medium @(ViewContext.RouteData.Values["Controller"].ToString() == "Home" ? "active" : "")">
                         <i class="fas fa-home mr-1"></i> Home
                     </a>
-                    <a asp-controller="Survey" asp-action="Index" class="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors">
+                    <a asp-controller="Survey" asp-action="Index" class="nav-link-mobile border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors @(ViewContext.RouteData.Values["Controller"].ToString() == "Survey" ? "active" : "")">
                         <i class="fas fa-file-alt mr-1"></i> Surveys
                     </a>
-                    <a asp-controller="Analytics" asp-action="Index" class="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors">
+                    <a asp-controller="Analytics" asp-action="Index" class="nav-link-mobile border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors @(ViewContext.RouteData.Values["Controller"].ToString() == "Analytics" ? "active" : "")">
                         <i class="fas fa-chart-line mr-1"></i> Analytics
                     </a>
-                    <a asp-controller="Suggestions" asp-action="Index" class="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors">
+                    <a asp-controller="Suggestions" asp-action="Index" class="nav-link-mobile border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors @(ViewContext.RouteData.Values["Controller"].ToString() == "Suggestions" ? "active" : "")">
                         <i class="fas fa-lightbulb mr-1"></i> Suggestions
                     </a>
-                    <a asp-controller="Customers" asp-action="Index" class="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors">
+                    <a asp-controller="Customers" asp-action="Index" class="nav-link-mobile border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors @(ViewContext.RouteData.Values["Controller"].ToString() == "Customers" ? "active" : "")">
                         <i class="fas fa-users mr-1"></i> Customers
                     </a>
-                    <a asp-controller="KnowledgeBase" asp-action="Index" class="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors">
+                    <a asp-controller="KnowledgeBase" asp-action="Index" class="nav-link-mobile border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors @(ViewContext.RouteData.Values["Controller"].ToString() == "KnowledgeBase" ? "active" : "")">
                         <i class="fas fa-book mr-1"></i> Knowledge Base
                     </a>
                 </div>
@@ -196,7 +305,7 @@
         </nav>
     </header>
 
-    <main role="main" class="pb-3 flex-grow">
+    <main role="main" class="pb-3 flex-grow mt-16">
         @RenderBody()
     </main>
 
@@ -229,17 +338,54 @@
         // Mobile menu toggle with animation
         document.getElementById('mobile-menu-button').addEventListener('click', function() {
             const mobileMenu = document.getElementById('mobile-menu');
+            
             if (mobileMenu.classList.contains('hidden')) {
+                // Show the menu
                 mobileMenu.classList.remove('hidden');
+                
+                // Add overlay
+                const overlay = document.createElement('div');
+                overlay.className = 'mobile-menu-overlay';
+                document.body.appendChild(overlay);
+                
+                // Trigger animation
                 setTimeout(() => {
-                    mobileMenu.classList.add('animate-slide-down');
+                    mobileMenu.classList.add('show');
+                    overlay.classList.add('show');
                 }, 10);
+                
+                // Register click outside to close
+                overlay.addEventListener('click', closeMenu);
             } else {
-                mobileMenu.classList.add('animate-fade-out');
-                setTimeout(() => {
-                    mobileMenu.classList.add('hidden');
-                    mobileMenu.classList.remove('animate-fade-out');
-                }, 300);
+                closeMenu();
+            }
+            
+            function closeMenu() {
+                const mobileMenu = document.getElementById('mobile-menu');
+                const overlay = document.querySelector('.mobile-menu-overlay');
+                
+                if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+                    mobileMenu.classList.remove('show');
+                    if (overlay) overlay.classList.remove('show');
+                    
+                    // After animation completes
+                    setTimeout(() => {
+                        mobileMenu.classList.add('hidden');
+                        if (overlay) overlay.remove();
+                    }, 300);
+                }
+            }
+        });
+        
+        // Add scroll effect to navbar
+        window.addEventListener('scroll', function() {
+            const header = document.querySelector('header nav');
+            if (window.scrollY > 10) {
+                header.classList.add('glass');
+                header.classList.add('shadow');
+            } else {
+                header.classList.remove('glass');
+                header.classList.remove('shadow');
             }
         });
 

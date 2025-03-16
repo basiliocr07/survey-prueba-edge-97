@@ -53,7 +53,15 @@ namespace SurveyApp.WebMvc.Controllers
         public async Task<IActionResult> RefreshAnalytics()
         {
             await _analyticsService.RefreshAnalyticsDataAsync();
+            TempData["SuccessMessage"] = "Analytics data has been refreshed successfully.";
             return RedirectToAction(nameof(Index));
+        }
+        
+        [HttpGet]
+        public IActionResult AnimatedPartial()
+        {
+            // This method is for demonstrating animations with partial views
+            return PartialView("_AnimatedPartial");
         }
     }
 }
