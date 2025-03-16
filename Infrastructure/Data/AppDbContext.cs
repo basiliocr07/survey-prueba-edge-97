@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
@@ -19,6 +18,8 @@ namespace SurveyApp.Infrastructure.Data
         public DbSet<GrowthMetric> GrowthMetrics { get; set; }
         public DbSet<Suggestion> Suggestions { get; set; }
         public DbSet<KnowledgeBaseItem> KnowledgeBaseItems { get; set; }
+        public DbSet<AnalyticsData> AnalyticsData { get; set; }
+        public DbSet<SurveyResponseStats> ResponseTrends { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -126,6 +127,33 @@ namespace SurveyApp.Infrastructure.Data
                     v => JsonSerializer.Serialize(v, new JsonSerializerOptions()),
                     v => JsonSerializer.Deserialize<List<string>>(v, new JsonSerializerOptions())
                 );
+            });
+
+            // Configure AnalyticsData entity
+            modelBuilder.Entity<AnalyticsData>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.TotalSurveys);
+                entity.Property(e => e.TotalResponses);
+                entity.Property(e => e.AverageCompletionRate);
+                
+                entity.Property(e => e.QuestionTypeDistribution).HasConversion(
+                    v => JsonSerializer.Serialize(v, new JsonSerializerOptions()),
+                    v => JsonSerializer.Deserialize<Dictionary<string, int>>(v, new JsonSerializerOptions()) ?? new Dictionary<string, int>()
+                );
+                
+                entity.HasMany(e => e.ResponseTrends)
+                      .WithOne()
+                      .HasForeignKey("AnalyticsDataId")
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configure SurveyResponseStats entity
+            modelBuilder.Entity<SurveyResponseStats>(entity =>
+            {
+                entity.HasKey(e => e.Date);
+                entity.Property(e => e.Date).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.Responses);
             });
         }
     }

@@ -1,4 +1,3 @@
-
 using System;
 using System.Net;
 using System.Net.Mail;
@@ -100,6 +99,98 @@ namespace SurveyApp.Infrastructure.Services
                     await client.SendMailAsync(message);
                     _logger.LogInformation("Email sent successfully to {Email} for survey '{SurveyTitle}'", 
                         toEmail, surveyTitle);
+                }
+            }
+            catch (SmtpException ex)
+            {
+                _logger.LogError(ex, "SMTP error sending email to {Email}: {ErrorCode}, {Message}", 
+                    toEmail, ex.StatusCode, ex.Message);
+                throw new InvalidOperationException($"SMTP error sending email: {ex.Message}", ex);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending email to {Email}: {ErrorMessage}", toEmail, ex.Message);
+                throw;
+            }
+        }
+
+        public async Task SendEmailAsync(string toEmail, string subject, string body)
+        {
+            if (string.IsNullOrWhiteSpace(toEmail))
+            {
+                _logger.LogError("Cannot send email: Recipient email is null or empty");
+                throw new ArgumentException("Recipient email cannot be null or empty", nameof(toEmail));
+            }
+
+            if (string.IsNullOrWhiteSpace(subject))
+            {
+                _logger.LogError("Cannot send email: Subject is null or empty");
+                throw new ArgumentException("Subject cannot be null or empty", nameof(subject));
+            }
+
+            if (string.IsNullOrWhiteSpace(body))
+            {
+                _logger.LogError("Cannot send email: Body is null or empty");
+                throw new ArgumentException("Body cannot be null or empty", nameof(body));
+            }
+
+            _logger.LogInformation("Preparing to send email to {Email} with subject: {Subject}", 
+                toEmail, subject);
+                
+            try
+            {
+                // Verificar la configuración de SMTP
+                if (string.IsNullOrWhiteSpace(_emailSettings.SmtpServer))
+                {
+                    _logger.LogError("SMTP server is not configured");
+                    throw new InvalidOperationException("SMTP server is not configured");
+                }
+                
+                if (string.IsNullOrWhiteSpace(_emailSettings.SenderEmail))
+                {
+                    _logger.LogError("Sender email is not configured");
+                    throw new InvalidOperationException("Sender email is not configured");
+                }
+
+                // Crear el mensaje con los datos proporcionados
+                var message = new MailMessage
+                {
+                    From = new MailAddress(_emailSettings.SenderEmail, _emailSettings.SenderName ?? "Survey System"),
+                    Subject = subject,
+                    Body = body,
+                    IsBodyHtml = true
+                };
+                
+                message.To.Add(new MailAddress(toEmail));
+
+                _logger.LogDebug("Email message created with subject: {Subject}", message.Subject);
+
+                // Configurar el cliente SMTP
+                using (var client = new SmtpClient(_emailSettings.SmtpServer, _emailSettings.SmtpPort))
+                {
+                    _logger.LogDebug("Configuring SMTP client with SSL: {EnableSsl}", _emailSettings.EnableSsl);
+                    
+                    client.EnableSsl = _emailSettings.EnableSsl;
+                    
+                    // Verificar credenciales
+                    if (string.IsNullOrWhiteSpace(_emailSettings.Username) || string.IsNullOrWhiteSpace(_emailSettings.Password))
+                    {
+                        _logger.LogWarning("SMTP username or password is not configured, attempting to send without authentication");
+                    }
+                    else
+                    {
+                        client.Credentials = new NetworkCredential(_emailSettings.Username, _emailSettings.Password);
+                    }
+                    
+                    client.DeliveryMethod = SmtpDeliveryMethod.Network;
+
+                    // Enviar el correo electrónico
+                    _logger.LogInformation("Sending email to {Email} through SMTP server {SmtpServer}:{SmtpPort}", 
+                        toEmail, _emailSettings.SmtpServer, _emailSettings.SmtpPort);
+                        
+                    await client.SendMailAsync(message);
+                    _logger.LogInformation("Email sent successfully to {Email} with subject '{Subject}'", 
+                        toEmail, subject);
                 }
             }
             catch (SmtpException ex)

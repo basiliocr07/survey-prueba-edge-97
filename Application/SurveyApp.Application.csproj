@@ -11,4 +11,8 @@
     <ProjectReference Include="..\Domain\SurveyApp.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.0" />
+  </ItemGroup>
+
 </Project>
