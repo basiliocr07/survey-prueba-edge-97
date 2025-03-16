@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 
@@ -11,7 +10,8 @@ namespace SurveyApp.Application.DTOs
         public string Description { get; set; }
         public List<QuestionDto> Questions { get; set; }
         public DateTime CreatedAt { get; set; }
-        public int Responses { get; set; }
+        public bool IsActive { get; set; } = true;
+        public int ResponseCount { get; set; }
         public int CompletionRate { get; set; }
         public DeliveryConfigDto DeliveryConfig { get; set; }
     }
