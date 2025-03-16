@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Application.Services;
 using SurveyApp.WebMvc.Models;
 using System.Linq;
+using System;
 
 namespace SurveyApp.WebMvc.Controllers
 {
@@ -52,6 +53,8 @@ namespace SurveyApp.WebMvc.Controllers
         [HttpPost]
         public async Task<IActionResult> RefreshAnalytics()
         {
+            // Add a small delay to make the animation more noticeable (similar to React)
+            await Task.Delay(TimeSpan.FromMilliseconds(800));
             await _analyticsService.RefreshAnalyticsDataAsync();
             TempData["SuccessMessage"] = "Analytics data has been refreshed successfully.";
             return RedirectToAction(nameof(Index));
