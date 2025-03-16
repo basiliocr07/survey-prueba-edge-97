@@ -19,7 +19,7 @@ namespace SurveyApp.Infrastructure.Data
         public DbSet<Suggestion> Suggestions { get; set; }
         public DbSet<KnowledgeBaseItem> KnowledgeBaseItems { get; set; }
         public DbSet<AnalyticsData> AnalyticsData { get; set; }
-        public DbSet<SurveyResponseStats> ResponseTrends { get; set; }
+        public DbSet<SurveyResponseTrend> ResponseTrends { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -148,8 +148,8 @@ namespace SurveyApp.Infrastructure.Data
                       .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // Configure SurveyResponseStats entity
-            modelBuilder.Entity<SurveyResponseStats>(entity =>
+            // Configure SurveyResponseTrend entity
+            modelBuilder.Entity<SurveyResponseTrend>(entity =>
             {
                 entity.HasKey(e => e.Date);
                 entity.Property(e => e.Date).IsRequired().HasMaxLength(20);

@@ -35,10 +35,4 @@ namespace SurveyApp.Domain.Entities
             ResponseTrends.Add(trend);
         }
     }
-
-    public class SurveyResponseTrend
-    {
-        public string Date { get; set; }
-        public int Responses { get; set; }
-    }
 }

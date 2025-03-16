@@ -34,8 +34,12 @@ namespace SurveyApp.Infrastructure.Repositories
                 _dbContext.Entry(existingData).CurrentValues.SetValues(analyticsData);
 
                 // Update ResponseTrends
-                _dbContext.ResponseTrends.RemoveRange(existingData.ResponseTrends);
-                existingData.ResponseTrends.Clear();
+                var existingTrends = await _dbContext.ResponseTrends
+                    .Where(rt => EF.Property<Guid>(rt, "AnalyticsDataId") == existingData.Id)
+                    .ToListAsync();
+                
+                _dbContext.ResponseTrends.RemoveRange(existingTrends);
+                
                 foreach (var trend in analyticsData.ResponseTrends)
                 {
                     existingData.AddResponseTrend(trend);
