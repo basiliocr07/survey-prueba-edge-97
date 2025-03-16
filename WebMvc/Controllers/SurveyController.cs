@@ -7,6 +7,7 @@ using SurveyApp.Application.Services;
 using SurveyApp.WebMvc.Models;
 using System.Net.Mail;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SurveyApp.WebMvc.Controllers
 {
@@ -30,15 +31,46 @@ namespace SurveyApp.WebMvc.Controllers
             
             try
             {
-                var surveys = await _surveyService.GetAllSurveysAsync();
-                _logger.LogInformation("Retrieved {Count} surveys for Index view", surveys.Count);
-                return View(surveys);
+                var surveyDtos = await _surveyService.GetAllSurveysAsync();
+                _logger.LogInformation("Retrieved {Count} surveys for Index view", surveyDtos.Count);
+                
+                // Convert DTOs to ViewModels
+                var viewModels = surveyDtos.Select(dto => new SurveyViewModel
+                {
+                    Id = dto.Id,
+                    Title = dto.Title,
+                    Description = dto.Description,
+                    CreatedAt = dto.CreatedAt,
+                    Responses = dto.Responses,
+                    CompletionRate = dto.CompletionRate,
+                    DeliveryConfig = new DeliveryConfigViewModel
+                    {
+                        Type = dto.DeliveryConfig?.Type,
+                        EmailAddresses = dto.DeliveryConfig?.EmailAddresses?.ToList() ?? new List<string>(),
+                        Schedule = dto.DeliveryConfig?.Schedule != null ? new ScheduleViewModel
+                        {
+                            Frequency = dto.DeliveryConfig.Schedule.Frequency,
+                            DayOfMonth = dto.DeliveryConfig.Schedule.DayOfMonth ?? 1,
+                            DayOfWeek = dto.DeliveryConfig.Schedule.DayOfWeek,
+                            Time = dto.DeliveryConfig.Schedule.Time,
+                            StartDate = dto.DeliveryConfig.Schedule.StartDate
+                        } : new ScheduleViewModel(),
+                        Trigger = dto.DeliveryConfig?.Trigger != null ? new TriggerViewModel
+                        {
+                            Type = dto.DeliveryConfig.Trigger.Type,
+                            DelayHours = dto.DeliveryConfig.Trigger.DelayHours,
+                            SendAutomatically = dto.DeliveryConfig.Trigger.SendAutomatically
+                        } : new TriggerViewModel()
+                    }
+                }).ToList();
+                
+                return View(viewModels);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving surveys for Index view: {ErrorMessage}", ex.Message);
                 TempData["ErrorMessage"] = "Error retrieving surveys. Please try again later.";
-                return View(new List<SurveyDto>());
+                return View(new List<SurveyViewModel>());
             }
         }
 
