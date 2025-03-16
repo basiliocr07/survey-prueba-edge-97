@@ -291,6 +291,24 @@ namespace SurveyApp.WebMvc.Controllers
             }
         }
 
+        // POST: /Survey/SendOnTicketClosed
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SendOnTicketClosed(string customerEmail, Guid? surveyId = null)
+        {
+            try
+            {
+                await _surveyService.SendSurveyOnTicketClosedAsync(customerEmail, surveyId);
+                TempData["SuccessMessage"] = "Survey email sent on ticket closed event!";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error sending survey email: {ex.Message}";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
         // Ajax action to add question form
         [HttpGet]
         public IActionResult AddQuestion(int index)

@@ -61,6 +61,15 @@ namespace SurveyApp.Application.Services
             }
 
             var createdSurvey = await _surveyRepository.CreateAsync(survey);
+            
+            // Si la encuesta está configurada para envío automático mensual, programar envío
+            if (createSurveyDto.DeliveryConfig?.Type == "Scheduled" && 
+                createSurveyDto.DeliveryConfig?.Schedule?.Frequency == "monthly" &&
+                createSurveyDto.DeliveryConfig?.EmailAddresses.Count > 0)
+            {
+                await SendSurveyEmailsAsync(createdSurvey.Id);
+            }
+            
             return MapToDto(createdSurvey);
         }
 
@@ -129,6 +138,45 @@ namespace SurveyApp.Application.Services
             foreach (var email in survey.DeliveryConfig.EmailAddresses)
             {
                 await _emailService.SendSurveyInvitationAsync(email, survey.Title, surveyLink);
+            }
+        }
+
+        // Nuevo método para enviar encuestas automáticamente cuando se cierra un ticket
+        public async Task SendSurveyOnTicketClosedAsync(string customerEmail, Guid? specificSurveyId = null)
+        {
+            if (string.IsNullOrEmpty(customerEmail))
+                throw new ArgumentException("El correo del cliente es requerido");
+                
+            List<Survey> surveysToSend;
+            
+            if (specificSurveyId.HasValue)
+            {
+                // Si se especifica una encuesta, enviar solo esa
+                var survey = await _surveyRepository.GetByIdAsync(specificSurveyId.Value);
+                if (survey == null)
+                    throw new KeyNotFoundException($"No se encontró la encuesta con ID {specificSurveyId}");
+                    
+                surveysToSend = new List<Survey> { survey };
+            }
+            else
+            {
+                // Obtener todas las encuestas configuradas para envío automático con trigger "ticket-closed"
+                var allSurveys = await _surveyRepository.GetAllAsync();
+                surveysToSend = allSurveys
+                    .Where(s => s.DeliveryConfig.Type == DeliveryType.Triggered && 
+                           s.DeliveryConfig.Trigger.Type == "ticket-closed" &&
+                           s.DeliveryConfig.Trigger.SendAutomatically)
+                    .ToList();
+            }
+            
+            if (!surveysToSend.Any())
+                return;
+                
+            // Enviar cada encuesta relevante al cliente
+            foreach (var survey in surveysToSend)
+            {
+                var surveyLink = $"https://yoursurveyapp.com/survey/{survey.Id}";
+                await _emailService.SendSurveyInvitationAsync(customerEmail, survey.Title, surveyLink);
             }
         }
 
