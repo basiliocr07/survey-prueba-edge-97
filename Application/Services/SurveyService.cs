@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -178,6 +177,21 @@ namespace SurveyApp.Application.Services
                 var surveyLink = $"https://yoursurveyapp.com/survey/{survey.Id}";
                 await _emailService.SendSurveyInvitationAsync(customerEmail, survey.Title, surveyLink);
             }
+        }
+
+        // New method to send a test survey email
+        public async Task SendTestSurveyEmailAsync(string email, Guid surveyId)
+        {
+            if (string.IsNullOrEmpty(email))
+                throw new ArgumentException("Email address is required");
+                
+            var survey = await _surveyRepository.GetByIdAsync(surveyId);
+            
+            if (survey == null)
+                throw new KeyNotFoundException($"Survey with ID {surveyId} not found.");
+                
+            var surveyLink = $"https://yoursurveyapp.com/survey/{survey.Id}";
+            await _emailService.SendSurveyInvitationAsync(email, survey.Title, surveyLink);
         }
 
         // Helper methods for mapping between DTOs and domain entities

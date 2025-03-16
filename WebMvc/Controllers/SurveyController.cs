@@ -309,6 +309,28 @@ namespace SurveyApp.WebMvc.Controllers
             }
         }
 
+        // POST: /Survey/SendTestEmail
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SendTestEmail(Guid id, string email)
+        {
+            try
+            {
+                await _surveyService.SendTestSurveyEmailAsync(email, id);
+                TempData["SuccessMessage"] = $"Test survey email sent to {email} successfully!";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error sending test email: {ex.Message}";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+        }
+
         // Ajax action to add question form
         [HttpGet]
         public IActionResult AddQuestion(int index)

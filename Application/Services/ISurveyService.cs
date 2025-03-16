@@ -15,5 +15,6 @@ namespace SurveyApp.Application.Services
         Task DeleteSurveyAsync(Guid id);
         Task SendSurveyEmailsAsync(Guid id);
         Task SendSurveyOnTicketClosedAsync(string customerEmail, Guid? specificSurveyId = null);
+        Task SendTestSurveyEmailAsync(string email, Guid surveyId);
     }
 }
