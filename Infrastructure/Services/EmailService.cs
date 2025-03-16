@@ -16,18 +16,55 @@ namespace SurveyApp.Infrastructure.Services
 
         public EmailService(ILogger<EmailService> logger, IOptions<EmailSettings> emailSettings)
         {
-            _logger = logger;
-            _emailSettings = emailSettings.Value;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _emailSettings = emailSettings?.Value ?? throw new ArgumentNullException(nameof(emailSettings));
+            
+            _logger.LogInformation("EmailService initialized with SMTP server: {SmtpServer}:{SmtpPort}, Sender: {SenderEmail}",
+                _emailSettings.SmtpServer, _emailSettings.SmtpPort, _emailSettings.SenderEmail);
         }
 
         public async Task SendSurveyInvitationAsync(string toEmail, string surveyTitle, string surveyLink)
         {
+            if (string.IsNullOrWhiteSpace(toEmail))
+            {
+                _logger.LogError("Cannot send email: Recipient email is null or empty");
+                throw new ArgumentException("Recipient email cannot be null or empty", nameof(toEmail));
+            }
+
+            if (string.IsNullOrWhiteSpace(surveyTitle))
+            {
+                _logger.LogError("Cannot send email: Survey title is null or empty");
+                throw new ArgumentException("Survey title cannot be null or empty", nameof(surveyTitle));
+            }
+
+            if (string.IsNullOrWhiteSpace(surveyLink))
+            {
+                _logger.LogError("Cannot send email: Survey link is null or empty");
+                throw new ArgumentException("Survey link cannot be null or empty", nameof(surveyLink));
+            }
+
+            _logger.LogInformation("Preparing to send survey invitation email to {Email} for survey: {SurveyTitle}", 
+                toEmail, surveyTitle);
+                
             try
             {
+                // Verificar la configuración de SMTP
+                if (string.IsNullOrWhiteSpace(_emailSettings.SmtpServer))
+                {
+                    _logger.LogError("SMTP server is not configured");
+                    throw new InvalidOperationException("SMTP server is not configured");
+                }
+                
+                if (string.IsNullOrWhiteSpace(_emailSettings.SenderEmail))
+                {
+                    _logger.LogError("Sender email is not configured");
+                    throw new InvalidOperationException("Sender email is not configured");
+                }
+
                 // Crear el mensaje con los datos proporcionados
                 var message = new MailMessage
                 {
-                    From = new MailAddress(_emailSettings.SenderEmail, _emailSettings.SenderName),
+                    From = new MailAddress(_emailSettings.SenderEmail, _emailSettings.SenderName ?? "Survey System"),
                     Subject = $"Invitación para responder encuesta: {surveyTitle}",
                     Body = GetEmailTemplate(toEmail, surveyTitle, surveyLink),
                     IsBodyHtml = true
@@ -35,27 +72,54 @@ namespace SurveyApp.Infrastructure.Services
                 
                 message.To.Add(new MailAddress(toEmail));
 
+                _logger.LogDebug("Email message created with subject: {Subject}", message.Subject);
+
                 // Configurar el cliente SMTP
                 using (var client = new SmtpClient(_emailSettings.SmtpServer, _emailSettings.SmtpPort))
                 {
+                    _logger.LogDebug("Configuring SMTP client with SSL: {EnableSsl}", _emailSettings.EnableSsl);
+                    
                     client.EnableSsl = _emailSettings.EnableSsl;
-                    client.Credentials = new NetworkCredential(_emailSettings.Username, _emailSettings.Password);
+                    
+                    // Verificar credenciales
+                    if (string.IsNullOrWhiteSpace(_emailSettings.Username) || string.IsNullOrWhiteSpace(_emailSettings.Password))
+                    {
+                        _logger.LogWarning("SMTP username or password is not configured, attempting to send without authentication");
+                    }
+                    else
+                    {
+                        client.Credentials = new NetworkCredential(_emailSettings.Username, _emailSettings.Password);
+                    }
+                    
                     client.DeliveryMethod = SmtpDeliveryMethod.Network;
 
                     // Enviar el correo electrónico
+                    _logger.LogInformation("Sending email to {Email} through SMTP server {SmtpServer}:{SmtpPort}", 
+                        toEmail, _emailSettings.SmtpServer, _emailSettings.SmtpPort);
+                        
                     await client.SendMailAsync(message);
-                    _logger.LogInformation($"Correo enviado exitosamente a {toEmail} para la encuesta '{surveyTitle}'");
+                    _logger.LogInformation("Email sent successfully to {Email} for survey '{SurveyTitle}'", 
+                        toEmail, surveyTitle);
                 }
+            }
+            catch (SmtpException ex)
+            {
+                _logger.LogError(ex, "SMTP error sending email to {Email}: {ErrorCode}, {Message}", 
+                    toEmail, ex.StatusCode, ex.Message);
+                throw new InvalidOperationException($"SMTP error sending email: {ex.Message}", ex);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error al enviar correo a {toEmail}: {ex.Message}");
+                _logger.LogError(ex, "Error sending email to {Email}: {ErrorMessage}", toEmail, ex.Message);
                 throw;
             }
         }
 
         private string GetEmailTemplate(string toEmail, string surveyTitle, string surveyLink)
         {
+            _logger.LogDebug("Generating email template for recipient {Email}, survey: {SurveyTitle}", 
+                toEmail, surveyTitle);
+                
             return $@"
             <!DOCTYPE html>
             <html>

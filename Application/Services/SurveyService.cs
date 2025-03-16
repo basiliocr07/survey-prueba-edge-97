@@ -26,10 +26,14 @@ namespace SurveyApp.Application.Services
             _surveyRepository = surveyRepository ?? throw new ArgumentNullException(nameof(surveyRepository));
             _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            
+            _logger.LogInformation("SurveyService initialized with repository and email service");
         }
 
         public async Task<SurveyDto> GetSurveyByIdAsync(Guid id)
         {
+            _logger.LogInformation("GetSurveyByIdAsync called with ID: {SurveyId}", id);
+            
             var survey = await _surveyRepository.GetByIdAsync(id);
             
             if (survey == null)
@@ -38,278 +42,409 @@ namespace SurveyApp.Application.Services
                 throw new KeyNotFoundException($"Survey with ID {id} not found.");
             }
             
+            _logger.LogInformation("Survey found: {SurveyTitle}", survey.Title);
             return MapToDto(survey);
         }
 
         public async Task<List<SurveyDto>> GetAllSurveysAsync()
         {
+            _logger.LogInformation("GetAllSurveysAsync called");
+            
             var surveys = await _surveyRepository.GetAllAsync();
+            
+            _logger.LogInformation("Retrieved {Count} surveys", surveys.Count);
             return surveys.Select(MapToDto).ToList();
         }
 
         public async Task<SurveyDto> CreateSurveyAsync(CreateSurveyDto createSurveyDto)
         {
+            _logger.LogInformation("CreateSurveyAsync called with title: {Title}", createSurveyDto?.Title);
+            
             if (createSurveyDto == null)
             {
+                _logger.LogError("CreateSurveyDto is null");
                 throw new ArgumentNullException(nameof(createSurveyDto));
             }
             
-            ValidateSurveyDto(createSurveyDto);
-
-            var survey = new Survey(createSurveyDto.Title, createSurveyDto.Description);
-
-            foreach (var questionDto in createSurveyDto.Questions)
+            try
             {
-                var questionType = Enum.Parse<QuestionType>(questionDto.Type, true);
-                var question = new Question(questionDto.Title, questionType, questionDto.Required);
+                ValidateSurveyDto(createSurveyDto);
+                
+                _logger.LogInformation("Creating survey with {QuestionCount} questions", 
+                    createSurveyDto.Questions?.Count ?? 0);
 
-                if (!string.IsNullOrEmpty(questionDto.Description))
+                var survey = new Survey(createSurveyDto.Title, createSurveyDto.Description);
+
+                foreach (var questionDto in createSurveyDto.Questions)
                 {
-                    question.UpdateDescription(questionDto.Description);
+                    _logger.LogDebug("Processing question: {QuestionTitle}, Type: {QuestionType}", 
+                        questionDto.Title, questionDto.Type);
+                        
+                    var questionType = Enum.Parse<QuestionType>(questionDto.Type, true);
+                    var question = new Question(questionDto.Title, questionType, questionDto.Required);
+
+                    if (!string.IsNullOrEmpty(questionDto.Description))
+                    {
+                        question.UpdateDescription(questionDto.Description);
+                    }
+
+                    if (questionDto.Options != null && questionDto.Options.Any())
+                    {
+                        _logger.LogDebug("Setting {OptionCount} options for question", questionDto.Options.Count);
+                        question.SetOptions(questionDto.Options);
+                    }
+
+                    survey.AddQuestion(question);
                 }
 
-                if (questionDto.Options != null && questionDto.Options.Any())
+                if (createSurveyDto.DeliveryConfig != null)
                 {
-                    question.SetOptions(questionDto.Options);
+                    _logger.LogInformation("Setting delivery config, Type: {DeliveryType}", 
+                        createSurveyDto.DeliveryConfig.Type);
+                        
+                    var deliveryConfig = MapToDeliveryConfig(createSurveyDto.DeliveryConfig);
+                    survey.SetDeliveryConfig(deliveryConfig);
                 }
 
-                survey.AddQuestion(question);
+                var createdSurvey = await _surveyRepository.CreateAsync(survey);
+                _logger.LogInformation("Survey created successfully with ID: {SurveyId}", createdSurvey.Id);
+                
+                // Auto-send for scheduled monthly surveys
+                if (ShouldSendSurveyAutomatically(createSurveyDto.DeliveryConfig))
+                {
+                    try
+                    {
+                        _logger.LogInformation("Attempting to automatically send monthly survey {SurveyId}", 
+                            createdSurvey.Id);
+                            
+                        await SendSurveyEmailsAsync(createdSurvey.Id);
+                        _logger.LogInformation("Automatically sent monthly survey {SurveyId}", createdSurvey.Id);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to automatically send monthly survey {SurveyId}: {ErrorMessage}", 
+                            createdSurvey.Id, ex.Message);
+                        // Continue with survey creation even if email sending fails
+                    }
+                }
+                
+                return MapToDto(createdSurvey);
             }
-
-            if (createSurveyDto.DeliveryConfig != null)
+            catch (Exception ex)
             {
-                var deliveryConfig = MapToDeliveryConfig(createSurveyDto.DeliveryConfig);
-                survey.SetDeliveryConfig(deliveryConfig);
+                _logger.LogError(ex, "Error creating survey: {ErrorMessage}", ex.Message);
+                throw;
             }
-
-            var createdSurvey = await _surveyRepository.CreateAsync(survey);
-            
-            // Auto-send for scheduled monthly surveys
-            if (ShouldSendSurveyAutomatically(createSurveyDto.DeliveryConfig))
-            {
-                try
-                {
-                    await SendSurveyEmailsAsync(createdSurvey.Id);
-                    _logger.LogInformation("Automatically sent monthly survey {SurveyId}", createdSurvey.Id);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to automatically send monthly survey {SurveyId}", createdSurvey.Id);
-                    // Continue with survey creation even if email sending fails
-                }
-            }
-            
-            return MapToDto(createdSurvey);
         }
 
         public async Task UpdateSurveyAsync(Guid id, CreateSurveyDto updateSurveyDto)
         {
+            _logger.LogInformation("UpdateSurveyAsync called for ID: {SurveyId}", id);
+            
             if (updateSurveyDto == null)
             {
+                _logger.LogError("UpdateSurveyDto is null");
                 throw new ArgumentNullException(nameof(updateSurveyDto));
             }
             
-            ValidateSurveyDto(updateSurveyDto);
-            
-            var survey = await _surveyRepository.GetByIdAsync(id);
-            
-            if (survey == null)
+            try
             {
-                _logger.LogWarning("Survey with ID {SurveyId} not found during update", id);
-                throw new KeyNotFoundException($"Survey with ID {id} not found.");
-            }
-
-            survey.UpdateTitle(updateSurveyDto.Title);
-            survey.UpdateDescription(updateSurveyDto.Description);
-            
-            // Clear existing questions and add new ones
-            survey.Questions.Clear();
-            foreach (var questionDto in updateSurveyDto.Questions)
-            {
-                var questionType = Enum.Parse<QuestionType>(questionDto.Type, true);
-                var question = new Question(questionDto.Title, questionType, questionDto.Required);
-
-                if (!string.IsNullOrEmpty(questionDto.Description))
+                ValidateSurveyDto(updateSurveyDto);
+                
+                var survey = await _surveyRepository.GetByIdAsync(id);
+                
+                if (survey == null)
                 {
-                    question.UpdateDescription(questionDto.Description);
+                    _logger.LogWarning("Survey with ID {SurveyId} not found during update", id);
+                    throw new KeyNotFoundException($"Survey with ID {id} not found.");
                 }
 
-                if (questionDto.Options != null && questionDto.Options.Any())
+                _logger.LogInformation("Updating survey: {SurveyTitle} with {QuestionCount} questions", 
+                    updateSurveyDto.Title, updateSurveyDto.Questions?.Count ?? 0);
+                    
+                survey.UpdateTitle(updateSurveyDto.Title);
+                survey.UpdateDescription(updateSurveyDto.Description);
+                
+                // Clear existing questions and add new ones
+                survey.Questions.Clear();
+                foreach (var questionDto in updateSurveyDto.Questions)
                 {
-                    question.SetOptions(questionDto.Options);
+                    _logger.LogDebug("Processing question: {QuestionTitle}, Type: {QuestionType}", 
+                        questionDto.Title, questionDto.Type);
+                        
+                    var questionType = Enum.Parse<QuestionType>(questionDto.Type, true);
+                    var question = new Question(questionDto.Title, questionType, questionDto.Required);
+
+                    if (!string.IsNullOrEmpty(questionDto.Description))
+                    {
+                        question.UpdateDescription(questionDto.Description);
+                    }
+
+                    if (questionDto.Options != null && questionDto.Options.Any())
+                    {
+                        _logger.LogDebug("Setting {OptionCount} options for question", questionDto.Options.Count);
+                        question.SetOptions(questionDto.Options);
+                    }
+
+                    survey.AddQuestion(question);
                 }
 
-                survey.AddQuestion(question);
-            }
+                if (updateSurveyDto.DeliveryConfig != null)
+                {
+                    _logger.LogInformation("Updating delivery config, Type: {DeliveryType}", 
+                        updateSurveyDto.DeliveryConfig.Type);
+                        
+                    var deliveryConfig = MapToDeliveryConfig(updateSurveyDto.DeliveryConfig);
+                    survey.SetDeliveryConfig(deliveryConfig);
+                }
 
-            if (updateSurveyDto.DeliveryConfig != null)
+                await _surveyRepository.UpdateAsync(survey);
+                _logger.LogInformation("Successfully updated survey {SurveyId}", id);
+            }
+            catch (Exception ex)
             {
-                var deliveryConfig = MapToDeliveryConfig(updateSurveyDto.DeliveryConfig);
-                survey.SetDeliveryConfig(deliveryConfig);
+                _logger.LogError(ex, "Error updating survey {SurveyId}: {ErrorMessage}", id, ex.Message);
+                throw;
             }
-
-            await _surveyRepository.UpdateAsync(survey);
-            _logger.LogInformation("Updated survey {SurveyId}", id);
         }
 
         public async Task DeleteSurveyAsync(Guid id)
         {
-            if (!await _surveyRepository.ExistsAsync(id))
-            {
-                _logger.LogWarning("Survey with ID {SurveyId} not found during deletion", id);
-                throw new KeyNotFoundException($"Survey with ID {id} not found.");
-            }
+            _logger.LogInformation("DeleteSurveyAsync called for ID: {SurveyId}", id);
             
-            await _surveyRepository.DeleteAsync(id);
-            _logger.LogInformation("Deleted survey {SurveyId}", id);
+            try
+            {
+                if (!await _surveyRepository.ExistsAsync(id))
+                {
+                    _logger.LogWarning("Survey with ID {SurveyId} not found during deletion", id);
+                    throw new KeyNotFoundException($"Survey with ID {id} not found.");
+                }
+                
+                await _surveyRepository.DeleteAsync(id);
+                _logger.LogInformation("Successfully deleted survey {SurveyId}", id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting survey {SurveyId}: {ErrorMessage}", id, ex.Message);
+                throw;
+            }
         }
 
         public async Task SendSurveyEmailsAsync(Guid id)
         {
-            var survey = await _surveyRepository.GetByIdAsync(id);
+            _logger.LogInformation("SendSurveyEmailsAsync called for ID: {SurveyId}", id);
             
-            if (survey == null)
+            try
             {
-                _logger.LogWarning("Survey with ID {SurveyId} not found when sending emails", id);
-                throw new KeyNotFoundException($"Survey with ID {id} not found.");
-            }
-
-            if (survey.DeliveryConfig.EmailAddresses.Count == 0)
-            {
-                _logger.LogWarning("No email recipients specified for survey {SurveyId}", id);
-                throw new InvalidOperationException("No email recipients specified.");
-            }
-
-            var invalidEmails = survey.DeliveryConfig.EmailAddresses
-                .Where(email => !IsValidEmail(email))
-                .ToList();
+                var survey = await _surveyRepository.GetByIdAsync(id);
                 
-            if (invalidEmails.Any())
-            {
-                throw new InvalidOperationException($"The following email addresses are invalid: {string.Join(", ", invalidEmails)}");
-            }
+                if (survey == null)
+                {
+                    _logger.LogWarning("Survey with ID {SurveyId} not found when sending emails", id);
+                    throw new KeyNotFoundException($"Survey with ID {id} not found.");
+                }
 
-            var surveyLink = $"{BASE_SURVEY_URL}{survey.Id}";
-            int successCount = 0;
-            
-            foreach (var email in survey.DeliveryConfig.EmailAddresses)
-            {
-                try
+                if (survey.DeliveryConfig.EmailAddresses == null)
                 {
-                    await _emailService.SendSurveyInvitationAsync(email, survey.Title, surveyLink);
-                    successCount++;
+                    _logger.LogError("EmailAddresses list is null for survey {SurveyId}", id);
+                    throw new InvalidOperationException("Email addresses list is null.");
                 }
-                catch (Exception ex)
+
+                if (survey.DeliveryConfig.EmailAddresses.Count == 0)
                 {
-                    _logger.LogError(ex, "Failed to send survey {SurveyId} to email {Email}", id, email);
-                    // Continue with other emails even if one fails
+                    _logger.LogWarning("No email recipients specified for survey {SurveyId}", id);
+                    throw new InvalidOperationException("No email recipients specified.");
                 }
+
+                _logger.LogInformation("Preparing to send survey {SurveyId} to {RecipientCount} recipients", 
+                    id, survey.DeliveryConfig.EmailAddresses.Count);
+                    
+                var invalidEmails = survey.DeliveryConfig.EmailAddresses
+                    .Where(email => !IsValidEmail(email))
+                    .ToList();
+                    
+                if (invalidEmails.Any())
+                {
+                    _logger.LogWarning("Invalid email addresses found: {InvalidEmails}", 
+                        string.Join(", ", invalidEmails));
+                    throw new InvalidOperationException($"The following email addresses are invalid: {string.Join(", ", invalidEmails)}");
+                }
+
+                var surveyLink = $"{BASE_SURVEY_URL}{survey.Id}";
+                int successCount = 0;
+                
+                foreach (var email in survey.DeliveryConfig.EmailAddresses)
+                {
+                    try
+                    {
+                        _logger.LogInformation("Sending survey {SurveyId} to {Email}", id, email);
+                        await _emailService.SendSurveyInvitationAsync(email, survey.Title, surveyLink);
+                        successCount++;
+                        _logger.LogInformation("Successfully sent survey invitation to {Email}", email);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to send survey {SurveyId} to email {Email}: {ErrorMessage}", 
+                            id, email, ex.Message);
+                        // Continue with other emails even if one fails
+                    }
+                }
+                
+                if (successCount == 0 && survey.DeliveryConfig.EmailAddresses.Any())
+                {
+                    _logger.LogError("Failed to send all {Count} emails for survey {SurveyId}", 
+                        survey.DeliveryConfig.EmailAddresses.Count, id);
+                    throw new InvalidOperationException("Failed to send all emails. Please check your email configuration.");
+                }
+                
+                _logger.LogInformation("Sent {SuccessCount} of {TotalCount} emails for survey {SurveyId}", 
+                    successCount, survey.DeliveryConfig.EmailAddresses.Count, id);
             }
-            
-            if (successCount == 0 && survey.DeliveryConfig.EmailAddresses.Any())
+            catch (Exception ex)
             {
-                throw new InvalidOperationException("Failed to send all emails. Please check your email configuration.");
+                _logger.LogError(ex, "Error in SendSurveyEmailsAsync for survey {SurveyId}: {ErrorMessage}", 
+                    id, ex.Message);
+                throw;
             }
-            
-            _logger.LogInformation("Sent {SuccessCount} of {TotalCount} emails for survey {SurveyId}", 
-                successCount, survey.DeliveryConfig.EmailAddresses.Count, id);
         }
 
         public async Task<bool> SendSurveyOnTicketClosedAsync(string customerEmail, Guid? specificSurveyId = null)
         {
-            if (string.IsNullOrWhiteSpace(customerEmail))
-            {
-                throw new ArgumentException("Customer email is required");
-            }
-                
-            if (!IsValidEmail(customerEmail))
-            {
-                throw new ArgumentException($"Invalid email format: {customerEmail}");
-            }
-                
-            List<Survey> surveysToSend;
+            _logger.LogInformation("SendSurveyOnTicketClosedAsync called for email: {Email}, SpecificSurveyId: {SurveyId}", 
+                customerEmail, specificSurveyId);
             
-            if (specificSurveyId.HasValue)
+            try
             {
-                // If a specific survey is requested, send only that one
-                var survey = await _surveyRepository.GetByIdAsync(specificSurveyId.Value);
-                if (survey == null)
+                if (string.IsNullOrWhiteSpace(customerEmail))
                 {
-                    _logger.LogWarning("Survey with ID {SurveyId} not found for ticket-closed event", specificSurveyId);
-                    throw new KeyNotFoundException($"Survey with ID {specificSurveyId} not found.");
+                    _logger.LogError("Customer email is null or empty");
+                    throw new ArgumentException("Customer email is required");
                 }
                     
-                surveysToSend = new List<Survey> { survey };
-            }
-            else
-            {
-                // Get all surveys configured for automatic sending with ticket-closed trigger
-                var allSurveys = await _surveyRepository.GetAllAsync();
-                surveysToSend = allSurveys
-                    .Where(s => s.DeliveryConfig.Type == DeliveryType.Triggered && 
-                           s.DeliveryConfig.Trigger.Type == "ticket-closed" &&
-                           s.DeliveryConfig.Trigger.SendAutomatically)
-                    .ToList();
-            }
-            
-            if (!surveysToSend.Any())
-            {
-                _logger.LogInformation("No eligible surveys found for ticket-closed event to {Email}", customerEmail);
-                return false;
-            }
+                if (!IsValidEmail(customerEmail))
+                {
+                    _logger.LogError("Invalid email format: {Email}", customerEmail);
+                    throw new ArgumentException($"Invalid email format: {customerEmail}");
+                }
+                    
+                List<Survey> surveysToSend;
                 
-            // Send each relevant survey to the customer
-            int successCount = 0;
-            foreach (var survey in surveysToSend)
-            {
-                try
+                if (specificSurveyId.HasValue)
                 {
-                    var surveyLink = $"{BASE_SURVEY_URL}{survey.Id}";
-                    await _emailService.SendSurveyInvitationAsync(customerEmail, survey.Title, surveyLink);
-                    successCount++;
-                    _logger.LogInformation("Sent ticket-closed survey {SurveyId} to {Email}", survey.Id, customerEmail);
+                    // If a specific survey is requested, send only that one
+                    _logger.LogInformation("Looking for specific survey: {SurveyId}", specificSurveyId.Value);
+                    var survey = await _surveyRepository.GetByIdAsync(specificSurveyId.Value);
+                    
+                    if (survey == null)
+                    {
+                        _logger.LogWarning("Survey with ID {SurveyId} not found for ticket-closed event", specificSurveyId);
+                        throw new KeyNotFoundException($"Survey with ID {specificSurveyId} not found.");
+                    }
+                        
+                    surveysToSend = new List<Survey> { survey };
+                    _logger.LogInformation("Using specific survey: {SurveyTitle}", survey.Title);
                 }
-                catch (Exception ex)
+                else
                 {
-                    _logger.LogError(ex, "Failed to send ticket-closed survey {SurveyId} to {Email}", survey.Id, customerEmail);
-                    // Continue with other surveys even if one fails
+                    // Get all surveys configured for automatic sending with ticket-closed trigger
+                    _logger.LogInformation("Looking for surveys with ticket-closed trigger and automatic sending");
+                    var allSurveys = await _surveyRepository.GetAllAsync();
+                    surveysToSend = allSurveys
+                        .Where(s => s.DeliveryConfig.Type == DeliveryType.Triggered && 
+                               s.DeliveryConfig.Trigger.Type == "ticket-closed" &&
+                               s.DeliveryConfig.Trigger.SendAutomatically)
+                        .ToList();
+                        
+                    _logger.LogInformation("Found {Count} eligible surveys for ticket-closed event", surveysToSend.Count);
                 }
+                
+                if (!surveysToSend.Any())
+                {
+                    _logger.LogInformation("No eligible surveys found for ticket-closed event to {Email}", customerEmail);
+                    return false;
+                }
+                    
+                // Send each relevant survey to the customer
+                int successCount = 0;
+                foreach (var survey in surveysToSend)
+                {
+                    try
+                    {
+                        _logger.LogInformation("Sending ticket-closed survey {SurveyId}: {SurveyTitle} to {Email}", 
+                            survey.Id, survey.Title, customerEmail);
+                            
+                        var surveyLink = $"{BASE_SURVEY_URL}{survey.Id}";
+                        await _emailService.SendSurveyInvitationAsync(customerEmail, survey.Title, surveyLink);
+                        successCount++;
+                        _logger.LogInformation("Sent ticket-closed survey {SurveyId} to {Email}", survey.Id, customerEmail);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to send ticket-closed survey {SurveyId} to {Email}: {ErrorMessage}", 
+                            survey.Id, customerEmail, ex.Message);
+                        // Continue with other surveys even if one fails
+                    }
+                }
+                
+                _logger.LogInformation("Successfully sent {SuccessCount} of {TotalCount} ticket-closed surveys to {Email}", 
+                    successCount, surveysToSend.Count, customerEmail);
+                return successCount > 0;
             }
-            
-            return successCount > 0;
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in SendSurveyOnTicketClosedAsync: {ErrorMessage}", ex.Message);
+                throw;
+            }
         }
 
         public async Task<bool> SendTestSurveyEmailAsync(string email, Guid surveyId)
         {
-            if (string.IsNullOrWhiteSpace(email))
-            {
-                throw new ArgumentException("Email address is required");
-            }
-                
-            if (!IsValidEmail(email))
-            {
-                throw new ArgumentException($"Invalid email format: {email}");
-            }
-                
-            var survey = await _surveyRepository.GetByIdAsync(surveyId);
-            
-            if (survey == null)
-            {
-                _logger.LogWarning("Survey with ID {SurveyId} not found when sending test email", surveyId);
-                throw new KeyNotFoundException($"Survey with ID {surveyId} not found.");
-            }
+            _logger.LogInformation("SendTestSurveyEmailAsync called for email: {Email}, surveyId: {SurveyId}", 
+                email, surveyId);
             
             try
-            {    
-                var surveyLink = $"{BASE_SURVEY_URL}{survey.Id}";
-                await _emailService.SendSurveyInvitationAsync(email, survey.Title, surveyLink);
-                _logger.LogInformation("Sent test email for survey {SurveyId} to {Email}", surveyId, email);
-                return true;
+            {
+                if (string.IsNullOrWhiteSpace(email))
+                {
+                    _logger.LogError("Email address is null or empty");
+                    throw new ArgumentException("Email address is required");
+                }
+                    
+                if (!IsValidEmail(email))
+                {
+                    _logger.LogError("Invalid email format: {Email}", email);
+                    throw new ArgumentException($"Invalid email format: {email}");
+                }
+                    
+                var survey = await _surveyRepository.GetByIdAsync(surveyId);
+                
+                if (survey == null)
+                {
+                    _logger.LogWarning("Survey with ID {SurveyId} not found when sending test email", surveyId);
+                    throw new KeyNotFoundException($"Survey with ID {surveyId} not found.");
+                }
+                
+                _logger.LogInformation("Sending test email for survey {SurveyId}: {SurveyTitle} to {Email}", 
+                    surveyId, survey.Title, email);
+                
+                try
+                {    
+                    var surveyLink = $"{BASE_SURVEY_URL}{survey.Id}";
+                    await _emailService.SendSurveyInvitationAsync(email, survey.Title, surveyLink);
+                    _logger.LogInformation("Successfully sent test email for survey {SurveyId} to {Email}", surveyId, email);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to send test email for survey {SurveyId} to {Email}: {ErrorMessage}", 
+                        surveyId, email, ex.Message);
+                    return false;
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to send test email for survey {SurveyId} to {Email}", surveyId, email);
-                return false;
+                _logger.LogError(ex, "Error in SendTestSurveyEmailAsync: {ErrorMessage}", ex.Message);
+                throw;
             }
         }
 
