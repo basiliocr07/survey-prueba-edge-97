@@ -15,6 +15,7 @@ import CustomerGrowth from "./pages/CustomerGrowth";
 import Requirements from "./pages/Requirements";
 import Surveys from "./pages/Surveys";
 import Dashboard from "./pages/Dashboard";
+import About from "./pages/About";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ const App = () => (
               <Route path="/suggestions" element={<Suggestions />} />
               <Route path="/customers" element={<CustomerGrowth />} />
               <Route path="/requirements" element={<Requirements />} />
+              <Route path="/about" element={<About />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>

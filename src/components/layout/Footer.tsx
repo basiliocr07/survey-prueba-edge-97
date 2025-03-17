@@ -1,5 +1,6 @@
 
 import { Link } from 'react-router-dom';
+import { Facebook, Linkedin, Twitter } from 'lucide-react';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -13,6 +14,36 @@ export default function Footer() {
             <p className="text-sm text-muted-foreground">
               Create beautiful surveys and analyze results with our simple yet powerful platform.
             </p>
+            {/* Social Media Icons */}
+            <div className="flex space-x-4 pt-2">
+              <a 
+                href="https://facebook.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary transition-colors"
+                aria-label="Facebook"
+              >
+                <Facebook className="h-5 w-5" />
+              </a>
+              <a 
+                href="https://linkedin.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary transition-colors"
+                aria-label="LinkedIn"
+              >
+                <Linkedin className="h-5 w-5" />
+              </a>
+              <a 
+                href="https://twitter.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary transition-colors"
+                aria-label="Twitter"
+              >
+                <Twitter className="h-5 w-5" />
+              </a>
+            </div>
           </div>
           
           <div>
@@ -71,7 +102,7 @@ export default function Footer() {
             <h5 className="text-sm font-medium mb-4 text-muted-foreground">Company</h5>
             <ul className="space-y-2">
               <li>
-                <Link to="/" className="text-sm hover:text-primary transition-colors">
+                <Link to="/about" className="text-sm hover:text-primary transition-colors">
                   About
                 </Link>
               </li>
