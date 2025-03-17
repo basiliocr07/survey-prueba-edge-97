@@ -8,7 +8,7 @@ export default {
 		"./components/**/*.{ts,tsx}",
 		"./app/**/*.{ts,tsx}",
 		"./src/**/*.{ts,tsx}",
-		"./WebMvc/Views/**/*.cshtml", // Include Razor views for Tailwind processing
+		"./WebMvc/Views/**/*.cshtml", // Para procesar vistas Razor con Tailwind
 	],
 	prefix: "",
 	theme: {
