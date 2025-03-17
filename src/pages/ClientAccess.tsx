@@ -6,7 +6,7 @@ import ClientSuggestionForm from '@/components/client/ClientSuggestionForm';
 import ClientRequirementForm from '@/components/client/ClientRequirementForm';
 import Footer from '@/components/layout/Footer';
 import { Link } from 'react-router-dom';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Home, MessageSquare, FileText } from 'lucide-react';
 
 export default function ClientAccess() {
   const [activeTab, setActiveTab] = useState('suggestion');
@@ -17,6 +17,34 @@ export default function ClientAccess() {
         <div className="flex items-center">
           <h1 className="text-white text-xl font-semibold">Client Portal</h1>
         </div>
+        <nav className="hidden md:flex items-center space-x-6">
+          <Link to="/client" className="text-white hover:text-white/80 flex items-center">
+            <Home className="w-4 h-4 mr-1" />
+            Home
+          </Link>
+          <Link 
+            to="/client?tab=suggestion" 
+            onClick={(e) => {
+              e.preventDefault();
+              setActiveTab('suggestion');
+            }} 
+            className="text-white hover:text-white/80 flex items-center"
+          >
+            <MessageSquare className="w-4 h-4 mr-1" />
+            Suggestions
+          </Link>
+          <Link 
+            to="/client?tab=requirement" 
+            onClick={(e) => {
+              e.preventDefault();
+              setActiveTab('requirement');
+            }} 
+            className="text-white hover:text-white/80 flex items-center"
+          >
+            <FileText className="w-4 h-4 mr-1" />
+            Requirements
+          </Link>
+        </nav>
         <Link to="/" className="flex items-center text-white text-sm hover:underline">
           <ChevronLeft className="h-4 w-4 mr-1" />
           Back to main site
