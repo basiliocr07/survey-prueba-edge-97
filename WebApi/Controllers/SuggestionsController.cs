@@ -1,6 +1,5 @@
 
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Application.DTOs;
@@ -21,78 +20,95 @@ namespace SurveyApp.WebApi.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<SuggestionDto>>> GetAllSuggestions()
+        public async Task<IActionResult> GetAll()
         {
             var suggestions = await _suggestionService.GetAllSuggestionsAsync();
             return Ok(suggestions);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<SuggestionDto>> GetSuggestionById(Guid id)
+        public async Task<IActionResult> GetById(Guid id)
         {
             var suggestion = await _suggestionService.GetSuggestionByIdAsync(id);
             if (suggestion == null)
+            {
                 return NotFound();
-
+            }
             return Ok(suggestion);
         }
 
         [HttpGet("status/{status}")]
-        public async Task<ActionResult<List<SuggestionDto>>> GetSuggestionsByStatus(string status)
+        public async Task<IActionResult> GetByStatus(string status)
         {
             if (!Enum.TryParse<SuggestionStatus>(status, true, out var suggestionStatus))
+            {
                 return BadRequest("Invalid status value");
-
+            }
+            
             var suggestions = await _suggestionService.GetSuggestionsByStatusAsync(suggestionStatus);
             return Ok(suggestions);
         }
 
         [HttpGet("category/{category}")]
-        public async Task<ActionResult<List<SuggestionDto>>> GetSuggestionsByCategory(string category)
+        public async Task<IActionResult> GetByCategory(string category)
         {
             var suggestions = await _suggestionService.GetSuggestionsByCategoryAsync(category);
             return Ok(suggestions);
         }
 
         [HttpGet("search")]
-        public async Task<ActionResult<List<SuggestionDto>>> SearchSuggestions([FromQuery] string query)
+        public async Task<IActionResult> Search([FromQuery] string term)
         {
-            var suggestions = await _suggestionService.SearchSuggestionsAsync(query);
+            var suggestions = await _suggestionService.SearchSuggestionsAsync(term);
             return Ok(suggestions);
         }
 
         [HttpPost]
-        public async Task<ActionResult<SuggestionDto>> CreateSuggestion(CreateSuggestionDto suggestionDto)
+        public async Task<IActionResult> Create([FromBody] CreateSuggestionDto suggestionDto)
         {
-            var suggestion = await _suggestionService.CreateSuggestionAsync(suggestionDto);
-            return CreatedAtAction(nameof(GetSuggestionById), new { id = suggestion.Id }, suggestion);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            
+            var createdSuggestion = await _suggestionService.CreateSuggestionAsync(suggestionDto);
+            return CreatedAtAction(nameof(GetById), new { id = createdSuggestion.Id }, createdSuggestion);
         }
 
         [HttpPut("{id}/status")]
-        public async Task<IActionResult> UpdateSuggestionStatus(Guid id, UpdateSuggestionStatusDto updateDto)
+        public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateSuggestionStatusDto statusDto)
         {
-            if (!Enum.TryParse<SuggestionStatus>(updateDto.Status, true, out var status))
-                return BadRequest("Invalid status value");
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-            await _suggestionService.UpdateSuggestionStatusAsync(id, status, updateDto.Response);
+            if (!Enum.TryParse<SuggestionStatus>(statusDto.Status, true, out var status))
+            {
+                return BadRequest("Invalid status value");
+            }
+            
+            await _suggestionService.UpdateSuggestionStatusAsync(id, status, statusDto.Response);
             return NoContent();
         }
 
-        [HttpGet("report/{months}")]
-        public async Task<ActionResult<MonthlyReportDto>> GetMonthlyReport(int months)
-        {
-            if (months <= 0 || months > 12)
-                return BadRequest("Months must be between 1 and 12");
-
-            var report = await _suggestionService.GenerateMonthlyReportAsync(months);
-            return Ok(report);
-        }
-
-        [HttpGet("similar")]
-        public async Task<ActionResult<List<SuggestionDto>>> FindSimilarSuggestions([FromQuery] string content)
+        [HttpGet("find-similar")]
+        public async Task<IActionResult> FindSimilar([FromQuery] string content)
         {
             var suggestions = await _suggestionService.FindSimilarSuggestionsAsync(content);
             return Ok(suggestions);
+        }
+
+        [HttpGet("monthly-report/{months}")]
+        public async Task<IActionResult> GetMonthlyReport(int months)
+        {
+            if (months <= 0 || months > 24)
+            {
+                return BadRequest("Months parameter must be between 1 and 24");
+            }
+            
+            var report = await _suggestionService.GenerateMonthlyReportAsync(months);
+            return Ok(report);
         }
     }
 }

@@ -1,6 +1,5 @@
 
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Application.DTOs;
@@ -20,52 +19,63 @@ namespace SurveyApp.WebApi.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<KnowledgeBaseItemDto>>> GetAllItems()
+        public async Task<IActionResult> GetAll()
         {
             var items = await _knowledgeBaseService.GetAllItemsAsync();
             return Ok(items);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<KnowledgeBaseItemDto>> GetItemById(Guid id)
+        public async Task<IActionResult> GetById(Guid id)
         {
             var item = await _knowledgeBaseService.GetItemByIdAsync(id);
             if (item == null)
+            {
                 return NotFound();
-
+            }
             return Ok(item);
         }
 
         [HttpGet("category/{category}")]
-        public async Task<ActionResult<List<KnowledgeBaseItemDto>>> GetItemsByCategory(string category)
+        public async Task<IActionResult> GetByCategory(string category)
         {
             var items = await _knowledgeBaseService.GetItemsByCategoryAsync(category);
             return Ok(items);
         }
 
         [HttpGet("search")]
-        public async Task<ActionResult<List<KnowledgeBaseItemDto>>> SearchItems([FromQuery] string query)
+        public async Task<IActionResult> Search([FromQuery] string term)
         {
-            var items = await _knowledgeBaseService.SearchItemsAsync(query);
+            var items = await _knowledgeBaseService.SearchItemsAsync(term);
             return Ok(items);
         }
 
         [HttpPost]
-        public async Task<ActionResult<KnowledgeBaseItemDto>> CreateItem(CreateKnowledgeBaseItemDto itemDto)
+        public async Task<IActionResult> Create([FromBody] CreateKnowledgeBaseItemDto itemDto)
         {
-            var item = await _knowledgeBaseService.CreateItemAsync(itemDto);
-            return CreatedAtAction(nameof(GetItemById), new { id = item.Id }, item);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            
+            var createdItem = await _knowledgeBaseService.CreateItemAsync(itemDto);
+            return CreatedAtAction(nameof(GetById), new { id = createdItem.Id }, createdItem);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateItem(Guid id, UpdateKnowledgeBaseItemDto itemDto)
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateKnowledgeBaseItemDto itemDto)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            
             await _knowledgeBaseService.UpdateItemAsync(id, itemDto);
             return NoContent();
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteItem(Guid id)
+        public async Task<IActionResult> Delete(Guid id)
         {
             await _knowledgeBaseService.DeleteItemAsync(id);
             return NoContent();
