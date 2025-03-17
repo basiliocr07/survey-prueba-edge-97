@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { PlusCircle, BarChart3, Home, Menu, X, MessageSquare, Users, FileText } from "lucide-react";
+import { BarChart3, Home, Menu, X, MessageSquare, Users, FileText, FileBarChart } from "lucide-react";
 import { cn } from '@/lib/utils';
 
 export default function Navbar() {
@@ -27,7 +27,7 @@ export default function Navbar() {
 
   const navItems = [
     { path: '/', label: 'Home', icon: <Home className="w-4 h-4 mr-2" /> },
-    { path: '/create', label: 'Create Survey', icon: <PlusCircle className="w-4 h-4 mr-2" /> },
+    { path: '/surveys', label: 'Surveys', icon: <FileBarChart className="w-4 h-4 mr-2" /> },
     { path: '/results', label: 'Analysis', icon: <BarChart3 className="w-4 h-4 mr-2" /> },
     { path: '/suggestions', label: 'Suggestions', icon: <MessageSquare className="w-4 h-4 mr-2" /> },
     { path: '/customers', label: 'Customer Growth', icon: <Users className="w-4 h-4 mr-2" /> },
