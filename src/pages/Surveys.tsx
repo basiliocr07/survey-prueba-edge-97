@@ -2,11 +2,12 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { FilePlus, BarChart3, Trash2, Edit, Eye } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import Navbar from "@/components/layout/Navbar";
 
 // Sample data - in a real app this would come from an API
 const fetchSurveys = async () => {
@@ -57,28 +58,29 @@ export default function Surveys() {
   };
 
   return (
-    <div className="container mx-auto py-10 px-4 md:px-6">
-      <div className="flex flex-col space-y-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Survey Management</h1>
-            <p className="text-muted-foreground mt-1">Create and manage your surveys</p>
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <div className="container mx-auto pt-20 pb-10 px-4 md:px-6">
+        <div className="flex flex-col space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Survey Management</h1>
+              <p className="text-muted-foreground mt-1">Create and manage your surveys</p>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Link to="/create">
+                <Button size="sm">
+                  <FilePlus className="mr-2 h-4 w-4" />
+                  Create Survey
+                </Button>
+              </Link>
+            </div>
           </div>
-          
-          <div className="flex items-center gap-2">
-            <Link to="/create">
-              <Button size="sm">
-                <FilePlus className="mr-2 h-4 w-4" />
-                Create Survey
-              </Button>
-            </Link>
-          </div>
-        </div>
 
-        <div className="bg-white rounded-lg shadow">
-          <div className="border-b p-4">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div className="flex items-center gap-2">
+          <Card className="shadow-sm">
+            <div className="border-b p-3">
+              <div className="flex gap-2 overflow-x-auto pb-1">
                 <Button 
                   variant={filterActive === "all" ? "default" : "outline"} 
                   size="sm"
@@ -109,75 +111,73 @@ export default function Surveys() {
                 </Button>
               </div>
             </div>
-          </div>
-          
-          {isLoading ? (
-            <div className="flex justify-center items-center p-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : surveys.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-              {surveys.map((survey) => (
-                <Card key={survey.id} className="flex flex-col">
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <CardTitle className="text-lg font-semibold">{survey.title}</CardTitle>
-                      <Badge variant="outline" className="bg-primary/10 text-primary">
-                        {survey.responses} responses
-                      </Badge>
-                    </div>
-                    <CardDescription className="line-clamp-2 mt-1">
-                      {survey.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex-grow">
-                    <div className="text-sm text-muted-foreground">
-                      Created on {formatDate(survey.createdAt)}
-                    </div>
-                    <div className="mt-4">
-                      <p className="text-sm font-medium mb-1">Completion rate</p>
-                      <div className="w-full bg-secondary rounded-full h-2">
-                        <div 
-                          className="bg-primary h-2 rounded-full" 
-                          style={{ width: `${survey.completionRate}%` }}
-                        ></div>
-                      </div>
-                      <p className="text-xs text-right mt-1">{survey.completionRate}%</p>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="border-t pt-4 flex justify-between">
-                    <div className="flex space-x-2">
-                      <Button variant="ghost" size="sm">
-                        <Eye className="h-4 w-4 mr-1" />
-                        View
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit
-                      </Button>
-                    </div>
-                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center p-12 text-center">
-              <div className="rounded-full bg-primary/10 p-4 mb-4">
-                <FilePlus className="h-6 w-6 text-primary" />
+            
+            {isLoading ? (
+              <div className="flex justify-center items-center p-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
-              <h3 className="text-lg font-semibold mb-1">No surveys found</h3>
-              <p className="text-muted-foreground mb-4">Get started by creating your first survey</p>
-              <Link to="/create">
-                <Button>
-                  <FilePlus className="mr-2 h-4 w-4" />
-                  Create Survey
-                </Button>
-              </Link>
-            </div>
-          )}
+            ) : surveys.length > 0 ? (
+              <CardContent className="p-0">
+                <ul className="divide-y">
+                  {surveys.map((survey) => (
+                    <li key={survey.id} className="p-4 hover:bg-accent/20 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-grow">
+                          <div className="flex items-center justify-between mb-1">
+                            <h3 className="font-medium">{survey.title}</h3>
+                            <Badge variant="outline" className="bg-primary/10 text-primary text-xs">
+                              {survey.responses} responses
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground line-clamp-1 mb-1">
+                            {survey.description}
+                          </p>
+                          <div className="flex items-center text-xs text-muted-foreground">
+                            <span>Created {formatDate(survey.createdAt)}</span>
+                            <span className="mx-2">•</span>
+                            <div className="flex items-center">
+                              <div className="w-16 bg-secondary rounded-full h-1.5 mr-1">
+                                <div 
+                                  className="bg-primary h-1.5 rounded-full" 
+                                  style={{ width: `${survey.completionRate}%` }}
+                                ></div>
+                              </div>
+                              <span>{survey.completionRate}% completed</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex space-x-1 ml-4">
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            ) : (
+              <div className="flex flex-col items-center justify-center p-12 text-center">
+                <div className="rounded-full bg-primary/10 p-4 mb-4">
+                  <FilePlus className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-lg font-semibold mb-1">No surveys found</h3>
+                <p className="text-muted-foreground mb-4">Get started by creating your first survey</p>
+                <Link to="/create">
+                  <Button>
+                    <FilePlus className="mr-2 h-4 w-4" />
+                    Create Survey
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </Card>
         </div>
       </div>
     </div>
