@@ -1,86 +1,122 @@
 
-@model HomeViewModel
 @{
     ViewData["Title"] = "Home";
 }
 
-<div class="min-h-screen flex flex-col bg-background">    
-    <!-- Hero Section -->
-    <section class="w-full pt-20 pb-16 px-6 animate-fade-in">
-        <div class="max-w-7xl mx-auto flex flex-col items-center text-center">
-            <div class="animate-slide-down">
-                <div class="inline-block px-3 py-1 mb-6 rounded-full bg-primary/10 text-primary text-sm font-medium">
-                    The future of surveys is here
-                </div>
-                <h1 class="text-4xl md:text-6xl font-bold tracking-tight mb-6">
-                    Survey creation & analytics made <span class="text-primary">simple</span>
-                </h1>
-                <p class="text-xl text-muted-foreground max-w-3xl mx-auto mb-10">
-                    Build beautiful surveys, collect responses, and analyze results with our intuitive platform. No coding required.
-                </p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a asp-controller="Survey" asp-action="Create"
-                       class="btn btn-primary btn-lg animate-slide-up hover-lift">
-                        <i class="fas fa-plus-circle mr-2"></i> Create a Survey
-                    </a>
-                    <a asp-controller="Analytics" asp-action="Index"
-                       class="btn btn-outline btn-lg animate-slide-up hover-lift" style="animation-delay: 100ms">
-                        <i class="fas fa-chart-bar mr-2"></i> Explore Analytics
-                    </a>
-                </div>
+<!-- Hero Section -->
+<section class="w-full pt-32 pb-20 px-6">
+    <div class="max-w-7xl mx-auto flex flex-col items-center text-center">
+        <div class="animate-slide-down">
+            <div class="inline-block px-3 py-1 mb-6 rounded-full bg-primary/10 text-primary text-sm font-medium">
+                The future of surveys is here
+            </div>
+            <h1 class="text-4xl md:text-6xl font-bold tracking-tight mb-6">
+                Survey creation & analytics made <span class="text-primary">simple</span>
+            </h1>
+            <p class="text-xl text-muted-foreground max-w-3xl mx-auto mb-10">
+                Build beautiful surveys, collect responses, and analyze results with our intuitive platform. No coding required.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a asp-controller="Survey" asp-action="Create" class="btn btn-primary btn-lg animate-slide-up transition-all duration-300">
+                    <i class="fas fa-plus-circle mr-2"></i> Create a Survey
+                </a>
+                <a asp-controller="Analytics" asp-action="Index" class="btn btn-outline btn-lg animate-slide-up transition-all duration-300 delay-100">
+                    <i class="fas fa-chart-bar mr-2"></i> Explore Analytics
+                </a>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- Features Section -->
-    <section class="w-full py-20 px-6 bg-accent/50">
-        <div class="max-w-7xl mx-auto">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl font-bold mb-4">Powerful Features</h2>
-                <p class="text-lg text-muted-foreground max-w-2xl mx-auto">
-                    Everything you need to create professional surveys and gain valuable insights
-                </p>
+<!-- Features Section -->
+<section class="w-full py-20 px-6 bg-accent/50">
+    <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl font-bold mb-4">Powerful Features</h2>
+            <p class="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Everything you need to create professional surveys and gain valuable insights
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Feature 1 -->
+            <div class="card hover-lift overflow-hidden transition-all duration-300 hover:border-primary/20 hover:bg-accent/70">
+                <div class="p-6 flex flex-col items-start">
+                    <div class="p-3 rounded-lg bg-primary/10 text-primary mb-4">
+                        <i class="fas fa-file-alt text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Intuitive Survey Builder</h3>
+                    <p class="text-muted-foreground">Create beautiful surveys with our drag-and-drop interface. No coding required.</p>
+                </div>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                @foreach (var feature in Model.Features)
-                {
-                    <div class="card hover-lift border hover:border-primary/20 hover:bg-accent/70 transition-all duration-300">
-                        <div class="card-content p-6 flex flex-col items-start">
-                            <div class="p-3 rounded-lg bg-primary/10 text-primary mb-4">
-                                <i class="fas fa-@feature.Icon text-xl"></i>
-                            </div>
-                            <h3 class="text-xl font-semibold mb-2">@feature.Title</h3>
-                            <p class="text-muted-foreground">@feature.Description</p>
-                        </div>
+            <!-- Feature 2 -->
+            <div class="card hover-lift overflow-hidden transition-all duration-300 hover:border-primary/20 hover:bg-accent/70">
+                <div class="p-6 flex flex-col items-start">
+                    <div class="p-3 rounded-lg bg-primary/10 text-primary mb-4">
+                        <i class="fas fa-chart-bar text-2xl"></i>
                     </div>
-                }
+                    <h3 class="text-xl font-semibold mb-2">Powerful Analytics</h3>
+                    <p class="text-muted-foreground">Get real-time insights with customizable reports and advanced visualizations.</p>
+                </div>
+            </div>
+            
+            <!-- Feature 3 -->
+            <div class="card hover-lift overflow-hidden transition-all duration-300 hover:border-primary/20 hover:bg-accent/70">
+                <div class="p-6 flex flex-col items-start">
+                    <div class="p-3 rounded-lg bg-primary/10 text-primary mb-4">
+                        <i class="fas fa-check-square text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Multiple Question Types</h3>
+                    <p class="text-muted-foreground">Choose from a variety of question types to gather the precise data you need.</p>
+                </div>
+            </div>
+            
+            <!-- Feature 4 -->
+            <div class="card hover-lift overflow-hidden transition-all duration-300 hover:border-primary/20 hover:bg-accent/70">
+                <div class="p-6 flex flex-col items-start">
+                    <div class="p-3 rounded-lg bg-primary/10 text-primary mb-4">
+                        <i class="fas fa-star text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Rating Scales</h3>
+                    <p class="text-muted-foreground">Measure sentiment and satisfaction with customizable rating scales.</p>
+                </div>
+            </div>
+            
+            <!-- Feature 5 -->
+            <div class="card hover-lift overflow-hidden transition-all duration-300 hover:border-primary/20 hover:bg-accent/70">
+                <div class="p-6 flex flex-col items-start">
+                    <div class="p-3 rounded-lg bg-primary/10 text-primary mb-4">
+                        <i class="fas fa-arrows-alt-v text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Ranking Questions</h3>
+                    <p class="text-muted-foreground">Allow respondents to rank items in order of preference or importance.</p>
+                </div>
+            </div>
+            
+            <!-- Feature 6 -->
+            <div class="card hover-lift overflow-hidden transition-all duration-300 hover:border-primary/20 hover:bg-accent/70">
+                <div class="p-6 flex flex-col items-start">
+                    <div class="p-3 rounded-lg bg-primary/10 text-primary mb-4">
+                        <i class="fas fa-plus-circle text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Logic Branching</h3>
+                    <p class="text-muted-foreground">Create dynamic surveys that adapt based on previous answers.</p>
+                </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- CTA Section -->
-    <section class="w-full py-24 px-6 animate-fade-in" style="animation-delay: 200ms">
-        <div class="max-w-6xl mx-auto glass rounded-xl shadow-xl overflow-hidden">
-            <div class="grid grid-cols-1 md:grid-cols-2">
-                <div class="p-8 md:p-12 text-primary space-y-6">
-                    <h2 class="text-3xl font-bold">Ready to get started?</h2>
-                    <p class="text-muted-foreground">Join thousands of users who are already collecting valuable feedback and insights.</p>
-                    <div class="flex flex-col sm:flex-row gap-4 mt-8">
-                        <a href="#" class="btn btn-primary animate-pulse-slow">
-                            <i class="fas fa-user-plus mr-2"></i> Sign Up Free
-                        </a>
-                        <a href="#" class="btn btn-outline">
-                            <i class="fas fa-book mr-2"></i> Learn More
-                        </a>
-                    </div>
-                </div>
-                <div class="hidden md:block relative">
-                    <div class="absolute inset-0 bg-gradient-to-r from-primary/20 to-transparent z-10"></div>
-                    <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
-                         alt="Survey in action" class="h-full w-full object-cover" />
-                </div>
-            </div>
-        </div>
-    </section>
-</div>
+<!-- CTA Section -->
+<section class="w-full py-24 px-6">
+    <div class="max-w-6xl mx-auto text-center">
+        <h2 class="text-3xl md:text-4xl font-bold mb-6">Ready to create your first survey?</h2>
+        <p class="text-lg text-muted-foreground max-w-3xl mx-auto mb-10">
+            Join thousands of users who are already collecting valuable insights with our platform.
+        </p>
+        <a asp-controller="Survey" asp-action="Create" class="btn btn-primary btn-lg animate-pulse-slow">
+            Get Started Now
+        </a>
+    </div>
+</section>

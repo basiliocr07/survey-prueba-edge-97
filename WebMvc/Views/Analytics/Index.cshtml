@@ -1,197 +1,257 @@
 
-@model AnalyticsViewModel
+@model SurveyApp.WebMvc.Models.AnalyticsViewModel
 @{
-    ViewData["Title"] = "Analytics";
+    ViewData["Title"] = "Analytics Dashboard";
 }
 
-<h1 class="text-3xl font-bold mb-8">Analytics Dashboard</h1>
-
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-    <!-- Summary Cards -->
-    <div class="card">
-        <div class="card-content p-6">
-            <div class="flex justify-between items-center mb-2">
-                <h3 class="text-lg font-medium">Total Surveys</h3>
-                <i class="icon-file-text text-primary"></i>
+<div class="w-full px-4 sm:px-6 lg:px-8 pb-10">
+    <div class="w-full max-w-[900px] mx-auto bg-white p-6">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight sm:text-4xl mb-2">Analytics Dashboard</h1>
+                <p class="text-muted-foreground">
+                    Get insights into your surveys and customer engagement
+                </p>
             </div>
-            <p class="text-3xl font-bold">@Model.TotalSurveys</p>
-            <p class="text-sm text-muted-foreground">Active surveys in your account</p>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-content p-6">
-            <div class="flex justify-between items-center mb-2">
-                <h3 class="text-lg font-medium">Total Responses</h3>
-                <i class="icon-users text-primary"></i>
+            
+            <div class="flex space-x-2">
+                <button type="button" class="btn btn-outline btn-sm">
+                    <i class="fas fa-calendar-alt mr-2"></i>Last 30 Days
+                </button>
+                <button type="button" class="btn btn-primary btn-sm">
+                    <i class="fas fa-download mr-2"></i>Export
+                </button>
             </div>
-            <p class="text-3xl font-bold">@Model.TotalResponses</p>
-            <p class="text-sm text-muted-foreground">Responses collected</p>
         </div>
-    </div>
-
-    <div class="card">
-        <div class="card-content p-6">
-            <div class="flex justify-between items-center mb-2">
-                <h3 class="text-lg font-medium">Completion Rate</h3>
-                <i class="icon-percent text-primary"></i>
+        
+        <!-- Key Metrics -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="card p-4">
+                <div class="text-muted-foreground text-sm mb-1">Total Surveys</div>
+                <div class="text-2xl font-bold">@Model.TotalSurveys</div>
+                <div class="text-xs text-green-600 mt-1">
+                    <i class="fas fa-arrow-up"></i> @Model.SurveyGrowthRate%
+                </div>
             </div>
-            <p class="text-3xl font-bold">@Model.AverageCompletionRate.ToString("0.0")%</p>
-            <p class="text-sm text-muted-foreground">Average across all surveys</p>
+            
+            <div class="card p-4">
+                <div class="text-muted-foreground text-sm mb-1">Total Responses</div>
+                <div class="text-2xl font-bold">@Model.TotalResponses</div>
+                <div class="text-xs text-green-600 mt-1">
+                    <i class="fas fa-arrow-up"></i> @Model.ResponseGrowthRate%
+                </div>
+            </div>
+            
+            <div class="card p-4">
+                <div class="text-muted-foreground text-sm mb-1">Avg. Completion Rate</div>
+                <div class="text-2xl font-bold">@Model.AvgCompletionRate%</div>
+                <div class="text-xs @(Model.CompletionRateChange >= 0 ? "text-green-600" : "text-red-600") mt-1">
+                    <i class="fas fa-arrow-@(Model.CompletionRateChange >= 0 ? "up" : "down")"></i> @Math.Abs(Model.CompletionRateChange)%
+                </div>
+            </div>
+            
+            <div class="card p-4">
+                <div class="text-muted-foreground text-sm mb-1">Avg. Response Time</div>
+                <div class="text-2xl font-bold">@Model.AvgResponseTime min</div>
+                <div class="text-xs @(Model.ResponseTimeChange <= 0 ? "text-green-600" : "text-red-600") mt-1">
+                    <i class="fas fa-arrow-@(Model.ResponseTimeChange <= 0 ? "down" : "up")"></i> @Math.Abs(Model.ResponseTimeChange)%
+                </div>
+            </div>
         </div>
-    </div>
-</div>
-
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-    <!-- Response Trends Chart -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Response Trends</h3>
-            <p class="card-description">Responses collected over time</p>
+        
+        <!-- Response Trends Chart -->
+        <div class="card p-6 mb-8">
+            <h2 class="text-xl font-bold mb-4">Response Trends</h2>
+            <div class="w-full h-[300px]" id="responseTrendsChart">
+                <!-- Chart will be rendered here -->
+                <div class="flex items-center justify-center h-full">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+            </div>
         </div>
-        <div class="card-content p-6">
-            <div id="responseTrendsChart" style="height: 300px;"></div>
-        </div>
-    </div>
-
-    <!-- Question Type Distribution Chart -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Question Types</h3>
-            <p class="card-description">Distribution of question types across surveys</p>
-        </div>
-        <div class="card-content p-6">
-            <div id="questionTypeChart" style="height: 300px;"></div>
-        </div>
-    </div>
-</div>
-
-<!-- Recent Surveys Table -->
-<div class="card mb-8">
-    <div class="card-header">
-        <h3 class="card-title">Recent Surveys</h3>
-        <p class="card-description">Your most recently created surveys</p>
-    </div>
-    <div class="card-content p-0">
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead>
-                    <tr class="bg-muted/50">
-                        <th class="p-4 text-left">Title</th>
-                        <th class="p-4 text-left">Created</th>
-                        <th class="p-4 text-left">Responses</th>
-                        <th class="p-4 text-left">Completion Rate</th>
-                        <th class="p-4 text-left">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var survey in Model.RecentSurveys)
-                    {
-                        <tr class="border-t hover:bg-muted/20">
-                            <td class="p-4 font-medium">@survey.Title</td>
-                            <td class="p-4">@survey.CreatedAt.ToString("MMM d, yyyy")</td>
-                            <td class="p-4">@survey.Responses</td>
-                            <td class="p-4">@survey.CompletionRate%</td>
-                            <td class="p-4">
-                                <a asp-controller="Survey" asp-action="Results" asp-route-id="@survey.Id" class="btn btn-sm btn-outline">
-                                    View Results
-                                </a>
-                            </td>
+        
+        <!-- Survey Performance Table -->
+        <div class="card mb-8">
+            <div class="px-6 py-4 border-b">
+                <h2 class="text-xl font-bold">Survey Performance</h2>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-border">
+                    <thead class="bg-accent/30">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Survey</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Responses</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Completion Rate</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Avg. Time</th>
                         </tr>
-                    }
-                    @if (Model.RecentSurveys.Count == 0)
-                    {
-                        <tr class="border-t">
-                            <td colspan="5" class="p-4 text-center text-muted-foreground">
-                                No surveys created yet
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @if (Model.SurveyPerformance != null && Model.SurveyPerformance.Any())
+                        {
+                            @foreach (var survey in Model.SurveyPerformance)
+                            {
+                                <tr class="hover:bg-accent/10 transition-colors">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium">@survey.Title</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm">@survey.ResponseCount</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="w-16 bg-secondary rounded-full h-1.5 mr-2">
+                                                <div class="bg-primary h-1.5 rounded-full" style="width: @(survey.CompletionRate)%"></div>
+                                            </div>
+                                            <span class="text-sm">@survey.CompletionRate%</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                        @survey.AverageTimeMinutes min
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4" class="px-6 py-10 text-center text-sm text-muted-foreground">
+                                    <p>No survey performance data available.</p>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Demographic & Device Distribution -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div class="card p-6">
+                <h2 class="text-xl font-bold mb-4">Demographics</h2>
+                <div class="w-full h-[250px]" id="demographicsChart">
+                    <!-- Chart will be rendered here -->
+                    <div class="flex items-center justify-center h-full">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card p-6">
+                <h2 class="text-xl font-bold mb-4">Device Distribution</h2>
+                <div class="w-full h-[250px]" id="deviceChart">
+                    <!-- Chart will be rendered here -->
+                    <div class="flex items-center justify-center h-full">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-</div>
-
-<div class="text-center">
-    <form asp-controller="Analytics" asp-action="RefreshAnalytics" method="post">
-        <button type="submit" class="btn btn-outline">
-            <i class="icon-refresh-cw mr-2"></i> Refresh Analytics
-        </button>
-    </form>
 </div>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <script>
-        // Response Trends Chart
-        const trendLabels = @Json.Serialize(Model.ResponseTrends.Select(t => t.Date).ToArray());
-        const trendData = @Json.Serialize(Model.ResponseTrends.Select(t => t.Responses).ToArray());
-        
-        const trendCtx = document.getElementById('responseTrendsChart').getContext('2d');
-        new Chart(trendCtx, {
-            type: 'line',
-            data: {
-                labels: trendLabels,
-                datasets: [{
-                    label: 'Responses',
-                    data: trendData,
-                    backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                    borderColor: 'rgba(59, 130, 246, 1)',
-                    borderWidth: 2,
-                    tension: 0.3,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            drawBorder: false
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
+        document.addEventListener('DOMContentLoaded', function() {
+            // Response Trends Chart
+            const responseTrendsCtx = document.getElementById('responseTrendsChart').getContext('2d');
+            document.getElementById('responseTrendsChart').innerHTML = '';
+            
+            const responseLabels = @Html.Raw(Json.Serialize(Model.ResponseTrends.Select(t => t.Period)));
+            const responseData = @Html.Raw(Json.Serialize(Model.ResponseTrends.Select(t => t.ResponseCount)));
+            
+            new Chart(responseTrendsCtx, {
+                type: 'line',
+                data: {
+                    labels: responseLabels,
+                    datasets: [{
+                        label: 'Responses',
+                        data: responseData,
+                        fill: true,
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderColor: '#3b82f6',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
                         }
                     }
                 }
-            }
-        });
-
-        // Question Type Distribution Chart
-        const typeLabels = @Json.Serialize(Model.QuestionTypeDistribution.Keys.ToArray());
-        const typeData = @Json.Serialize(Model.QuestionTypeDistribution.Values.ToArray());
-        
-        const typeCtx = document.getElementById('questionTypeChart').getContext('2d');
-        new Chart(typeCtx, {
-            type: 'doughnut',
-            data: {
-                labels: typeLabels,
-                datasets: [{
-                    data: typeData,
-                    backgroundColor: [
-                        'rgba(59, 130, 246, 0.7)',
-                        'rgba(16, 185, 129, 0.7)',
-                        'rgba(249, 115, 22, 0.7)',
-                        'rgba(139, 92, 246, 0.7)',
-                        'rgba(251, 191, 36, 0.7)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'right'
+            });
+            
+            // Demographics Chart
+            const demographicsCtx = document.getElementById('demographicsChart').getContext('2d');
+            document.getElementById('demographicsChart').innerHTML = '';
+            
+            const demoLabels = @Html.Raw(Json.Serialize(Model.Demographics.Select(d => d.Category)));
+            const demoData = @Html.Raw(Json.Serialize(Model.Demographics.Select(d => d.Percentage)));
+            
+            new Chart(demographicsCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: demoLabels,
+                    datasets: [{
+                        data: demoData,
+                        backgroundColor: [
+                            '#3b82f6',
+                            '#10b981',
+                            '#f59e0b',
+                            '#ef4444',
+                            '#8b5cf6'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
                     }
                 }
-            }
+            });
+            
+            // Device Chart
+            const deviceCtx = document.getElementById('deviceChart').getContext('2d');
+            document.getElementById('deviceChart').innerHTML = '';
+            
+            const deviceLabels = @Html.Raw(Json.Serialize(Model.DeviceDistribution.Select(d => d.DeviceType)));
+            const deviceData = @Html.Raw(Json.Serialize(Model.DeviceDistribution.Select(d => d.Percentage)));
+            
+            new Chart(deviceCtx, {
+                type: 'pie',
+                data: {
+                    labels: deviceLabels,
+                    datasets: [{
+                        data: deviceData,
+                        backgroundColor: [
+                            '#3b82f6',
+                            '#10b981',
+                            '#f59e0b',
+                            '#ef4444'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
         });
     </script>
 }

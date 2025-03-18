@@ -1,207 +1,312 @@
 
-@model RequirementsViewModel
+@model SurveyApp.WebMvc.Models.RequirementsViewModel
 @{
-    ViewData["Title"] = "Requirements Management";
+    ViewData["Title"] = "Requirements";
 }
 
-<div class="bg-background p-8">
-    <div class="max-w-7xl mx-auto">
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold tracking-tight sm:text-4xl mb-2">Requirements Management</h1>
-            <p class="text-muted-foreground max-w-2xl mx-auto">
-                Submit new requirements or search for existing solutions
-            </p>
-        </div>
-
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <div class="alert alert-success mb-6">
-                @TempData["SuccessMessage"]
-            </div>
-        }
-
-        @if (TempData["ErrorMessage"] != null)
-        {
-            <div class="alert alert-danger mb-6">
-                @TempData["ErrorMessage"]
-            </div>
-        }
-
-        <div class="tab-container">
-            <div class="tab-list grid grid-cols-3 mb-8">
-                <a asp-controller="Requirements" asp-action="Index" asp-route-tab="new" 
-                   class="tab-item @(Model.ActiveTab == "new" ? "active" : "")">Submit New Requirement</a>
-                <a asp-controller="Requirements" asp-action="ViewRequirements" 
-                   class="tab-item @(Model.ActiveTab == "existing" ? "active" : "")">View Requirements</a>
-                <a asp-controller="Requirements" asp-action="KnowledgeBase" 
-                   class="tab-item @(Model.ActiveTab == "knowledge" ? "active" : "")">Knowledge Base</a>
+<div class="w-full px-4 sm:px-6 lg:px-8 pb-10">
+    <div class="w-full max-w-[900px] mx-auto bg-white p-6">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight sm:text-4xl mb-2">Requirements Management</h1>
+                <p class="text-muted-foreground">
+                    Track and prioritize feature requirements and customer needs
+                </p>
             </div>
             
-            <div class="tab-content">
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title flex items-center gap-2">
-                            <i class="icon-message-square"></i> New Requirement
-                        </h2>
-                        <p class="card-description">
-                            Submit a new requirement or issue
-                        </p>
+            <div class="flex space-x-2">
+                <a asp-action="KnowledgeBase" class="btn btn-outline btn-sm">
+                    <i class="fas fa-book mr-2"></i>Knowledge Base
+                </a>
+                <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addRequirementModal">
+                    <i class="fas fa-plus mr-2"></i>Add Requirement
+                </button>
+            </div>
+        </div>
+        
+        <!-- Priority Filtering -->
+        <div class="flex flex-wrap gap-2 mb-6">
+            <button class="btn btn-primary btn-sm" onclick="filterRequirements('all')">All</button>
+            <button class="btn btn-outline btn-sm" onclick="filterRequirements('critical')">
+                <span class="w-2 h-2 rounded-full bg-red-500 mr-2"></span>
+                Critical
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="filterRequirements('high')">
+                <span class="w-2 h-2 rounded-full bg-orange-500 mr-2"></span>
+                High
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="filterRequirements('medium')">
+                <span class="w-2 h-2 rounded-full bg-yellow-500 mr-2"></span>
+                Medium
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="filterRequirements('low')">
+                <span class="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
+                Low
+            </button>
+        </div>
+        
+        <!-- Requirements List -->
+        <div class="border rounded-lg overflow-hidden mb-6">
+            <div id="requirementsList">
+                @if (Model.Requirements != null && Model.Requirements.Any())
+                {
+                    foreach (var req in Model.Requirements)
+                    {
+                        <div class="requirement-item p-4 border-b hover:bg-accent/10 transition-colors" data-priority="@req.Priority.ToLower()">
+                            <div class="flex justify-between">
+                                <div class="mb-2">
+                                    <div class="flex items-center space-x-2">
+                                        @{
+                                            var priorityColor = "bg-green-500";
+                                            switch (req.Priority.ToLower())
+                                            {
+                                                case "critical":
+                                                    priorityColor = "bg-red-500";
+                                                    break;
+                                                case "high":
+                                                    priorityColor = "bg-orange-500";
+                                                    break;
+                                                case "medium":
+                                                    priorityColor = "bg-yellow-500";
+                                                    break;
+                                            }
+                                        }
+                                        <span class="w-2 h-2 rounded-full @priorityColor"></span>
+                                        <span class="text-lg font-medium">@req.Title</span>
+                                        <span class="px-2 py-0.5 text-xs rounded-full bg-primary/10 text-primary">@req.Category</span>
+                                    </div>
+                                    <p class="text-sm text-muted-foreground mt-1">
+                                        @req.Description
+                                    </p>
+                                </div>
+                                <div class="flex space-x-1">
+                                    <a href="@Url.Action("ViewRequirements", new { id = req.Id })" class="p-1 text-primary hover:text-primary/80">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <button class="p-1 text-primary hover:text-primary/80" onclick="editRequirement('@req.Id')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between mt-2 text-xs text-muted-foreground">
+                                <div class="flex items-center space-x-4">
+                                    <span>Status: <span class="font-medium">@req.Status</span></span>
+                                    <span>Source: <span class="font-medium">@req.Source</span></span>
+                                    <span>Created: <span class="font-medium">@req.CreatedAt.ToShortDateString()</span></span>
+                                </div>
+                                <div>
+                                    <div class="flex items-center space-x-1">
+                                        <span>Progress:</span>
+                                        <div class="w-20 bg-secondary rounded-full h-1.5">
+                                            <div class="bg-primary h-1.5 rounded-full" style="width: @(req.CompletionPercentage)%"></div>
+                                        </div>
+                                        <span>@req.CompletionPercentage%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="p-8 text-center">
+                        <div class="rounded-full bg-primary/10 text-primary w-12 h-12 flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-clipboard-list text-xl"></i>
+                        </div>
+                        <h3 class="text-lg font-medium mb-1">No requirements yet</h3>
+                        <p class="text-muted-foreground mb-4">Start adding requirements to track feature development</p>
+                        <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addRequirementModal">
+                            <i class="fas fa-plus mr-2"></i>Add Requirement
+                        </button>
                     </div>
-                    <form asp-controller="Requirements" asp-action="Submit" method="post">
-                        <div class="card-content space-y-6">
-                            <div class="space-y-2">
-                                <label for="content" class="form-label">Requirement Description</label>
-                                <textarea id="content" name="Content" class="form-textarea min-h-[120px]"
-                                          placeholder="Describe your requirement in detail..." required
-                                          data-requirement-content></textarea>
-                                <span class="text-sm text-red-500 field-validation-valid" data-valmsg-for="Content"></span>
-                            </div>
-                            
-                            <div id="similarItemsContainer" class="bg-muted p-4 rounded-md border border-border hidden">
-                                <h4 class="font-medium flex items-center gap-2 mb-2">
-                                    <i class="icon-search"></i> Similar items found
-                                </h4>
-                                <div id="similarRequirements" class="mb-3 hidden">
-                                    <p class="text-sm font-medium mb-1">Similar requirements:</p>
-                                    <ul class="text-sm space-y-1" id="similarRequirementsList"></ul>
-                                </div>
-                                <div id="knowledgeItems" class="hidden">
-                                    <p class="text-sm font-medium mb-1">From knowledge base:</p>
-                                    <ul class="text-sm space-y-1" id="knowledgeItemsList"></ul>
-                                </div>
-                            </div>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div class="space-y-2">
-                                    <label for="customerName" class="form-label">Your Name</label>
-                                    <input id="customerName" name="CustomerName" class="form-input" placeholder="John Doe" required />
-                                    <span class="text-sm text-red-500 field-validation-valid" data-valmsg-for="CustomerName"></span>
-                                </div>
-                                
-                                <div class="space-y-2">
-                                    <label for="customerEmail" class="form-label">Email Address</label>
-                                    <input id="customerEmail" name="CustomerEmail" type="email" class="form-input" 
-                                           placeholder="john@example.com" required />
-                                    <span class="text-sm text-red-500 field-validation-valid" data-valmsg-for="CustomerEmail"></span>
-                                </div>
-                            </div>
-                            
-                            <div class="space-y-2">
-                                <label for="category" class="form-label">Category</label>
-                                <select id="category" name="Category" class="form-select">
-                                    <option value="">Select a category</option>
-                                    @foreach (var category in Model.Categories)
-                                    {
-                                        <option value="@category">@category</option>
-                                    }
-                                </select>
-                            </div>
-                            
-                            <input type="hidden" name="IsAnonymous" value="false" />
+                }
+            </div>
+        </div>
+        
+        <!-- Requirements Summary -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div class="card p-4">
+                <h3 class="text-lg font-semibold mb-3">Requirements by Status</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span>Proposed</span>
+                        <span class="text-sm font-medium">@Model.ProposedCount (@Math.Round((double)Model.ProposedCount / Model.TotalCount * 100)%)</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>In Progress</span>
+                        <span class="text-sm font-medium">@Model.InProgressCount (@Math.Round((double)Model.InProgressCount / Model.TotalCount * 100)%)</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Testing</span>
+                        <span class="text-sm font-medium">@Model.TestingCount (@Math.Round((double)Model.TestingCount / Model.TotalCount * 100)%)</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Completed</span>
+                        <span class="text-sm font-medium">@Model.CompletedCount (@Math.Round((double)Model.CompletedCount / Model.TotalCount * 100)%)</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card p-4">
+                <h3 class="text-lg font-semibold mb-3">Requirements by Priority</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center">
+                            <span class="w-2 h-2 rounded-full bg-red-500 mr-2"></span>
+                            <span>Critical</span>
                         </div>
-                        
-                        <div class="card-footer flex justify-end">
-                            <button type="submit" class="btn btn-primary">Submit Requirement</button>
+                        <span class="text-sm font-medium">@Model.CriticalCount (@Math.Round((double)Model.CriticalCount / Model.TotalCount * 100)%)</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center">
+                            <span class="w-2 h-2 rounded-full bg-orange-500 mr-2"></span>
+                            <span>High</span>
                         </div>
-                    </form>
+                        <span class="text-sm font-medium">@Model.HighCount (@Math.Round((double)Model.HighCount / Model.TotalCount * 100)%)</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center">
+                            <span class="w-2 h-2 rounded-full bg-yellow-500 mr-2"></span>
+                            <span>Medium</span>
+                        </div>
+                        <span class="text-sm font-medium">@Model.MediumCount (@Math.Round((double)Model.MediumCount / Model.TotalCount * 100)%)</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center">
+                            <span class="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
+                            <span>Low</span>
+                        </div>
+                        <span class="text-sm font-medium">@Model.LowCount (@Math.Round((double)Model.LowCount / Model.TotalCount * 100)%)</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Add Requirement Modal -->
+<div class="modal fade" id="addRequirementModal" tabindex="-1" role="dialog" aria-labelledby="addRequirementModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addRequirementModalLabel">Add New Requirement</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form asp-action="Create" method="post">
+                <div class="modal-body">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div class="space-y-2">
+                            <label for="Title" class="text-sm font-medium">Title</label>
+                            <input type="text" id="Title" name="Title" class="form-input w-full rounded-md border" required />
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <label for="Category" class="text-sm font-medium">Category</label>
+                            <select id="Category" name="Category" class="form-select w-full rounded-md border">
+                                <option value="UI/UX">UI/UX</option>
+                                <option value="Functionality">Functionality</option>
+                                <option value="Performance">Performance</option>
+                                <option value="Security">Security</option>
+                                <option value="Compatibility">Compatibility</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2 mb-4">
+                        <label for="Description" class="text-sm font-medium">Description</label>
+                        <textarea id="Description" name="Description" rows="4" class="form-textarea w-full rounded-md border" required></textarea>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div class="space-y-2">
+                            <label for="Priority" class="text-sm font-medium">Priority</label>
+                            <select id="Priority" name="Priority" class="form-select w-full rounded-md border">
+                                <option value="Critical">Critical</option>
+                                <option value="High">High</option>
+                                <option value="Medium" selected>Medium</option>
+                                <option value="Low">Low</option>
+                            </select>
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <label for="Source" class="text-sm font-medium">Source</label>
+                            <select id="Source" name="Source" class="form-select w-full rounded-md border">
+                                <option value="Customer Feedback">Customer Feedback</option>
+                                <option value="Internal Team">Internal Team</option>
+                                <option value="Market Research">Market Research</option>
+                                <option value="Usability Testing">Usability Testing</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div class="space-y-2">
+                            <label for="Status" class="text-sm font-medium">Status</label>
+                            <select id="Status" name="Status" class="form-select w-full rounded-md border">
+                                <option value="Proposed" selected>Proposed</option>
+                                <option value="In Progress">In Progress</option>
+                                <option value="Testing">Testing</option>
+                                <option value="Completed">Completed</option>
+                            </select>
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <label for="TargetDate" class="text-sm font-medium">Target Date</label>
+                            <input type="date" id="TargetDate" name="TargetDate" class="form-input w-full rounded-md border" />
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <label for="AcceptanceCriteria" class="text-sm font-medium">Acceptance Criteria</label>
+                        <textarea id="AcceptanceCriteria" name="AcceptanceCriteria" rows="3" class="form-textarea w-full rounded-md border"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Requirement</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const contentTextarea = document.querySelector('[data-requirement-content]');
-            const similarItemsContainer = document.getElementById('similarItemsContainer');
-            const similarRequirementsSection = document.getElementById('similarRequirements');
-            const knowledgeItemsSection = document.getElementById('knowledgeItems');
-            const similarRequirementsList = document.getElementById('similarRequirementsList');
-            const knowledgeItemsList = document.getElementById('knowledgeItemsList');
+        function filterRequirements(priority) {
+            const reqItems = document.querySelectorAll('.requirement-item');
             
-            let typingTimer;
-            
-            contentTextarea.addEventListener('input', function() {
-                clearTimeout(typingTimer);
-                const content = this.value.trim();
-                
-                if (content.length < 10) {
-                    similarItemsContainer.classList.add('hidden');
-                    return;
+            reqItems.forEach(item => {
+                if (priority === 'all' || item.dataset.priority === priority) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
                 }
-                
-                typingTimer = setTimeout(function() {
-                    findSimilarItems(content);
-                }, 500);
             });
             
-            function findSimilarItems(content) {
-                fetch(`/requirements/similar?content=${encodeURIComponent(content)}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            const hasRequirements = data.requirements && data.requirements.length > 0;
-                            const hasKnowledgeItems = data.knowledgeItems && data.knowledgeItems.length > 0;
-                            
-                            if (hasRequirements || hasKnowledgeItems) {
-                                similarItemsContainer.classList.remove('hidden');
-                                
-                                if (hasRequirements) {
-                                    similarRequirementsSection.classList.remove('hidden');
-                                    renderRequirements(data.requirements);
-                                } else {
-                                    similarRequirementsSection.classList.add('hidden');
-                                }
-                                
-                                if (hasKnowledgeItems) {
-                                    knowledgeItemsSection.classList.remove('hidden');
-                                    renderKnowledgeItems(data.knowledgeItems);
-                                } else {
-                                    knowledgeItemsSection.classList.add('hidden');
-                                }
-                            } else {
-                                similarItemsContainer.classList.add('hidden');
-                            }
-                        } else {
-                            similarItemsContainer.classList.add('hidden');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error finding similar items:', error);
-                        similarItemsContainer.classList.add('hidden');
-                    });
-            }
+            // Update active filter button
+            const filterButtons = document.querySelectorAll('.flex.flex-wrap.gap-2.mb-6 button');
+            filterButtons.forEach(button => {
+                button.classList.remove('btn-primary');
+                button.classList.add('btn-outline');
+            });
             
-            function renderRequirements(requirements) {
-                similarRequirementsList.innerHTML = '';
-                
-                requirements.slice(0, 3).forEach(req => {
-                    const li = document.createElement('li');
-                    li.className = 'p-2 bg-background rounded-md';
-                    li.innerHTML = `
-                        ${req.content}
-                        <span class="block text-xs text-muted-foreground mt-1">
-                            Status: ${req.status} • Category: ${req.category || 'Uncategorized'}
-                        </span>
-                    `;
-                    similarRequirementsList.appendChild(li);
-                });
-            }
+            const activeButton = Array.from(filterButtons).find(button => 
+                button.textContent.trim().toLowerCase().includes(priority)
+            );
             
-            function renderKnowledgeItems(items) {
-                knowledgeItemsList.innerHTML = '';
-                
-                items.slice(0, 2).forEach(item => {
-                    const li = document.createElement('li');
-                    li.className = 'p-2 bg-background rounded-md';
-                    li.innerHTML = `
-                        <strong>${item.title}</strong>
-                        <p class="text-muted-foreground text-xs mt-1">${item.content.substring(0, 100)}...</p>
-                    `;
-                    knowledgeItemsList.appendChild(li);
-                });
+            if (activeButton) {
+                activeButton.classList.remove('btn-outline');
+                activeButton.classList.add('btn-primary');
             }
-        });
+        }
+        
+        function editRequirement(id) {
+            // In a real app, this would open the edit modal and populate it with data
+            window.location.href = '@Url.Action("Edit")/' + id;
+        }
     </script>
 }

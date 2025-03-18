@@ -19,7 +19,8 @@ builder.Services.AddControllersWithViews();
 // Configure EF Core
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        sqlServerOptions => sqlServerOptions.EnableRetryOnFailure()
     ));
 
 // Register repositories
@@ -85,13 +86,26 @@ app.MapControllerRoute(
     pattern: "requirements/{action=Index}/{id?}",
     defaults: new { controller = "Requirements" });
 
+app.MapControllerRoute(
+    name: "knowledge-base",
+    pattern: "knowledge-base/{action=Index}/{id?}",
+    defaults: new { controller = "KnowledgeBase" });
+
 app.MapControllers(); // Map API controllers
 
 // Apply database migrations
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    dbContext.Database.Migrate();
+    try
+    {
+        dbContext.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while applying migrations");
+    }
 }
 
 app.Run();
