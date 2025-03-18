@@ -40,6 +40,39 @@ namespace SurveyApp.Infrastructure.Repositories
                     .ThenInclude(d => d.Trigger)
                 .ToListAsync();
         }
+        
+        public async Task<(List<Survey> Surveys, int TotalCount)> GetPagedSurveysAsync(int pageNumber, int pageSize, string searchTerm = null, string statusFilter = null, string categoryFilter = null)
+        {
+            var query = _dbContext.Surveys
+                .Include(s => s.Questions)
+                .Include(s => s.DeliveryConfig)
+                    .ThenInclude(d => d.Schedule)
+                .Include(s => s.DeliveryConfig)
+                    .ThenInclude(d => d.Trigger)
+                .AsQueryable();
+                
+            // Apply filters
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                searchTerm = searchTerm.ToLower();
+                query = query.Where(s => s.Title.ToLower().Contains(searchTerm) || 
+                                         s.Description.ToLower().Contains(searchTerm));
+            }
+            
+            // We'll need to add Status and Category properties to the Survey entity in a future update
+            // For now, we'll just return the full list
+            
+            // Get total count before pagination
+            var totalCount = await query.CountAsync();
+            
+            // Apply pagination
+            var pagedSurveys = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+                
+            return (pagedSurveys, totalCount);
+        }
 
         public async Task<Survey> CreateAsync(Survey survey)
         {
@@ -103,32 +136,26 @@ namespace SurveyApp.Infrastructure.Repositories
                 }
                 else
                 {
-                    _dbContext.Entry(existingSurvey.DeliveryConfig).CurrentValues.SetValues(survey.DeliveryConfig);
+                    // Set the delivery type
+                    existingSurvey.DeliveryConfig.SetType(survey.DeliveryConfig.Type);
                     
-                    // Actualizar Schedule
-                    if (survey.DeliveryConfig.Schedule != null)
+                    // Update email addresses
+                    existingSurvey.DeliveryConfig.EmailAddresses.Clear();
+                    foreach (var email in survey.DeliveryConfig.EmailAddresses)
                     {
-                        if (existingSurvey.DeliveryConfig.Schedule == null)
-                        {
-                            existingSurvey.DeliveryConfig.Schedule = survey.DeliveryConfig.Schedule;
-                        }
-                        else
-                        {
-                            _dbContext.Entry(existingSurvey.DeliveryConfig.Schedule).CurrentValues.SetValues(survey.DeliveryConfig.Schedule);
-                        }
+                        existingSurvey.DeliveryConfig.AddEmailAddress(email);
                     }
                     
-                    // Actualizar Trigger
+                    // Update Schedule using the SetSchedule method
+                    if (survey.DeliveryConfig.Schedule != null)
+                    {
+                        existingSurvey.DeliveryConfig.SetSchedule(survey.DeliveryConfig.Schedule);
+                    }
+                    
+                    // Update Trigger using the SetTrigger method
                     if (survey.DeliveryConfig.Trigger != null)
                     {
-                        if (existingSurvey.DeliveryConfig.Trigger == null)
-                        {
-                            existingSurvey.DeliveryConfig.Trigger = survey.DeliveryConfig.Trigger;
-                        }
-                        else
-                        {
-                            _dbContext.Entry(existingSurvey.DeliveryConfig.Trigger).CurrentValues.SetValues(survey.DeliveryConfig.Trigger);
-                        }
+                        existingSurvey.DeliveryConfig.SetTrigger(survey.DeliveryConfig.Trigger);
                     }
                 }
             }
@@ -156,6 +183,20 @@ namespace SurveyApp.Infrastructure.Repositories
         public async Task<bool> ExistsAsync(Guid id)
         {
             return await _dbContext.Surveys.AnyAsync(s => s.Id == id);
+        }
+        
+        public async Task<List<string>> GetAllCategoriesAsync()
+        {
+            // For now, we'll return a list of predefined categories
+            // In the future, this should be dynamic based on the data
+            return await Task.FromResult(new List<string> 
+            { 
+                "Customer Satisfaction", 
+                "Product Feedback", 
+                "Employee Engagement", 
+                "Market Research", 
+                "Event Feedback"
+            });
         }
     }
 }

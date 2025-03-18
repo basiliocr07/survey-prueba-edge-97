@@ -17,5 +17,7 @@ namespace SurveyApp.WebMvc.Models
         public bool IsFeatured { get; set; }
         public string Category { get; set; }
         public int QuestionCount { get; set; }
+        public string CreatedBy { get; set; }
+        public DateTime? LastUpdated { get; set; }
     }
 }

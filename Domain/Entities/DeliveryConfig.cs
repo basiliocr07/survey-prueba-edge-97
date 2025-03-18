@@ -36,12 +36,12 @@ namespace SurveyApp.Domain.Entities
 
         public void SetSchedule(Schedule schedule)
         {
-            Schedule = schedule;
+            Schedule = schedule ?? new Schedule();
         }
 
         public void SetTrigger(Trigger trigger)
         {
-            Trigger = trigger;
+            Trigger = trigger ?? new Trigger();
         }
     }
 
@@ -59,6 +59,7 @@ namespace SurveyApp.Domain.Entities
         public int? DayOfWeek { get; set; }
         public string Time { get; set; } = "09:00";
         public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
     }
 
     public class Trigger
@@ -66,5 +67,6 @@ namespace SurveyApp.Domain.Entities
         public string Type { get; set; } = "ticket-closed";
         public int DelayHours { get; set; } = 24;
         public bool SendAutomatically { get; set; } = false;
+        public string EventName { get; set; }
     }
 }

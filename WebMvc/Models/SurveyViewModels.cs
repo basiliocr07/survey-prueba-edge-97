@@ -48,6 +48,8 @@ namespace SurveyApp.WebMvc.Models
         public int TotalCount { get; set; }
         public int PageNumber { get; set; } = 1;
         public int PageSize { get; set; } = 10;
+        public List<string> Categories { get; set; } = new List<string>();
+        public List<string> Statuses { get; set; } = new List<string>() { "Active", "Draft", "Archived", "Completed" };
     }
 
     public class QuestionViewModel
