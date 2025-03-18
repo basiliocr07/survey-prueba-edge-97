@@ -13,6 +13,10 @@ namespace SurveyApp.Application.DTOs
         public List<string> Tags { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+        
+        // Additional properties needed by the view
+        public string Summary { get; set; }
+        public int ViewCount { get; set; }
     }
 
     public class CreateKnowledgeBaseItemDto
