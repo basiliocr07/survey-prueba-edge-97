@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -82,7 +81,7 @@ namespace SurveyApp.WebMvc.Models
         public int? MaxValue { get; set; }
     }
 
-    public class CreateSurveyViewModel
+    public class SurveyCreateViewModel
     {
         public Guid Id { get; set; }
         
@@ -100,6 +99,17 @@ namespace SurveyApp.WebMvc.Models
         public string Category { get; set; }
         
         public bool IsFeatured { get; set; }
+        
+        public bool EnableEmailDelivery { get; set; }
+        public string SenderName { get; set; }
+        public string SenderEmail { get; set; }
+        public string EmailSubject { get; set; }
+        public string EmailBody { get; set; }
+        
+        public DateTime? ExpiryDate { get; set; }
+        public bool AllowAnonymousResponses { get; set; } = true;
+        public bool LimitOneResponsePerUser { get; set; }
+        public string ThankYouMessage { get; set; } = "Thank you for completing our survey!";
     }
 
     public class DeliveryConfigViewModel

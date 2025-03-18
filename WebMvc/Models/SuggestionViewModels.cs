@@ -26,4 +26,15 @@ namespace SurveyApp.WebMvc.Models
         public MonthlyReportDto Report { get; set; }
         public int MonthsRange { get; set; }
     }
+
+    // Added the missing SuggestionIndexViewModel class
+    public class SuggestionIndexViewModel
+    {
+        public List<SuggestionDto> Suggestions { get; set; }
+        public int TotalSuggestions { get; set; }
+        public int NewSuggestions { get; set; }
+        public int InProgressSuggestions { get; set; }
+        public int CompletedSuggestions { get; set; }
+        public string[] Categories { get; set; }
+    }
 }

@@ -1,5 +1,6 @@
 
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Application.DTOs;
@@ -22,10 +23,15 @@ namespace SurveyApp.WebMvc.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var viewModel = new SuggestionViewModel
+            var suggestions = await _suggestionService.GetAllSuggestionsAsync();
+            
+            var viewModel = new SuggestionIndexViewModel
             {
-                Suggestions = await _suggestionService.GetAllSuggestionsAsync(),
-                KnowledgeBaseItems = await _knowledgeBaseService.GetAllItemsAsync(),
+                Suggestions = suggestions,
+                TotalSuggestions = suggestions.Count,
+                NewSuggestions = suggestions.Count(s => s.Status.ToLower() == "new"),
+                InProgressSuggestions = suggestions.Count(s => s.Status.ToLower() == "in progress"),
+                CompletedSuggestions = suggestions.Count(s => s.Status.ToLower() == "completed"),
                 Categories = new[] {
                     "UI/UX", 
                     "Features", 
