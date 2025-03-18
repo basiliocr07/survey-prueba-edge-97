@@ -24,9 +24,6 @@ namespace SurveyApp.Infrastructure.Repositories
             return await _dbContext.Surveys
                 .Include(s => s.Questions)
                 .Include(s => s.DeliveryConfig)
-                    .ThenInclude(d => d.Schedule)
-                .Include(s => s.DeliveryConfig)
-                    .ThenInclude(d => d.Trigger)
                 .FirstOrDefaultAsync(s => s.Id == id);
         }
 
@@ -35,9 +32,6 @@ namespace SurveyApp.Infrastructure.Repositories
             return await _dbContext.Surveys
                 .Include(s => s.Questions)
                 .Include(s => s.DeliveryConfig)
-                    .ThenInclude(d => d.Schedule)
-                .Include(s => s.DeliveryConfig)
-                    .ThenInclude(d => d.Trigger)
                 .ToListAsync();
         }
         
@@ -46,9 +40,6 @@ namespace SurveyApp.Infrastructure.Repositories
             var query = _dbContext.Surveys
                 .Include(s => s.Questions)
                 .Include(s => s.DeliveryConfig)
-                    .ThenInclude(d => d.Schedule)
-                .Include(s => s.DeliveryConfig)
-                    .ThenInclude(d => d.Trigger)
                 .AsQueryable();
                 
             // Apply filters
@@ -59,8 +50,15 @@ namespace SurveyApp.Infrastructure.Repositories
                                          s.Description.ToLower().Contains(searchTerm));
             }
             
-            // We'll need to add Status and Category properties to the Survey entity in a future update
-            // For now, we'll just return the full list
+            if (!string.IsNullOrWhiteSpace(statusFilter))
+            {
+                query = query.Where(s => s.Status == statusFilter);
+            }
+            
+            if (!string.IsNullOrWhiteSpace(categoryFilter))
+            {
+                query = query.Where(s => s.Category == categoryFilter);
+            }
             
             // Get total count before pagination
             var totalCount = await query.CountAsync();
@@ -87,9 +85,6 @@ namespace SurveyApp.Infrastructure.Repositories
             var existingSurvey = await _dbContext.Surveys
                 .Include(s => s.Questions)
                 .Include(s => s.DeliveryConfig)
-                    .ThenInclude(d => d.Schedule)
-                .Include(s => s.DeliveryConfig)
-                    .ThenInclude(d => d.Trigger)
                 .FirstOrDefaultAsync(s => s.Id == survey.Id);
 
             if (existingSurvey == null)
@@ -98,7 +93,16 @@ namespace SurveyApp.Infrastructure.Repositories
             }
 
             // Actualizamos propiedades básicas
-            _dbContext.Entry(existingSurvey).CurrentValues.SetValues(survey);
+            existingSurvey.UpdateTitle(survey.Title);
+            existingSurvey.UpdateDescription(survey.Description);
+            existingSurvey.SetStatus(survey.Status);
+            existingSurvey.SetCategory(survey.Category);
+            existingSurvey.SetFeatured(survey.IsFeatured);
+            
+            if (!string.IsNullOrEmpty(survey.CreatedBy))
+            {
+                existingSurvey.SetCreatedBy(survey.CreatedBy);
+            }
 
             // Actualizar preguntas
             // Eliminar preguntas que ya no existen
@@ -106,7 +110,7 @@ namespace SurveyApp.Infrastructure.Repositories
             {
                 if (!survey.Questions.Any(q => q.Id == existingQuestion.Id))
                 {
-                    existingSurvey.Questions.Remove(existingQuestion);
+                    existingSurvey.RemoveQuestion(existingQuestion);
                 }
             }
 
@@ -123,7 +127,7 @@ namespace SurveyApp.Infrastructure.Repositories
                 else
                 {
                     // Agregar nueva pregunta
-                    existingSurvey.Questions.Add(question);
+                    existingSurvey.AddQuestion(question);
                 }
             }
 
@@ -132,30 +136,33 @@ namespace SurveyApp.Infrastructure.Repositories
             {
                 if (existingSurvey.DeliveryConfig == null)
                 {
-                    existingSurvey.DeliveryConfig = survey.DeliveryConfig;
+                    existingSurvey.SetDeliveryConfig(survey.DeliveryConfig);
                 }
                 else
                 {
+                    // Update the existing delivery config
+                    var deliveryConfig = existingSurvey.DeliveryConfig;
+                    
                     // Set the delivery type
-                    existingSurvey.DeliveryConfig.SetType(survey.DeliveryConfig.Type);
+                    deliveryConfig.SetType(survey.DeliveryConfig.Type);
                     
                     // Update email addresses
-                    existingSurvey.DeliveryConfig.EmailAddresses.Clear();
+                    deliveryConfig.EmailAddresses.Clear();
                     foreach (var email in survey.DeliveryConfig.EmailAddresses)
                     {
-                        existingSurvey.DeliveryConfig.AddEmailAddress(email);
+                        deliveryConfig.AddEmailAddress(email);
                     }
                     
-                    // Update Schedule using the SetSchedule method
+                    // Update Schedule
                     if (survey.DeliveryConfig.Schedule != null)
                     {
-                        existingSurvey.DeliveryConfig.SetSchedule(survey.DeliveryConfig.Schedule);
+                        deliveryConfig.SetSchedule(survey.DeliveryConfig.Schedule);
                     }
                     
-                    // Update Trigger using the SetTrigger method
+                    // Update Trigger
                     if (survey.DeliveryConfig.Trigger != null)
                     {
-                        existingSurvey.DeliveryConfig.SetTrigger(survey.DeliveryConfig.Trigger);
+                        deliveryConfig.SetTrigger(survey.DeliveryConfig.Trigger);
                     }
                 }
             }
@@ -168,9 +175,6 @@ namespace SurveyApp.Infrastructure.Repositories
             var survey = await _dbContext.Surveys
                 .Include(s => s.Questions)
                 .Include(s => s.DeliveryConfig)
-                    .ThenInclude(d => d.Schedule)
-                .Include(s => s.DeliveryConfig)
-                    .ThenInclude(d => d.Trigger)
                 .FirstOrDefaultAsync(s => s.Id == id);
                 
             if (survey != null)
@@ -187,16 +191,26 @@ namespace SurveyApp.Infrastructure.Repositories
         
         public async Task<List<string>> GetAllCategoriesAsync()
         {
-            // For now, we'll return a list of predefined categories
-            // In the future, this should be dynamic based on the data
-            return await Task.FromResult(new List<string> 
-            { 
-                "Customer Satisfaction", 
-                "Product Feedback", 
-                "Employee Engagement", 
-                "Market Research", 
-                "Event Feedback"
-            });
+            var categories = await _dbContext.Surveys
+                .Where(s => !string.IsNullOrEmpty(s.Category))
+                .Select(s => s.Category)
+                .Distinct()
+                .ToListAsync();
+
+            // If no categories exist yet, return some default categories
+            if (categories == null || categories.Count == 0)
+            {
+                return new List<string> 
+                { 
+                    "Customer Satisfaction", 
+                    "Product Feedback", 
+                    "Employee Engagement", 
+                    "Market Research", 
+                    "Event Feedback"
+                };
+            }
+
+            return categories;
         }
     }
 }

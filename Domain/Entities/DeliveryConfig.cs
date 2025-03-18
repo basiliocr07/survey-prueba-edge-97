@@ -26,7 +26,10 @@ namespace SurveyApp.Domain.Entities
 
         public void AddEmailAddress(string email)
         {
-            EmailAddresses.Add(email);
+            if (!EmailAddresses.Contains(email))
+            {
+                EmailAddresses.Add(email);
+            }
         }
 
         public void RemoveEmailAddress(string email)
