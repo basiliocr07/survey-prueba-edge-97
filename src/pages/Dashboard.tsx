@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,8 @@ const fetchLatestRequirement = async () => {
 
 const updateStatus = async ({ id, type, newStatus }) => {
   console.log(`Actualizando ${type} con id ${id} a estado: ${newStatus}`);
+  // Simulamos una llamada a API con un retraso
+  await new Promise(resolve => setTimeout(resolve, 500));
   return { id, status: newStatus };
 };
 
@@ -107,7 +110,19 @@ export default function Dashboard() {
   const updateStatusMutation = useMutation({
     mutationFn: updateStatus,
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: [`latest${variables.type.charAt(0).toUpperCase() + variables.type.slice(1)}`] });
+      // Actualizamos manualmente el estado en el caché para una actualización inmediata en la UI
+      const queryKey = `latest${variables.type.charAt(0).toUpperCase() + variables.type.slice(1)}`;
+      
+      queryClient.setQueryData([queryKey], (oldData) => {
+        if (oldData) {
+          return {
+            ...oldData,
+            status: data.status
+          };
+        }
+        return oldData;
+      });
+      
       toast.success(`Estado actualizado a ${getStatusLabel(data.status)}`);
       setConfirmDialog({ open: false, id: "", type: "", newStatus: "", currentStatus: "" });
     },
@@ -147,7 +162,8 @@ export default function Dashboard() {
     });
   };
 
-  const confirmStatusChange = () => {
+  const confirmStatusChange = (e) => {
+    if (e) e.stopPropagation();
     updateStatusMutation.mutate({
       id: confirmDialog.id,
       type: confirmDialog.type,
@@ -155,8 +171,13 @@ export default function Dashboard() {
     });
   };
 
+  const closeDialog = (e) => {
+    if (e) e.stopPropagation();
+    setConfirmDialog({ open: false, id: "", type: "", newStatus: "", currentStatus: "" });
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" onClick={(e) => e.stopPropagation()}>
       <Navbar />
       <div className="container mx-auto pt-20 pb-10 px-4 md:px-6">
         <h1 className="text-3xl font-bold tracking-tight mb-6">Panel de Control</h1>
@@ -183,18 +204,17 @@ export default function Dashboard() {
                 <div className="flex items-center space-x-2">
                   {latestSurvey && (
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
+                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                         <Button 
                           variant="outline" 
                           size="sm" 
                           className="h-8"
-                          onClick={(e) => e.stopPropagation()}
                         >
                           <span>Cambiar Estado</span>
                           <ChevronDown className="ml-1 h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenuContent align="end">
                         <DropdownMenuItem 
                           onClick={(e) => handleStatusChange(e, latestSurvey.id, "Survey", "pending", latestSurvey.status)}
                           disabled={latestSurvey.status === "pending"}
@@ -220,16 +240,17 @@ export default function Dashboard() {
                     </DropdownMenu>
                   )}
                   {latestSurvey && (
-                    <Link to={`/survey/${latestSurvey.id}`}>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 w-8 p-0"
-                        onClick={(e) => e.stopPropagation()}
-                      >
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-8 w-8 p-0"
+                      onClick={(e) => e.stopPropagation()}
+                      asChild
+                    >
+                      <Link to={`/survey/${latestSurvey.id}`}>
                         <Eye className="h-4 w-4" />
-                      </Button>
-                    </Link>
+                      </Link>
+                    </Button>
                   )}
                 </div>
               </div>
@@ -250,18 +271,17 @@ export default function Dashboard() {
                 <div className="flex items-center space-x-2">
                   {latestSuggestion && (
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
+                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                         <Button 
                           variant="outline" 
                           size="sm" 
                           className="h-8"
-                          onClick={(e) => e.stopPropagation()}
                         >
                           <span>Cambiar Estado</span>
                           <ChevronDown className="ml-1 h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenuContent align="end">
                         <DropdownMenuItem 
                           onClick={(e) => handleStatusChange(e, latestSuggestion.id, "Suggestion", "pending", latestSuggestion.status)}
                           disabled={latestSuggestion.status === "pending"}
@@ -287,16 +307,17 @@ export default function Dashboard() {
                     </DropdownMenu>
                   )}
                   {latestSuggestion && (
-                    <Link to="/suggestions">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 w-8 p-0"
-                        onClick={(e) => e.stopPropagation()}
-                      >
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-8 w-8 p-0"
+                      onClick={(e) => e.stopPropagation()}
+                      asChild
+                    >
+                      <Link to="/suggestions">
                         <Eye className="h-4 w-4" />
-                      </Button>
-                    </Link>
+                      </Link>
+                    </Button>
                   )}
                 </div>
               </div>
@@ -317,18 +338,17 @@ export default function Dashboard() {
                 <div className="flex items-center space-x-2">
                   {latestRequirement && (
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
+                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                         <Button 
                           variant="outline" 
                           size="sm" 
                           className="h-8"
-                          onClick={(e) => e.stopPropagation()}
                         >
                           <span>Cambiar Estado</span>
                           <ChevronDown className="ml-1 h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenuContent align="end">
                         <DropdownMenuItem 
                           onClick={(e) => handleStatusChange(e, latestRequirement.id, "Requirement", "pending", latestRequirement.status)}
                           disabled={latestRequirement.status === "pending"}
@@ -354,16 +374,17 @@ export default function Dashboard() {
                     </DropdownMenu>
                   )}
                   {latestRequirement && (
-                    <Link to="/requirements">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 w-8 p-0"
-                        onClick={(e) => e.stopPropagation()}
-                      >
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-8 w-8 p-0"
+                      onClick={(e) => e.stopPropagation()}
+                      asChild
+                    >
+                      <Link to="/requirements">
                         <Eye className="h-4 w-4" />
-                      </Button>
-                    </Link>
+                      </Link>
+                    </Button>
                   )}
                 </div>
               </div>
@@ -371,13 +392,13 @@ export default function Dashboard() {
             
             <div className="flex justify-end space-x-2 mt-6">
               <Link to="/results">
-                <Button size="sm">
+                <Button size="sm" onClick={(e) => e.stopPropagation()}>
                   <BarChart3 className="mr-2 h-4 w-4" />
                   Ver Análisis
                 </Button>
               </Link>
               <Link to="/surveys">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={(e) => e.stopPropagation()}>
                   Ver Todas las Encuestas
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -408,18 +429,12 @@ export default function Dashboard() {
           <DialogFooter>
             <Button 
               variant="outline" 
-              onClick={(e) => {
-                e.stopPropagation();
-                setConfirmDialog({ open: false, id: "", type: "", newStatus: "", currentStatus: "" });
-              }}
+              onClick={closeDialog}
             >
               Cancelar
             </Button>
             <Button 
-              onClick={(e) => {
-                e.stopPropagation();
-                confirmStatusChange();
-              }} 
+              onClick={confirmStatusChange} 
               disabled={updateStatusMutation.isPending}
             >
               {updateStatusMutation.isPending ? "Actualizando..." : "Confirmar"}
