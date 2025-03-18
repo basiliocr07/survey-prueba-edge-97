@@ -1,5 +1,5 @@
-
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Application.DTOs;
@@ -36,7 +36,17 @@ namespace SurveyApp.WebMvc.Controllers
                     "Documentation", 
                     "Security", 
                     "Other"
-                }
+                },
+                ProposedCount = suggestions.Count(s => s.Status.ToLower() == "proposed" || s.Status.ToLower() == "new"),
+                InProgressCount = suggestions.Count(s => s.Status.ToLower() == "in progress"),
+                TestingCount = suggestions.Count(s => s.Status.ToLower() == "testing"),
+                CompletedCount = suggestions.Count(s => s.Status.ToLower() == "completed"),
+                TotalCount = suggestions.Count,
+                
+                CriticalCount = suggestions.Count(s => s.Priority.ToLower() == "critical"),
+                HighCount = suggestions.Count(s => s.Priority.ToLower() == "high"),
+                MediumCount = suggestions.Count(s => s.Priority.ToLower() == "medium"),
+                LowCount = suggestions.Count(s => s.Priority.ToLower() == "low")
             };
             
             return View(viewModel);
