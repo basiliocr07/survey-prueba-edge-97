@@ -127,5 +127,29 @@ namespace SurveyApp.WebApi.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        // PUT: api/surveys/{id}/status
+        [HttpPut("{id}/status")]
+        public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] string status)
+        {
+            if (string.IsNullOrWhiteSpace(status))
+            {
+                return BadRequest("El estado no puede estar vacío");
+            }
+
+            try
+            {
+                await _surveyService.UpdateSurveyStatusAsync(id, status);
+                return NoContent();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }

@@ -62,5 +62,26 @@ namespace SurveyApp.Application.Services
         /// <param name="surveyId">The survey identifier</param>
         /// <returns>True if the email was sent successfully, otherwise false</returns>
         Task<bool> SendTestSurveyEmailAsync(string email, Guid surveyId);
+
+        /// <summary>
+        /// Updates the status of a survey
+        /// </summary>
+        /// <param name="id">The survey identifier</param>
+        /// <param name="status">The new status</param>
+        Task UpdateSurveyStatusAsync(Guid id, string status);
+        
+        /// <summary>
+        /// Submits a response to a survey
+        /// </summary>
+        /// <param name="createResponseDto">The survey response data</param>
+        /// <returns>The created survey response DTO</returns>
+        Task<SurveyResponseDto> SubmitSurveyResponseAsync(CreateSurveyResponseDto createResponseDto);
+        
+        /// <summary>
+        /// Gets all responses for a specific survey
+        /// </summary>
+        /// <param name="surveyId">The survey identifier</param>
+        /// <returns>A list of survey response DTOs</returns>
+        Task<List<SurveyResponseDto>> GetSurveyResponsesAsync(Guid surveyId);
     }
 }

@@ -51,6 +51,21 @@ interface RequirementItem {
   status: string;
 }
 
+// Define the proper type for the parameters
+interface UpdateStatusParams {
+  id: string;
+  type: string;
+  newStatus: string;
+}
+
+interface ConfirmDialogState {
+  open: boolean;
+  id: string;
+  type: string;
+  newStatus: string;
+  currentStatus: string;
+}
+
 const fetchLatestSurvey = async (): Promise<SurveyItem> => {
   return {
     id: "1",
@@ -83,27 +98,12 @@ const fetchLatestRequirement = async (): Promise<RequirementItem> => {
   };
 };
 
-// Define the proper type for the parameters
-interface UpdateStatusParams {
-  id: string;
-  type: string;
-  newStatus: string;
-}
-
 const updateStatus = async ({ id, type, newStatus }: UpdateStatusParams) => {
   console.log(`Actualizando ${type} con id ${id} a estado: ${newStatus}`);
   // Simulamos una llamada a API con un retraso
   await new Promise(resolve => setTimeout(resolve, 500));
   return { id, status: newStatus };
 };
-
-interface ConfirmDialogState {
-  open: boolean;
-  id: string;
-  type: string;
-  newStatus: string;
-  currentStatus: string;
-}
 
 const StatusBadge = ({ status }: { status: string }) => {
   switch (status) {
@@ -158,14 +158,19 @@ export default function Dashboard() {
   const updateStatusMutation = useMutation({
     mutationFn: updateStatus,
     onSuccess: (data, variables) => {
-      // Actualizamos manualmente el estado en el caché para una actualización inmediata en la UI
-      const queryKey = variables.type === 'Survey' 
-        ? 'latestSurvey' 
-        : variables.type === 'Suggestion' 
-          ? 'latestSuggestion' 
-          : 'latestRequirement';
+      // Identificar correctamente la clave de consulta según el tipo
+      let queryKey;
       
-      queryClient.setQueryData([queryKey], (oldData: SurveyItem | SuggestionItem | RequirementItem | undefined) => {
+      if (variables.type === 'Survey') {
+        queryKey = 'latestSurvey';
+      } else if (variables.type === 'Suggestion') {
+        queryKey = 'latestSuggestion';
+      } else {
+        queryKey = 'latestRequirement';
+      }
+      
+      // Asegurar que el tipo de datos sea correcto al actualizar la caché
+      queryClient.setQueryData([queryKey], (oldData: any) => {
         if (oldData) {
           return {
             ...oldData,
