@@ -1,4 +1,3 @@
-
 @model SurveyApp.WebMvc.Models.SurveyCreateViewModel
 @{
     ViewData["Title"] = "Create Survey";
@@ -66,7 +65,7 @@
                                 {
                                     @for (int i = 0; i < Model.Questions.Count; i++)
                                     {
-                                        <partial name="_QuestionPartial" model="Model.Questions[i]" />
+                                        <partial name="_QuestionPartial" model="new Tuple<SurveyApp.WebMvc.Models.QuestionViewModel, int>(Model.Questions[i], i)" />
                                     }
                                 }
                             </div>
@@ -298,151 +297,312 @@
             const questionsContainer = document.getElementById('questions-container');
             const questionCount = document.querySelectorAll('.question-item').length;
             
-            // Create a new question item (this would be partial view in ASP.NET)
+            // Create a new question item with proper indexing
             const newQuestion = document.createElement('div');
-            newQuestion.className = 'question-item bg-accent/30 p-4 rounded-lg mb-4';
+            newQuestion.className = 'question-item bg-white shadow-sm rounded-lg border p-4 mb-4';
+            newQuestion.setAttribute('data-index', questionCount);
             newQuestion.innerHTML = `
-                <div class="flex justify-between mb-2">
-                    <h4 class="font-medium">Question ${questionCount + 1}</h4>
-                    <button type="button" class="text-destructive hover:text-destructive/80" onclick="removeQuestion(this)">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                <div class="flex justify-between mb-4">
+                    <h3 class="font-medium">Question ${questionCount + 1}</h3>
+                    <div class="flex space-x-2">
+                        <button type="button" class="move-up text-gray-500 hover:text-gray-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                        </button>
+                        <button type="button" class="move-down text-gray-500 hover:text-gray-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </button>
+                        <button type="button" class="delete-question text-red-500 hover:text-red-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
                 </div>
-                <div class="space-y-4">
-                    <div class="space-y-2">
-                        <label class="text-sm font-medium">Question Text</label>
-                        <input type="text" name="Questions[${questionCount}].QuestionText" class="form-input w-full rounded-md border" placeholder="Enter your question" />
+                
+                <div class="space-y-3">
+                    <input type="hidden" name="Questions[${questionCount}].Id" id="Questions_${questionCount}__Id" value="" />
+                    <input type="hidden" name="Questions[${questionCount}].Title" id="Questions_${questionCount}__Title" value="" />
+                    <input type="hidden" name="Questions[${questionCount}].Description" id="Questions_${questionCount}__Description" value="" />
+                    <input type="hidden" name="Questions[${questionCount}].Type" id="Questions_${questionCount}__Type" value="Text" />
+                    <input type="hidden" name="Questions[${questionCount}].Required" id="Questions_${questionCount}__Required" value="false" />
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Question Title</label>
+                        <input type="text" class="question-title w-full px-3 py-2 border border-gray-300 rounded-md"
+                               value="" 
+                               onchange="updateHiddenField(this, 'Questions_${questionCount}__Title')" />
+                        <span class="field-validation-valid text-danger text-sm" data-valmsg-for="Questions[${questionCount}].Title" data-valmsg-replace="true"></span>
                     </div>
                     
-                    <div class="space-y-2">
-                        <label class="text-sm font-medium">Question Type</label>
-                        <select name="Questions[${questionCount}].QuestionType" class="form-select w-full rounded-md border" onchange="toggleQuestionOptions(this)">
-                            <option value="Text">Text</option>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Question Type</label>
+                        <select class="question-type w-full px-3 py-2 border border-gray-300 rounded-md"
+                                onchange="updateQuestionType(this, ${questionCount})">
+                            <option value="Text" selected>Text</option>
+                            <option value="SingleChoice">Single Choice</option>
                             <option value="MultipleChoice">Multiple Choice</option>
-                            <option value="Checkbox">Checkbox</option>
                             <option value="Rating">Rating</option>
                         </select>
                     </div>
                     
-                    <div class="question-options hidden">
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium">Options</label>
-                            <div class="options-container space-y-2">
-                                <div class="flex items-center gap-2">
-                                    <input type="text" name="Questions[${questionCount}].Options[0]" class="form-input flex-1 rounded-md border" placeholder="Option 1" />
-                                    <button type="button" class="text-destructive" onclick="removeOption(this)">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <input type="text" name="Questions[${questionCount}].Options[1]" class="form-input flex-1 rounded-md border" placeholder="Option 2" />
-                                    <button type="button" class="text-destructive" onclick="removeOption(this)">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <button type="button" class="btn btn-outline btn-sm mt-2" onclick="addOption(this, ${questionCount})">
-                                <i class="fas fa-plus mr-1"></i> Add Option
-                            </button>
+                    <div class="options-container hidden">
+                        <label class="block text-sm font-medium mb-1">Options</label>
+                        <div class="options-list space-y-2">
+                            <!-- Options will be added here -->
                         </div>
+                        <button type="button" class="add-option mt-2 text-sm text-blue-600">+ Add Option</button>
                     </div>
                     
-                    <div class="space-y-2">
-                        <div class="flex items-center gap-2">
-                            <input type="checkbox" id="required-${questionCount}" name="Questions[${questionCount}].Required" class="rounded border-gray-300 text-primary focus:ring-primary" />
-                            <label for="required-${questionCount}" class="text-sm font-medium">Required Question</label>
-                        </div>
+                    <div class="flex items-center mt-2">
+                        <input type="checkbox" class="required-checkbox mr-2" 
+                               onchange="updateRequiredField(this, ${questionCount})" />
+                        <label class="text-sm">Required</label>
                     </div>
                 </div>
             `;
             
             questionsContainer.appendChild(newQuestion);
+            
+            // Add listeners for new question's buttons
+            setupQuestionEventListeners(newQuestion, questionCount);
         });
         
-        // Remove question functionality
-        function removeQuestion(button) {
-            const questionItem = button.closest('.question-item');
-            questionItem.remove();
+        // Setup event listeners for question actions
+        function setupQuestionEventListeners(questionElement, index) {
+            // Delete question button
+            const deleteBtn = questionElement.querySelector('.delete-question');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', function() {
+                    questionElement.remove();
+                    // Reindex questions
+                    reindexQuestions();
+                });
+            }
             
-            // Renumber remaining questions
-            const questionItems = document.querySelectorAll('.question-item');
-            questionItems.forEach((item, index) => {
-                const heading = item.querySelector('h4');
-                if (heading) {
-                    heading.innerText = `Question ${index + 1}`;
+            // Move up button
+            const moveUpBtn = questionElement.querySelector('.move-up');
+            if (moveUpBtn) {
+                moveUpBtn.addEventListener('click', function() {
+                    const prev = questionElement.previousElementSibling;
+                    if (prev && prev.classList.contains('question-item')) {
+                        questionElement.parentNode.insertBefore(questionElement, prev);
+                        reindexQuestions();
+                    }
+                });
+            }
+            
+            // Move down button
+            const moveDownBtn = questionElement.querySelector('.move-down');
+            if (moveDownBtn) {
+                moveDownBtn.addEventListener('click', function() {
+                    const next = questionElement.nextElementSibling;
+                    if (next && next.classList.contains('question-item')) {
+                        questionElement.parentNode.insertBefore(next, questionElement);
+                        reindexQuestions();
+                    }
+                });
+            }
+            
+            // Add option button
+            const addOptionBtn = questionElement.querySelector('.add-option');
+            if (addOptionBtn) {
+                addOptionBtn.addEventListener('click', function() {
+                    const optionsList = questionElement.querySelector('.options-list');
+                    const optionCount = optionsList.children.length;
+                    
+                    const newOption = document.createElement('div');
+                    newOption.className = 'flex items-center';
+                    newOption.innerHTML = `
+                        <input type="hidden" name="Questions[${index}].Options[${optionCount}]" value="" />
+                        <input type="text" class="option-input flex-1 px-3 py-1 border border-gray-300 rounded-md"
+                               value=""
+                               onchange="updateOptionValue(this, ${index}, ${optionCount})" />
+                        <button type="button" class="remove-option ml-2 text-red-500">×</button>
+                    `;
+                    
+                    optionsList.appendChild(newOption);
+                    
+                    // Add listener for remove option button
+                    const removeBtn = newOption.querySelector('.remove-option');
+                    if (removeBtn) {
+                        removeBtn.addEventListener('click', function() {
+                            if (optionsList.children.length > 2) {
+                                newOption.remove();
+                                reindexOptions(optionsList, index);
+                            }
+                        });
+                    }
+                });
+            }
+            
+            // Question type change
+            const typeSelect = questionElement.querySelector('.question-type');
+            if (typeSelect) {
+                typeSelect.addEventListener('change', function() {
+                    const optionsContainer = questionElement.querySelector('.options-container');
+                    const hiddenTypeInput = document.getElementById(`Questions_${index}__Type`);
+                    
+                    // Update hidden field
+                    if (hiddenTypeInput) {
+                        hiddenTypeInput.value = this.value;
+                    }
+                    
+                    // Show/hide options based on question type
+                    if (this.value === 'SingleChoice' || this.value === 'MultipleChoice') {
+                        optionsContainer.classList.remove('hidden');
+                        
+                        // If no options exist, add two default ones
+                        const optionsList = optionsContainer.querySelector('.options-list');
+                        if (optionsList.children.length === 0) {
+                            for (let i = 0; i < 2; i++) {
+                                const newOption = document.createElement('div');
+                                newOption.className = 'flex items-center';
+                                newOption.innerHTML = `
+                                    <input type="hidden" name="Questions[${index}].Options[${i}]" value="Option ${i + 1}" />
+                                    <input type="text" class="option-input flex-1 px-3 py-1 border border-gray-300 rounded-md"
+                                           value="Option ${i + 1}"
+                                           onchange="updateOptionValue(this, ${index}, ${i})" />
+                                    <button type="button" class="remove-option ml-2 text-red-500">×</button>
+                                `;
+                                
+                                optionsList.appendChild(newOption);
+                                
+                                // Add listener for remove option button
+                                const removeBtn = newOption.querySelector('.remove-option');
+                                if (removeBtn) {
+                                    removeBtn.addEventListener('click', function() {
+                                        if (optionsList.children.length > 2) {
+                                            newOption.remove();
+                                            reindexOptions(optionsList, index);
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                    } else {
+                        optionsContainer.classList.add('hidden');
+                    }
+                });
+            }
+        }
+        
+        // Reindex all questions after reordering or deletion
+        function reindexQuestions() {
+            const questions = document.querySelectorAll('.question-item');
+            questions.forEach((question, index) => {
+                // Update data-index attribute
+                question.setAttribute('data-index', index);
+                
+                // Update question number in title
+                const title = question.querySelector('h3');
+                if (title) {
+                    title.textContent = `Question ${index + 1}`;
                 }
                 
-                // Update name attributes to maintain correct indexing
-                const inputs = item.querySelectorAll('input, select');
+                // Update all input names and IDs
+                const inputs = question.querySelectorAll('input[name^="Questions["], select[name^="Questions["]');
                 inputs.forEach(input => {
                     const name = input.getAttribute('name');
-                    if (name) {
-                        input.setAttribute('name', name.replace(/Questions\[\d+\]/, `Questions[${index}]`));
+                    const newName = name.replace(/Questions\[\d+\]/, `Questions[${index}]`);
+                    input.setAttribute('name', newName);
+                    
+                    if (input.id) {
+                        const newId = input.id.replace(/Questions_\d+_/, `Questions_${index}_`);
+                        input.id = newId;
                     }
+                });
+                
+                // Update onchange handlers
+                const titleInput = question.querySelector('.question-title');
+                if (titleInput) {
+                    titleInput.setAttribute('onchange', `updateHiddenField(this, 'Questions_${index}__Title')`);
+                }
+                
+                const typeSelect = question.querySelector('.question-type');
+                if (typeSelect) {
+                    typeSelect.setAttribute('onchange', `updateQuestionType(this, ${index})`);
+                }
+                
+                const requiredCheckbox = question.querySelector('.required-checkbox');
+                if (requiredCheckbox) {
+                    requiredCheckbox.setAttribute('onchange', `updateRequiredField(this, ${index})`);
+                }
+                
+                // Update options
+                const optionInputs = question.querySelectorAll('.option-input');
+                optionInputs.forEach((input, optionIndex) => {
+                    input.setAttribute('onchange', `updateOptionValue(this, ${index}, ${optionIndex})`);
                 });
             });
         }
         
-        // Toggle question options based on question type
-        function toggleQuestionOptions(select) {
+        // Reindex options within a question
+        function reindexOptions(optionsList, questionIndex) {
+            const options = optionsList.querySelectorAll('.flex.items-center');
+            options.forEach((option, optionIndex) => {
+                const hiddenInput = option.querySelector('input[type="hidden"]');
+                const textInput = option.querySelector('.option-input');
+                
+                if (hiddenInput) {
+                    hiddenInput.setAttribute('name', `Questions[${questionIndex}].Options[${optionIndex}]`);
+                }
+                
+                if (textInput) {
+                    textInput.setAttribute('onchange', `updateOptionValue(this, ${questionIndex}, ${optionIndex})`);
+                }
+            });
+        }
+        
+        // Helper functions for updating hidden fields
+        function updateHiddenField(element, targetId) {
+            const hiddenField = document.getElementById(targetId);
+            if (hiddenField) {
+                hiddenField.value = element.value;
+            }
+        }
+        
+        function updateQuestionType(select, index) {
+            const hiddenField = document.getElementById(`Questions_${index}__Type`);
+            if (hiddenField) {
+                hiddenField.value = select.value;
+            }
+            
             const questionItem = select.closest('.question-item');
-            const optionsDiv = questionItem.querySelector('.question-options');
+            const optionsContainer = questionItem.querySelector('.options-container');
             
-            if (select.value === 'MultipleChoice' || select.value === 'Checkbox') {
-                optionsDiv.classList.remove('hidden');
+            if (select.value === 'SingleChoice' || select.value === 'MultipleChoice') {
+                optionsContainer.classList.remove('hidden');
             } else {
-                optionsDiv.classList.add('hidden');
+                optionsContainer.classList.add('hidden');
             }
         }
         
-        // Add option to multiple choice/checkbox questions
-        function addOption(button, questionIndex) {
-            const optionsContainer = button.closest('.question-options').querySelector('.options-container');
-            const optionCount = optionsContainer.children.length;
-            
-            const newOption = document.createElement('div');
-            newOption.className = 'flex items-center gap-2';
-            newOption.innerHTML = `
-                <input type="text" name="Questions[${questionIndex}].Options[${optionCount}]" class="form-input flex-1 rounded-md border" placeholder="Option ${optionCount + 1}" />
-                <button type="button" class="text-destructive" onclick="removeOption(this)">
-                    <i class="fas fa-times"></i>
-                </button>
-            `;
-            
-            optionsContainer.appendChild(newOption);
-        }
-        
-        // Remove option from multiple choice/checkbox questions
-        function removeOption(button) {
-            const optionItem = button.closest('div');
-            const optionsContainer = optionItem.parentElement;
-            
-            if (optionsContainer.children.length > 1) {
-                optionItem.remove();
-                
-                // Update indices of remaining options
-                const questionItem = optionsContainer.closest('.question-item');
-                const questionIndex = Array.from(document.querySelectorAll('.question-item')).indexOf(questionItem);
-                
-                const options = optionsContainer.querySelectorAll('input[type="text"]');
-                options.forEach((option, index) => {
-                    option.setAttribute('name', `Questions[${questionIndex}].Options[${index}]`);
-                    option.setAttribute('placeholder', `Option ${index + 1}`);
-                });
+        function updateRequiredField(checkbox, index) {
+            const hiddenField = document.getElementById(`Questions_${index}__Required`);
+            if (hiddenField) {
+                hiddenField.value = checkbox.checked.toString().toLowerCase();
             }
         }
         
-        // Email delivery toggle
-        document.getElementById('enableEmailDelivery').addEventListener('change', function() {
-            const emailSettings = document.getElementById('email-settings');
-            emailSettings.style.display = this.checked ? 'block' : 'none';
-        });
+        function updateOptionValue(input, questionIndex, optionIndex) {
+            const hiddenInput = input.previousElementSibling;
+            if (hiddenInput && hiddenInput.tagName === 'INPUT') {
+                hiddenInput.value = input.value;
+            }
+        }
         
-        // Initialize email settings visibility
+        // Initialize existing questions
         document.addEventListener('DOMContentLoaded', function() {
+            const questions = document.querySelectorAll('.question-item');
+            questions.forEach((question, index) => {
+                setupQuestionEventListeners(question, index);
+            });
+            
+            // Initial state of email settings
             const enableEmail = document.getElementById('enableEmailDelivery');
             const emailSettings = document.getElementById('email-settings');
-            emailSettings.style.display = enableEmail.checked ? 'block' : 'none';
+            if (enableEmail && emailSettings) {
+                emailSettings.style.display = enableEmail.checked ? 'block' : 'none';
+            }
         });
     </script>
 }
+

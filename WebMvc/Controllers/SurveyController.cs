@@ -58,7 +58,10 @@ namespace SurveyApp.WebMvc.Controllers
         // GET: Survey/Create
         public IActionResult Create()
         {
-            var viewModel = new SurveyCreateViewModel();
+            var viewModel = new SurveyCreateViewModel
+            {
+                Questions = new List<QuestionViewModel>()
+            };
             return View(viewModel);
         }
 
@@ -75,14 +78,16 @@ namespace SurveyApp.WebMvc.Controllers
                     {
                         Title = viewModel.Title,
                         Description = viewModel.Description,
-                        Questions = viewModel.Questions.Select(q => new CreateQuestionDto
-                        {
-                            Title = q.Title,
-                            Description = q.Description,
-                            Type = q.Type,
-                            Required = q.Required,
-                            Options = q.Options
-                        }).ToList(),
+                        Questions = viewModel.Questions?
+                            .Select(q => new CreateQuestionDto
+                            {
+                                Title = q.Title,
+                                Description = q.Description,
+                                Type = q.Type,
+                                Required = q.Required,
+                                Options = q.Options ?? new List<string>()
+                            })
+                            .ToList() ?? new List<CreateQuestionDto>(),
                         DeliveryConfig = MapToDeliveryConfigDto(viewModel.DeliveryConfig)
                     };
 

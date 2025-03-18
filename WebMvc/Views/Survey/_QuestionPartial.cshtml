@@ -5,7 +5,7 @@
     var index = Model.Item2;
 }
 
-<div class="question-item bg-white shadow-sm rounded-lg border p-4" data-index="@index">
+<div class="question-item bg-white shadow-sm rounded-lg border p-4 mb-4" data-index="@index">
     <div class="flex justify-between mb-4">
         <h3 class="font-medium">Question @(index + 1)</h3>
         <div class="flex space-x-2">
@@ -40,9 +40,9 @@
             <label class="block text-sm font-medium mb-1">Question Type</label>
             <select class="question-type w-full px-3 py-2 border border-gray-300 rounded-md"
                     onchange="updateQuestionType(this, @index)">
+                <option value="Text" @(question.Type == "Text" ? "selected" : "")>Text</option>
                 <option value="SingleChoice" @(question.Type == "SingleChoice" ? "selected" : "")>Single Choice</option>
                 <option value="MultipleChoice" @(question.Type == "MultipleChoice" ? "selected" : "")>Multiple Choice</option>
-                <option value="Text" @(question.Type == "Text" ? "selected" : "")>Text</option>
                 <option value="Rating" @(question.Type == "Rating" ? "selected" : "")>Rating</option>
             </select>
         </div>
@@ -50,15 +50,18 @@
         <div class="options-container @(question.Type == "Text" || question.Type == "Rating" ? "hidden" : "")">
             <label class="block text-sm font-medium mb-1">Options</label>
             <div class="options-list space-y-2">
-                @for (var j = 0; j < question.Options.Count; j++)
+                @if (question.Options != null)
                 {
-                    <div class="flex items-center">
-                        <input type="hidden" name="Questions[@index].Options[@j]" value="@question.Options[j]" />
-                        <input type="text" class="option-input flex-1 px-3 py-1 border border-gray-300 rounded-md"
-                               value="@question.Options[j]"
-                               onchange="updateOptionValue(this, @index, @j)" />
-                        <button type="button" class="remove-option ml-2 text-red-500">×</button>
-                    </div>
+                    @for (var j = 0; j < question.Options.Count; j++)
+                    {
+                        <div class="flex items-center">
+                            <input type="hidden" name="Questions[@index].Options[@j]" value="@question.Options[j]" />
+                            <input type="text" class="option-input flex-1 px-3 py-1 border border-gray-300 rounded-md"
+                                   value="@question.Options[j]"
+                                   onchange="updateOptionValue(this, @index, @j)" />
+                            <button type="button" class="remove-option ml-2 text-red-500">×</button>
+                        </div>
+                    }
                 }
             </div>
             <button type="button" class="add-option mt-2 text-sm text-blue-600">+ Add Option</button>
