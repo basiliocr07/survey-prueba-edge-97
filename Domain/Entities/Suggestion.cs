@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 
@@ -18,6 +17,10 @@ namespace SurveyApp.Domain.Entities
         public string Response { get; set; }
         public DateTime? ResponseDate { get; set; }
         public List<string> SimilarSuggestions { get; set; } = new List<string>();
+        
+        // Nuevas propiedades
+        public DateTime? TargetDate { get; set; }
+        public string AcceptanceCriteria { get; set; }
     }
 
     public enum SuggestionStatus

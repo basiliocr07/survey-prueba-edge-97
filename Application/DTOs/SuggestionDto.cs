@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 
@@ -23,6 +24,8 @@ namespace SurveyApp.Application.DTOs
         public string Description { get; set; }
         public string Source { get; set; }
         public int CompletionPercentage { get; set; }
+        public DateTime? TargetDate { get; set; }
+        public string AcceptanceCriteria { get; set; }
     }
 
     public class CreateSuggestionDto

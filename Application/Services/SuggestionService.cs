@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -214,9 +215,10 @@ namespace SurveyApp.Application.Services
                     : "Sin título",
                 Description = suggestion.Content,
                 Source = suggestion.IsAnonymous ? "Anonymous" : "Customer",
-                CompletionPercentage = completionPercentage
+                CompletionPercentage = completionPercentage,
+                TargetDate = suggestion.TargetDate,
+                AcceptanceCriteria = suggestion.AcceptanceCriteria
             };
         }
     }
 }
-
