@@ -14,186 +14,302 @@
             </p>
         </div>
 
-        <form asp-action="Create" method="post">
+        <div class="tabs-container mb-8">
+            <div class="tabs flex border-b">
+                <button class="tab-btn py-2 px-4 font-medium text-primary border-b-2 border-primary" data-tab="design">Design Survey</button>
+                <button class="tab-btn py-2 px-4 font-medium text-gray-500" data-tab="delivery">Email Delivery</button>
+                <button class="tab-btn py-2 px-4 font-medium text-gray-500" data-tab="settings">Settings</button>
+                <button class="tab-btn py-2 px-4 font-medium text-gray-500" data-tab="preview">Preview</button>
+            </div>
+        </div>
+
+        <form asp-action="Create" method="post" id="surveyForm">
             <div asp-validation-summary="ModelOnly" class="text-danger mb-4"></div>
 
-            <div class="bg-white shadow rounded-lg p-6 mb-6">
-                <h2 class="text-xl font-semibold mb-4">Survey Details</h2>
-                <div class="space-y-4">
-                    <div>
-                        <label asp-for="Title" class="block text-sm font-medium mb-1">Survey Title</label>
-                        <input asp-for="Title" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Enter survey title" />
-                        <span asp-validation-for="Title" class="text-danger text-sm"></span>
-                    </div>
-                    <div>
-                        <label asp-for="Description" class="block text-sm font-medium mb-1">Description (optional)</label>
-                        <textarea asp-for="Description" class="w-full px-3 py-2 border border-gray-300 rounded-md min-h-[100px]" placeholder="Enter a description for your survey"></textarea>
-                        <span asp-validation-for="Description" class="text-danger text-sm"></span>
+            <div class="tab-content" id="design-tab">
+                <div class="bg-white shadow rounded-lg p-6 mb-6">
+                    <h2 class="text-xl font-semibold mb-4">Survey Details</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label asp-for="Title" class="block text-sm font-medium mb-1">Survey Title</label>
+                            <input asp-for="Title" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Enter survey title" />
+                            <span asp-validation-for="Title" class="text-danger text-sm"></span>
+                        </div>
+                        <div>
+                            <label asp-for="Description" class="block text-sm font-medium mb-1">Description (optional)</label>
+                            <textarea asp-for="Description" class="w-full px-3 py-2 border border-gray-300 rounded-md min-h-[100px]" placeholder="Enter a description for your survey"></textarea>
+                            <span asp-validation-for="Description" class="text-danger text-sm"></span>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="bg-white shadow rounded-lg p-6 mb-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-xl font-semibold">Questions</h2>
-                    <button type="button" id="addQuestion" class="inline-flex items-center justify-center rounded-md bg-primary text-white px-4 py-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                        Add Question
+                <div class="bg-white shadow rounded-lg p-6 mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-semibold">Questions</h2>
+                        <button type="button" id="addQuestion" class="inline-flex items-center justify-center rounded-md bg-primary text-white px-4 py-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            Add Question
+                        </button>
+                    </div>
+
+                    <div id="questionsContainer" class="space-y-4">
+                        @for (var i = 0; i < Model.Questions.Count; i++)
+                        {
+                            <div class="question-item bg-white shadow-sm rounded-lg border p-4" data-index="@i">
+                                <div class="flex justify-between mb-4">
+                                    <h3 class="font-medium">Question @(i + 1)</h3>
+                                    <div class="flex space-x-2">
+                                        @if (i > 0)
+                                        {
+                                            <button type="button" class="move-up text-gray-500 hover:text-gray-700">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                            </button>
+                                        }
+                                        @if (i < Model.Questions.Count - 1)
+                                        {
+                                            <button type="button" class="move-down text-gray-500 hover:text-gray-700">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                            </button>
+                                        }
+                                        <button type="button" class="delete-question text-red-500 hover:text-red-700">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-3">
+                                    <input type="hidden" asp-for="Questions[i].Id" />
+                                    <input type="hidden" asp-for="Questions[i].Title" id="Questions_@(i)__Title" />
+                                    <input type="hidden" asp-for="Questions[i].Description" id="Questions_@(i)__Description" />
+                                    <input type="hidden" asp-for="Questions[i].Type" id="Questions_@(i)__Type" />
+                                    <input type="hidden" asp-for="Questions[i].Required" id="Questions_@(i)__Required" />
+
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1">Question Title</label>
+                                        <input type="text" class="question-title w-full px-3 py-2 border border-gray-300 rounded-md"
+                                               value="@Model.Questions[i].Title" 
+                                               onchange="updateHiddenField(this, 'Questions_@(i)__Title')" />
+                                        <span class="field-validation-valid text-danger text-sm" data-valmsg-for="Questions[@i].Title" data-valmsg-replace="true"></span>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1">Question Description (optional)</label>
+                                        <textarea class="question-description w-full px-3 py-2 border border-gray-300 rounded-md"
+                                                  onchange="updateHiddenField(this, 'Questions_@(i)__Description')">@Model.Questions[i].Description</textarea>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1">Question Type</label>
+                                        <select class="question-type w-full px-3 py-2 border border-gray-300 rounded-md"
+                                                onchange="updateQuestionType(this, @i)">
+                                            <option value="single-choice" @(Model.Questions[i].Type == "single-choice" ? "selected" : "")>Single Choice</option>
+                                            <option value="multiple-choice" @(Model.Questions[i].Type == "multiple-choice" ? "selected" : "")>Multiple Choice</option>
+                                            <option value="text" @(Model.Questions[i].Type == "text" ? "selected" : "")>Text</option>
+                                            <option value="rating" @(Model.Questions[i].Type == "rating" ? "selected" : "")>Rating</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="options-container @(Model.Questions[i].Type == "text" || Model.Questions[i].Type == "rating" ? "hidden" : "")">
+                                        <label class="block text-sm font-medium mb-1">Options</label>
+                                        <div class="options-list space-y-2">
+                                            @for (var j = 0; j < (Model.Questions[i].Options?.Count ?? 0); j++)
+                                            {
+                                                <div class="flex items-center">
+                                                    <input type="hidden" name="Questions[@i].Options[@j]" value="@Model.Questions[i].Options[j]" />
+                                                    <input type="text" class="option-input flex-1 px-3 py-1 border border-gray-300 rounded-md"
+                                                           value="@Model.Questions[i].Options[j]"
+                                                           onchange="updateOptionValue(this, @i, @j)" />
+                                                    <button type="button" class="remove-option ml-2 text-red-500">×</button>
+                                                </div>
+                                            }
+                                        </div>
+                                        <button type="button" class="add-option mt-2 text-sm text-blue-600">+ Add Option</button>
+                                    </div>
+
+                                    <div class="flex items-center mt-2">
+                                        <input type="checkbox" class="required-checkbox mr-2" 
+                                               @(Model.Questions[i].Required ? "checked" : "")
+                                               onchange="updateRequiredField(this, @i)" />
+                                        <label class="text-sm">Required</label>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-4 mt-8">
+                    <button type="button" class="preview-btn inline-flex items-center justify-center rounded-md border border-gray-300 px-4 py-2">
+                        Preview
+                    </button>
+                    <button type="submit" class="inline-flex items-center justify-center rounded-md bg-primary text-white px-4 py-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                        Save Survey
                     </button>
                 </div>
+            </div>
 
-                <div id="questionsContainer" class="space-y-4">
-                    @for (var i = 0; i < Model.Questions.Count; i++)
-                    {
-                        <div class="question-item bg-white shadow-sm rounded-lg border p-4" data-index="@i">
-                            <div class="flex justify-between mb-4">
-                                <h3 class="font-medium">Question @(i + 1)</h3>
-                                <div class="flex space-x-2">
-                                    @if (i > 0)
-                                    {
-                                        <button type="button" class="move-up text-gray-500 hover:text-gray-700">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><polyline points="18 15 12 9 6 15"></polyline></svg>
-                                        </button>
-                                    }
-                                    @if (i < Model.Questions.Count - 1)
-                                    {
-                                        <button type="button" class="move-down text-gray-500 hover:text-gray-700">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                                        </button>
-                                    }
-                                    <button type="button" class="delete-question text-red-500 hover:text-red-700">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-                                    </button>
-                                </div>
-                            </div>
-
+            <div class="tab-content hidden" id="delivery-tab">
+                <div class="bg-white shadow rounded-lg p-6 mb-6">
+                    <h2 class="text-xl font-semibold mb-4">Email Delivery Settings</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-3">Delivery Method</label>
                             <div class="space-y-3">
-                                <input type="hidden" asp-for="Questions[i].Title" />
-                                <input type="hidden" asp-for="Questions[i].Description" />
-                                <input type="hidden" asp-for="Questions[i].Type" />
-                                <input type="hidden" asp-for="Questions[i].Required" />
-
-                                <div>
-                                    <label class="block text-sm font-medium mb-1">Question Title</label>
-                                    <input type="text" class="question-title w-full px-3 py-2 border border-gray-300 rounded-md"
-                                           value="@Model.Questions[i].Title" 
-                                           onchange="updateHiddenField(this, 'Questions_@(i)__Title')" />
-                                    <span class="field-validation-valid text-danger text-sm" data-valmsg-for="Questions[@i].Title" data-valmsg-replace="true"></span>
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium mb-1">Question Type</label>
-                                    <select class="question-type w-full px-3 py-2 border border-gray-300 rounded-md"
-                                            onchange="updateQuestionType(this, @i)">
-                                        <option value="SingleChoice" @(Model.Questions[i].Type == "SingleChoice" ? "selected" : "")>Single Choice</option>
-                                        <option value="MultipleChoice" @(Model.Questions[i].Type == "MultipleChoice" ? "selected" : "")>Multiple Choice</option>
-                                        <option value="Text" @(Model.Questions[i].Type == "Text" ? "selected" : "")>Text</option>
-                                        <option value="Rating" @(Model.Questions[i].Type == "Rating" ? "selected" : "")>Rating</option>
-                                    </select>
-                                </div>
-
-                                <div class="options-container @(Model.Questions[i].Type == "Text" || Model.Questions[i].Type == "Rating" ? "hidden" : "")">
-                                    <label class="block text-sm font-medium mb-1">Options</label>
-                                    <div class="options-list space-y-2">
-                                        @for (var j = 0; j < Model.Questions[i].Options.Count; j++)
-                                        {
-                                            <div class="flex items-center">
-                                                <input type="hidden" name="Questions[@i].Options[@j]" value="@Model.Questions[i].Options[j]" />
-                                                <input type="text" class="option-input flex-1 px-3 py-1 border border-gray-300 rounded-md"
-                                                       value="@Model.Questions[i].Options[j]"
-                                                       onchange="updateOptionValue(this, @i, @j)" />
-                                                <button type="button" class="remove-option ml-2 text-red-500">×</button>
-                                            </div>
-                                        }
+                                <div class="flex items-start space-x-2">
+                                    <input type="radio" id="manual" name="DeliveryConfig.Type" value="manual" 
+                                           @(Model.DeliveryConfig.Type == "manual" ? "checked" : "") 
+                                           class="mt-1" />
+                                    <div class="grid gap-1.5">
+                                        <label for="manual" class="font-medium">Manual Sending</label>
+                                        <p class="text-sm text-gray-500">
+                                            Send surveys manually when needed
+                                        </p>
                                     </div>
-                                    <button type="button" class="add-option mt-2 text-sm text-blue-600">+ Add Option</button>
                                 </div>
-
-                                <div class="flex items-center mt-2">
-                                    <input type="checkbox" class="required-checkbox mr-2" 
-                                           @(Model.Questions[i].Required ? "checked" : "")
-                                           onchange="updateRequiredField(this, @i)" />
-                                    <label class="text-sm">Required</label>
+                                
+                                <div class="flex items-start space-x-2">
+                                    <input type="radio" id="scheduled" name="DeliveryConfig.Type" value="scheduled" 
+                                           @(Model.DeliveryConfig.Type == "scheduled" ? "checked" : "") 
+                                           class="mt-1" />
+                                    <div class="grid gap-1.5">
+                                        <label for="scheduled" class="font-medium">Scheduled</label>
+                                        <p class="text-sm text-gray-500">
+                                            Send surveys on a regular schedule (daily, weekly, monthly)
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
-                    }
-                </div>
-            </div>
-
-            <div class="bg-white shadow rounded-lg p-6 mb-6">
-                <h2 class="text-xl font-semibold mb-4">Email Delivery Settings</h2>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-3">Delivery Method</label>
-                        <div class="space-y-3">
-                            <div class="flex items-start space-x-2">
-                                <input type="radio" id="manual" name="DeliveryConfig.Type" value="Manual" 
-                                       @(Model.DeliveryConfig.Type == "Manual" ? "checked" : "") 
-                                       class="mt-1" />
-                                <div class="grid gap-1.5">
-                                    <label for="manual" class="font-medium">Manual Sending</label>
-                                    <p class="text-sm text-gray-500">
-                                        Send surveys manually when needed
-                                    </p>
-                                </div>
-                            </div>
-                            
-                            <div class="flex items-start space-x-2">
-                                <input type="radio" id="scheduled" name="DeliveryConfig.Type" value="Scheduled" 
-                                       @(Model.DeliveryConfig.Type == "Scheduled" ? "checked" : "") 
-                                       class="mt-1" />
-                                <div class="grid gap-1.5">
-                                    <label for="scheduled" class="font-medium">Scheduled</label>
-                                    <p class="text-sm text-gray-500">
-                                        Send surveys on a regular schedule (daily, weekly, monthly)
-                                    </p>
-                                </div>
-                            </div>
-                            
-                            <div class="flex items-start space-x-2">
-                                <input type="radio" id="triggered" name="DeliveryConfig.Type" value="Triggered" 
-                                       @(Model.DeliveryConfig.Type == "Triggered" ? "checked" : "") 
-                                       class="mt-1" />
-                                <div class="grid gap-1.5">
-                                    <label for="triggered" class="font-medium">Event Triggered</label>
-                                    <p class="text-sm text-gray-500">
-                                        Send surveys when specific events occur (ticket closed, purchase completed)
-                                    </p>
+                                
+                                <div class="flex items-start space-x-2">
+                                    <input type="radio" id="triggered" name="DeliveryConfig.Type" value="triggered" 
+                                           @(Model.DeliveryConfig.Type == "triggered" ? "checked" : "") 
+                                           class="mt-1" />
+                                    <div class="grid gap-1.5">
+                                        <label for="triggered" class="font-medium">Event Triggered</label>
+                                        <p class="text-sm text-gray-500">
+                                            Send surveys when specific events occur (ticket closed, purchase completed)
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="pt-4 border-t">
-                        <h3 class="text-lg font-medium mb-4">Recipient Emails</h3>
-                        <div class="flex space-x-2 mb-4">
-                            <input id="emailInput" type="email" placeholder="Add email address" class="flex-1 px-3 py-2 border border-gray-300 rounded-md" />
-                            <button type="button" id="addEmail" class="inline-flex items-center justify-center rounded-md bg-primary text-white px-4 py-2">Add</button>
-                        </div>
+                        <div class="pt-4 border-t">
+                            <h3 class="text-lg font-medium mb-4">Recipient Emails</h3>
+                            <div class="flex space-x-2 mb-4">
+                                <input id="emailInput" type="email" placeholder="Add email address" class="flex-1 px-3 py-2 border border-gray-300 rounded-md" />
+                                <button type="button" id="addEmail" class="inline-flex items-center justify-center rounded-md bg-primary text-white px-4 py-2">Add</button>
+                            </div>
 
-                        <div id="emailList" class="space-y-2">
-                            @for (var i = 0; i < Model.DeliveryConfig.EmailAddresses.Count; i++)
-                            {
-                                <div class="flex items-center justify-between bg-gray-100 p-2 rounded">
-                                    <input type="hidden" name="DeliveryConfig.EmailAddresses[@i]" value="@Model.DeliveryConfig.EmailAddresses[i]" />
-                                    <span class="text-sm">@Model.DeliveryConfig.EmailAddresses[i]</span>
-                                    <button type="button" class="remove-email text-red-500">×</button>
-                                </div>
-                            }
+                            <div id="emailList" class="space-y-2">
+                                @for (var i = 0; i < Model.DeliveryConfig.EmailAddresses.Count; i++)
+                                {
+                                    <div class="flex items-center justify-between bg-gray-100 p-2 rounded">
+                                        <input type="hidden" name="DeliveryConfig.EmailAddresses[@i]" value="@Model.DeliveryConfig.EmailAddresses[i]" />
+                                        <span class="text-sm">@Model.DeliveryConfig.EmailAddresses[i]</span>
+                                        <button type="button" class="remove-email text-red-500">×</button>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="flex justify-end mt-4">
+                                <button type="button" id="sendNow" class="inline-flex items-center justify-center rounded-md bg-primary text-white px-4 py-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                                    Send Now
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="flex justify-end space-x-4 mt-8">
-                <a asp-action="Index" class="inline-flex items-center justify-center rounded-md border border-gray-300 px-4 py-2">
-                    Cancel
-                </a>
-                <button type="submit" class="inline-flex items-center justify-center rounded-md bg-primary text-white px-4 py-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                    Save Survey
-                </button>
+            <div class="tab-content hidden" id="settings-tab">
+                <div class="bg-white shadow rounded-lg p-6 mb-6">
+                    <h2 class="text-xl font-semibold mb-4">Survey Settings</h2>
+                    <div class="space-y-6">
+                        <div>
+                            <h3 class="text-lg font-medium mb-4">Data Collection</h3>
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="font-medium">Allow anonymous responses</h4>
+                                        <p class="text-sm text-muted-foreground">Respondents can submit without identifying themselves</p>
+                                    </div>
+                                    <div class="flex items-center h-6">
+                                        <input type="checkbox" id="anonymous" name="Settings.AllowAnonymous" class="mr-2" checked />
+                                        <label for="anonymous">Enable</label>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="font-medium">Multiple submissions</h4>
+                                        <p class="text-sm text-muted-foreground">Allow respondents to submit multiple times</p>
+                                    </div>
+                                    <div class="flex items-center h-6">
+                                        <input type="checkbox" id="multiple" name="Settings.AllowMultiple" class="mr-2" />
+                                        <label for="multiple">Enable</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-lg font-medium mb-4">Display Options</h3>
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="font-medium">Show progress bar</h4>
+                                        <p class="text-sm text-muted-foreground">Display completion progress to respondents</p>
+                                    </div>
+                                    <div class="flex items-center h-6">
+                                        <input type="checkbox" id="progress" name="Settings.ShowProgress" class="mr-2" checked />
+                                        <label for="progress">Enable</label>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="font-medium">Show question numbers</h4>
+                                        <p class="text-sm text-muted-foreground">Display question numbers to respondents</p>
+                                    </div>
+                                    <div class="flex items-center h-6">
+                                        <input type="checkbox" id="numbers" name="Settings.ShowNumbers" class="mr-2" checked />
+                                        <label for="numbers">Enable</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content hidden" id="preview-tab">
+                <div class="bg-white shadow rounded-lg p-6 mb-6">
+                    <h2 class="text-xl font-semibold mb-4">Preview Your Survey</h2>
+                    <div id="survey-preview" class="max-w-3xl mx-auto border rounded-lg p-6 bg-white shadow-sm">
+                        <div class="mb-8">
+                            <h2 class="text-2xl font-bold mb-2" id="preview-title">Untitled Survey</h2>
+                            <p class="text-muted-foreground" id="preview-description"></p>
+                        </div>
+                        
+                        <div id="preview-questions" class="space-y-8">
+                            <!-- Preview questions will be populated here -->
+                        </div>
+                        
+                        <div class="mt-8 flex justify-end">
+                            <button type="button" class="inline-flex items-center justify-center rounded-md bg-primary text-white px-4 py-2">
+                                Submit Responses
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end mt-6">
+                        <button type="button" class="return-to-edit inline-flex items-center justify-center rounded-md border border-gray-300 px-4 py-2">
+                            Return to Editing
+                        </button>
+                    </div>
+                </div>
             </div>
         </form>
     </main>
@@ -201,61 +317,264 @@
 
 @section Scripts {
     <script>
-        // Función para actualizar campos ocultos
-        function updateHiddenField(input, fieldName) {
-            document.getElementById(fieldName).value = input.value;
-        }
-        
-        // Función para actualizar el tipo de pregunta
-        function updateQuestionType(select, index) {
-            const questionItem = select.closest('.question-item');
-            const optionsContainer = questionItem.querySelector('.options-container');
-            const hiddenTypeInput = document.getElementById(`Questions_${index}__Type`);
-            
-            hiddenTypeInput.value = select.value;
-            
-            if (select.value === 'Text' || select.value === 'Rating') {
-                optionsContainer.classList.add('hidden');
-            } else {
-                optionsContainer.classList.remove('hidden');
-            }
-        }
-        
-        // Función para actualizar el valor de una opción
-        function updateOptionValue(input, questionIndex, optionIndex) {
-            const hiddenInput = document.querySelector(`input[name="Questions[${questionIndex}].Options[${optionIndex}]"]`);
-            hiddenInput.value = input.value;
-        }
-        
-        // Función para actualizar el campo requerido
-        function updateRequiredField(checkbox, index) {
-            const hiddenRequiredInput = document.getElementById(`Questions_${index}__Required`);
-            hiddenRequiredInput.value = checkbox.checked;
-        }
-        
         document.addEventListener('DOMContentLoaded', function() {
-            // Manejar agregar una nueva pregunta
+            // Tab functionality
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tabId = btn.getAttribute('data-tab');
+                    
+                    // Update active tab button
+                    tabBtns.forEach(btn => {
+                        btn.classList.remove('text-primary', 'border-b-2', 'border-primary');
+                        btn.classList.add('text-gray-500');
+                    });
+                    btn.classList.remove('text-gray-500');
+                    btn.classList.add('text-primary', 'border-b-2', 'border-primary');
+                    
+                    // Show active tab content
+                    tabContents.forEach(content => {
+                        content.classList.add('hidden');
+                    });
+                    document.getElementById(`${tabId}-tab`).classList.remove('hidden');
+                });
+            });
+            
+            // Preview button functionality
+            document.querySelector('.preview-btn').addEventListener('click', function() {
+                // Switch to preview tab
+                tabBtns.forEach(btn => {
+                    btn.classList.remove('text-primary', 'border-b-2', 'border-primary');
+                    btn.classList.add('text-gray-500');
+                    if (btn.getAttribute('data-tab') === 'preview') {
+                        btn.classList.remove('text-gray-500');
+                        btn.classList.add('text-primary', 'border-b-2', 'border-primary');
+                    }
+                });
+                
+                // Show preview tab content
+                tabContents.forEach(content => {
+                    content.classList.add('hidden');
+                });
+                document.getElementById('preview-tab').classList.remove('hidden');
+                
+                // Update preview with current survey data
+                updatePreview();
+            });
+            
+            // Return to edit button
+            document.querySelector('.return-to-edit').addEventListener('click', function() {
+                // Switch to design tab
+                tabBtns.forEach(btn => {
+                    btn.classList.remove('text-primary', 'border-b-2', 'border-primary');
+                    btn.classList.add('text-gray-500');
+                    if (btn.getAttribute('data-tab') === 'design') {
+                        btn.classList.remove('text-gray-500');
+                        btn.classList.add('text-primary', 'border-b-2', 'border-primary');
+                    }
+                });
+                
+                // Show design tab content
+                tabContents.forEach(content => {
+                    content.classList.add('hidden');
+                });
+                document.getElementById('design-tab').classList.remove('hidden');
+            });
+            
+            // Function to update preview
+            function updatePreview() {
+                const titleEl = document.getElementById('preview-title');
+                const descriptionEl = document.getElementById('preview-description');
+                const questionsContainer = document.getElementById('preview-questions');
+                
+                // Update title and description
+                const title = document.querySelector('input[name="Title"]').value;
+                const description = document.querySelector('textarea[name="Description"]').value;
+                
+                titleEl.textContent = title || 'Untitled Survey';
+                descriptionEl.textContent = description || '';
+                
+                // Clear existing questions
+                questionsContainer.innerHTML = '';
+                
+                // Add questions to preview
+                const questionItems = document.querySelectorAll('.question-item');
+                questionItems.forEach((item, index) => {
+                    const questionTitle = item.querySelector('.question-title').value;
+                    const questionType = item.querySelector('.question-type').value;
+                    const isRequired = item.querySelector('.required-checkbox').checked;
+                    const questionDescription = item.querySelector('.question-description')?.value || '';
+                    
+                    const questionDiv = document.createElement('div');
+                    questionDiv.className = 'border-b pb-6 last:border-0';
+                    
+                    const questionHeader = document.createElement('div');
+                    questionHeader.className = 'mb-3';
+                    questionHeader.innerHTML = `
+                        <h3 class="text-lg font-medium">
+                            ${index + 1}. ${questionTitle || 'Untitled Question'}
+                            ${isRequired ? '<span class="text-red-500 ml-1">*</span>' : ''}
+                        </h3>
+                        ${questionDescription ? `<p class="text-sm text-muted-foreground mt-1">${questionDescription}</p>` : ''}
+                    `;
+                    
+                    const questionContent = document.createElement('div');
+                    questionContent.className = 'mt-3';
+                    
+                    // Add appropriate input based on question type
+                    if (questionType === 'single-choice') {
+                        const options = Array.from(item.querySelectorAll('.option-input')).map(input => input.value);
+                        questionContent.innerHTML = `
+                            <div class="space-y-2">
+                                ${options.map((option, i) => `
+                                    <div class="flex items-center">
+                                        <input type="radio" id="q${index}-o${i}" name="question-${index}" class="mr-2">
+                                        <label for="q${index}-o${i}">${option}</label>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    } else if (questionType === 'multiple-choice') {
+                        const options = Array.from(item.querySelectorAll('.option-input')).map(input => input.value);
+                        questionContent.innerHTML = `
+                            <div class="space-y-2">
+                                ${options.map((option, i) => `
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="q${index}-o${i}" name="question-${index}" class="mr-2">
+                                        <label for="q${index}-o${i}">${option}</label>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    } else if (questionType === 'text') {
+                        questionContent.innerHTML = `
+                            <textarea class="w-full rounded-md border border-input bg-background px-3 py-2 min-h-[100px]" placeholder="Your answer"></textarea>
+                        `;
+                    } else if (questionType === 'rating') {
+                        questionContent.innerHTML = `
+                            <div class="flex space-x-2">
+                                ${[1, 2, 3, 4, 5].map(value => `
+                                    <button class="w-10 h-10 rounded-full border flex items-center justify-center hover:bg-accent transition-colors">
+                                        ${value}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        `;
+                    }
+                    
+                    questionDiv.appendChild(questionHeader);
+                    questionDiv.appendChild(questionContent);
+                    questionsContainer.appendChild(questionDiv);
+                });
+            }
+            
+            // Handle adding new questions
             document.getElementById('addQuestion').addEventListener('click', function() {
                 const questionsContainer = document.getElementById('questionsContainer');
                 const questionCount = document.querySelectorAll('.question-item').length;
                 
-                fetch(`/Survey/AddQuestion?index=${questionCount}`)
-                    .then(response => response.text())
-                    .then(html => {
-                        const tempDiv = document.createElement('div');
-                        tempDiv.innerHTML = html;
-                        questionsContainer.appendChild(tempDiv.firstElementChild);
-                        
-                        setupQuestionEventListeners(tempDiv.firstElementChild);
-                    });
+                // Create a new question element
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-item bg-white shadow-sm rounded-lg border p-4';
+                questionDiv.setAttribute('data-index', questionCount);
+                
+                questionDiv.innerHTML = `
+                    <div class="flex justify-between mb-4">
+                        <h3 class="font-medium">Question ${questionCount + 1}</h3>
+                        <div class="flex space-x-2">
+                            ${questionCount > 0 ? `
+                                <button type="button" class="move-up text-gray-500 hover:text-gray-700">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                </button>
+                            ` : ''}
+                            <button type="button" class="delete-question text-red-500 hover:text-red-700">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <input type="hidden" name="Questions[${questionCount}].Id" value="" />
+                        <input type="hidden" name="Questions[${questionCount}].Title" id="Questions_${questionCount}__Title" value="" />
+                        <input type="hidden" name="Questions[${questionCount}].Description" id="Questions_${questionCount}__Description" value="" />
+                        <input type="hidden" name="Questions[${questionCount}].Type" id="Questions_${questionCount}__Type" value="single-choice" />
+                        <input type="hidden" name="Questions[${questionCount}].Required" id="Questions_${questionCount}__Required" value="true" />
+
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Question Title</label>
+                            <input type="text" class="question-title w-full px-3 py-2 border border-gray-300 rounded-md"
+                                   value="" 
+                                   onchange="updateHiddenField(this, 'Questions_${questionCount}__Title')" />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Question Description (optional)</label>
+                            <textarea class="question-description w-full px-3 py-2 border border-gray-300 rounded-md"
+                                      onchange="updateHiddenField(this, 'Questions_${questionCount}__Description')"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Question Type</label>
+                            <select class="question-type w-full px-3 py-2 border border-gray-300 rounded-md"
+                                    onchange="updateQuestionType(this, ${questionCount})">
+                                <option value="single-choice" selected>Single Choice</option>
+                                <option value="multiple-choice">Multiple Choice</option>
+                                <option value="text">Text</option>
+                                <option value="rating">Rating</option>
+                            </select>
+                        </div>
+
+                        <div class="options-container">
+                            <label class="block text-sm font-medium mb-1">Options</label>
+                            <div class="options-list space-y-2">
+                                <div class="flex items-center">
+                                    <input type="hidden" name="Questions[${questionCount}].Options[0]" value="Option 1" />
+                                    <input type="text" class="option-input flex-1 px-3 py-1 border border-gray-300 rounded-md"
+                                           value="Option 1"
+                                           onchange="updateOptionValue(this, ${questionCount}, 0)" />
+                                    <button type="button" class="remove-option ml-2 text-red-500">×</button>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="hidden" name="Questions[${questionCount}].Options[1]" value="Option 2" />
+                                    <input type="text" class="option-input flex-1 px-3 py-1 border border-gray-300 rounded-md"
+                                           value="Option 2"
+                                           onchange="updateOptionValue(this, ${questionCount}, 1)" />
+                                    <button type="button" class="remove-option ml-2 text-red-500">×</button>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="hidden" name="Questions[${questionCount}].Options[2]" value="Option 3" />
+                                    <input type="text" class="option-input flex-1 px-3 py-1 border border-gray-300 rounded-md"
+                                           value="Option 3"
+                                           onchange="updateOptionValue(this, ${questionCount}, 2)" />
+                                    <button type="button" class="remove-option ml-2 text-red-500">×</button>
+                                </div>
+                            </div>
+                            <button type="button" class="add-option mt-2 text-sm text-blue-600">+ Add Option</button>
+                        </div>
+
+                        <div class="flex items-center mt-2">
+                            <input type="checkbox" class="required-checkbox mr-2" 
+                                   checked
+                                   onchange="updateRequiredField(this, ${questionCount})" />
+                            <label class="text-sm">Required</label>
+                        </div>
+                    </div>
+                `;
+                
+                questionsContainer.appendChild(questionDiv);
+                
+                // Add event listeners to the new question
+                setupQuestionEventListeners(questionDiv);
             });
             
-            // Configurar event listeners para las preguntas existentes
-            document.querySelectorAll('.question-item').forEach(questionItem => {
-                setupQuestionEventListeners(questionItem);
+            // Set up event listeners for initial questions
+            document.querySelectorAll('.question-item').forEach(item => {
+                setupQuestionEventListeners(item);
             });
             
-            // Manejar agregar un nuevo email
+            // Handle adding new emails
             document.getElementById('addEmail').addEventListener('click', function() {
                 const emailInput = document.getElementById('emailInput');
                 const email = emailInput.value.trim();
@@ -284,17 +603,62 @@
                 }
             });
             
-            // Configurar event listeners para los emails existentes
+            // Set up event listeners for initial emails
             document.querySelectorAll('.remove-email').forEach(button => {
                 button.addEventListener('click', function() {
                     button.closest('div').remove();
                     updateEmailIndices();
                 });
             });
+            
+            // Send now button
+            document.getElementById('sendNow').addEventListener('click', function() {
+                const emailList = document.getElementById('emailList');
+                if (emailList.children.length === 0) {
+                    alert('Please add at least one email address');
+                    return;
+                }
+                
+                // In a real implementation, this would submit to the server
+                alert('Emails will be sent to the specified recipients');
+            });
         });
         
+        // Function to update hidden field
+        function updateHiddenField(input, fieldName) {
+            document.getElementById(fieldName).value = input.value;
+        }
+        
+        // Function to update question type
+        function updateQuestionType(select, index) {
+            const questionItem = select.closest('.question-item');
+            const optionsContainer = questionItem.querySelector('.options-container');
+            const hiddenTypeInput = document.getElementById(`Questions_${index}__Type`);
+            
+            hiddenTypeInput.value = select.value;
+            
+            if (select.value === 'text' || select.value === 'rating') {
+                optionsContainer.classList.add('hidden');
+            } else {
+                optionsContainer.classList.remove('hidden');
+            }
+        }
+        
+        // Function to update option value
+        function updateOptionValue(input, questionIndex, optionIndex) {
+            const hiddenInput = document.querySelector(`input[name="Questions[${questionIndex}].Options[${optionIndex}]"]`);
+            hiddenInput.value = input.value;
+        }
+        
+        // Function to update required field
+        function updateRequiredField(checkbox, index) {
+            const hiddenRequiredInput = document.getElementById(`Questions_${index}__Required`);
+            hiddenRequiredInput.value = checkbox.checked;
+        }
+        
+        // Function to set up question event listeners
         function setupQuestionEventListeners(questionItem) {
-            // Manejar eliminación de preguntas
+            // Delete question
             const deleteButton = questionItem.querySelector('.delete-question');
             deleteButton.addEventListener('click', function() {
                 if (document.querySelectorAll('.question-item').length <= 1) {
@@ -306,7 +670,7 @@
                 updateQuestionIndices();
             });
             
-            // Manejar movimiento hacia arriba
+            // Move question up
             const moveUpButton = questionItem.querySelector('.move-up');
             if (moveUpButton) {
                 moveUpButton.addEventListener('click', function() {
@@ -318,47 +682,37 @@
                 });
             }
             
-            // Manejar movimiento hacia abajo
-            const moveDownButton = questionItem.querySelector('.move-down');
-            if (moveDownButton) {
-                moveDownButton.addEventListener('click', function() {
-                    const nextQuestion = questionItem.nextElementSibling;
-                    if (nextQuestion) {
-                        questionItem.parentNode.insertBefore(nextQuestion, questionItem);
-                        updateQuestionIndices();
-                    }
-                });
-            }
-            
-            // Manejar adición de opciones
+            // Add option
             const addOptionButton = questionItem.querySelector('.add-option');
-            if (addOptionButton) {
-                addOptionButton.addEventListener('click', function() {
-                    const optionsList = questionItem.querySelector('.options-list');
-                    const optionCount = optionsList.querySelectorAll('.option-input').length;
-                    const questionIndex = questionItem.getAttribute('data-index');
+            addOptionButton.addEventListener('click', function() {
+                const optionsList = questionItem.querySelector('.options-list');
+                const optionCount = optionsList.querySelectorAll('.option-input').length;
+                const questionIndex = questionItem.getAttribute('data-index');
+                
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'flex items-center';
+                optionDiv.innerHTML = `
+                    <input type="hidden" name="Questions[${questionIndex}].Options[${optionCount}]" value="New Option" />
+                    <input type="text" class="option-input flex-1 px-3 py-1 border border-gray-300 rounded-md" 
+                           value="New Option" 
+                           onchange="updateOptionValue(this, ${questionIndex}, ${optionCount})" />
+                    <button type="button" class="remove-option ml-2 text-red-500">×</button>
+                `;
+                
+                optionsList.appendChild(optionDiv);
+                
+                optionDiv.querySelector('.remove-option').addEventListener('click', function() {
+                    if (optionsList.querySelectorAll('.option-input').length <= 2) {
+                        alert('Each question must have at least two options');
+                        return;
+                    }
                     
-                    const optionDiv = document.createElement('div');
-                    optionDiv.className = 'flex items-center';
-                    optionDiv.innerHTML = `
-                        <input type="hidden" name="Questions[${questionIndex}].Options[${optionCount}]" value="New Option" />
-                        <input type="text" class="option-input flex-1 px-3 py-1 border border-gray-300 rounded-md" 
-                               value="New Option" 
-                               onchange="updateOptionValue(this, ${questionIndex}, ${optionCount})" />
-                        <button type="button" class="remove-option ml-2 text-red-500">×</button>
-                    `;
-                    
-                    optionsList.appendChild(optionDiv);
-                    
-                    // Configurar remove option para la nueva opción
-                    optionDiv.querySelector('.remove-option').addEventListener('click', function() {
-                        optionDiv.remove();
-                        updateOptionIndices(questionItem);
-                    });
+                    optionDiv.remove();
+                    updateOptionIndices(questionItem);
                 });
-            }
+            });
             
-            // Manejar eliminación de opciones existentes
+            // Remove option
             questionItem.querySelectorAll('.remove-option').forEach(button => {
                 button.addEventListener('click', function() {
                     const optionsList = questionItem.querySelector('.options-list');
@@ -373,42 +727,70 @@
             });
         }
         
-        // Actualizar índices de preguntas
+        // Update question indices
         function updateQuestionIndices() {
             document.querySelectorAll('.question-item').forEach((item, index) => {
                 item.setAttribute('data-index', index);
                 item.querySelector('h3').textContent = `Question ${index + 1}`;
                 
-                // Actualizar nombres e IDs de todos los campos dentro de la pregunta
+                // Update field names
                 updateFieldNames(item, index);
+                
+                // Update move-up buttons
+                const moveUpBtn = item.querySelector('.move-up');
+                if (index === 0) {
+                    if (moveUpBtn) moveUpBtn.remove();
+                } else if (!moveUpBtn) {
+                    const btnContainer = item.querySelector('.flex.space-x-2');
+                    const moveUpButton = document.createElement('button');
+                    moveUpButton.className = 'move-up text-gray-500 hover:text-gray-700';
+                    moveUpButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><polyline points="18 15 12 9 6 15"></polyline></svg>';
+                    
+                    btnContainer.insertBefore(moveUpButton, btnContainer.firstChild);
+                    
+                    moveUpButton.addEventListener('click', function() {
+                        const prevQuestion = item.previousElementSibling;
+                        if (prevQuestion) {
+                            item.parentNode.insertBefore(item, prevQuestion);
+                            updateQuestionIndices();
+                        }
+                    });
+                }
             });
         }
         
-        // Actualizar nombres de campos dentro de una pregunta
+        // Update field names
         function updateFieldNames(questionItem, questionIndex) {
-            // Actualizar campos ocultos
-            questionItem.querySelectorAll('input[type="hidden"]').forEach(input => {
+            // Update hidden inputs
+            const hiddenInputs = questionItem.querySelectorAll('input[type="hidden"]');
+            hiddenInputs.forEach(input => {
                 if (input.name.includes('Questions[')) {
                     input.name = input.name.replace(/Questions\[\d+\]/, `Questions[${questionIndex}]`);
-                    input.id = input.id.replace(/Questions_\d+_/, `Questions_${questionIndex}_`);
+                    
+                    if (input.id && input.id.includes('Questions_')) {
+                        input.id = input.id.replace(/Questions_\d+_/, `Questions_${questionIndex}_`);
+                    }
                 }
             });
             
-            // Actualizar event listeners
-            questionItem.querySelectorAll('.option-input').forEach((input, optionIndex) => {
-                input.setAttribute('onchange', `updateOptionValue(this, ${questionIndex}, ${optionIndex})`);
-            });
+            // Update visible inputs
+            const questionTitle = questionItem.querySelector('.question-title');
+            questionTitle.setAttribute('onchange', `updateHiddenField(this, 'Questions_${questionIndex}__Title')`);
             
-            // Actualizar checkbox required
+            const questionDescription = questionItem.querySelector('.question-description');
+            questionDescription.setAttribute('onchange', `updateHiddenField(this, 'Questions_${questionIndex}__Description')`);
+            
+            const questionType = questionItem.querySelector('.question-type');
+            questionType.setAttribute('onchange', `updateQuestionType(this, ${questionIndex})`);
+            
             const requiredCheckbox = questionItem.querySelector('.required-checkbox');
             requiredCheckbox.setAttribute('onchange', `updateRequiredField(this, ${questionIndex})`);
             
-            // Actualizar select de tipo
-            const typeSelect = questionItem.querySelector('.question-type');
-            typeSelect.setAttribute('onchange', `updateQuestionType(this, ${questionIndex})`);
+            // Update options
+            updateOptionIndices(questionItem);
         }
         
-        // Actualizar índices de opciones
+        // Update option indices
         function updateOptionIndices(questionItem) {
             const questionIndex = questionItem.getAttribute('data-index');
             const optionInputs = questionItem.querySelectorAll('.option-input');
@@ -420,7 +802,7 @@
             });
         }
         
-        // Actualizar índices de emails
+        // Update email indices
         function updateEmailIndices() {
             const emailList = document.getElementById('emailList');
             const emails = emailList.querySelectorAll('div');
@@ -431,10 +813,10 @@
             });
         }
         
-        // Validar formato de email
+        // Validate email
         function isValidEmail(email) {
             const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return re.test(String(email));
+            return re.test(String(email).toLowerCase());
         }
     </script>
 }

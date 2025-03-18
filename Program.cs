@@ -64,7 +64,7 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// Registra rutas adicionales
+// Register additional routes
 app.MapControllerRoute(
     name: "customers",
     pattern: "customers/{action=Index}/{id?}",
@@ -86,5 +86,12 @@ app.MapControllerRoute(
     defaults: new { controller = "Requirements" });
 
 app.MapControllers(); // Map API controllers
+
+// Apply database migrations
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    dbContext.Database.Migrate();
+}
 
 app.Run();
