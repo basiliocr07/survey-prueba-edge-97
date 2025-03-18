@@ -63,9 +63,14 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Dashboard}/{action=Index}/{id?}");
 
 // Register additional routes
+app.MapControllerRoute(
+    name: "dashboard",
+    pattern: "dashboard/{action=Index}/{id?}",
+    defaults: new { controller = "Dashboard" });
+
 app.MapControllerRoute(
     name: "customers",
     pattern: "customers/{action=Index}/{id?}",

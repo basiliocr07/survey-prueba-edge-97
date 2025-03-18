@@ -21,7 +21,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useState } from "react";
 
 // Sample data fetching functions - in real app these would be API calls
@@ -183,7 +183,7 @@ export default function Dashboard() {
         {/* Minimalist container */}
         <Card className="shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xl">Vista General</CardTitle>
+            <CardTitle className="text-xl">Vista Rápida de Elementos Recientes</CardTitle>
           </CardHeader>
           <CardContent>
             {/* Latest items in list format */}
@@ -194,40 +194,6 @@ export default function Dashboard() {
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="font-medium text-sm text-muted-foreground">Última Encuesta</h3>
                     {latestSurvey && <StatusBadge status={latestSurvey.status} />}
-                    
-                    {latestSurvey && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="sm" className="h-6 ml-auto">
-                            <span>Cambiar Estado</span>
-                            <ChevronDown className="ml-1 h-3 w-3" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem 
-                            onClick={() => handleStatusChange(latestSurvey.id, "Survey", "pending", latestSurvey.status)}
-                            disabled={latestSurvey.status === "pending"}
-                          >
-                            <Clock className="mr-2 h-4 w-4" />
-                            <span>Pendiente</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleStatusChange(latestSurvey.id, "Survey", "in-progress", latestSurvey.status)}
-                            disabled={latestSurvey.status === "in-progress"}
-                          >
-                            <LineChart className="mr-2 h-4 w-4" />
-                            <span>En curso</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleStatusChange(latestSurvey.id, "Survey", "closed", latestSurvey.status)}
-                            disabled={latestSurvey.status === "closed"}
-                          >
-                            <CheckCircle2 className="mr-2 h-4 w-4" />
-                            <span>Cerrada</span>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
                   </div>
                   <p className="font-semibold">{latestSurvey?.title || "No hay encuestas aún"}</p>
                   {latestSurvey && (
@@ -236,13 +202,48 @@ export default function Dashboard() {
                     </p>
                   )}
                 </div>
-                {latestSurvey && (
-                  <Link to={`/survey/${latestSurvey.id}`}>
-                    <Button variant="ghost" size="sm" className="h-8 w-8">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                )}
+                <div className="flex items-center space-x-2">
+                  {latestSurvey && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="h-8">
+                          <span>Cambiar Estado</span>
+                          <ChevronDown className="ml-1 h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem 
+                          onClick={() => handleStatusChange(latestSurvey.id, "Survey", "pending", latestSurvey.status)}
+                          disabled={latestSurvey.status === "pending"}
+                        >
+                          <Clock className="mr-2 h-4 w-4" />
+                          <span>Pendiente</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleStatusChange(latestSurvey.id, "Survey", "in-progress", latestSurvey.status)}
+                          disabled={latestSurvey.status === "in-progress"}
+                        >
+                          <LineChart className="mr-2 h-4 w-4" />
+                          <span>En curso</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleStatusChange(latestSurvey.id, "Survey", "closed", latestSurvey.status)}
+                          disabled={latestSurvey.status === "closed"}
+                        >
+                          <CheckCircle2 className="mr-2 h-4 w-4" />
+                          <span>Cerrada</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                  {latestSurvey && (
+                    <Link to={`/survey/${latestSurvey.id}`}>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  )}
+                </div>
               </div>
               
               {/* Latest Suggestion */}
@@ -251,40 +252,6 @@ export default function Dashboard() {
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="font-medium text-sm text-muted-foreground">Última Sugerencia</h3>
                     {latestSuggestion && <StatusBadge status={latestSuggestion.status} />}
-                    
-                    {latestSuggestion && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="sm" className="h-6 ml-auto">
-                            <span>Cambiar Estado</span>
-                            <ChevronDown className="ml-1 h-3 w-3" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem 
-                            onClick={() => handleStatusChange(latestSuggestion.id, "Suggestion", "pending", latestSuggestion.status)}
-                            disabled={latestSuggestion.status === "pending"}
-                          >
-                            <Clock className="mr-2 h-4 w-4" />
-                            <span>Pendiente</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleStatusChange(latestSuggestion.id, "Suggestion", "in-progress", latestSuggestion.status)}
-                            disabled={latestSuggestion.status === "in-progress"}
-                          >
-                            <LineChart className="mr-2 h-4 w-4" />
-                            <span>En curso</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleStatusChange(latestSuggestion.id, "Suggestion", "closed", latestSuggestion.status)}
-                            disabled={latestSuggestion.status === "closed"}
-                          >
-                            <CheckCircle2 className="mr-2 h-4 w-4" />
-                            <span>Cerrada</span>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
                   </div>
                   <p className="font-semibold">{latestSuggestion?.content || "No hay sugerencias aún"}</p>
                   {latestSuggestion && (
@@ -293,13 +260,48 @@ export default function Dashboard() {
                     </p>
                   )}
                 </div>
-                {latestSuggestion && (
-                  <Link to="/suggestions">
-                    <Button variant="ghost" size="sm" className="h-8 w-8">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                )}
+                <div className="flex items-center space-x-2">
+                  {latestSuggestion && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="h-8">
+                          <span>Cambiar Estado</span>
+                          <ChevronDown className="ml-1 h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem 
+                          onClick={() => handleStatusChange(latestSuggestion.id, "Suggestion", "pending", latestSuggestion.status)}
+                          disabled={latestSuggestion.status === "pending"}
+                        >
+                          <Clock className="mr-2 h-4 w-4" />
+                          <span>Pendiente</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleStatusChange(latestSuggestion.id, "Suggestion", "in-progress", latestSuggestion.status)}
+                          disabled={latestSuggestion.status === "in-progress"}
+                        >
+                          <LineChart className="mr-2 h-4 w-4" />
+                          <span>En curso</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleStatusChange(latestSuggestion.id, "Suggestion", "closed", latestSuggestion.status)}
+                          disabled={latestSuggestion.status === "closed"}
+                        >
+                          <CheckCircle2 className="mr-2 h-4 w-4" />
+                          <span>Cerrada</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                  {latestSuggestion && (
+                    <Link to="/suggestions">
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  )}
+                </div>
               </div>
               
               {/* Latest Requirement */}
@@ -308,40 +310,6 @@ export default function Dashboard() {
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="font-medium text-sm text-muted-foreground">Último Requerimiento</h3>
                     {latestRequirement && <StatusBadge status={latestRequirement.status} />}
-                    
-                    {latestRequirement && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="sm" className="h-6 ml-auto">
-                            <span>Cambiar Estado</span>
-                            <ChevronDown className="ml-1 h-3 w-3" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem 
-                            onClick={() => handleStatusChange(latestRequirement.id, "Requirement", "pending", latestRequirement.status)}
-                            disabled={latestRequirement.status === "pending"}
-                          >
-                            <Clock className="mr-2 h-4 w-4" />
-                            <span>Pendiente</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleStatusChange(latestRequirement.id, "Requirement", "in-progress", latestRequirement.status)}
-                            disabled={latestRequirement.status === "in-progress"}
-                          >
-                            <LineChart className="mr-2 h-4 w-4" />
-                            <span>En curso</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleStatusChange(latestRequirement.id, "Requirement", "closed", latestRequirement.status)}
-                            disabled={latestRequirement.status === "closed"}
-                          >
-                            <CheckCircle2 className="mr-2 h-4 w-4" />
-                            <span>Cerrada</span>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
                   </div>
                   <p className="font-semibold">{latestRequirement?.title || "No hay requerimientos aún"}</p>
                   {latestRequirement && (
@@ -350,13 +318,48 @@ export default function Dashboard() {
                     </p>
                   )}
                 </div>
-                {latestRequirement && (
-                  <Link to="/requirements">
-                    <Button variant="ghost" size="sm" className="h-8 w-8">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                )}
+                <div className="flex items-center space-x-2">
+                  {latestRequirement && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="h-8">
+                          <span>Cambiar Estado</span>
+                          <ChevronDown className="ml-1 h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem 
+                          onClick={() => handleStatusChange(latestRequirement.id, "Requirement", "pending", latestRequirement.status)}
+                          disabled={latestRequirement.status === "pending"}
+                        >
+                          <Clock className="mr-2 h-4 w-4" />
+                          <span>Pendiente</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleStatusChange(latestRequirement.id, "Requirement", "in-progress", latestRequirement.status)}
+                          disabled={latestRequirement.status === "in-progress"}
+                        >
+                          <LineChart className="mr-2 h-4 w-4" />
+                          <span>En curso</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleStatusChange(latestRequirement.id, "Requirement", "closed", latestRequirement.status)}
+                          disabled={latestRequirement.status === "closed"}
+                        >
+                          <CheckCircle2 className="mr-2 h-4 w-4" />
+                          <span>Cerrada</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                  {latestRequirement && (
+                    <Link to="/requirements">
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  )}
+                </div>
               </div>
             </div>
             
@@ -384,6 +387,9 @@ export default function Dashboard() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Confirmar Cambio de Estado</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas cambiar el estado?
+            </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <p>¿Estás seguro de que deseas cambiar el estado de
