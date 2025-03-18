@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -57,31 +58,32 @@ namespace SurveyApp.WebMvc.Controllers
         // GET: Survey/Create
         public IActionResult Create()
         {
-            var viewModel = new CreateSurveyViewModel();
+            var viewModel = new SurveyCreateViewModel();
             return View(viewModel);
         }
 
         // POST: Survey/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(CreateSurveyViewModel viewModel)
+        public async Task<IActionResult> Create(SurveyCreateViewModel viewModel)
         {
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var surveyDto = new SurveyDto
+                    var surveyDto = new CreateSurveyDto
                     {
                         Title = viewModel.Title,
                         Description = viewModel.Description,
-                        Questions = viewModel.Questions.Select(q => new QuestionDto
+                        Questions = viewModel.Questions.Select(q => new CreateQuestionDto
                         {
                             Title = q.Title,
                             Description = q.Description,
                             Type = q.Type,
                             Required = q.Required,
                             Options = q.Options
-                        }).ToList()
+                        }).ToList(),
+                        DeliveryConfig = MapToDeliveryConfigDto(viewModel.DeliveryConfig)
                     };
 
                     var createdSurvey = await _surveyService.CreateSurveyAsync(surveyDto);
@@ -119,7 +121,7 @@ namespace SurveyApp.WebMvc.Controllers
         // POST: Survey/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, CreateSurveyViewModel viewModel)
+        public async Task<IActionResult> Edit(Guid id, SurveyCreateViewModel viewModel)
         {
             if (id != viewModel.Id)
             {
@@ -130,20 +132,19 @@ namespace SurveyApp.WebMvc.Controllers
             {
                 try
                 {
-                    var surveyDto = new SurveyDto
+                    var surveyDto = new CreateSurveyDto
                     {
-                        Id = viewModel.Id,
                         Title = viewModel.Title,
                         Description = viewModel.Description,
-                        Questions = viewModel.Questions.Select(q => new QuestionDto
+                        Questions = viewModel.Questions.Select(q => new CreateQuestionDto
                         {
-                            Id = q.Id,
                             Title = q.Title,
                             Description = q.Description,
                             Type = q.Type,
                             Required = q.Required,
                             Options = q.Options
-                        }).ToList()
+                        }).ToList(),
+                        DeliveryConfig = MapToDeliveryConfigDto(viewModel.DeliveryConfig)
                     };
 
                     await _surveyService.UpdateSurveyAsync(id, surveyDto);
@@ -239,9 +240,9 @@ namespace SurveyApp.WebMvc.Controllers
             };
         }
 
-        private CreateSurveyViewModel MapToCreateSurveyViewModel(SurveyDto survey)
+        private SurveyCreateViewModel MapToCreateSurveyViewModel(SurveyDto survey)
         {
-            return new CreateSurveyViewModel
+            return new SurveyCreateViewModel
             {
                 Id = survey.Id,
                 Title = survey.Title,
@@ -288,6 +289,31 @@ namespace SurveyApp.WebMvc.Controllers
                 ResponseCount = survey.Responses,
                 CompletionRate = survey.CompletionRate,
                 Status = DeterminarEstado(survey)
+            };
+        }
+
+        private DeliveryConfigDto MapToDeliveryConfigDto(DeliveryConfigViewModel viewModel)
+        {
+            if (viewModel == null) return null;
+            
+            return new DeliveryConfigDto
+            {
+                Type = viewModel.Type,
+                EmailAddresses = viewModel.EmailAddresses,
+                Schedule = new ScheduleDto
+                {
+                    Frequency = viewModel.Schedule?.Frequency,
+                    DayOfMonth = viewModel.Schedule?.DayOfMonth,
+                    DayOfWeek = viewModel.Schedule?.DayOfWeek,
+                    Time = viewModel.Schedule?.Time,
+                    StartDate = viewModel.Schedule?.StartDate
+                },
+                Trigger = new TriggerDto
+                {
+                    Type = viewModel.Trigger?.Type,
+                    DelayHours = viewModel.Trigger?.DelayHours ?? 24,
+                    SendAutomatically = viewModel.Trigger?.SendAutomatically ?? false
+                }
             };
         }
 
