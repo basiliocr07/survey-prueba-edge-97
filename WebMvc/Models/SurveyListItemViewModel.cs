@@ -12,5 +12,10 @@ namespace SurveyApp.WebMvc.Models
         public int ResponseCount { get; set; }
         public int CompletionRate { get; set; }
         public string Status { get; set; } = "Active";
+        public string DeliveryType { get; set; } = "Manual";
+        public DateTime? LastResponseDate { get; set; }
+        public bool IsFeatured { get; set; }
+        public string Category { get; set; }
+        public int QuestionCount { get; set; }
     }
 }

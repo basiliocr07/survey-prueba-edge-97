@@ -25,11 +25,29 @@ namespace SurveyApp.WebMvc.Models
         public int CompletionRate { get; set; }
 
         public DeliveryConfigViewModel DeliveryConfig { get; set; } = new DeliveryConfigViewModel();
+        
+        public string Status { get; set; } = "Active";
+        
+        public string Category { get; set; }
+        
+        public bool IsFeatured { get; set; }
+        
+        public DateTime? LastUpdated { get; set; }
+        
+        public DateTime? LastResponseDate { get; set; }
+        
+        public string CreatedBy { get; set; }
     }
 
     public class SurveyListViewModel
     {
-        public List<SurveyViewModel> Surveys { get; set; } = new List<SurveyViewModel>();
+        public List<SurveyListItemViewModel> Surveys { get; set; } = new List<SurveyListItemViewModel>();
+        public string SearchTerm { get; set; }
+        public string StatusFilter { get; set; }
+        public string CategoryFilter { get; set; }
+        public int TotalCount { get; set; }
+        public int PageNumber { get; set; } = 1;
+        public int PageSize { get; set; } = 10;
     }
 
     public class QuestionViewModel
@@ -47,6 +65,19 @@ namespace SurveyApp.WebMvc.Models
         public bool Required { get; set; }
         
         public List<string> Options { get; set; } = new List<string>();
+        
+        public int Order { get; set; }
+        
+        public ValidationRulesViewModel ValidationRules { get; set; } = new ValidationRulesViewModel();
+    }
+
+    public class ValidationRulesViewModel
+    {
+        public int? MinLength { get; set; }
+        public int? MaxLength { get; set; }
+        public string Pattern { get; set; }
+        public int? MinValue { get; set; }
+        public int? MaxValue { get; set; }
     }
 
     public class CreateSurveyViewModel
@@ -63,6 +94,10 @@ namespace SurveyApp.WebMvc.Models
         public List<QuestionViewModel> Questions { get; set; } = new List<QuestionViewModel>();
 
         public DeliveryConfigViewModel DeliveryConfig { get; set; } = new DeliveryConfigViewModel();
+        
+        public string Category { get; set; }
+        
+        public bool IsFeatured { get; set; }
     }
 
     public class DeliveryConfigViewModel
@@ -87,6 +122,8 @@ namespace SurveyApp.WebMvc.Models
         public string Time { get; set; } = "09:00";
         
         public DateTime? StartDate { get; set; }
+        
+        public DateTime? EndDate { get; set; }
     }
 
     public class TriggerViewModel
@@ -96,5 +133,7 @@ namespace SurveyApp.WebMvc.Models
         public int DelayHours { get; set; } = 24;
         
         public bool SendAutomatically { get; set; } = false;
+        
+        public string EventName { get; set; }
     }
 }
