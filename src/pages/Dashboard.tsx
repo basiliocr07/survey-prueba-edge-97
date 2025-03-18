@@ -56,14 +56,29 @@ const fetchLatestRequirement = async () => {
   };
 };
 
-const updateStatus = async ({ id, type, newStatus }) => {
+// Define the proper type for the parameters
+interface UpdateStatusParams {
+  id: string;
+  type: string;
+  newStatus: string;
+}
+
+const updateStatus = async ({ id, type, newStatus }: UpdateStatusParams) => {
   console.log(`Actualizando ${type} con id ${id} a estado: ${newStatus}`);
   // Simulamos una llamada a API con un retraso
   await new Promise(resolve => setTimeout(resolve, 500));
   return { id, status: newStatus };
 };
 
-const StatusBadge = ({ status }) => {
+interface ConfirmDialogState {
+  open: boolean;
+  id: string;
+  type: string;
+  newStatus: string;
+  currentStatus: string;
+}
+
+const StatusBadge = ({ status }: { status: string }) => {
   switch (status) {
     case "pending":
       return (
@@ -90,7 +105,13 @@ const StatusBadge = ({ status }) => {
 
 export default function Dashboard() {
   const queryClient = useQueryClient();
-  const [confirmDialog, setConfirmDialog] = useState({ open: false, id: "", type: "", newStatus: "", currentStatus: "" });
+  const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState>({ 
+    open: false, 
+    id: "", 
+    type: "", 
+    newStatus: "", 
+    currentStatus: "" 
+  });
 
   const { data: latestSurvey, isLoading: loadingSurvey } = useQuery({
     queryKey: ['latestSurvey'],
@@ -142,7 +163,7 @@ export default function Dashboard() {
     }).format(date);
   };
 
-  const getStatusLabel = (status) => {
+  const getStatusLabel = (status: string) => {
     switch (status) {
       case "pending": return "Pendiente";
       case "in-progress": return "En curso";
@@ -151,7 +172,7 @@ export default function Dashboard() {
     }
   };
 
-  const handleStatusChange = (e, id, type, newStatus, currentStatus) => {
+  const handleStatusChange = (e: React.MouseEvent, id: string, type: string, newStatus: string, currentStatus: string) => {
     if (e) e.stopPropagation();
     setConfirmDialog({
       open: true,
@@ -162,7 +183,7 @@ export default function Dashboard() {
     });
   };
 
-  const confirmStatusChange = (e) => {
+  const confirmStatusChange = (e: React.MouseEvent) => {
     if (e) e.stopPropagation();
     updateStatusMutation.mutate({
       id: confirmDialog.id,
@@ -171,7 +192,7 @@ export default function Dashboard() {
     });
   };
 
-  const closeDialog = (e) => {
+  const closeDialog = (e: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setConfirmDialog({ open: false, id: "", type: "", newStatus: "", currentStatus: "" });
   };
