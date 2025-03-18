@@ -1,599 +1,301 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using SurveyApp.Application.DTOs;
 using SurveyApp.Application.Services;
 using SurveyApp.WebMvc.Models;
-using System.Net.Mail;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace SurveyApp.WebMvc.Controllers
 {
     public class SurveyController : Controller
     {
         private readonly ISurveyService _surveyService;
-        private readonly ILogger<SurveyController> _logger;
 
-        public SurveyController(ISurveyService surveyService, ILogger<SurveyController> logger)
+        public SurveyController(ISurveyService surveyService)
         {
-            _surveyService = surveyService ?? throw new ArgumentNullException(nameof(surveyService));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            
-            _logger.LogInformation("SurveyController initialized");
+            _surveyService = surveyService;
         }
 
-        // GET: /Survey
+        // GET: Survey
         public async Task<IActionResult> Index()
         {
-            _logger.LogInformation("SurveyController.Index action invoked");
-            
             try
             {
-                var surveyDtos = await _surveyService.GetAllSurveysAsync();
-                _logger.LogInformation("Retrieved {Count} surveys for Index view", surveyDtos.Count);
-                
-                // Convert DTOs to ViewModels
-                var viewModels = surveyDtos.Select(dto => new SurveyViewModel
-                {
-                    Id = dto.Id,
-                    Title = dto.Title,
-                    Description = dto.Description,
-                    CreatedAt = dto.CreatedAt,
-                    Responses = dto.Responses,
-                    CompletionRate = dto.CompletionRate,
-                    Questions = dto.Questions?.Select(q => new QuestionViewModel
-                    {
-                        Id = q.Id,
-                        Title = q.Title,
-                        Description = q.Description,
-                        Type = q.Type,
-                        Required = q.Required,
-                        Options = q.Options?.ToList() ?? new List<string>()
-                    }).ToList() ?? new List<QuestionViewModel>(),
-                    DeliveryConfig = new DeliveryConfigViewModel
-                    {
-                        Type = dto.DeliveryConfig?.Type,
-                        EmailAddresses = dto.DeliveryConfig?.EmailAddresses?.ToList() ?? new List<string>(),
-                        Schedule = dto.DeliveryConfig?.Schedule != null ? new ScheduleViewModel
-                        {
-                            Frequency = dto.DeliveryConfig.Schedule.Frequency,
-                            DayOfMonth = dto.DeliveryConfig.Schedule.DayOfMonth ?? 1,
-                            DayOfWeek = dto.DeliveryConfig.Schedule.DayOfWeek,
-                            Time = dto.DeliveryConfig.Schedule.Time,
-                            StartDate = dto.DeliveryConfig.Schedule.StartDate
-                        } : new ScheduleViewModel(),
-                        Trigger = dto.DeliveryConfig?.Trigger != null ? new TriggerViewModel
-                        {
-                            Type = dto.DeliveryConfig.Trigger.Type,
-                            DelayHours = dto.DeliveryConfig.Trigger.DelayHours,
-                            SendAutomatically = dto.DeliveryConfig.Trigger.SendAutomatically
-                        } : new TriggerViewModel()
-                    }
-                }).ToList();
-                
-                return View(viewModels);
+                var surveys = await _surveyService.GetAllSurveysAsync();
+                var viewModel = surveys.Select(MapToListItemViewModel).ToList();
+                return View(viewModel);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving surveys for Index view: {ErrorMessage}", ex.Message);
-                TempData["ErrorMessage"] = "Error retrieving surveys. Please try again later.";
-                return View(new List<SurveyViewModel>());
+                // Loguear el error
+                return View(new List<SurveyListItemViewModel>());
             }
         }
 
-        // GET: /Survey/Details/{id}
+        // GET: Survey/Details/5
         public async Task<IActionResult> Details(Guid id)
         {
-            _logger.LogInformation("Details action invoked for survey ID: {SurveyId}", id);
             try
             {
-                var surveyDto = await _surveyService.GetSurveyByIdAsync(id);
-                if (surveyDto == null)
+                var survey = await _surveyService.GetSurveyByIdAsync(id);
+                if (survey == null)
                 {
-                    _logger.LogWarning("Survey not found for ID: {SurveyId}", id);
                     return NotFound();
                 }
 
-                var viewModel = new SurveyViewModel
-                {
-                    Id = surveyDto.Id,
-                    Title = surveyDto.Title,
-                    Description = surveyDto.Description,
-                    CreatedAt = surveyDto.CreatedAt,
-                    Responses = surveyDto.Responses,
-                    CompletionRate = surveyDto.CompletionRate,
-                    Questions = surveyDto.Questions?.Select(q => new QuestionViewModel
-                    {
-                        Id = q.Id,
-                        Title = q.Title,
-                        Description = q.Description,
-                        Type = q.Type,
-                        Required = q.Required,
-                        Options = q.Options?.ToList() ?? new List<string>()
-                    }).ToList() ?? new List<QuestionViewModel>(),
-                    DeliveryConfig = new DeliveryConfigViewModel
-                    {
-                        Type = surveyDto.DeliveryConfig?.Type,
-                        EmailAddresses = surveyDto.DeliveryConfig?.EmailAddresses?.ToList() ?? new List<string>(),
-                        Schedule = surveyDto.DeliveryConfig?.Schedule != null ? new ScheduleViewModel
-                        {
-                            Frequency = surveyDto.DeliveryConfig.Schedule.Frequency,
-                            DayOfMonth = surveyDto.DeliveryConfig.Schedule.DayOfMonth ?? 1,
-                            DayOfWeek = surveyDto.DeliveryConfig.Schedule.DayOfWeek,
-                            Time = surveyDto.DeliveryConfig.Schedule.Time,
-                            StartDate = surveyDto.DeliveryConfig.Schedule.StartDate
-                        } : new ScheduleViewModel(),
-                        Trigger = surveyDto.DeliveryConfig?.Trigger != null ? new TriggerViewModel
-                        {
-                            Type = surveyDto.DeliveryConfig.Trigger.Type,
-                            DelayHours = surveyDto.DeliveryConfig.Trigger.DelayHours,
-                            SendAutomatically = surveyDto.DeliveryConfig.Trigger.SendAutomatically
-                        } : new TriggerViewModel()
-                    }
-                };
-
+                var viewModel = MapToViewModel(survey);
                 return View(viewModel);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                _logger.LogWarning(ex, "Survey not found: {SurveyId}", id);
-                return NotFound();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving survey details: {SurveyId}", id);
-                TempData["ErrorMessage"] = "Error retrieving survey details. Please try again later.";
                 return RedirectToAction(nameof(Index));
             }
         }
 
-        // GET: /Survey/Create
+        // GET: Survey/Create
         public IActionResult Create()
         {
-            _logger.LogInformation("SurveyController.Create GET action invoked");
-            
-            var viewModel = new CreateSurveyViewModel
-            {
-                Questions = new System.Collections.Generic.List<QuestionViewModel>
-                {
-                    new QuestionViewModel
-                    {
-                        Type = "SingleChoice",
-                        Required = true,
-                        Options = new System.Collections.Generic.List<string> { "Option 1", "Option 2", "Option 3" }
-                    }
-                },
-                DeliveryConfig = new DeliveryConfigViewModel
-                {
-                    Type = "Manual",
-                    EmailAddresses = new System.Collections.Generic.List<string>(),
-                    Schedule = new ScheduleViewModel
-                    {
-                        Frequency = "monthly",
-                        DayOfMonth = 1,
-                        Time = "09:00"
-                    },
-                    Trigger = new TriggerViewModel
-                    {
-                        Type = "ticket-closed",
-                        DelayHours = 24,
-                        SendAutomatically = false
-                    }
-                }
-            };
-            
-            _logger.LogDebug("Initialized Create view model with default question and delivery config");
+            var viewModel = new CreateSurveyViewModel();
             return View(viewModel);
         }
 
-        // POST: /Survey/Create
+        // POST: Survey/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(CreateSurveyViewModel model)
+        public async Task<IActionResult> Create(CreateSurveyViewModel viewModel)
         {
-            _logger.LogInformation("SurveyController.Create POST action invoked with title: {Title}", model?.Title);
-            
-            if (model == null)
-            {
-                _logger.LogWarning("Create survey model is null");
-                ModelState.AddModelError("", "No survey data provided");
-                return View(new CreateSurveyViewModel());
-            }
-            
-            _logger.LogDebug("Create survey request with {QuestionCount} questions", model.Questions?.Count ?? 0);
-            
             if (ModelState.IsValid)
             {
                 try
                 {
-                    _logger.LogInformation("Creating survey: {Title}", model.Title);
-                    
-                    var createSurveyDto = new CreateSurveyDto
+                    var surveyDto = new SurveyDto
                     {
-                        Title = model.Title,
-                        Description = model.Description,
-                        Questions = model.Questions?.ConvertAll(q => new CreateQuestionDto
+                        Title = viewModel.Title,
+                        Description = viewModel.Description,
+                        Questions = viewModel.Questions.Select(q => new QuestionDto
                         {
                             Title = q.Title,
                             Description = q.Description,
                             Type = q.Type,
                             Required = q.Required,
                             Options = q.Options
-                        }) ?? new List<CreateQuestionDto>(),
-                        DeliveryConfig = new DeliveryConfigDto
-                        {
-                            Type = model.DeliveryConfig?.Type ?? "Manual",
-                            EmailAddresses = model.DeliveryConfig?.EmailAddresses ?? new List<string>(),
-                            Schedule = model.DeliveryConfig?.Schedule != null ? new ScheduleDto
-                            {
-                                Frequency = model.DeliveryConfig.Schedule.Frequency,
-                                DayOfMonth = model.DeliveryConfig.Schedule.DayOfMonth,
-                                DayOfWeek = model.DeliveryConfig.Schedule.DayOfWeek,
-                                Time = model.DeliveryConfig.Schedule.Time,
-                                StartDate = model.DeliveryConfig.Schedule.StartDate
-                            } : new ScheduleDto(),
-                            Trigger = model.DeliveryConfig?.Trigger != null ? new TriggerDto
-                            {
-                                Type = model.DeliveryConfig.Trigger.Type,
-                                DelayHours = model.DeliveryConfig.Trigger.DelayHours,
-                                SendAutomatically = model.DeliveryConfig.Trigger.SendAutomatically
-                            } : new TriggerDto()
-                        }
+                        }).ToList()
                     };
 
-                    var survey = await _surveyService.CreateSurveyAsync(createSurveyDto);
-                    _logger.LogInformation("Survey created successfully with ID: {SurveyId}", survey.Id);
-                    
-                    TempData["SuccessMessage"] = "Survey created successfully!";
-                    return RedirectToAction(nameof(Details), new { id = survey.Id });
+                    var createdSurvey = await _surveyService.CreateSurveyAsync(surveyDto);
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error creating survey: {ErrorMessage}", ex.Message);
-                    ModelState.AddModelError("", $"Error creating survey: {ex.Message}");
+                    ModelState.AddModelError("", "Error al crear la encuesta: " + ex.Message);
                 }
             }
-            else
-            {
-                _logger.LogWarning("Invalid model state when creating survey. Errors: {Errors}", 
-                    string.Join("; ", ModelState.Values
-                        .SelectMany(v => v.Errors)
-                        .Select(e => e.ErrorMessage)));
-            }
 
-            return View(model);
+            return View(viewModel);
         }
 
-        // GET: /Survey/Edit/{id}
+        // GET: Survey/Edit/5
         public async Task<IActionResult> Edit(Guid id)
         {
-            _logger.LogInformation("Edit action invoked for survey ID: {SurveyId}", id);
             try
             {
                 var survey = await _surveyService.GetSurveyByIdAsync(id);
                 if (survey == null)
                 {
-                    _logger.LogWarning("Survey not found for ID: {SurveyId}", id);
                     return NotFound();
                 }
 
-                var viewModel = new CreateSurveyViewModel
-                {
-                    Title = survey.Title,
-                    Description = survey.Description,
-                    Questions = survey.Questions.ConvertAll(q => new QuestionViewModel
-                    {
-                        Title = q.Title,
-                        Description = q.Description,
-                        Type = q.Type,
-                        Required = q.Required,
-                        Options = q.Options
-                    }),
-                    DeliveryConfig = new DeliveryConfigViewModel
-                    {
-                        Type = survey.DeliveryConfig.Type,
-                        EmailAddresses = survey.DeliveryConfig.EmailAddresses,
-                        Schedule = new ScheduleViewModel
-                        {
-                            Frequency = survey.DeliveryConfig.Schedule.Frequency,
-                            DayOfMonth = survey.DeliveryConfig.Schedule.DayOfMonth,
-                            DayOfWeek = survey.DeliveryConfig.Schedule.DayOfWeek,
-                            Time = survey.DeliveryConfig.Schedule.Time,
-                            StartDate = survey.DeliveryConfig.Schedule.StartDate
-                        },
-                        Trigger = new TriggerViewModel
-                        {
-                            Type = survey.DeliveryConfig.Trigger.Type,
-                            DelayHours = survey.DeliveryConfig.Trigger.DelayHours,
-                            SendAutomatically = survey.DeliveryConfig.Trigger.SendAutomatically
-                        }
-                    }
-                };
+                var viewModel = MapToCreateSurveyViewModel(survey);
                 return View(viewModel);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                _logger.LogWarning(ex, "Survey not found: {SurveyId}", id);
-                return NotFound();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving survey for edit: {SurveyId}", id);
-                TempData["ErrorMessage"] = "Error retrieving survey. Please try again later.";
                 return RedirectToAction(nameof(Index));
             }
         }
 
-        // POST: /Survey/Edit/{id}
+        // POST: Survey/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, CreateSurveyViewModel model)
+        public async Task<IActionResult> Edit(Guid id, CreateSurveyViewModel viewModel)
         {
-            _logger.LogInformation("Edit POST action invoked for survey ID: {SurveyId}", id);
+            if (id != viewModel.Id)
+            {
+                return NotFound();
+            }
+
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var updateSurveyDto = new CreateSurveyDto
+                    var surveyDto = new SurveyDto
                     {
-                        Title = model.Title,
-                        Description = model.Description,
-                        Questions = model.Questions.ConvertAll(q => new CreateQuestionDto
+                        Id = viewModel.Id,
+                        Title = viewModel.Title,
+                        Description = viewModel.Description,
+                        Questions = viewModel.Questions.Select(q => new QuestionDto
                         {
+                            Id = q.Id,
                             Title = q.Title,
                             Description = q.Description,
                             Type = q.Type,
                             Required = q.Required,
                             Options = q.Options
-                        }),
-                        DeliveryConfig = new DeliveryConfigDto
-                        {
-                            Type = model.DeliveryConfig.Type,
-                            EmailAddresses = model.DeliveryConfig.EmailAddresses,
-                            Schedule = new ScheduleDto
-                            {
-                                Frequency = model.DeliveryConfig.Schedule.Frequency,
-                                DayOfMonth = model.DeliveryConfig.Schedule.DayOfMonth,
-                                DayOfWeek = model.DeliveryConfig.Schedule.DayOfWeek,
-                                Time = model.DeliveryConfig.Schedule.Time,
-                                StartDate = model.DeliveryConfig.Schedule.StartDate
-                            },
-                            Trigger = new TriggerDto
-                            {
-                                Type = model.DeliveryConfig.Trigger.Type,
-                                DelayHours = model.DeliveryConfig.Trigger.DelayHours,
-                                SendAutomatically = model.DeliveryConfig.Trigger.SendAutomatically
-                            }
-                        }
+                        }).ToList()
                     };
 
-                    await _surveyService.UpdateSurveyAsync(id, updateSurveyDto);
-                    TempData["SuccessMessage"] = "Survey updated successfully!";
-                    return RedirectToAction(nameof(Details), new { id });
-                }
-                catch (KeyNotFoundException ex)
-                {
-                    _logger.LogWarning(ex, "Survey not found during update: {SurveyId}", id);
-                    return NotFound();
+                    await _surveyService.UpdateSurveyAsync(id, surveyDto);
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error updating survey: {SurveyId}", id);
-                    ModelState.AddModelError("", $"Error updating survey: {ex.Message}");
+                    ModelState.AddModelError("", "Error al actualizar la encuesta: " + ex.Message);
                 }
             }
 
-            return View(model);
+            return View(viewModel);
         }
 
-        // GET: /Survey/Delete/{id}
+        // GET: Survey/Delete/5
         public async Task<IActionResult> Delete(Guid id)
         {
-            _logger.LogInformation("Delete action invoked for survey ID: {SurveyId}", id);
             try
             {
                 var survey = await _surveyService.GetSurveyByIdAsync(id);
                 if (survey == null)
                 {
-                    _logger.LogWarning("Survey not found for ID: {SurveyId}", id);
                     return NotFound();
                 }
-                return View(survey);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                _logger.LogWarning(ex, "Survey not found for deletion: {SurveyId}", id);
-                return NotFound();
+
+                var viewModel = MapToViewModel(survey);
+                return View(viewModel);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving survey for deletion: {SurveyId}", id);
-                TempData["ErrorMessage"] = "Error retrieving survey. Please try again later.";
                 return RedirectToAction(nameof(Index));
             }
         }
 
-        // POST: /Survey/Delete/{id}
+        // POST: Survey/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            _logger.LogInformation("DeleteConfirmed action invoked for survey ID: {SurveyId}", id);
             try
             {
                 await _surveyService.DeleteSurveyAsync(id);
-                TempData["SuccessMessage"] = "Survey deleted successfully!";
-                return RedirectToAction(nameof(Index));
-            }
-            catch (KeyNotFoundException ex)
-            {
-                _logger.LogWarning(ex, "Survey not found during deletion: {SurveyId}", id);
-                return NotFound();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error deleting survey: {SurveyId}", id);
-                TempData["ErrorMessage"] = $"Error deleting survey: {ex.Message}";
-                return RedirectToAction(nameof(Delete), new { id });
-            }
-        }
-
-        // POST: /Survey/SendEmails/{id}
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SendEmails(Guid id)
-        {
-            _logger.LogInformation("SendEmails action invoked for survey ID: {SurveyId}", id);
-            
-            try
-            {
-                await _surveyService.SendSurveyEmailsAsync(id);
-                _logger.LogInformation("Emails sent successfully for survey {SurveyId}", id);
-                
-                TempData["SuccessMessage"] = "Emails sent successfully!";
-                return RedirectToAction(nameof(Details), new { id });
-            }
-            catch (KeyNotFoundException ex)
-            {
-                _logger.LogWarning(ex, "Survey not found when sending emails: {SurveyId}", id);
-                return NotFound();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error sending emails for survey {SurveyId}: {ErrorMessage}", id, ex.Message);
-                TempData["ErrorMessage"] = $"Error sending emails: {ex.Message}";
-                return RedirectToAction(nameof(Details), new { id });
-            }
-        }
-
-        // POST: /Survey/SendOnTicketClosed
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SendOnTicketClosed(string customerEmail, Guid? surveyId = null)
-        {
-            _logger.LogInformation("SendOnTicketClosed action invoked for email: {Email}, SurveyId: {SurveyId}", 
-                customerEmail, surveyId);
-            
-            if (string.IsNullOrWhiteSpace(customerEmail) || !IsValidEmail(customerEmail))
-            {
-                _logger.LogWarning("Invalid email provided for ticket-closed event: {Email}", customerEmail);
-                TempData["ErrorMessage"] = "Please provide a valid email address.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            try
-            {
-                _logger.LogInformation("Sending survey on ticket closed to {Email}", customerEmail);
-                bool success = await _surveyService.SendSurveyOnTicketClosedAsync(customerEmail, surveyId);
-                
-                if (success)
-                {
-                    _logger.LogInformation("Successfully sent survey email on ticket closed event to {Email}", customerEmail);
-                    TempData["SuccessMessage"] = "Survey email sent on ticket closed event!";
-                }
-                else
-                {
-                    _logger.LogWarning("No eligible surveys found for ticket closed event to {Email}", customerEmail);
-                    TempData["WarningMessage"] = "No eligible surveys found for ticket closed event.";
-                }
-                
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error sending survey on ticket closed event to {Email}: {ErrorMessage}", 
-                    customerEmail, ex.Message);
-                TempData["ErrorMessage"] = $"Error sending survey email: {ex.Message}";
-                return RedirectToAction(nameof(Index));
+                ModelState.AddModelError("", "Error al eliminar la encuesta: " + ex.Message);
+                var survey = await _surveyService.GetSurveyByIdAsync(id);
+                var viewModel = MapToViewModel(survey);
+                return View(viewModel);
             }
         }
 
-        // POST: /Survey/SendTestEmail
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SendTestEmail(Guid id, string email)
+        // Métodos auxiliares para mapear entre DTOs y ViewModels
+        private SurveyViewModel MapToViewModel(SurveyDto survey)
         {
-            _logger.LogInformation("SendTestEmail action invoked for SurveyId: {SurveyId}, Email: {Email}", id, email);
-            
-            if (string.IsNullOrWhiteSpace(email) || !IsValidEmail(email))
+            return new SurveyViewModel
             {
-                _logger.LogWarning("Invalid email provided for test email: {Email}", email);
-                TempData["ErrorMessage"] = "Please provide a valid email address.";
-                return RedirectToAction(nameof(Details), new { id });
-            }
-
-            try
-            {
-                _logger.LogInformation("Sending test survey email to {Email} for survey {SurveyId}", email, id);
-                bool success = await _surveyService.SendTestSurveyEmailAsync(email, id);
-                
-                if (success)
+                Id = survey.Id,
+                Title = survey.Title,
+                Description = survey.Description,
+                CreatedAt = survey.CreatedAt,
+                Responses = survey.Responses,
+                CompletionRate = survey.CompletionRate,
+                Questions = survey.Questions.Select(q => new QuestionViewModel
                 {
-                    _logger.LogInformation("Test survey email sent successfully to {Email} for survey {SurveyId}", email, id);
-                    TempData["SuccessMessage"] = $"Test survey email sent to {email} successfully!";
-                }
-                else
+                    Id = q.Id,
+                    Title = q.Title,
+                    Description = q.Description,
+                    Type = q.Type,
+                    Required = q.Required,
+                    Options = q.Options
+                }).ToList(),
+                DeliveryConfig = new DeliveryConfigViewModel
                 {
-                    _logger.LogWarning("Test email could not be sent to {Email} for survey {SurveyId}", email, id);
-                    TempData["WarningMessage"] = "Test email could not be sent. Please check your email settings.";
+                    Type = survey.DeliveryConfig?.Type ?? "Manual",
+                    EmailAddresses = survey.DeliveryConfig?.EmailAddresses ?? new List<string>(),
+                    Schedule = new ScheduleViewModel
+                    {
+                        Frequency = survey.DeliveryConfig?.Schedule?.Frequency ?? "monthly",
+                        DayOfMonth = survey.DeliveryConfig?.Schedule?.DayOfMonth ?? 1,
+                        DayOfWeek = survey.DeliveryConfig?.Schedule?.DayOfWeek,
+                        Time = survey.DeliveryConfig?.Schedule?.Time ?? "09:00",
+                        StartDate = survey.DeliveryConfig?.Schedule?.StartDate
+                    },
+                    Trigger = new TriggerViewModel
+                    {
+                        Type = survey.DeliveryConfig?.Trigger?.Type ?? "ticket-closed",
+                        DelayHours = survey.DeliveryConfig?.Trigger?.DelayHours ?? 24,
+                        SendAutomatically = survey.DeliveryConfig?.Trigger?.SendAutomatically ?? false
+                    }
                 }
-                
-                return RedirectToAction(nameof(Details), new { id });
-            }
-            catch (KeyNotFoundException ex)
-            {
-                _logger.LogWarning(ex, "Survey not found when sending test email: {SurveyId}", id);
-                return NotFound();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error sending test email for survey {SurveyId} to {Email}: {ErrorMessage}", 
-                    id, email, ex.Message);
-                TempData["ErrorMessage"] = $"Error sending test email: {ex.Message}";
-                return RedirectToAction(nameof(Details), new { id });
-            }
-        }
-
-        // Ajax action to add question form
-        [HttpGet]
-        public IActionResult AddQuestion(int index)
-        {
-            _logger.LogInformation("AddQuestion action invoked for index: {Index}", index);
-            
-            var question = new QuestionViewModel
-            {
-                Type = "SingleChoice",
-                Required = true,
-                Options = new System.Collections.Generic.List<string> { "Option 1", "Option 2", "Option 3" }
             };
-            
-            _logger.LogDebug("Returning question partial for index {Index}", index);
-            return PartialView("_QuestionPartial", new Tuple<QuestionViewModel, int>(question, index));
         }
-        
-        // Helper method to validate email format
-        private bool IsValidEmail(string email)
+
+        private CreateSurveyViewModel MapToCreateSurveyViewModel(SurveyDto survey)
         {
-            if (string.IsNullOrWhiteSpace(email))
+            return new CreateSurveyViewModel
             {
-                _logger.LogDebug("Email validation failed: Email is null or empty");
-                return false;
-            }
-            
-            try
+                Id = survey.Id,
+                Title = survey.Title,
+                Description = survey.Description,
+                Questions = survey.Questions.Select(q => new QuestionViewModel
+                {
+                    Id = q.Id,
+                    Title = q.Title,
+                    Description = q.Description,
+                    Type = q.Type,
+                    Required = q.Required,
+                    Options = q.Options
+                }).ToList(),
+                DeliveryConfig = new DeliveryConfigViewModel
+                {
+                    Type = survey.DeliveryConfig?.Type ?? "Manual",
+                    EmailAddresses = survey.DeliveryConfig?.EmailAddresses ?? new List<string>(),
+                    Schedule = new ScheduleViewModel
+                    {
+                        Frequency = survey.DeliveryConfig?.Schedule?.Frequency ?? "monthly",
+                        DayOfMonth = survey.DeliveryConfig?.Schedule?.DayOfMonth ?? 1,
+                        DayOfWeek = survey.DeliveryConfig?.Schedule?.DayOfWeek,
+                        Time = survey.DeliveryConfig?.Schedule?.Time ?? "09:00",
+                        StartDate = survey.DeliveryConfig?.Schedule?.StartDate
+                    },
+                    Trigger = new TriggerViewModel
+                    {
+                        Type = survey.DeliveryConfig?.Trigger?.Type ?? "ticket-closed",
+                        DelayHours = survey.DeliveryConfig?.Trigger?.DelayHours ?? 24,
+                        SendAutomatically = survey.DeliveryConfig?.Trigger?.SendAutomatically ?? false
+                    }
+                }
+            };
+        }
+
+        private SurveyListItemViewModel MapToListItemViewModel(SurveyDto survey)
+        {
+            return new SurveyListItemViewModel
             {
-                var mailAddress = new MailAddress(email);
-                var isValid = mailAddress.Address == email;
-                _logger.LogDebug("Email validation for {Email}: {IsValid}", email, isValid);
-                return isValid;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogDebug(ex, "Email validation exception for {Email}: {ErrorMessage}", email, ex.Message);
-                return false;
-            }
+                Id = survey.Id,
+                Title = survey.Title,
+                Description = survey.Description,
+                CreatedAt = survey.CreatedAt,
+                ResponseCount = survey.Responses,
+                CompletionRate = survey.CompletionRate,
+                Status = DeterminarEstado(survey)
+            };
+        }
+
+        private string DeterminarEstado(SurveyDto survey)
+        {
+            // Aquí puedes implementar lógica para determinar el estado de la encuesta
+            // Por ejemplo, basado en fechas, respuestas, etc.
+            return "Active"; // Por defecto todas activas
         }
     }
 }

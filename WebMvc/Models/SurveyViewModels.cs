@@ -51,6 +51,8 @@ namespace SurveyApp.WebMvc.Models
 
     public class CreateSurveyViewModel
     {
+        public Guid Id { get; set; }
+        
         [Required(ErrorMessage = "Title is required")]
         [StringLength(200, ErrorMessage = "Title cannot be longer than 200 characters")]
         public string Title { get; set; }

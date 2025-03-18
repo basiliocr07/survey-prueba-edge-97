@@ -14,7 +14,8 @@ builder.Services.AddControllersWithViews();
 // Configure EF Core
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        sqlServerOptions => sqlServerOptions.EnableRetryOnFailure()
     ));
 
 // Register repositories
@@ -39,7 +40,10 @@ builder.Services.AddScoped<IKnowledgeBaseService, KnowledgeBaseService>();
 builder.Services.AddControllers();
 
 // Add Tailwind CSS configuration services
-builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
+}
 
 var app = builder.Build();
 
@@ -97,5 +101,23 @@ app.MapControllerRoute(
     defaults: new { controller = "Customers" });
 
 app.MapControllers(); // Map API controllers
+
+// Apply database migrations on startup
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    
+    try
+    {
+        dbContext.Database.Migrate();
+        Console.WriteLine("Database migrated successfully.");
+    }
+    catch (Exception ex)
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while applying migrations.");
+        Console.WriteLine($"Error migrating database: {ex.Message}");
+    }
+}
 
 app.Run();

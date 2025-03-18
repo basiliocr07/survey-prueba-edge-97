@@ -23,16 +23,16 @@
         <div class="card shadow-sm">
             <div class="border-b p-3">
                 <div class="flex gap-2 overflow-x-auto pb-1">
-                    <button class="btn btn-primary btn-sm">
+                    <button class="btn btn-primary btn-sm" id="filter-all">
                         All Surveys
                     </button>
-                    <button class="btn btn-outline btn-sm">
+                    <button class="btn btn-outline btn-sm" id="filter-active">
                         Active
                     </button>
-                    <button class="btn btn-outline btn-sm">
+                    <button class="btn btn-outline btn-sm" id="filter-draft">
                         Draft
                     </button>
-                    <button class="btn btn-outline btn-sm">
+                    <button class="btn btn-outline btn-sm" id="filter-archived">
                         Archived
                     </button>
                 </div>
@@ -40,10 +40,10 @@
             
             @if (Model != null && Model.Any())
             {
-                <ul class="divide-y">
+                <ul class="divide-y" id="survey-list">
                     @foreach (var survey in Model)
                     {
-                        <li class="p-4 hover:bg-accent/20 transition-colors">
+                        <li class="p-4 hover:bg-accent/20 transition-colors survey-item" data-status="@survey.Status.ToLower()">
                             <div class="flex items-center justify-between">
                                 <div class="flex-grow">
                                     <div class="flex items-center justify-between mb-1">
@@ -99,3 +99,59 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Referencia a los elementos
+            const filterAll = document.getElementById('filter-all');
+            const filterActive = document.getElementById('filter-active');
+            const filterDraft = document.getElementById('filter-draft');
+            const filterArchived = document.getElementById('filter-archived');
+            const surveyItems = document.querySelectorAll('.survey-item');
+            
+            // Función para filtrar encuestas
+            function filterSurveys(status) {
+                surveyItems.forEach(item => {
+                    if (status === 'all' || item.dataset.status === status) {
+                        item.style.display = 'block';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+                
+                // Actualizar estilos de botones
+                [filterAll, filterActive, filterDraft, filterArchived].forEach(btn => {
+                    btn.classList.remove('btn-primary');
+                    btn.classList.add('btn-outline');
+                });
+                
+                // Activar botón seleccionado
+                switch (status) {
+                    case 'all':
+                        filterAll.classList.remove('btn-outline');
+                        filterAll.classList.add('btn-primary');
+                        break;
+                    case 'active':
+                        filterActive.classList.remove('btn-outline');
+                        filterActive.classList.add('btn-primary');
+                        break;
+                    case 'draft':
+                        filterDraft.classList.remove('btn-outline');
+                        filterDraft.classList.add('btn-primary');
+                        break;
+                    case 'archived':
+                        filterArchived.classList.remove('btn-outline');
+                        filterArchived.classList.add('btn-primary');
+                        break;
+                }
+            }
+            
+            // Asignar eventos click
+            filterAll.addEventListener('click', () => filterSurveys('all'));
+            filterActive.addEventListener('click', () => filterSurveys('active'));
+            filterDraft.addEventListener('click', () => filterSurveys('draft'));
+            filterArchived.addEventListener('click', () => filterSurveys('archived'));
+        });
+    </script>
+}
