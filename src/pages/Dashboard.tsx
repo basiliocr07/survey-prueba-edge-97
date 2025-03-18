@@ -24,7 +24,34 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useState } from "react";
 
-const fetchLatestSurvey = async () => {
+// Define interfaces for our data types
+interface SurveyItem {
+  id: string;
+  title: string;
+  description: string;
+  createdAt: string;
+  responses: number;
+  status: string;
+}
+
+interface SuggestionItem {
+  id: string;
+  content: string;
+  customerName: string;
+  createdAt: string;
+  status: string;
+}
+
+interface RequirementItem {
+  id: string;
+  title: string;
+  description: string;
+  priority: string;
+  createdAt: string;
+  status: string;
+}
+
+const fetchLatestSurvey = async (): Promise<SurveyItem> => {
   return {
     id: "1",
     title: "Encuesta de Satisfacción del Cliente",
@@ -35,7 +62,7 @@ const fetchLatestSurvey = async () => {
   };
 };
 
-const fetchLatestSuggestion = async () => {
+const fetchLatestSuggestion = async (): Promise<SuggestionItem> => {
   return {
     id: "1",
     content: "Agregar modo oscuro al portal del cliente",
@@ -45,7 +72,7 @@ const fetchLatestSuggestion = async () => {
   };
 };
 
-const fetchLatestRequirement = async () => {
+const fetchLatestRequirement = async (): Promise<RequirementItem> => {
   return {
     id: "1",
     title: "Diseño responsivo para móviles",
@@ -132,9 +159,13 @@ export default function Dashboard() {
     mutationFn: updateStatus,
     onSuccess: (data, variables) => {
       // Actualizamos manualmente el estado en el caché para una actualización inmediata en la UI
-      const queryKey = `latest${variables.type.charAt(0).toUpperCase() + variables.type.slice(1)}`;
+      const queryKey = variables.type === 'Survey' 
+        ? 'latestSurvey' 
+        : variables.type === 'Suggestion' 
+          ? 'latestSuggestion' 
+          : 'latestRequirement';
       
-      queryClient.setQueryData([queryKey], (oldData) => {
+      queryClient.setQueryData([queryKey], (oldData: SurveyItem | SuggestionItem | RequirementItem | undefined) => {
         if (oldData) {
           return {
             ...oldData,
