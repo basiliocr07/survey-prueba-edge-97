@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -98,7 +99,7 @@ const fetchLatestRequirement = async (): Promise<RequirementItem> => {
 const updateStatus = async ({ id, type, newStatus }: UpdateStatusParams) => {
   console.log(`Actualizando ${type} con id ${id} a estado: ${newStatus}`);
   await new Promise(resolve => setTimeout(resolve, 500));
-  return { id, status: newStatus };
+  return { id, type, status: newStatus };
 };
 
 const StatusBadge = ({ status }: { status: string }) => {
@@ -153,16 +154,13 @@ export default function Dashboard() {
 
   const updateStatusMutation = useMutation({
     mutationFn: updateStatus,
-    onSuccess: (data, variables) => {
-      let queryKey = '';
-      
-      if (variables.type === 'Survey') {
-        queryKey = 'latestSurvey';
-      } else if (variables.type === 'Suggestion') {
-        queryKey = 'latestSuggestion';
-      } else if (variables.type === 'Requirement') {
-        queryKey = 'latestRequirement';
-      }
+    onSuccess: (data) => {
+      // Use the returned data.type to determine which query to update
+      const queryKey = data.type === 'Survey' 
+        ? 'latestSurvey' 
+        : data.type === 'Suggestion' 
+          ? 'latestSuggestion' 
+          : 'latestRequirement';
       
       queryClient.setQueryData([queryKey], (oldData: any) => {
         if (!oldData) return oldData;
@@ -229,6 +227,18 @@ export default function Dashboard() {
   const closeDialog = (e: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setConfirmDialog({ open: false, id: "", type: "", newStatus: "", currentStatus: "" });
+  };
+
+  // Helper function to get the current state of each item
+  const getCurrentStatus = (type: string) => {
+    if (type === 'Survey' && latestSurvey) {
+      return latestSurvey.status;
+    } else if (type === 'Suggestion' && latestSuggestion) {
+      return latestSuggestion.status;
+    } else if (type === 'Requirement' && latestRequirement) {
+      return latestRequirement.status;
+    }
+    return '';
   };
 
   return (
