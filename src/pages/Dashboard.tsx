@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,7 +23,6 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useState } from "react";
 
-// Define interfaces for our data types
 interface SurveyItem {
   id: string;
   title: string;
@@ -51,7 +49,6 @@ interface RequirementItem {
   status: string;
 }
 
-// Define the proper type for the parameters
 interface UpdateStatusParams {
   id: string;
   type: string;
@@ -100,7 +97,6 @@ const fetchLatestRequirement = async (): Promise<RequirementItem> => {
 
 const updateStatus = async ({ id, type, newStatus }: UpdateStatusParams) => {
   console.log(`Actualizando ${type} con id ${id} a estado: ${newStatus}`);
-  // Simulamos una llamada a API con un retraso
   await new Promise(resolve => setTimeout(resolve, 500));
   return { id, status: newStatus };
 };
@@ -158,26 +154,23 @@ export default function Dashboard() {
   const updateStatusMutation = useMutation({
     mutationFn: updateStatus,
     onSuccess: (data, variables) => {
-      // Identificar correctamente la clave de consulta según el tipo
-      let queryKey;
+      let queryKey = '';
       
       if (variables.type === 'Survey') {
         queryKey = 'latestSurvey';
       } else if (variables.type === 'Suggestion') {
         queryKey = 'latestSuggestion';
-      } else {
+      } else if (variables.type === 'Requirement') {
         queryKey = 'latestRequirement';
       }
       
-      // Asegurar que el tipo de datos sea correcto al actualizar la caché
       queryClient.setQueryData([queryKey], (oldData: any) => {
-        if (oldData) {
-          return {
-            ...oldData,
-            status: data.status
-          };
-        }
-        return oldData;
+        if (!oldData) return oldData;
+        
+        return {
+          ...oldData,
+          status: data.status
+        };
       });
       
       toast.success(`Estado actualizado a ${getStatusLabel(data.status)}`);
@@ -210,6 +203,11 @@ export default function Dashboard() {
 
   const handleStatusChange = (e: React.MouseEvent, id: string, type: string, newStatus: string, currentStatus: string) => {
     if (e) e.stopPropagation();
+    
+    if (newStatus === currentStatus) {
+      return;
+    }
+    
     setConfirmDialog({
       open: true,
       id,
