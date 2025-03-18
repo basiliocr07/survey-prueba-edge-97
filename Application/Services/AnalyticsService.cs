@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,8 +22,9 @@ namespace SurveyApp.Application.Services
         public async Task<AnalyticsDto> GetAnalyticsDataAsync()
         {
             var analyticsData = await _analyticsRepository.GetAnalyticsDataAsync();
+            var random = new Random();
             
-            return new AnalyticsDto
+            var dto = new AnalyticsDto
             {
                 TotalSurveys = analyticsData.TotalSurveys,
                 TotalResponses = analyticsData.TotalResponses,
@@ -34,8 +34,46 @@ namespace SurveyApp.Application.Services
                 {
                     Date = rt.Date,
                     Responses = rt.Responses
-                }).ToList()
+                }).ToList(),
+                
+                // Additional properties with sample data
+                SurveyGrowthRate = random.Next(5, 25),
+                ResponseGrowthRate = random.Next(5, 30),
+                AvgCompletionRate = Math.Round(analyticsData.AverageCompletionRate),
+                CompletionRateChange = random.Next(-5, 15),
+                AvgResponseTime = random.Next(2, 8),
+                ResponseTimeChange = random.Next(-10, 10)
             };
+            
+            // Add sample survey performance data
+            dto.SurveyPerformance = Enumerable.Range(1, 5).Select(i => new SurveyPerformanceDto
+            {
+                Title = $"Survey {i}",
+                ResponseCount = random.Next(50, 200),
+                CompletionRate = random.Next(60, 95),
+                AverageTimeMinutes = random.Next(2, 10)
+            }).ToList();
+            
+            // Add sample demographic data
+            dto.Demographics = new List<DemographicDto>
+            {
+                new DemographicDto { Category = "18-24", Percentage = random.Next(10, 25) },
+                new DemographicDto { Category = "25-34", Percentage = random.Next(20, 35) },
+                new DemographicDto { Category = "35-44", Percentage = random.Next(15, 30) },
+                new DemographicDto { Category = "45-54", Percentage = random.Next(10, 20) },
+                new DemographicDto { Category = "55+", Percentage = random.Next(5, 15) }
+            };
+            
+            // Add sample device distribution data
+            dto.DeviceDistribution = new List<DeviceDistributionDto>
+            {
+                new DeviceDistributionDto { DeviceType = "Desktop", Percentage = random.Next(30, 50) },
+                new DeviceDistributionDto { DeviceType = "Mobile", Percentage = random.Next(30, 45) },
+                new DeviceDistributionDto { DeviceType = "Tablet", Percentage = random.Next(10, 20) },
+                new DeviceDistributionDto { DeviceType = "Other", Percentage = random.Next(2, 8) }
+            };
+            
+            return dto;
         }
 
         public async Task RefreshAnalyticsDataAsync()

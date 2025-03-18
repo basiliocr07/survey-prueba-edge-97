@@ -1,4 +1,3 @@
-
 using System.Collections.Generic;
 using SurveyApp.Application.DTOs;
 
@@ -6,7 +5,7 @@ namespace SurveyApp.WebMvc.Models
 {
     public class RequirementsViewModel
     {
-        public List<SuggestionDto> Requirements { get; set; }
+        public List<SuggestionDto> Requirements { get;set; }
         public List<KnowledgeBaseItemDto> KnowledgeBase { get; set; }
         public string[] Categories { get; set; }
         public string ActiveTab { get; set; } = "new";

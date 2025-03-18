@@ -1,4 +1,3 @@
-
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Application.Services;
@@ -25,8 +24,6 @@ namespace SurveyApp.WebMvc.Controllers
             var analyticsData = await _analyticsService.GetAnalyticsDataAsync();
             var surveys = await _surveyService.GetAllSurveysAsync();
 
-            var random = new Random();
-
             var viewModel = new AnalyticsViewModel
             {
                 TotalSurveys = analyticsData.TotalSurveys,
@@ -51,41 +48,36 @@ namespace SurveyApp.WebMvc.Controllers
                         CreatedAt = s.CreatedAt
                     }).ToList(),
                 
-                // Add mock data for additional properties
-                SurveyGrowthRate = random.Next(5, 25),
-                ResponseGrowthRate = random.Next(5, 30),
-                AvgCompletionRate = Math.Round(analyticsData.AverageCompletionRate),
-                CompletionRateChange = random.Next(-5, 15),
-                AvgResponseTime = random.Next(2, 8),
-                ResponseTimeChange = random.Next(-10, 10),
+                // Map additional properties from the DTO
+                SurveyGrowthRate = analyticsData.SurveyGrowthRate,
+                ResponseGrowthRate = analyticsData.ResponseGrowthRate,
+                AvgCompletionRate = analyticsData.AvgCompletionRate,
+                CompletionRateChange = analyticsData.CompletionRateChange,
+                AvgResponseTime = analyticsData.AvgResponseTime,
+                ResponseTimeChange = analyticsData.ResponseTimeChange,
                 
-                // Add mock survey performance data
-                SurveyPerformance = surveys.Take(5).Select(s => new SurveyPerformanceViewModel
+                // Map survey performance data
+                SurveyPerformance = analyticsData.SurveyPerformance.Select(sp => new SurveyPerformanceViewModel
                 {
-                    Title = s.Title,
-                    ResponseCount = s.Responses,
-                    CompletionRate = s.CompletionRate,
-                    AverageTimeMinutes = random.Next(2, 10)
+                    Title = sp.Title,
+                    ResponseCount = sp.ResponseCount,
+                    CompletionRate = sp.CompletionRate,
+                    AverageTimeMinutes = sp.AverageTimeMinutes
                 }).ToList(),
                 
-                // Add mock demographic data
-                Demographics = new List<DemographicViewModel>
+                // Map demographic data
+                Demographics = analyticsData.Demographics.Select(d => new DemographicViewModel
                 {
-                    new DemographicViewModel { Category = "18-24", Percentage = random.Next(10, 25) },
-                    new DemographicViewModel { Category = "25-34", Percentage = random.Next(20, 35) },
-                    new DemographicViewModel { Category = "35-44", Percentage = random.Next(15, 30) },
-                    new DemographicViewModel { Category = "45-54", Percentage = random.Next(10, 20) },
-                    new DemographicViewModel { Category = "55+", Percentage = random.Next(5, 15) }
-                },
+                    Category = d.Category,
+                    Percentage = d.Percentage
+                }).ToList(),
                 
-                // Add mock device distribution data
-                DeviceDistribution = new List<DeviceDistributionViewModel>
+                // Map device distribution data
+                DeviceDistribution = analyticsData.DeviceDistribution.Select(dd => new DeviceDistributionViewModel
                 {
-                    new DeviceDistributionViewModel { DeviceType = "Desktop", Percentage = random.Next(30, 50) },
-                    new DeviceDistributionViewModel { DeviceType = "Mobile", Percentage = random.Next(30, 45) },
-                    new DeviceDistributionViewModel { DeviceType = "Tablet", Percentage = random.Next(10, 20) },
-                    new DeviceDistributionViewModel { DeviceType = "Other", Percentage = random.Next(2, 8) }
-                }
+                    DeviceType = dd.DeviceType,
+                    Percentage = dd.Percentage
+                }).ToList()
             };
 
             return View(viewModel);
