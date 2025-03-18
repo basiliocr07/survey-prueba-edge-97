@@ -67,6 +67,27 @@ namespace SurveyApp.WebMvc.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [HttpPost]
+        public async Task<IActionResult> Create(CreateSuggestionDto requirementDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["ErrorMessage"] = "Please correct the errors in the form.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Aseguramos que el contenido se establezca a partir de la descripción si está vacío
+            if (string.IsNullOrEmpty(requirementDto.Content) && !string.IsNullOrEmpty(requirementDto.Description))
+            {
+                requirementDto.Content = requirementDto.Description;
+            }
+
+            await _suggestionService.CreateSuggestionAsync(requirementDto);
+            TempData["SuccessMessage"] = "Your requirement has been submitted successfully.";
+            
+            return RedirectToAction(nameof(Index));
+        }
+
         [HttpGet("requirements/view")]
         public async Task<IActionResult> ViewRequirements(string category = null, string search = null)
         {

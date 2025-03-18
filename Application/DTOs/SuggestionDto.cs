@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 
@@ -18,6 +17,12 @@ namespace SurveyApp.Application.DTOs
         public string Response { get; set; }
         public DateTime? ResponseDate { get; set; }
         public List<string> SimilarSuggestions { get; set; }
+        
+        // Propiedades adicionales requeridas por las vistas
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public string Source { get; set; }
+        public int CompletionPercentage { get; set; }
     }
 
     public class CreateSuggestionDto
@@ -27,6 +32,15 @@ namespace SurveyApp.Application.DTOs
         public string CustomerEmail { get; set; }
         public string Category { get; set; }
         public bool IsAnonymous { get; set; }
+        
+        // Propiedades adicionales para el formulario de creación
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public string Source { get; set; }
+        public string Priority { get; set; }
+        public string Status { get; set; }
+        public DateTime? TargetDate { get; set; }
+        public string AcceptanceCriteria { get; set; }
     }
 
     public class UpdateSuggestionStatusDto
