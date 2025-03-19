@@ -1,4 +1,3 @@
-
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -8,6 +7,8 @@ using SurveyApp.Application.DTOs;
 using SurveyApp.Application.Services;
 using SurveyApp.Domain.Entities;
 using SurveyApp.WebMvc.Models;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace SurveyApp.WebMvc.Controllers
 {
@@ -170,7 +171,7 @@ namespace SurveyApp.WebMvc.Controllers
                     CustomerName = suggestion.CustomerName,
                     CustomerEmail = suggestion.CustomerEmail,
                     CreatedAt = suggestion.CreatedAt,
-                    Status = suggestion.Status.ToString(),
+                    Status = suggestion.Status,
                     Category = suggestion.Category,
                     Response = suggestion.Response
                 };
@@ -191,7 +192,7 @@ namespace SurveyApp.WebMvc.Controllers
         {
             try
             {
-                if (!Enum.TryParse<SuggestionStatus>(status, out var suggestionStatus))
+                if (!Enum.TryParse<SuggestionStatus>(status, true, out var suggestionStatus))
                 {
                     ModelState.AddModelError("", "Estado de sugerencia no válido.");
                     return RedirectToAction("View", new { id });

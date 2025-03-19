@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -178,7 +177,7 @@ namespace SurveyApp.Application.Services
 
         private SuggestionDto MapToDto(Suggestion suggestion)
         {
-            // Calcular el porcentaje de completación basado en el estado
+            // Calculate completion percentage based on status
             int completionPercentage = 0;
             switch (suggestion.Status)
             {
@@ -189,8 +188,6 @@ namespace SurveyApp.Application.Services
                     completionPercentage = 50;
                     break;
                 case SuggestionStatus.Implemented:
-                    completionPercentage = 100;
-                    break;
                 case SuggestionStatus.Rejected:
                     completionPercentage = 100;
                     break;
@@ -210,8 +207,6 @@ namespace SurveyApp.Application.Services
                 Response = suggestion.Response,
                 ResponseDate = suggestion.ResponseDate,
                 SimilarSuggestions = suggestion.SimilarSuggestions,
-                
-                // Asignar valores a las nuevas propiedades
                 Title = !string.IsNullOrEmpty(suggestion.Title) 
                     ? suggestion.Title 
                     : (!string.IsNullOrEmpty(suggestion.Content) 
