@@ -1,6 +1,7 @@
 
 using System;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,10 +16,12 @@ namespace SurveyApp.WebMvc.Controllers
     public class SurveyController : Controller
     {
         private readonly ISurveyService _surveyService;
+        private readonly ILogger<SurveyController> _logger;
 
-        public SurveyController(ISurveyService surveyService)
+        public SurveyController(ISurveyService surveyService, ILogger<SurveyController> logger)
         {
             _surveyService = surveyService;
+            _logger = logger;
         }
 
         // GET: Survey
@@ -26,13 +29,28 @@ namespace SurveyApp.WebMvc.Controllers
         {
             try
             {
+                // Check user role
+                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+                
+                // If not admin, redirect to access denied
+                if (userRole != "Admin")
+                {
+                    return RedirectToAction("AccessDenied", "Account");
+                }
+                
                 var surveys = await _surveyService.GetAllSurveysAsync();
                 var viewModel = surveys.Select(MapToListItemViewModel).ToList();
+                
+                // Set authentication and role information 
+                ViewBag.IsAuthenticated = User.Identity.IsAuthenticated;
+                ViewBag.UserRole = userRole;
+                ViewBag.Username = User.Identity.Name;
+                
                 return View(viewModel);
             }
             catch (Exception ex)
             {
-                // Loguear el error
+                _logger.LogError(ex, "Error al cargar las encuestas");
                 return View(new List<SurveyListItemViewModel>());
             }
         }
@@ -42,6 +60,14 @@ namespace SurveyApp.WebMvc.Controllers
         {
             try
             {
+                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+                
+                // If not admin, redirect to access denied
+                if (userRole != "Admin")
+                {
+                    return RedirectToAction("AccessDenied", "Account");
+                }
+                
                 var survey = await _surveyService.GetSurveyByIdAsync(id);
                 if (survey == null)
                 {
@@ -49,10 +75,17 @@ namespace SurveyApp.WebMvc.Controllers
                 }
 
                 var viewModel = MapToViewModel(survey);
+                
+                // Set authentication and role information
+                viewModel.IsAuthenticated = User.Identity.IsAuthenticated;
+                viewModel.UserRole = userRole ?? string.Empty;
+                viewModel.Username = User.Identity.IsAuthenticated ? User.Identity.Name : string.Empty;
+                
                 return View(viewModel);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error al cargar los detalles de la encuesta");
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -60,9 +93,20 @@ namespace SurveyApp.WebMvc.Controllers
         // GET: Survey/Create
         public IActionResult Create()
         {
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+                
+            // If not admin, redirect to access denied
+            if (userRole != "Admin")
+            {
+                return RedirectToAction("AccessDenied", "Account");
+            }
+            
             var viewModel = new SurveyCreateViewModel
             {
-                Questions = new List<QuestionViewModel>()
+                Questions = new List<QuestionViewModel>(),
+                IsAuthenticated = User.Identity.IsAuthenticated,
+                UserRole = userRole ?? string.Empty,
+                Username = User.Identity.IsAuthenticated ? User.Identity.Name : string.Empty
             };
             return View(viewModel);
         }
@@ -76,6 +120,14 @@ namespace SurveyApp.WebMvc.Controllers
             {
                 try
                 {
+                    var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+                
+                    // If not admin, redirect to access denied
+                    if (userRole != "Admin")
+                    {
+                        return RedirectToAction("AccessDenied", "Account");
+                    }
+                    
                     var surveyDto = new CreateSurveyDto
                     {
                         Title = viewModel.Title,
@@ -98,10 +150,16 @@ namespace SurveyApp.WebMvc.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Error al crear la encuesta");
                     ModelState.AddModelError("", "Error al crear la encuesta: " + ex.Message);
                 }
             }
 
+            // Set authentication and role information if ModelState is invalid
+            viewModel.IsAuthenticated = User.Identity.IsAuthenticated;
+            viewModel.UserRole = User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
+            viewModel.Username = User.Identity.IsAuthenticated ? User.Identity.Name : string.Empty;
+            
             return View(viewModel);
         }
 
@@ -110,6 +168,14 @@ namespace SurveyApp.WebMvc.Controllers
         {
             try
             {
+                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+                
+                // If not admin, redirect to access denied
+                if (userRole != "Admin")
+                {
+                    return RedirectToAction("AccessDenied", "Account");
+                }
+                
                 var survey = await _surveyService.GetSurveyByIdAsync(id);
                 if (survey == null)
                 {
@@ -117,10 +183,17 @@ namespace SurveyApp.WebMvc.Controllers
                 }
 
                 var viewModel = MapToCreateSurveyViewModel(survey);
+                
+                // Set authentication and role information
+                viewModel.IsAuthenticated = User.Identity.IsAuthenticated;
+                viewModel.UserRole = userRole ?? string.Empty;
+                viewModel.Username = User.Identity.IsAuthenticated ? User.Identity.Name : string.Empty;
+                
                 return View(viewModel);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error al cargar la encuesta para editar");
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -139,6 +212,14 @@ namespace SurveyApp.WebMvc.Controllers
             {
                 try
                 {
+                    var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+                
+                    // If not admin, redirect to access denied
+                    if (userRole != "Admin")
+                    {
+                        return RedirectToAction("AccessDenied", "Account");
+                    }
+                    
                     var surveyDto = new CreateSurveyDto
                     {
                         Title = viewModel.Title,
@@ -159,10 +240,16 @@ namespace SurveyApp.WebMvc.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Error al actualizar la encuesta");
                     ModelState.AddModelError("", "Error al actualizar la encuesta: " + ex.Message);
                 }
             }
 
+            // Set authentication and role information if ModelState is invalid
+            viewModel.IsAuthenticated = User.Identity.IsAuthenticated;
+            viewModel.UserRole = User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
+            viewModel.Username = User.Identity.IsAuthenticated ? User.Identity.Name : string.Empty;
+            
             return View(viewModel);
         }
 
@@ -171,6 +258,14 @@ namespace SurveyApp.WebMvc.Controllers
         {
             try
             {
+                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+                
+                // If not admin, redirect to access denied
+                if (userRole != "Admin")
+                {
+                    return RedirectToAction("AccessDenied", "Account");
+                }
+                
                 var survey = await _surveyService.GetSurveyByIdAsync(id);
                 if (survey == null)
                 {
@@ -178,10 +273,17 @@ namespace SurveyApp.WebMvc.Controllers
                 }
 
                 var viewModel = MapToViewModel(survey);
+                
+                // Set authentication and role information
+                viewModel.IsAuthenticated = User.Identity.IsAuthenticated;
+                viewModel.UserRole = userRole ?? string.Empty;
+                viewModel.Username = User.Identity.IsAuthenticated ? User.Identity.Name : string.Empty;
+                
                 return View(viewModel);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error al cargar la encuesta para eliminar");
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -193,14 +295,29 @@ namespace SurveyApp.WebMvc.Controllers
         {
             try
             {
+                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+                
+                // If not admin, redirect to access denied
+                if (userRole != "Admin")
+                {
+                    return RedirectToAction("AccessDenied", "Account");
+                }
+                
                 await _surveyService.DeleteSurveyAsync(id);
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error al eliminar la encuesta");
                 ModelState.AddModelError("", "Error al eliminar la encuesta: " + ex.Message);
                 var survey = await _surveyService.GetSurveyByIdAsync(id);
                 var viewModel = MapToViewModel(survey);
+                
+                // Set authentication and role information
+                viewModel.IsAuthenticated = User.Identity.IsAuthenticated;
+                viewModel.UserRole = User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
+                viewModel.Username = User.Identity.IsAuthenticated ? User.Identity.Name : string.Empty;
+                
                 return View(viewModel);
             }
         }
