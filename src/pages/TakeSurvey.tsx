@@ -316,77 +316,79 @@ export default function TakeSurvey() {
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            {question.type === 'text' && (
-                              <Textarea 
-                                placeholder="Your answer"
-                                value={field.value as string}
-                                onChange={(e) => field.onChange(e.target.value)}
-                                className="min-h-[100px]"
-                              />
-                            )}
-                            
-                            {question.type === 'single-choice' && question.options && (
-                              <div className="space-y-2">
-                                {question.options.map((option, i) => (
-                                  <div key={i} className="flex items-center">
-                                    <input
-                                      type="radio"
-                                      id={`q${index}-o${i}`}
-                                      name={`question-${question.id}`}
-                                      value={option}
-                                      checked={field.value === option}
-                                      onChange={() => field.onChange(option)}
-                                      className="mr-2"
-                                    />
-                                    <label htmlFor={`q${index}-o${i}`}>{option}</label>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                            
-                            {question.type === 'multiple-choice' && question.options && (
-                              <div className="space-y-2">
-                                {question.options.map((option, i) => {
-                                  const values = field.value as string[] || [];
-                                  return (
+                            <>
+                              {question.type === 'text' && (
+                                <Textarea 
+                                  placeholder="Your answer"
+                                  value={field.value as string}
+                                  onChange={(e) => field.onChange(e.target.value)}
+                                  className="min-h-[100px]"
+                                />
+                              )}
+                              
+                              {question.type === 'single-choice' && question.options && (
+                                <div className="space-y-2">
+                                  {question.options.map((option, i) => (
                                     <div key={i} className="flex items-center">
                                       <input
-                                        type="checkbox"
+                                        type="radio"
                                         id={`q${index}-o${i}`}
+                                        name={`question-${question.id}`}
                                         value={option}
-                                        checked={values.includes(option)}
-                                        onChange={(e) => {
-                                          const newValues = e.target.checked
-                                            ? [...values, option]
-                                            : values.filter(v => v !== option);
-                                          field.onChange(newValues);
-                                        }}
+                                        checked={field.value === option}
+                                        onChange={() => field.onChange(option)}
                                         className="mr-2"
                                       />
                                       <label htmlFor={`q${index}-o${i}`}>{option}</label>
                                     </div>
-                                  );
-                                })}
-                              </div>
-                            )}
-                            
-                            {question.type === 'rating' && (
-                              <StarRating
-                                name={`rating-${question.id}`}
-                                value={typeof field.value === 'string' ? field.value : ''}
-                                onChange={field.onChange}
-                                required={question.required}
-                              />
-                            )}
-                            
-                            {question.type === 'nps' && (
-                              <NPSRating
-                                name={`nps-${question.id}`}
-                                value={typeof field.value === 'string' ? field.value : ''}
-                                onChange={field.onChange}
-                                required={question.required}
-                              />
-                            )}
+                                  ))}
+                                </div>
+                              )}
+                              
+                              {question.type === 'multiple-choice' && question.options && (
+                                <div className="space-y-2">
+                                  {question.options.map((option, i) => {
+                                    const values = field.value as string[] || [];
+                                    return (
+                                      <div key={i} className="flex items-center">
+                                        <input
+                                          type="checkbox"
+                                          id={`q${index}-o${i}`}
+                                          value={option}
+                                          checked={values.includes(option)}
+                                          onChange={(e) => {
+                                            const newValues = e.target.checked
+                                              ? [...values, option]
+                                              : values.filter(v => v !== option);
+                                            field.onChange(newValues);
+                                          }}
+                                          className="mr-2"
+                                        />
+                                        <label htmlFor={`q${index}-o${i}`}>{option}</label>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                              
+                              {question.type === 'rating' && (
+                                <StarRating
+                                  name={`rating-${question.id}`}
+                                  value={typeof field.value === 'string' ? field.value : ''}
+                                  onChange={(value) => field.onChange(value)}
+                                  required={question.required}
+                                />
+                              )}
+                              
+                              {question.type === 'nps' && (
+                                <NPSRating
+                                  name={`nps-${question.id}`}
+                                  value={typeof field.value === 'string' ? field.value : ''}
+                                  onChange={(value) => field.onChange(value)}
+                                  required={question.required}
+                                />
+                              )}
+                            </>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
