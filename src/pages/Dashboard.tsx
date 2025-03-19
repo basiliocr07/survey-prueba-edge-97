@@ -196,13 +196,11 @@ const StatusBadge = ({ status }: { status: string }) => {
 const CollapsibleSection = ({ 
   title, 
   children, 
-  content, 
   expanded, 
   onToggle 
 }: { 
   title: React.ReactNode, 
   children: React.ReactNode, 
-  content: React.ReactNode, 
   expanded: boolean, 
   onToggle: () => void 
 }) => {
@@ -323,7 +321,6 @@ export default function Dashboard() {
                   )}
                 </div>
               }
-              content={recentResponses}
             >
               <div className="space-y-3">
                 <h4 className="text-sm font-medium mb-2">Últimas 5 respuestas</h4>
@@ -372,7 +369,6 @@ export default function Dashboard() {
                   )}
                 </div>
               }
-              content={recentSuggestions}
             >
               <div className="space-y-3">
                 <h4 className="text-sm font-medium mb-2">Últimas 5 sugerencias</h4>
@@ -429,7 +425,6 @@ export default function Dashboard() {
                   )}
                 </div>
               }
-              content={recentRequirements}
             >
               <div className="space-y-3">
                 <h4 className="text-sm font-medium mb-2">Últimos 5 requerimientos</h4>
