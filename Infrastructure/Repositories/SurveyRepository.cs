@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,6 +24,7 @@ namespace SurveyApp.Infrastructure.Repositories
             return await _dbContext.Surveys
                 .Include(s => s.Questions)
                 .Include(s => s.DeliveryConfig)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(s => s.Id == id);
         }
 
@@ -31,6 +33,7 @@ namespace SurveyApp.Infrastructure.Repositories
             return await _dbContext.Surveys
                 .Include(s => s.Questions)
                 .Include(s => s.DeliveryConfig)
+                .AsNoTracking()
                 .ToListAsync();
         }
         
@@ -66,6 +69,7 @@ namespace SurveyApp.Infrastructure.Repositories
             var pagedSurveys = await query
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
+                .AsNoTracking()
                 .ToListAsync();
                 
             return (pagedSurveys, totalCount);
@@ -73,17 +77,31 @@ namespace SurveyApp.Infrastructure.Repositories
 
         public async Task<Survey> CreateAsync(Survey survey)
         {
+            // Ensure entity is properly set up for insert
+            survey.Id = survey.Id == Guid.Empty ? Guid.NewGuid() : survey.Id;
+            
+            foreach (var question in survey.Questions)
+            {
+                question.Id = question.Id == Guid.Empty ? Guid.NewGuid() : question.Id;
+            }
+            
             await _dbContext.Surveys.AddAsync(survey);
             await _dbContext.SaveChangesAsync();
+            
+            // Detach entity after save to prevent tracking issues
+            _dbContext.Entry(survey).State = EntityState.Detached;
+            
             return survey;
         }
 
         public async Task UpdateAsync(Survey survey)
         {
-            // Primero obtenemos las preguntas actuales para comparar
+            // Use a disconnected approach to avoid tracking issues
+            _dbContext.ChangeTracker.Clear();
+            
+            // First, get the existing survey
             var existingSurvey = await _dbContext.Surveys
                 .Include(s => s.Questions)
-                .Include(s => s.DeliveryConfig)
                 .FirstOrDefaultAsync(s => s.Id == survey.Id);
 
             if (existingSurvey == null)
@@ -91,69 +109,48 @@ namespace SurveyApp.Infrastructure.Repositories
                 throw new KeyNotFoundException($"Survey with ID {survey.Id} not found.");
             }
 
-            // Actualizamos propiedades básicas
-            existingSurvey.UpdateTitle(survey.Title);
-            existingSurvey.UpdateDescription(survey.Description);
-            existingSurvey.SetStatus(survey.Status);
-            existingSurvey.SetCategory(survey.Category);
-            existingSurvey.SetFeatured(survey.IsFeatured);
+            // Update basic properties
+            _dbContext.Entry(existingSurvey).CurrentValues.SetValues(survey);
             
-            if (!string.IsNullOrEmpty(survey.CreatedBy))
-            {
-                existingSurvey.SetCreatedBy(survey.CreatedBy);
-            }
-
-            // Actualizar preguntas
-            // Primero, hacemos un seguimiento de los IDs de preguntas actuales para evitar eliminar y recrear
-            var existingQuestionIds = existingSurvey.Questions.Select(q => q.Id).ToList();
-            var updatedQuestionIds = survey.Questions.Select(q => q.Id).ToList();
-            
-            // Eliminar preguntas que ya no existen
+            // Handle questions - remove ones that no longer exist
             foreach (var existingQuestion in existingSurvey.Questions.ToList())
             {
-                if (!updatedQuestionIds.Contains(existingQuestion.Id))
+                if (!survey.Questions.Any(q => q.Id == existingQuestion.Id))
                 {
                     _dbContext.Questions.Remove(existingQuestion);
                 }
             }
-
-            // Actualizar o agregar preguntas
-            foreach (var question in survey.Questions)
+            
+            // Update or add questions
+            foreach (var questionModel in survey.Questions)
             {
-                var existingQuestion = existingSurvey.Questions.FirstOrDefault(q => q.Id == question.Id);
+                var existingQuestion = existingSurvey.Questions.FirstOrDefault(q => q.Id == questionModel.Id);
                 
                 if (existingQuestion != null)
                 {
-                    // Actualizar pregunta existente
-                    existingQuestion.UpdateTitle(question.Title);
-                    existingQuestion.UpdateDescription(question.Description);
-                    existingQuestion.SetRequired(question.Required);
+                    // Update existing question
+                    _dbContext.Entry(existingQuestion).CurrentValues.SetValues(questionModel);
                     
-                    // Solo actualizar tipo si es diferente para evitar problemas con las opciones
-                    if (existingQuestion.Type != question.Type)
+                    // Update options if needed
+                    if (questionModel.Options != null)
                     {
-                        existingQuestion.ChangeType(question.Type);
+                        existingQuestion.SetOptions(questionModel.Options);
                     }
-                    
-                    // Actualizar opciones
-                    if (question.Options != null && question.Options.Any())
-                    {
-                        existingQuestion.SetOptions(question.Options);
-                    }
-                    
-                    _dbContext.Entry(existingQuestion).State = EntityState.Modified;
                 }
                 else
                 {
-                    // Agregar nueva pregunta al contexto
-                    _dbContext.Questions.Add(question);
+                    // Ensure new question has an ID
+                    if (questionModel.Id == Guid.Empty)
+                    {
+                        questionModel.Id = Guid.NewGuid();
+                    }
                     
-                    // También añadir referencia a la encuesta
-                    existingSurvey.AddQuestion(question);
+                    // Add new question
+                    existingSurvey.AddQuestion(questionModel);
                 }
             }
-
-            // Actualizar configuración de entrega si existe
+            
+            // Update delivery config if present
             if (survey.DeliveryConfig != null)
             {
                 if (existingSurvey.DeliveryConfig == null)
@@ -162,10 +159,7 @@ namespace SurveyApp.Infrastructure.Repositories
                 }
                 else
                 {
-                    // Update the existing delivery config
                     var deliveryConfig = existingSurvey.DeliveryConfig;
-                    
-                    // Set the delivery type
                     deliveryConfig.SetType(survey.DeliveryConfig.Type);
                     
                     // Update email addresses
@@ -175,30 +169,29 @@ namespace SurveyApp.Infrastructure.Repositories
                         deliveryConfig.AddEmailAddress(email);
                     }
                     
-                    // Update Schedule
+                    // Update Schedule and Trigger if present
                     if (survey.DeliveryConfig.Schedule != null)
                     {
                         deliveryConfig.SetSchedule(survey.DeliveryConfig.Schedule);
                     }
                     
-                    // Update Trigger
                     if (survey.DeliveryConfig.Trigger != null)
                     {
                         deliveryConfig.SetTrigger(survey.DeliveryConfig.Trigger);
                     }
                 }
             }
-
-            _dbContext.Entry(existingSurvey).State = EntityState.Modified;
             
             await _dbContext.SaveChangesAsync();
+            
+            // Detach entities after save
+            _dbContext.ChangeTracker.Clear();
         }
 
         public async Task DeleteAsync(Guid id)
         {
             var survey = await _dbContext.Surveys
                 .Include(s => s.Questions)
-                .Include(s => s.DeliveryConfig)
                 .FirstOrDefaultAsync(s => s.Id == id);
                 
             if (survey != null)

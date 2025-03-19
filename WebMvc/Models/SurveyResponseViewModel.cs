@@ -1,6 +1,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace SurveyApp.WebMvc.Models
 {
@@ -10,7 +11,12 @@ namespace SurveyApp.WebMvc.Models
         public string Title { get; set; }
         public string Description { get; set; }
         public List<QuestionViewModel> Questions { get; set; }
+        
+        [Required(ErrorMessage = "El nombre es obligatorio")]
         public string RespondentName { get; set; }
+        
+        [Required(ErrorMessage = "El email es obligatorio")]
+        [EmailAddress(ErrorMessage = "Por favor, introduce un email válido")]
         public string RespondentEmail { get; set; }
     }
 
@@ -26,8 +32,13 @@ namespace SurveyApp.WebMvc.Models
 
     public class SurveyResponseInputModel
     {
+        [Required(ErrorMessage = "El nombre es obligatorio")]
         public string RespondentName { get; set; }
+        
+        [Required(ErrorMessage = "El email es obligatorio")]
+        [EmailAddress(ErrorMessage = "Por favor, introduce un email válido")]
         public string RespondentEmail { get; set; }
+        
         public Dictionary<string, object> Answers { get; set; } = new Dictionary<string, object>();
     }
 }

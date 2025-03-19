@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using SurveyApp.Application.DTOs;
 using SurveyApp.Application.Services;
 using SurveyApp.WebMvc.Models;
+using System.Linq;
 
 namespace SurveyApp.WebMvc.Controllers
 {
@@ -61,15 +62,32 @@ namespace SurveyApp.WebMvc.Controllers
         }
 
         [HttpPost("respond/{id}")]
-        public async Task<IActionResult> Submit(Guid id, SurveyResponseInputModel model)
+        public async Task<IActionResult> Submit(Guid id, [FromForm] SurveyResponseInputModel model)
         {
-            if (!ModelState.IsValid)
-            {
-                return RedirectToAction(nameof(Respond), new { id });
-            }
-
             try
             {
+                // Ensure model.Answers is initialized
+                if (model.Answers == null)
+                {
+                    model.Answers = new Dictionary<string, object>();
+                }
+
+                // Process form collection for multiple-choice questions
+                foreach (var key in Request.Form.Keys)
+                {
+                    if (key.StartsWith("Answers[") && key.EndsWith("]") && Request.Form[key].Count > 1)
+                    {
+                        // Extract question ID
+                        var questionId = key.Substring(8, key.Length - 9);
+                        
+                        // Get all values for this question (for multiple-choice)
+                        var values = Request.Form[key].ToList();
+                        
+                        // Add to model.Answers
+                        model.Answers[questionId] = values;
+                    }
+                }
+
                 var createResponseDto = new CreateSurveyResponseDto
                 {
                     SurveyId = id,
