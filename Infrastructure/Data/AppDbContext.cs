@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
@@ -202,7 +203,7 @@ namespace SurveyApp.Infrastructure.Data
                 entity.Property(e => e.ResponseDate).IsRequired();
                 entity.Property(e => e.SubmittedAt).IsRequired();
                 
-                // Using correct conversion for Dictionary<string, string>
+                // Convert Dictionary<string, string> to JSON
                 entity.Property(e => e.Answers).HasConversion(
                     v => JsonSerializer.Serialize(v, new JsonSerializerOptions()),
                     v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, new JsonSerializerOptions()) ?? new Dictionary<string, string>()

@@ -13,7 +13,7 @@ namespace SurveyApp.Domain.Entities
         public string RespondentPhone { get; set; }
         public string RespondentCompany { get; set; }
         public DateTime SubmittedAt { get; set; }
-        public DateTime ResponseDate { get; set; } // Added ResponseDate property
+        public DateTime ResponseDate { get; set; }
         public Dictionary<string, string> Answers { get; set; } = new Dictionary<string, string>();
         public bool IsExistingClient { get; set; }
         public Guid? ExistingClientId { get; set; }
