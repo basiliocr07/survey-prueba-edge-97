@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,11 +15,33 @@ export default function Results() {
   const [selectedSurveyId, setSelectedSurveyId] = useState<string>(sampleSurveys[0]?.id || '');
   
   const selectedSurvey = sampleSurveys.find(survey => survey.id === selectedSurveyId) || sampleSurveys[0];
-  const surveyResponses = sampleResponses.filter(response => response.surveyId === selectedSurveyId) as SurveyResponse[];
+  
+  // Convert Response[] to SurveyResponse[] with proper mapping
+  const surveyResponses: SurveyResponse[] = sampleResponses
+    .filter(response => response.surveyId === selectedSurveyId)
+    .map(response => ({
+      id: response.id,
+      surveyId: response.surveyId,
+      // Map the response answers to the format expected by SurveyResponse
+      answers: response.answers.map(answer => ({
+        questionId: answer.questionId,
+        questionTitle: answer.questionId, // Using questionId as title temporarily
+        questionType: typeof answer.value === 'number' ? 'rating' : 
+                     Array.isArray(answer.value) ? 'multiple-choice' : 'text',
+        value: Array.isArray(answer.value) ? answer.value : 
+              typeof answer.value === 'number' ? String(answer.value) : answer.value,
+        isValid: true
+      })),
+      submittedAt: response.submittedAt,
+      completionTime: response.completionTime,
+      // Add required properties from SurveyResponse interface
+      respondentName: `Respondent ${response.id}`, // Default placeholder for demo
+      respondentEmail: `respondent${response.id}@example.com`, // Default placeholder for demo
+    }));
 
   const getAverageCompletionTime = () => {
     if (surveyResponses.length === 0) return 0;
-    const total = surveyResponses.reduce((sum, response) => sum + response.completionTime, 0);
+    const total = surveyResponses.reduce((sum, response) => sum + (response.completionTime || 0), 0);
     return Math.round(total / surveyResponses.length);
   };
 

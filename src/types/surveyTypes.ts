@@ -40,6 +40,7 @@ export interface SurveyResponse {
   answers: QuestionResponse[];
   isExistingClient?: boolean;
   existingClientId?: string;
+  completionTime?: number; // Added this property to match with sampleData.ts Response type
 }
 
 export interface SurveyResponseSubmission {
