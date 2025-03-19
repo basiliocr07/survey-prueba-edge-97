@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Question, QuestionType } from "@/utils/sampleData";
-import { ChevronDown, ChevronUp, Trash2, Plus, GripVertical } from "lucide-react";
+import { ChevronDown, ChevronUp, Trash2, Plus, GripVertical, Star } from "lucide-react";
 import QuestionTypes from "./QuestionTypes";
 import { cn } from "@/lib/utils";
+import StarRating from './StarRating';
+import NPSRating from './NPSRating';
 
 interface QuestionBuilderProps {
   question: Question;
@@ -64,7 +65,12 @@ export default function QuestionBuilder({
       type,
       options: ['multiple-choice', 'single-choice', 'dropdown', 'matrix', 'ranking'].includes(type)
         ? question.options || ['Option 1', 'Option 2']
-        : undefined
+        : undefined,
+      settings: type === 'rating' 
+        ? { min: 1, max: 5 } 
+        : type === 'nps'
+        ? { min: 0, max: 10 }
+        : question.settings
     });
     setShowQuestionTypes(false);
   };
@@ -107,6 +113,36 @@ export default function QuestionBuilder({
         </Button>
       </div>
     );
+  };
+
+  const renderQuestionPreview = () => {
+    if (question.type === 'rating') {
+      return (
+        <div className="mt-4 border rounded-md p-4 bg-muted/20">
+          <Label className="mb-2 block">Preview</Label>
+          <StarRating 
+            name={`preview-${question.id}`} 
+            value="3" 
+            onChange={() => {}}
+          />
+        </div>
+      );
+    }
+    
+    if (question.type === 'nps') {
+      return (
+        <div className="mt-4 border rounded-md p-4 bg-muted/20">
+          <Label className="mb-2 block">Preview</Label>
+          <NPSRating 
+            name={`preview-${question.id}`} 
+            value="7" 
+            onChange={() => {}}
+          />
+        </div>
+      );
+    }
+    
+    return null;
   };
 
   return (
@@ -201,6 +237,7 @@ export default function QuestionBuilder({
           </div>
 
           {renderQuestionOptions()}
+          {renderQuestionPreview()}
 
           <div className="flex items-center space-x-2 pt-2">
             <Switch 

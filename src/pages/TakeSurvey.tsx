@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -14,8 +13,9 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Survey, SurveyResponseSubmission } from '@/types/surveyTypes';
+import StarRating from '@/components/survey/StarRating';
+import NPSRating from '@/components/survey/NPSRating';
 
-// Esquema de validación para el formulario
 const formSchema = z.object({
   respondentName: z.string().min(1, { message: "Name is required" }),
   respondentEmail: z.string().email({ message: "Valid email is required" }),
@@ -39,7 +39,6 @@ export default function TakeSurvey() {
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   
-  // Inicializar formulario con react-hook-form
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -52,7 +51,6 @@ export default function TakeSurvey() {
   });
   
   useEffect(() => {
-    // Cargar encuesta desde localStorage
     const loadSurvey = () => {
       try {
         const savedSurveys = JSON.parse(localStorage.getItem('surveys') || '[]');
@@ -61,7 +59,6 @@ export default function TakeSurvey() {
         if (foundSurvey) {
           setSurvey(foundSurvey);
           
-          // Inicializar respuestas
           const initialAnswers: Record<string, any> = {};
           foundSurvey.questions.forEach(question => {
             if (question.type === 'multiple-choice') {
@@ -95,7 +92,6 @@ export default function TakeSurvey() {
   const onSubmit = (data: FormValues) => {
     if (!survey) return;
     
-    // Validar las respuestas requeridas
     const requiredQuestions = survey.questions.filter(q => q.required);
     const missingRequiredAnswers = requiredQuestions.filter(q => {
       const answer = data.answers[q.id];
@@ -114,7 +110,6 @@ export default function TakeSurvey() {
       return;
     }
     
-    // Preparar datos para enviar
     const submission: SurveyResponseSubmission = {
       surveyId: survey.id,
       respondentName: data.respondentName,
@@ -122,12 +117,11 @@ export default function TakeSurvey() {
       respondentPhone: data.respondentPhone,
       respondentCompany: data.respondentCompany,
       answers: data.answers,
-      submittedAt: new Date().toISOString() // This is now valid as we've added it to the type definition
+      submittedAt: new Date().toISOString()
     };
     
     console.log('Saving survey response:', submission);
     
-    // Guardar en localStorage para simulación
     const savedResponses = JSON.parse(localStorage.getItem('surveyResponses') || '[]');
     localStorage.setItem('surveyResponses', JSON.stringify([...savedResponses, submission]));
     
@@ -369,22 +363,21 @@ export default function TakeSurvey() {
                             )}
                             
                             {question.type === 'rating' && (
-                              <div className="flex space-x-2">
-                                {[1, 2, 3, 4, 5].map((value) => (
-                                  <button
-                                    key={value}
-                                    type="button"
-                                    className={`w-10 h-10 rounded-full border flex items-center justify-center transition-colors ${
-                                      field.value === value.toString() 
-                                        ? 'bg-primary text-primary-foreground' 
-                                        : 'hover:bg-accent'
-                                    }`}
-                                    onClick={() => field.onChange(value.toString())}
-                                  >
-                                    {value}
-                                  </button>
-                                ))}
-                              </div>
+                              <StarRating
+                                name={`rating-${question.id}`}
+                                value={field.value}
+                                onChange={field.onChange}
+                                required={question.required}
+                              />
+                            )}
+                            
+                            {question.type === 'nps' && (
+                              <NPSRating
+                                name={`nps-${question.id}`}
+                                value={field.value}
+                                onChange={field.onChange}
+                                required={question.required}
+                              />
                             )}
                           </FormControl>
                           <FormMessage />
