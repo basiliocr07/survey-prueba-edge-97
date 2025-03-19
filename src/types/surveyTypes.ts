@@ -40,7 +40,7 @@ export interface SurveyResponse {
   answers: QuestionResponse[];
   isExistingClient?: boolean;
   existingClientId?: string;
-  completionTime?: number; // Added this property to match with sampleData.ts Response type
+  completionTime?: number; // Propiedad para tiempo de completado
 }
 
 export interface SurveyResponseSubmission {
@@ -52,5 +52,5 @@ export interface SurveyResponseSubmission {
   answers: Record<string, string | string[]>;
   isExistingClient?: boolean;
   existingClientId?: string;
-  submittedAt?: string; // Added this property to fix the errors
+  submittedAt?: string; // Fecha de envío
 }

@@ -80,7 +80,7 @@ export default function SurveyResponseList({ responses }: SurveyResponseListProp
   
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat('default', {
+    return new Intl.DateTimeFormat('es-ES', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -98,15 +98,15 @@ export default function SurveyResponseList({ responses }: SurveyResponseListProp
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Survey Responses</CardTitle>
+        <CardTitle>Respuestas de la Encuesta</CardTitle>
         <CardDescription>
-          Showing {responses.length} responses received from respondents
+          Mostrando {responses.length} respuestas recibidas de los clientes
         </CardDescription>
       </CardHeader>
       <CardContent>
         {responses.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-muted-foreground">No responses received yet</p>
+            <p className="text-muted-foreground">No se han recibido respuestas todavía</p>
           </div>
         ) : (
           <div className="border rounded-md overflow-hidden">
@@ -119,7 +119,7 @@ export default function SurveyResponseList({ responses }: SurveyResponseListProp
                     onClick={() => handleSort("respondentName")}
                   >
                     <div className="flex items-center space-x-1">
-                      <span>Respondent</span>
+                      <span>Cliente</span>
                       {getSortIcon("respondentName")}
                     </div>
                   </TableHead>
@@ -128,7 +128,7 @@ export default function SurveyResponseList({ responses }: SurveyResponseListProp
                     onClick={() => handleSort("respondentCompany")}
                   >
                     <div className="flex items-center space-x-1">
-                      <span>Company</span>
+                      <span>Compañía</span>
                       {getSortIcon("respondentCompany")}
                     </div>
                   </TableHead>
@@ -137,11 +137,11 @@ export default function SurveyResponseList({ responses }: SurveyResponseListProp
                     onClick={() => handleSort("submittedAt")}
                   >
                     <div className="flex items-center space-x-1">
-                      <span>Submitted</span>
+                      <span>Fecha</span>
                       {getSortIcon("submittedAt")}
                     </div>
                   </TableHead>
-                  <TableHead>Validation</TableHead>
+                  <TableHead>Validación</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -169,7 +169,7 @@ export default function SurveyResponseList({ responses }: SurveyResponseListProp
                           <div className="text-sm text-muted-foreground">{response.respondentEmail}</div>
                         </TableCell>
                         <TableCell>
-                          {response.respondentCompany || "Not specified"}
+                          {response.respondentCompany || "No especificado"}
                         </TableCell>
                         <TableCell>
                           {formatDate(response.submittedAt)}
@@ -180,7 +180,7 @@ export default function SurveyResponseList({ responses }: SurveyResponseListProp
                               variant={validationStatus === "valid" ? "default" : "secondary"}
                               className={validationStatus === "valid" ? "bg-green-500" : "bg-yellow-500"}
                             >
-                              {validAnswers}/{totalAnswers} Valid
+                              {validAnswers}/{totalAnswers} Válidas
                             </Badge>
                           </div>
                         </TableCell>
@@ -198,16 +198,16 @@ export default function SurveyResponseList({ responses }: SurveyResponseListProp
                                   </div>
                                   <div className="flex items-center space-x-2">
                                     <Phone className="h-4 w-4 text-muted-foreground" />
-                                    <span className="text-sm">{response.respondentPhone || "Not provided"}</span>
+                                    <span className="text-sm">{response.respondentPhone || "No proporcionado"}</span>
                                   </div>
                                   <div className="flex items-center space-x-2">
                                     <Building className="h-4 w-4 text-muted-foreground" />
-                                    <span className="text-sm">{response.respondentCompany || "Not provided"}</span>
+                                    <span className="text-sm">{response.respondentCompany || "No proporcionado"}</span>
                                   </div>
                                 </div>
                                 
                                 <div className="mt-4">
-                                  <h4 className="text-sm font-medium mb-2">Answers</h4>
+                                  <h4 className="text-sm font-medium mb-2">Respuestas</h4>
                                   <div className="border rounded-md">
                                     <div className="divide-y">
                                       {response.answers.map((answer, i) => (

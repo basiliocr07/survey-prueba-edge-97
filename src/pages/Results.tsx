@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,16 +15,14 @@ export default function Results() {
   
   const selectedSurvey = sampleSurveys.find(survey => survey.id === selectedSurveyId) || sampleSurveys[0];
   
-  // Convert Response[] to SurveyResponse[] with proper mapping
   const surveyResponses: SurveyResponse[] = sampleResponses
     .filter(response => response.surveyId === selectedSurveyId)
     .map(response => ({
       id: response.id,
       surveyId: response.surveyId,
-      // Map the response answers to the format expected by SurveyResponse
       answers: response.answers.map(answer => ({
         questionId: answer.questionId,
-        questionTitle: answer.questionId, // Using questionId as title temporarily
+        questionTitle: selectedSurvey.questions.find(q => q.id === answer.questionId)?.title || answer.questionId,
         questionType: typeof answer.value === 'number' ? 'rating' : 
                      Array.isArray(answer.value) ? 'multiple-choice' : 'text',
         value: Array.isArray(answer.value) ? answer.value : 
@@ -33,10 +30,11 @@ export default function Results() {
         isValid: true
       })),
       submittedAt: response.submittedAt,
-      completionTime: response.completionTime,
-      // Add required properties from SurveyResponse interface
-      respondentName: `Respondent ${response.id}`, // Default placeholder for demo
-      respondentEmail: `respondent${response.id}@example.com`, // Default placeholder for demo
+      completionTime: response.completionTime || 0,
+      respondentName: response.respondentName || `Cliente ${response.id.substring(0, 6)}`,
+      respondentEmail: response.respondentEmail || `cliente${response.id.substring(0, 6)}@example.com`,
+      respondentPhone: response.respondentPhone || undefined,
+      respondentCompany: response.respondentCompany || undefined
     }));
 
   const getAverageCompletionTime = () => {
@@ -57,9 +55,9 @@ export default function Results() {
       
       <main className="flex-1 w-full max-w-7xl mx-auto pt-24 px-6 pb-16">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Survey Results & Analysis</h1>
+          <h1 className="text-3xl font-bold mb-2">Análisis de Resultados</h1>
           <p className="text-muted-foreground">
-            View responses, analyze data, and export insights from your surveys
+            Ver respuestas, analizar datos y exportar información de tus encuestas
           </p>
         </div>
         
@@ -68,7 +66,7 @@ export default function Results() {
             <div className="sticky top-24">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">My Surveys</CardTitle>
+                  <CardTitle className="text-lg">Mis Encuestas</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
                   <div className="divide-y">
@@ -83,7 +81,7 @@ export default function Results() {
                       >
                         <div className="font-medium truncate">{survey.title}</div>
                         <div className="text-sm text-muted-foreground mt-1">
-                          {survey.responses} responses
+                          {survey.responses} respuestas
                         </div>
                       </button>
                     ))}
@@ -103,13 +101,13 @@ export default function Results() {
                   </div>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm">
-                      <Filter className="mr-2 h-4 w-4" /> Filter
+                      <Filter className="mr-2 h-4 w-4" /> Filtrar
                     </Button>
                     <Button variant="outline" size="sm">
-                      <Download className="mr-2 h-4 w-4" /> Export
+                      <Download className="mr-2 h-4 w-4" /> Exportar
                     </Button>
                     <Button size="sm">
-                      <Eye className="mr-2 h-4 w-4" /> View Survey
+                      <Eye className="mr-2 h-4 w-4" /> Ver Encuesta
                     </Button>
                   </div>
                 </div>
@@ -122,8 +120,8 @@ export default function Results() {
                           <BarChart className="h-6 w-6" />
                         </div>
                         <div>
-                          <div className="text-sm text-muted-foreground">Total Responses</div>
-                          <div className="text-2xl font-bold">{selectedSurvey.responses}</div>
+                          <div className="text-sm text-muted-foreground">Total Respuestas</div>
+                          <div className="text-2xl font-bold">{surveyResponses.length}</div>
                         </div>
                       </div>
                     </CardContent>
@@ -136,7 +134,7 @@ export default function Results() {
                           <PieChart className="h-6 w-6" />
                         </div>
                         <div>
-                          <div className="text-sm text-muted-foreground">Completion Rate</div>
+                          <div className="text-sm text-muted-foreground">Tasa de Finalización</div>
                           <div className="text-2xl font-bold">{selectedSurvey.completionRate}%</div>
                         </div>
                       </div>
@@ -150,7 +148,7 @@ export default function Results() {
                           <Calendar className="h-6 w-6" />
                         </div>
                         <div>
-                          <div className="text-sm text-muted-foreground">Avg. Completion Time</div>
+                          <div className="text-sm text-muted-foreground">Tiempo Promedio</div>
                           <div className="text-2xl font-bold">{formatTime(getAverageCompletionTime())}</div>
                         </div>
                       </div>
@@ -160,9 +158,9 @@ export default function Results() {
                 
                 <Tabs defaultValue="charts" className="w-full">
                   <TabsList className="grid grid-cols-3 w-full max-w-md mb-6">
-                    <TabsTrigger value="charts">Charts</TabsTrigger>
-                    <TabsTrigger value="responses">Responses</TabsTrigger>
-                    <TabsTrigger value="insights">Insights</TabsTrigger>
+                    <TabsTrigger value="charts">Gráficos</TabsTrigger>
+                    <TabsTrigger value="responses">Respuestas</TabsTrigger>
+                    <TabsTrigger value="insights">Estadísticas</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="charts" className="space-y-6 animate-fade-in">
@@ -172,22 +170,23 @@ export default function Results() {
                   <TabsContent value="responses" className="animate-fade-in">
                     <Card>
                       <CardHeader>
-                        <CardTitle>Individual Responses</CardTitle>
+                        <CardTitle>Respuestas Individuales</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-4">
                           {surveyResponses.length === 0 ? (
                             <p className="text-center py-6 text-muted-foreground">
-                              No responses yet for this survey
+                              No hay respuestas para esta encuesta todavía
                             </p>
                           ) : (
                             <div className="border rounded-md overflow-hidden">
                               <table className="w-full">
                                 <thead>
                                   <tr className="bg-muted/50">
-                                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Response ID</th>
-                                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Submitted</th>
-                                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Duration</th>
+                                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">ID</th>
+                                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Cliente</th>
+                                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Enviado</th>
+                                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Duración</th>
                                     <th className="px-4 py-3 text-left font-medium text-muted-foreground"></th>
                                   </tr>
                                 </thead>
@@ -196,11 +195,15 @@ export default function Results() {
                                     <tr key={response.id} className="hover:bg-muted/30 transition-colors">
                                       <td className="px-4 py-3">{response.id}</td>
                                       <td className="px-4 py-3">
+                                        <div className="font-medium">{response.respondentName}</div>
+                                        <div className="text-xs text-muted-foreground">{response.respondentEmail}</div>
+                                      </td>
+                                      <td className="px-4 py-3">
                                         {new Date(response.submittedAt).toLocaleDateString()}
                                       </td>
-                                      <td className="px-4 py-3">{formatTime(response.completionTime)}</td>
+                                      <td className="px-4 py-3">{formatTime(response.completionTime || 0)}</td>
                                       <td className="px-4 py-3 text-right">
-                                        <Button variant="ghost" size="sm">View Details</Button>
+                                        <Button variant="ghost" size="sm">Ver Detalles</Button>
                                       </td>
                                     </tr>
                                   ))}
@@ -216,62 +219,62 @@ export default function Results() {
                   <TabsContent value="insights" className="animate-fade-in">
                     <Card>
                       <CardHeader>
-                        <CardTitle>Survey Insights</CardTitle>
+                        <CardTitle>Estadísticas de la Encuesta</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-6">
                           <div>
-                            <h3 className="text-lg font-medium mb-2">Response Trends</h3>
+                            <h3 className="text-lg font-medium mb-2">Tendencias de Respuestas</h3>
                             <div className="bg-muted/30 p-4 rounded-md">
                               <p className="text-sm text-muted-foreground">
-                                Response trends visualization will appear here once there are enough responses to analyze patterns over time.
+                                La visualización de tendencias aparecerá aquí cuando haya suficientes respuestas para analizar patrones a lo largo del tiempo.
                               </p>
                             </div>
                           </div>
                           
                           <div>
-                            <h3 className="text-lg font-medium mb-2">Key Findings</h3>
+                            <h3 className="text-lg font-medium mb-2">Hallazgos Clave</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="border rounded-md p-4">
-                                <div className="text-sm font-medium mb-1">Most Selected Answer</div>
+                                <div className="text-sm font-medium mb-1">Respuesta más seleccionada</div>
                                 <div className="text-muted-foreground">
                                   {surveyResponses.length > 0 ? (
-                                    "Very satisfied"
+                                    "Muy satisfecho"
                                   ) : (
-                                    "No responses yet"
+                                    "Sin respuestas aún"
                                   )}
                                 </div>
                               </div>
                               
                               <div className="border rounded-md p-4">
-                                <div className="text-sm font-medium mb-1">Least Selected Answer</div>
+                                <div className="text-sm font-medium mb-1">Respuesta menos seleccionada</div>
                                 <div className="text-muted-foreground">
                                   {surveyResponses.length > 0 ? (
-                                    "Very unsatisfied"
+                                    "Muy insatisfecho"
                                   ) : (
-                                    "No responses yet"
+                                    "Sin respuestas aún"
                                   )}
                                 </div>
                               </div>
                               
                               <div className="border rounded-md p-4">
-                                <div className="text-sm font-medium mb-1">Average Rating</div>
+                                <div className="text-sm font-medium mb-1">Calificación promedio</div>
                                 <div className="text-muted-foreground">
                                   {surveyResponses.length > 0 ? (
                                     "7.6 / 10"
                                   ) : (
-                                    "No responses yet"
+                                    "Sin respuestas aún"
                                   )}
                                 </div>
                               </div>
                               
                               <div className="border rounded-md p-4">
-                                <div className="text-sm font-medium mb-1">Response Rate</div>
+                                <div className="text-sm font-medium mb-1">Tasa de respuesta</div>
                                 <div className="text-muted-foreground">
                                   {surveyResponses.length > 0 ? (
                                     "32%"
                                   ) : (
-                                    "No responses yet"
+                                    "Sin respuestas aún"
                                   )}
                                 </div>
                               </div>
