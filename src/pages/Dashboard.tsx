@@ -29,7 +29,7 @@ import {
   DialogFooter, 
   DialogDescription 
 } from "@/components/ui/dialog";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 
 interface SurveyItem {
   id: string;
@@ -136,12 +136,12 @@ const StatusBadge = ({ status }: { status: string }) => {
 
 export default function Dashboard() {
   const queryClient = useQueryClient();
-  const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState>({ 
-    open: false, 
-    id: "", 
-    type: "", 
-    newStatus: "", 
-    currentStatus: "" 
+  const [dialogState, setDialogState] = useState<ConfirmDialogState>({
+    open: false,
+    id: "",
+    type: "",
+    newStatus: "",
+    currentStatus: ""
   });
 
   const { data: latestSurvey, isLoading: loadingSurvey } = useQuery({
@@ -179,15 +179,27 @@ export default function Dashboard() {
       
       toast.success(`Estado actualizado a ${getStatusLabel(data.status)}`);
       
-      // Close dialog safely by only changing the open property
-      setConfirmDialog(prev => ({ ...prev, open: false }));
+      // Close dialog by creating a new state object with open: false
+      setDialogState({
+        open: false,
+        id: "",
+        type: "",
+        newStatus: "",
+        currentStatus: ""
+      });
     },
     onError: (error) => {
       console.error("Error al actualizar el estado:", error);
       toast.error("Error al actualizar el estado");
       
-      // Close dialog safely even on error
-      setConfirmDialog(prev => ({ ...prev, open: false }));
+      // Close dialog by creating a new state object with open: false
+      setDialogState({
+        open: false,
+        id: "",
+        type: "",
+        newStatus: "",
+        currentStatus: ""
+      });
     }
   });
 
@@ -209,36 +221,51 @@ export default function Dashboard() {
     }
   };
 
-  const handleStatusChange = (id: string, type: string, newStatus: string, currentStatus: string) => {
+  // Memoize this function to prevent unnecessary re-renders
+  const handleStatusChange = useCallback((id: string, type: string, newStatus: string, currentStatus: string) => {
     if (newStatus === currentStatus) {
       return;
     }
     
-    // Set all dialog state properties at once
-    setConfirmDialog({
+    // Create a completely new state object to avoid partial updates
+    setDialogState({
       open: true,
       id,
       type,
       newStatus,
       currentStatus
     });
-  };
+  }, []);
 
-  const confirmStatusChange = () => {
-    // Only proceed if we have the necessary data
-    if (confirmDialog.id && confirmDialog.type && confirmDialog.newStatus) {
+  const confirmStatusChange = useCallback(() => {
+    // Only proceed if we have valid data
+    const { id, type, newStatus } = dialogState;
+    if (id && type && newStatus) {
       updateStatusMutation.mutate({
-        id: confirmDialog.id,
-        type: confirmDialog.type,
-        newStatus: confirmDialog.newStatus
+        id,
+        type,
+        newStatus
       });
     }
-  };
+  }, [dialogState, updateStatusMutation]);
 
-  const closeDialog = () => {
-    // Only update the open state
-    setConfirmDialog(prev => ({ ...prev, open: false }));
-  };
+  const closeDialog = useCallback(() => {
+    // Create a completely new state object with open: false
+    setDialogState({
+      open: false,
+      id: "",
+      type: "",
+      newStatus: "",
+      currentStatus: ""
+    });
+  }, []);
+
+  // Handle dialog open state changes
+  const handleDialogOpenChange = useCallback((open: boolean) => {
+    if (!open) {
+      closeDialog();
+    }
+  }, [closeDialog]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -475,13 +502,8 @@ export default function Dashboard() {
       </div>
 
       <Dialog 
-        open={confirmDialog.open} 
-        onOpenChange={(open) => {
-          // Only update state when dialog is closing to prevent freezing
-          if (!open) {
-            setConfirmDialog(prev => ({ ...prev, open: false }));
-          }
-        }}
+        open={dialogState.open} 
+        onOpenChange={handleDialogOpenChange}
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -492,10 +514,10 @@ export default function Dashboard() {
           </DialogHeader>
           <div className="py-4">
             <p>¿Estás seguro de que deseas cambiar el estado de
-              {confirmDialog.type === 'Survey' && ' esta encuesta '}
-              {confirmDialog.type === 'Suggestion' && ' esta sugerencia '}
-              {confirmDialog.type === 'Requirement' && ' este requerimiento '}
-              de <strong>{getStatusLabel(confirmDialog.currentStatus)}</strong> a <strong>{getStatusLabel(confirmDialog.newStatus)}</strong>?</p>
+              {dialogState.type === 'Survey' && ' esta encuesta '}
+              {dialogState.type === 'Suggestion' && ' esta sugerencia '}
+              {dialogState.type === 'Requirement' && ' este requerimiento '}
+              de <strong>{getStatusLabel(dialogState.currentStatus)}</strong> a <strong>{getStatusLabel(dialogState.newStatus)}</strong>?</p>
           </div>
           <DialogFooter>
             <Button 
