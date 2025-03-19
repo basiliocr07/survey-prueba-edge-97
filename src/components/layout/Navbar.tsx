@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { BarChart3, Home, Menu, X, MessageSquare, Users, FileText, FileBarChart, LayoutDashboard, LogIn, LogOut, UserPlus } from "lucide-react";
+import { Menu, X, MessageSquare, FileText, Home, LogIn, LogOut } from "lucide-react";
 import { cn } from '@/lib/utils';
 import { useToast } from "@/components/ui/use-toast";
 import {
   NavigationMenu,
-  NavigationMenuContent,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
+  NavigationMenuContent,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 
@@ -81,8 +81,14 @@ export default function Navbar() {
   };
 
   const getFilteredNavItems = () => {
+    const clientNavItems = [
+      { path: '/', label: 'Home', icon: <Home className="w-4 h-4 mr-2" />, roles: ['client'] },
+      { path: '/suggestions', label: 'Enviar Sugerencia', icon: <MessageSquare className="w-4 h-4 mr-2" />, roles: ['client'] },
+      { path: '/requirements', label: 'Enviar Requerimiento', icon: <FileText className="w-4 h-4 mr-2" />, roles: ['client'] },
+    ];
+
     const allNavItems = [
-      { path: '/', label: 'Home', icon: <Home className="w-4 h-4 mr-2" />, roles: ['admin', 'client', ''] },
+      { path: '/', label: 'Home', icon: <Home className="w-4 h-4 mr-2" />, roles: ['admin', ''] },
       { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4 mr-2" />, roles: ['admin'] },
       { path: '/surveys', label: 'Surveys', icon: <FileBarChart className="w-4 h-4 mr-2" />, roles: ['admin'] },
       { path: '/results', label: 'Analysis', icon: <BarChart3 className="w-4 h-4 mr-2" />, roles: ['admin'] },
@@ -91,16 +97,48 @@ export default function Navbar() {
       { path: '/requirements', label: 'Requirements', icon: <FileText className="w-4 h-4 mr-2" />, roles: ['admin', 'client'] },
     ];
 
-    return allNavItems.filter(item => {
-      if (!isLoggedIn && item.roles.includes('')) return true;
-      if (isLoggedIn && (item.roles.includes(userRole.toLowerCase()) || item.roles.includes(''))) return true;
-      return false;
-    });
+    if (!isLoggedIn) {
+      return allNavItems.filter(item => item.roles.includes(''));
+    } else if (userRole.toLowerCase() === 'admin') {
+      return allNavItems.filter(item => item.roles.includes('admin'));
+    } else {
+      return clientNavItems;
+    }
   };
 
   const filteredNavItems = getFilteredNavItems();
 
   const getFilteredNavMenuItems = () => {
+    const clientMenuItems: NavMenuItem[] = [
+      {
+        label: 'Home',
+        icon: <Home className="w-4 h-4 mr-2" />,
+        href: '/',
+        description: 'Página principal',
+        roles: ['client']
+      },
+      {
+        label: 'Enviar Sugerencia',
+        icon: <MessageSquare className="w-4 h-4 mr-2" />,
+        href: '/suggestions',
+        description: 'Enviar una nueva sugerencia',
+        roles: ['client'],
+        features: [
+          { name: 'Nueva Sugerencia', description: 'Enviar una nueva sugerencia', href: '/suggestions#new', roles: ['client'] },
+        ]
+      },
+      {
+        label: 'Enviar Requerimiento',
+        icon: <FileText className="w-4 h-4 mr-2" />,
+        href: '/requirements',
+        description: 'Enviar un nuevo requerimiento',
+        roles: ['client'],
+        features: [
+          { name: 'Nuevo Requerimiento', description: 'Enviar un nuevo requerimiento', href: '/requirements#new', roles: ['client'] },
+        ]
+      }
+    ];
+
     const allMenuItems: NavMenuItem[] = [
       {
         label: 'Home',
@@ -189,22 +227,13 @@ export default function Navbar() {
       }
     ];
 
-    return allMenuItems.filter(item => {
-      if (!isLoggedIn && item.roles.includes('')) return true;
-      if (isLoggedIn && (item.roles.includes(userRole.toLowerCase()) || item.roles.includes(''))) return true;
-      return false;
-    }).map(item => {
-      if (item.features) {
-        const filteredFeatures = item.features.filter(feature => {
-          if (!feature.roles) return true;
-          if (!isLoggedIn && feature.roles.includes('')) return true;
-          if (isLoggedIn && (feature.roles.includes(userRole.toLowerCase()) || feature.roles.includes(''))) return true;
-          return false;
-        });
-        return { ...item, features: filteredFeatures };
-      }
-      return item;
-    });
+    if (!isLoggedIn) {
+      return allMenuItems.filter(item => item.roles.includes(''));
+    } else if (userRole.toLowerCase() === 'admin') {
+      return allMenuItems.filter(item => item.roles.includes('admin'));
+    } else {
+      return clientMenuItems;
+    }
   };
 
   const filteredNavMenuItems = getFilteredNavMenuItems();
@@ -343,12 +372,6 @@ export default function Navbar() {
               <span>{item.label}</span>
             </Link>
           ))}
-          <Link 
-            to="/about"
-            className="px-4 py-3 rounded-md flex items-center text-lg hover:bg-accent hover:text-accent-foreground"
-          >
-            <span>About</span>
-          </Link>
           
           {isLoggedIn ? (
             <Button 
