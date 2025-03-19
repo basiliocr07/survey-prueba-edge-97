@@ -13,10 +13,14 @@ namespace SurveyApp.WebMvc.Models
         public List<QuestionViewModel> Questions { get; set; }
         
         [Required(ErrorMessage = "El nombre es obligatorio")]
+        [StringLength(100, ErrorMessage = "El nombre no puede superar los 100 caracteres")]
+        [Display(Name = "Nombre")]
         public string RespondentName { get; set; }
         
         [Required(ErrorMessage = "El email es obligatorio")]
         [EmailAddress(ErrorMessage = "Por favor, introduce un email válido")]
+        [StringLength(200, ErrorMessage = "El email no puede superar los 200 caracteres")]
+        [Display(Name = "Email")]
         public string RespondentEmail { get; set; }
     }
 
@@ -33,10 +37,14 @@ namespace SurveyApp.WebMvc.Models
     public class SurveyResponseInputModel
     {
         [Required(ErrorMessage = "El nombre es obligatorio")]
+        [StringLength(100, ErrorMessage = "El nombre no puede superar los 100 caracteres")]
+        [Display(Name = "Nombre")]
         public string RespondentName { get; set; }
         
         [Required(ErrorMessage = "El email es obligatorio")]
         [EmailAddress(ErrorMessage = "Por favor, introduce un email válido")]
+        [StringLength(200, ErrorMessage = "El email no puede superar los 200 caracteres")]
+        [Display(Name = "Email")]
         public string RespondentEmail { get; set; }
         
         public Dictionary<string, object> Answers { get; set; } = new Dictionary<string, object>();

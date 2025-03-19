@@ -25,12 +25,14 @@
                 <div class="mb-6">
                     <h2 class="text-lg font-semibold mb-4">Sus datos</h2>
                     <div class="mb-4">
-                        <label asp-for="RespondentName" class="block text-gray-700 font-medium mb-2">Nombre</label>
-                        <input asp-for="RespondentName" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                        <label asp-for="RespondentName" class="block text-gray-700 font-medium mb-2"></label>
+                        <input asp-for="RespondentName" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        <span asp-validation-for="RespondentName" class="text-red-500 text-sm"></span>
                     </div>
                     <div class="mb-4">
-                        <label asp-for="RespondentEmail" class="block text-gray-700 font-medium mb-2">Email</label>
-                        <input asp-for="RespondentEmail" type="email" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                        <label asp-for="RespondentEmail" class="block text-gray-700 font-medium mb-2"></label>
+                        <input asp-for="RespondentEmail" type="email" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        <span asp-validation-for="RespondentEmail" class="text-red-500 text-sm"></span>
                     </div>
                 </div>
 
@@ -114,3 +116,53 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        // Validación del lado del cliente
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            
+            form.addEventListener('submit', function(e) {
+                const requiredQuestions = document.querySelectorAll('[required]');
+                let allValid = true;
+                
+                requiredQuestions.forEach(function(field) {
+                    if (field.type === 'radio') {
+                        // Para radio buttons, verificar si alguno del grupo está seleccionado
+                        const name = field.name;
+                        const checkedRadio = document.querySelector(`input[name="${name}"]:checked`);
+                        
+                        if (!checkedRadio) {
+                            allValid = false;
+                            // Buscar el elemento de pregunta padre para mostrar error
+                            const questionDiv = field.closest('.bg-gray-50');
+                            if (questionDiv && !questionDiv.querySelector('.text-red-500')) {
+                                const errorMsg = document.createElement('p');
+                                errorMsg.className = 'text-red-500 mt-2';
+                                errorMsg.textContent = 'Esta pregunta es obligatoria';
+                                questionDiv.appendChild(errorMsg);
+                            }
+                        }
+                    } else if (!field.value.trim()) {
+                        allValid = false;
+                    }
+                });
+                
+                if (!allValid) {
+                    e.preventDefault();
+                    // Crear mensaje de error general si no existe
+                    if (!document.querySelector('.bg-red-100')) {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4';
+                        errorDiv.innerHTML = '<span class="block sm:inline">Por favor complete todos los campos requeridos.</span>';
+                        form.prepend(errorDiv);
+                    }
+                    
+                    // Desplazarse al inicio del formulario
+                    window.scrollTo(0, 0);
+                }
+            });
+        });
+    </script>
+}
