@@ -1,0 +1,38 @@
+
+<div class="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+    <h3 class="text-lg font-bold mb-4">Datos Actualizados</h3>
+    <p>Este contenido se ha cargado de forma dinámica y con una animación de entrada.</p>
+    <div class="mt-4 flex justify-end">
+        <button class="btn btn-sm btn-outline" onclick="closeAnimatedPartial()">Cerrar</button>
+    </div>
+</div>
+
+<script>
+    function closeAnimatedPartial() {
+        const element = document.querySelector('.animate-fade-in');
+        element.classList.add('animate-fade-out');
+        setTimeout(() => {
+            element.remove();
+        }, 300);
+    }
+</script>
+
+<style>
+    .animate-fade-in {
+        animation: fadeIn 0.3s ease-in-out;
+    }
+    
+    .animate-fade-out {
+        animation: fadeOut 0.3s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes fadeOut {
+        from { opacity: 1; transform: translateY(0); }
+        to { opacity: 0; transform: translateY(-10px); }
+    }
+</style>

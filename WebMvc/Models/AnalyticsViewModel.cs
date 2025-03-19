@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 
@@ -23,6 +22,18 @@ namespace SurveyApp.WebMvc.Models
         public List<SurveyPerformanceViewModel> SurveyPerformance { get; set; } = new List<SurveyPerformanceViewModel>();
         public List<DemographicViewModel> Demographics { get; set; } = new List<DemographicViewModel>();
         public List<DeviceDistributionViewModel> DeviceDistribution { get; set; } = new List<DeviceDistributionViewModel>();
+        
+        // NPS score distribution
+        public Dictionary<int, int> NPSDistribution { get; set; } = new Dictionary<int, int>();
+        public double NPSScore { get; set; }
+        
+        // Rating score distribution
+        public Dictionary<int, int> RatingDistribution { get; set; } = new Dictionary<int, int>();
+        public double AverageRating { get; set; }
+        
+        // Response time breakdown
+        public List<TimeOfDayResponseViewModel> TimeOfDayResponses { get; set; } = new List<TimeOfDayResponseViewModel>();
+        public List<DayOfWeekResponseViewModel> DayOfWeekResponses { get; set; } = new List<DayOfWeekResponseViewModel>();
     }
 
     public class ResponseTrendViewModel
@@ -60,5 +71,33 @@ namespace SurveyApp.WebMvc.Models
     {
         public string DeviceType { get; set; }
         public double Percentage { get; set; }
+    }
+
+    public class TimeOfDayResponseViewModel
+    {
+        public string TimeRange { get; set; }
+        public int ResponseCount { get; set; }
+        public double Percentage { get; set; }
+    }
+
+    public class DayOfWeekResponseViewModel
+    {
+        public string DayName { get; set; }
+        public int ResponseCount { get; set; }
+        public double Percentage { get; set; }
+    }
+    
+    public class QuestionAnalyticsViewModel
+    {
+        public Guid Id { get; set; }
+        public string Title { get; set; }
+        public string Type { get; set; }
+        public int ResponseCount { get; set; }
+        public double CompletionRate { get; set; }
+        public Dictionary<string, int> AnswerDistribution { get; set; } = new Dictionary<string, int>();
+        
+        // For rating and NPS questions
+        public double AverageScore { get; set; }
+        public Dictionary<int, int> ScoreDistribution { get; set; } = new Dictionary<int, int>();
     }
 }

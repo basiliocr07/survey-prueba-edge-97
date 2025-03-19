@@ -1,0 +1,130 @@
+
+@model SurveyApp.WebMvc.Models.SurveyResponseAnalyticsViewModel
+@{
+    ViewData["Title"] = "Response Details";
+}
+
+<div class="w-full px-4 sm:px-6 lg:px-8 pb-10">
+    <div class="w-full max-w-[900px] mx-auto bg-white p-6">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight sm:text-4xl mb-2">Response Details</h1>
+                <p class="text-muted-foreground">
+                    Detailed view of an individual survey response
+                </p>
+            </div>
+            
+            <div class="flex space-x-2">
+                <a href="@Url.Action("Responses", new { surveyId = Model.SurveyId })" class="btn btn-outline btn-sm">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Responses
+                </a>
+            </div>
+        </div>
+        
+        <!-- Response Summary Card -->
+        <div class="card p-6 mb-6 border">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <h2 class="text-xl font-bold mb-4">@Model.SurveyTitle</h2>
+                    <div class="text-sm">
+                        <p><span class="font-medium">Response ID:</span> @Model.Id</p>
+                        <p><span class="font-medium">Submitted:</span> @Model.SubmittedAt.ToString("yyyy-MM-dd HH:mm")</p>
+                        <p><span class="font-medium">Status:</span> 
+                            @if (Model.IsValidated)
+                            {
+                                <span class="text-green-600">Valid</span>
+                            }
+                            else
+                            {
+                                <span class="text-yellow-600">Partially Valid</span>
+                            }
+                        </p>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-medium mb-2">Respondent Information</h3>
+                    <div class="text-sm">
+                        <p><span class="font-medium">Name:</span> @Model.RespondentName</p>
+                        <p><span class="font-medium">Email:</span> @Model.RespondentEmail</p>
+                        @if (!string.IsNullOrEmpty(Model.RespondentPhone))
+                        {
+                            <p><span class="font-medium">Phone:</span> @Model.RespondentPhone</p>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.RespondentCompany))
+                        {
+                            <p><span class="font-medium">Company:</span> @Model.RespondentCompany</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Response Answers Card -->
+        <div class="card">
+            <div class="px-6 py-4 border-b">
+                <h2 class="text-xl font-bold">Survey Answers</h2>
+            </div>
+            
+            <div class="p-6">
+                <div class="space-y-6">
+                    @foreach (var answer in Model.Answers)
+                    {
+                        <div class="border rounded-md p-4 @(!answer.IsValid ? "bg-red-50" : "")">
+                            <div class="flex justify-between">
+                                <h3 class="font-medium mb-2">@answer.QuestionTitle</h3>
+                                <div>
+                                    @if (answer.IsValid)
+                                    {
+                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                                            Valid
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+                                            Invalid
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+                            
+                            <p class="text-xs text-muted-foreground mb-2">Question Type: @answer.QuestionType</p>
+                            
+                            @if (answer.QuestionType == "MultipleChoice" && answer.MultipleAnswers != null)
+                            {
+                                <div class="mt-2">
+                                    <p class="font-medium text-sm">Selected Options:</p>
+                                    <ul class="list-disc list-inside text-sm">
+                                        @foreach (var option in answer.MultipleAnswers)
+                                        {
+                                            <li>@option</li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+                            else if (answer.QuestionType == "Rating" || answer.QuestionType == "NPS")
+                            {
+                                <div class="mt-2">
+                                    <p class="font-medium text-sm">Rating:</p>
+                                    <div class="text-sm">
+                                        @answer.Answer
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="mt-2">
+                                    <p class="font-medium text-sm">Answer:</p>
+                                    <div class="text-sm">
+                                        @answer.Answer
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
