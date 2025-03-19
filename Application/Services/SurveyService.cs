@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,6 +22,80 @@ namespace SurveyApp.Application.Services
             _surveyRepository = surveyRepository;
             _surveyResponseRepository = surveyResponseRepository;
             _emailService = emailService;
+        }
+
+        // Implementación del método CreateSurveyAsync
+        public async Task<SurveyDto> CreateSurveyAsync(CreateSurveyDto surveyDto)
+        {
+            // Crear la entidad de encuesta con los datos del DTO
+            var survey = new Survey
+            {
+                Id = Guid.NewGuid(),
+                Title = surveyDto.Title,
+                Description = surveyDto.Description,
+                CreatedAt = DateTime.UtcNow,
+                Status = "Active",
+                Responses = 0
+            };
+
+            // Agregar preguntas a la encuesta
+            if (surveyDto.Questions != null)
+            {
+                foreach (var questionDto in surveyDto.Questions)
+                {
+                    var question = new Question
+                    {
+                        Id = Guid.NewGuid(),
+                        Title = questionDto.Title,
+                        Description = questionDto.Description,
+                        Type = questionDto.Type,
+                        Required = questionDto.Required,
+                        Options = questionDto.Options
+                    };
+
+                    survey.AddQuestion(question);
+                }
+            }
+
+            // Agregar configuración de entrega si existe
+            if (surveyDto.DeliveryConfig != null)
+            {
+                var deliveryConfig = new DeliveryConfig
+                {
+                    Type = surveyDto.DeliveryConfig.Type,
+                    EmailAddresses = surveyDto.DeliveryConfig.EmailAddresses
+                };
+
+                if (surveyDto.DeliveryConfig.Schedule != null)
+                {
+                    deliveryConfig.Schedule = new Schedule
+                    {
+                        Frequency = surveyDto.DeliveryConfig.Schedule.Frequency,
+                        DayOfMonth = surveyDto.DeliveryConfig.Schedule.DayOfMonth,
+                        DayOfWeek = surveyDto.DeliveryConfig.Schedule.DayOfWeek,
+                        Time = surveyDto.DeliveryConfig.Schedule.Time,
+                        StartDate = surveyDto.DeliveryConfig.Schedule.StartDate
+                    };
+                }
+
+                if (surveyDto.DeliveryConfig.Trigger != null)
+                {
+                    deliveryConfig.Trigger = new Trigger
+                    {
+                        Type = surveyDto.DeliveryConfig.Trigger.Type,
+                        DelayHours = surveyDto.DeliveryConfig.Trigger.DelayHours,
+                        SendAutomatically = surveyDto.DeliveryConfig.Trigger.SendAutomatically
+                    };
+                }
+
+                survey.SetDeliveryConfig(deliveryConfig);
+            }
+
+            // Guardar la encuesta en el repositorio
+            var createdSurvey = await _surveyRepository.CreateAsync(survey);
+
+            // Mapear la entidad a DTO para retornar
+            return MapToSurveyDto(createdSurvey);
         }
 
         // Implementa este método para actualizar el estado de una encuesta
@@ -152,6 +225,135 @@ namespace SurveyApp.Application.Services
                     IsValid = a.IsValid
                 }).ToList()
             };
+        }
+
+        // Método auxiliar para mapear Survey a SurveyDto
+        private SurveyDto MapToSurveyDto(Survey survey)
+        {
+            return new SurveyDto
+            {
+                Id = survey.Id,
+                Title = survey.Title,
+                Description = survey.Description,
+                CreatedAt = survey.CreatedAt,
+                Responses = survey.Responses,
+                CompletionRate = survey.CompletionRate,
+                Questions = survey.Questions?.Select(q => new QuestionDto
+                {
+                    Id = q.Id,
+                    Title = q.Title,
+                    Description = q.Description,
+                    Type = q.Type,
+                    Required = q.Required,
+                    Options = q.Options
+                }).ToList(),
+                DeliveryConfig = survey.DeliveryConfig != null ? new DeliveryConfigDto
+                {
+                    Type = survey.DeliveryConfig.Type,
+                    EmailAddresses = survey.DeliveryConfig.EmailAddresses,
+                    Schedule = survey.DeliveryConfig.Schedule != null ? new ScheduleDto
+                    {
+                        Frequency = survey.DeliveryConfig.Schedule.Frequency,
+                        DayOfMonth = survey.DeliveryConfig.Schedule.DayOfMonth,
+                        DayOfWeek = survey.DeliveryConfig.Schedule.DayOfWeek,
+                        Time = survey.DeliveryConfig.Schedule.Time,
+                        StartDate = survey.DeliveryConfig.Schedule.StartDate
+                    } : null,
+                    Trigger = survey.DeliveryConfig.Trigger != null ? new TriggerDto
+                    {
+                        Type = survey.DeliveryConfig.Trigger.Type,
+                        DelayHours = survey.DeliveryConfig.Trigger.DelayHours,
+                        SendAutomatically = survey.DeliveyConfig.Trigger.SendAutomatically
+                    } : null
+                } : null
+            };
+        }
+
+        // Otras implementaciones requeridas por la interfaz ISurveyService deben ser agregadas aquí
+        public async Task<SurveyDto> GetSurveyByIdAsync(Guid id)
+        {
+            var survey = await _surveyRepository.GetByIdAsync(id);
+            if (survey == null)
+                return null;
+
+            return MapToSurveyDto(survey);
+        }
+
+        public async Task<List<SurveyDto>> GetAllSurveysAsync()
+        {
+            var surveys = await _surveyRepository.GetAllAsync();
+            return surveys.Select(MapToSurveyDto).ToList();
+        }
+
+        public async Task UpdateSurveyAsync(Guid id, UpdateSurveyDto surveyDto)
+        {
+            var survey = await _surveyRepository.GetByIdAsync(id);
+            if (survey == null)
+                throw new KeyNotFoundException($"Survey with ID {id} not found");
+
+            // Actualizar propiedades básicas
+            survey.Title = surveyDto.Title;
+            survey.Description = surveyDto.Description;
+            
+            // Actualizar configuración de entrega si existe
+            if (surveyDto.DeliveryConfig != null)
+            {
+                var deliveryConfig = new DeliveryConfig
+                {
+                    Type = surveyDto.DeliveryConfig.Type,
+                    EmailAddresses = surveyDto.DeliveryConfig.EmailAddresses
+                };
+
+                if (surveyDto.DeliveryConfig.Schedule != null)
+                {
+                    deliveryConfig.Schedule = new Schedule
+                    {
+                        Frequency = surveyDto.DeliveryConfig.Schedule.Frequency,
+                        DayOfMonth = surveyDto.DeliveryConfig.Schedule.DayOfMonth,
+                        DayOfWeek = surveyDto.DeliveryConfig.Schedule.DayOfWeek,
+                        Time = surveyDto.DeliveryConfig.Schedule.Time,
+                        StartDate = surveyDto.DeliveryConfig.Schedule.StartDate
+                    };
+                }
+
+                if (surveyDto.DeliveryConfig.Trigger != null)
+                {
+                    deliveryConfig.Trigger = new Trigger
+                    {
+                        Type = surveyDto.DeliveryConfig.Trigger.Type,
+                        DelayHours = surveyDto.DeliveryConfig.Trigger.DelayHours,
+                        SendAutomatically = surveyDto.DeliveryConfig.Trigger.SendAutomatically
+                    };
+                }
+
+                survey.SetDeliveryConfig(deliveryConfig);
+            }
+
+            await _surveyRepository.UpdateAsync(survey);
+        }
+
+        public async Task DeleteSurveyAsync(Guid id)
+        {
+            await _surveyRepository.DeleteAsync(id);
+        }
+
+        public async Task<bool> SurveyExistsAsync(Guid id)
+        {
+            var survey = await _surveyRepository.GetByIdAsync(id);
+            return survey != null;
+        }
+
+        public async Task<List<string>> GetAllCategoriesAsync()
+        {
+            var surveys = await _surveyRepository.GetAllAsync();
+            return surveys.Select(s => s.Category).Distinct().Where(c => !string.IsNullOrWhiteSpace(c)).ToList();
+        }
+
+        public async Task<(List<SurveyDto> Surveys, int TotalCount)> GetPagedSurveysAsync(int pageNumber, int pageSize, string searchTerm = null, string statusFilter = null, string categoryFilter = null)
+        {
+            var (surveys, totalCount) = await _surveyRepository.GetPagedAsync(pageNumber, pageSize, searchTerm, statusFilter, categoryFilter);
+            var surveyDtos = surveys.Select(MapToSurveyDto).ToList();
+            return (surveyDtos, totalCount);
         }
     }
 }
