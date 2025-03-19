@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Menu, X, MessageSquare, FileText, Home, LogIn, LogOut } from "lucide-react";
+import { Menu, X, MessageSquare, FileText, Home, LogIn, LogOut, LayoutDashboard, FileBarChart, BarChart3, Users } from "lucide-react";
 import { cn } from '@/lib/utils';
 import { useToast } from "@/components/ui/use-toast";
 import {
