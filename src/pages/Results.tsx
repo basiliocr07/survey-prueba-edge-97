@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,12 +10,14 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { cn } from '@/lib/utils';
 import { SurveyResponse } from "@/types/surveyTypes";
+import SurveyResponseList from "@/components/results/SurveyResponseList";
 
 export default function Results() {
   const [selectedSurveyId, setSelectedSurveyId] = useState<string>(sampleSurveys[0]?.id || '');
   
   const selectedSurvey = sampleSurveys.find(survey => survey.id === selectedSurveyId) || sampleSurveys[0];
   
+  // Convert Response[] to SurveyResponse[]
   const surveyResponses: SurveyResponse[] = sampleResponses
     .filter(response => response.surveyId === selectedSurveyId)
     .map(response => ({
@@ -22,7 +25,7 @@ export default function Results() {
       surveyId: response.surveyId,
       answers: response.answers.map(answer => ({
         questionId: answer.questionId,
-        questionTitle: selectedSurvey.questions.find(q => q.id === answer.questionId)?.title || answer.questionId,
+        questionTitle: selectedSurvey.questions.find(q => q.id === answer.questionId)?.title || 'Pregunta sin título',
         questionType: typeof answer.value === 'number' ? 'rating' : 
                      Array.isArray(answer.value) ? 'multiple-choice' : 'text',
         value: Array.isArray(answer.value) ? answer.value : 
@@ -30,11 +33,11 @@ export default function Results() {
         isValid: true
       })),
       submittedAt: response.submittedAt,
-      completionTime: response.completionTime || 0,
-      respondentName: response.respondentName || `Cliente ${response.id.substring(0, 6)}`,
-      respondentEmail: response.respondentEmail || `cliente${response.id.substring(0, 6)}@example.com`,
-      respondentPhone: response.respondentPhone || undefined,
-      respondentCompany: response.respondentCompany || undefined
+      completionTime: response.completionTime,
+      respondentName: response.respondentName,
+      respondentEmail: response.respondentEmail,
+      respondentPhone: response.respondentPhone,
+      respondentCompany: response.respondentCompany
     }));
 
   const getAverageCompletionTime = () => {

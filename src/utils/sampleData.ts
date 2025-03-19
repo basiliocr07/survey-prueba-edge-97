@@ -1,4 +1,3 @@
-
 export interface Survey {
   id: string;
   title: string;
@@ -27,6 +26,10 @@ export interface Response {
   answers: Answer[];
   submittedAt: string;
   completionTime: number; // in seconds
+  respondentName: string;  // Added property
+  respondentEmail: string; // Added property
+  respondentPhone?: string; // Added property
+  respondentCompany?: string; // Added property
 }
 
 export interface Answer {
@@ -144,7 +147,11 @@ export const sampleResponses: Response[] = [
       { questionId: "q3", value: 8 }
     ],
     submittedAt: "2023-06-16T11:20:00Z",
-    completionTime: 156
+    completionTime: 156,
+    respondentName: "Juan Pérez",
+    respondentEmail: "juan.perez@example.com",
+    respondentPhone: "+34 612 345 678",
+    respondentCompany: "Técnicas Avanzadas S.L."
   },
   {
     id: "r2",
@@ -155,7 +162,11 @@ export const sampleResponses: Response[] = [
       { questionId: "q3", value: 9 }
     ],
     submittedAt: "2023-06-17T15:45:00Z",
-    completionTime: 132
+    completionTime: 132,
+    respondentName: "María García",
+    respondentEmail: "maria.garcia@example.com",
+    respondentPhone: "+34 623 456 789",
+    respondentCompany: "Innovaciones Digitales"
   },
   {
     id: "r3",
@@ -166,7 +177,11 @@ export const sampleResponses: Response[] = [
       { questionId: "q3", value: 6 }
     ],
     submittedAt: "2023-06-18T09:30:00Z",
-    completionTime: 178
+    completionTime: 178,
+    respondentName: "Carlos López",
+    respondentEmail: "carlos.lopez@example.com",
+    respondentPhone: "+34 634 567 890",
+    respondentCompany: "Soluciones Empresariales"
   },
   {
     id: "r4",
@@ -177,7 +192,11 @@ export const sampleResponses: Response[] = [
       { questionId: "q3", value: 7 }
     ],
     submittedAt: "2023-08-23T10:15:00Z",
-    completionTime: 245
+    completionTime: 245,
+    respondentName: "Ana Martínez",
+    respondentEmail: "ana.martinez@example.com",
+    respondentPhone: "+34 645 678 901",
+    respondentCompany: "Tech Solutions"
   },
   {
     id: "r5",
@@ -188,7 +207,11 @@ export const sampleResponses: Response[] = [
       { questionId: "q3", value: 8 }
     ],
     submittedAt: "2023-08-24T16:40:00Z",
-    completionTime: 198
+    completionTime: 198,
+    respondentName: "Javier Rodríguez",
+    respondentEmail: "javier.rodriguez@example.com",
+    respondentPhone: "+34 656 789 012",
+    respondentCompany: "Consultores Asociados"
   }
 ];
 
