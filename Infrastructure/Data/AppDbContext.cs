@@ -131,7 +131,7 @@ namespace SurveyApp.Infrastructure.Data
                 entity.Property(e => e.Priority).HasConversion<string>().IsRequired(false);
                 entity.Property(e => e.Response).HasMaxLength(1000);
 
-                // Modificamos esta línea para convertir correctamente List<string> a string[]
+                // Using correct conversion for string array
                 entity.Property(e => e.SimilarSuggestions).HasConversion(
                     v => JsonSerializer.Serialize(v, new JsonSerializerOptions()),
                     v => JsonSerializer.Deserialize<string[]>(v, new JsonSerializerOptions()) ?? Array.Empty<string>()
@@ -200,6 +200,9 @@ namespace SurveyApp.Infrastructure.Data
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.SurveyId).IsRequired();
                 entity.Property(e => e.ResponseDate).IsRequired();
+                entity.Property(e => e.SubmittedAt).IsRequired();
+                
+                // Using correct conversion for Dictionary<string, string>
                 entity.Property(e => e.Answers).HasConversion(
                     v => JsonSerializer.Serialize(v, new JsonSerializerOptions()),
                     v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, new JsonSerializerOptions()) ?? new Dictionary<string, string>()

@@ -5,24 +5,18 @@ namespace SurveyApp.Domain.Entities
 {
     public class Requirement
     {
-        public Guid Id { get; private set; }
-        public string Title { get; private set; }
-        public string Description { get; private set; }
-        public string Priority { get; private set; }
-        public DateTime CreatedAt { get; private set; }
-        public DateTime? UpdatedAt { get; private set; } // Added UpdatedAt property
-        public string Status { get; private set; }
-        public string ProjectArea { get; private set; } // Added ProjectArea property
+        public Guid Id { get; set; }
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public string Priority { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+        public string Status { get; set; }
+        public string ProjectArea { get; set; }
 
-        // Parameterless constructor for EF Core
-        private Requirement() { }
-
-        public Requirement(string title, string description, string priority)
+        public Requirement()
         {
             Id = Guid.NewGuid();
-            Title = title ?? string.Empty;
-            Description = description ?? string.Empty;
-            Priority = priority ?? "medium";
             CreatedAt = DateTime.UtcNow;
             Status = "pending";
             ProjectArea = "general";

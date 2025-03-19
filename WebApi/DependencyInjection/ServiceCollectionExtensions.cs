@@ -11,7 +11,7 @@ namespace SurveyApp.WebApi.DependencyInjection
     {
         public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
-            // Registrar servicios de aplicación
+            // Register application services
             services.AddScoped<ISurveyService, SurveyService>();
             services.AddScoped<ISuggestionService, SuggestionService>();
             services.AddScoped<IRequirementService, RequirementService>();
@@ -19,15 +19,15 @@ namespace SurveyApp.WebApi.DependencyInjection
             services.AddScoped<IKnowledgeBaseService, KnowledgeBaseService>();
             services.AddScoped<IAnalyticsService, AnalyticsService>();
             
-            // Corregimos la ambigüedad en la interfaz de autenticación
-            services.AddScoped<Application.Ports.IAuthenticationService, Application.Services.AuthenticationService>();
+            // Fix ambiguity by specifying the interface fully
+            services.AddScoped<SurveyApp.Application.Ports.IAuthenticationService, SurveyApp.Application.Services.AuthenticationService>();
             
             return services;
         }
         
         public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
         {
-            // Registrar repositorios
+            // Register repositories
             services.AddScoped<ISurveyRepository, SurveyRepository>();
             services.AddScoped<ISuggestionRepository, SuggestionRepository>();
             services.AddScoped<IRequirementRepository, RequirementRepository>();
@@ -37,7 +37,7 @@ namespace SurveyApp.WebApi.DependencyInjection
             services.AddScoped<ISurveyResponseRepository, SurveyResponseRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
             
-            // Registrar servicios de infraestructura
+            // Register infrastructure services
             services.AddScoped<IEmailService, EmailService>();
             
             return services;

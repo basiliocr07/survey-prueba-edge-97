@@ -54,6 +54,7 @@ namespace SurveyApp.Infrastructure.Repositories
         {
             try
             {
+                // Using direct property assignment instead of private setter
                 requirement.CreatedAt = DateTime.UtcNow;
                 _context.Requirements.Add(requirement);
                 await _context.SaveChangesAsync();
@@ -70,6 +71,7 @@ namespace SurveyApp.Infrastructure.Repositories
         {
             try
             {
+                // Using direct property assignment instead of private setter
                 requirement.UpdatedAt = DateTime.UtcNow;
                 _context.Entry(requirement).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
