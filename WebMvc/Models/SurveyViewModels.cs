@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -75,6 +76,21 @@ namespace SurveyApp.WebMvc.Models
         public int Order { get; set; }
         
         public ValidationRulesViewModel ValidationRules { get; set; } = new ValidationRulesViewModel();
+        
+        // Settings para tipos de preguntas específicas como Rating y NPS
+        public QuestionSettingsViewModel Settings { get; set; } = new QuestionSettingsViewModel();
+    }
+
+    public class QuestionSettingsViewModel
+    {
+        // Para preguntas tipo Rating
+        public int? MinValue { get; set; }
+        public int? MaxValue { get; set; }
+        
+        // Para preguntas tipo NPS
+        public string LowLabel { get; set; } = "No es probable";
+        public string MiddleLabel { get; set; } = "Neutral";
+        public string HighLabel { get; set; } = "Muy probable";
     }
 
     public class ValidationRulesViewModel

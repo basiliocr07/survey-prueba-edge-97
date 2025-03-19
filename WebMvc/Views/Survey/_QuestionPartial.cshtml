@@ -44,10 +44,11 @@
                 <option value="SingleChoice" @(question.Type == "SingleChoice" ? "selected" : "")>Single Choice</option>
                 <option value="MultipleChoice" @(question.Type == "MultipleChoice" ? "selected" : "")>Multiple Choice</option>
                 <option value="Rating" @(question.Type == "Rating" ? "selected" : "")>Rating</option>
+                <option value="NPS" @(question.Type == "NPS" ? "selected" : "")>Net Promoter Score (NPS)</option>
             </select>
         </div>
         
-        <div class="options-container @(question.Type == "Text" || question.Type == "Rating" ? "hidden" : "")">
+        <div class="options-container @(question.Type == "Text" || question.Type == "Rating" || question.Type == "NPS" ? "hidden" : "")">
             <label class="block text-sm font-medium mb-1">Options</label>
             <div class="options-list space-y-2">
                 @if (question.Options != null)
@@ -65,6 +66,77 @@
                 }
             </div>
             <button type="button" class="add-option mt-2 text-sm text-blue-600">+ Add Option</button>
+        </div>
+        
+        <div class="rating-settings-container @(question.Type == "Rating" ? "" : "hidden")">
+            <div class="flex gap-4 mt-3">
+                <div class="flex-1">
+                    <label class="block text-sm font-medium mb-1">Min Value</label>
+                    <input type="number" class="min-value w-full px-3 py-2 border border-gray-300 rounded-md" 
+                           value="@(question.Settings?.MinValue ?? 1)" min="1" max="10" 
+                           onchange="updateRatingMinValue(this, @index)" />
+                </div>
+                <div class="flex-1">
+                    <label class="block text-sm font-medium mb-1">Max Value</label>
+                    <input type="number" class="max-value w-full px-3 py-2 border border-gray-300 rounded-md" 
+                           value="@(question.Settings?.MaxValue ?? 5)" min="1" max="10" 
+                           onchange="updateRatingMaxValue(this, @index)" />
+                </div>
+            </div>
+            <div class="mt-2">
+                <div class="rating-preview text-center py-2">
+                    <p class="text-sm mb-2">Rating Preview:</p>
+                    <div class="flex justify-center gap-1">
+                        @for (var i = 1; i <= (question.Settings?.MaxValue ?? 5); i++)
+                        {
+                            <span class="star-preview inline-block text-2xl cursor-default @(i <= 3 ? "text-yellow-400" : "text-gray-300")">★</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="nps-settings-container @(question.Type == "NPS" ? "" : "hidden")">
+            <div class="mt-3">
+                <div class="nps-preview">
+                    <p class="text-sm mb-2">NPS Preview:</p>
+                    <div class="grid grid-cols-11 gap-1 mt-2">
+                        @for (var i = 0; i <= 10; i++)
+                        {
+                            <div class="text-center">
+                                <div class="@(i == 7 ? "bg-primary text-white" : "border border-gray-300") h-10 rounded-md flex items-center justify-center">
+                                    @i
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="flex justify-between text-sm text-gray-500 mt-2">
+                        <span>@(question.Settings?.LowLabel ?? "No es probable")</span>
+                        <span>@(question.Settings?.MiddleLabel ?? "Neutral")</span>
+                        <span>@(question.Settings?.HighLabel ?? "Muy probable")</span>
+                    </div>
+                </div>
+                <div class="space-y-3 mt-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Low Label</label>
+                        <input type="text" class="low-label w-full px-3 py-2 border border-gray-300 rounded-md" 
+                               value="@(question.Settings?.LowLabel ?? "No es probable")" 
+                               onchange="updateNPSLabel(this, @index, 'low')" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Middle Label</label>
+                        <input type="text" class="middle-label w-full px-3 py-2 border border-gray-300 rounded-md" 
+                               value="@(question.Settings?.MiddleLabel ?? "Neutral")" 
+                               onchange="updateNPSLabel(this, @index, 'middle')" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">High Label</label>
+                        <input type="text" class="high-label w-full px-3 py-2 border border-gray-300 rounded-md" 
+                               value="@(question.Settings?.HighLabel ?? "Muy probable")" 
+                               onchange="updateNPSLabel(this, @index, 'high')" />
+                    </div>
+                </div>
+            </div>
         </div>
         
         <div class="flex items-center mt-2">
