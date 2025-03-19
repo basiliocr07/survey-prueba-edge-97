@@ -1,4 +1,5 @@
 
+@model SurveyApp.WebMvc.Models.HomeViewModel
 @{
     ViewData["Title"] = "Home";
 }
@@ -39,71 +40,18 @@
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <!-- Feature 1 -->
-            <div class="card hover-lift overflow-hidden transition-all duration-300 hover:border-primary/20 hover:bg-accent/70">
-                <div class="p-6 flex flex-col items-start">
-                    <div class="p-3 rounded-lg bg-primary/10 text-primary mb-4">
-                        <i class="fas fa-file-alt text-2xl"></i>
+            @foreach (var feature in Model.Features)
+            {
+                <div class="card hover-lift overflow-hidden transition-all duration-300 hover:border-primary/20 hover:bg-accent/70">
+                    <div class="p-6 flex flex-col items-start">
+                        <div class="p-3 rounded-lg bg-primary/10 text-primary mb-4">
+                            <i class="fas @feature.Icon text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2">@feature.Title</h3>
+                        <p class="text-muted-foreground">@feature.Description</p>
                     </div>
-                    <h3 class="text-xl font-semibold mb-2">Intuitive Survey Builder</h3>
-                    <p class="text-muted-foreground">Create beautiful surveys with our drag-and-drop interface. No coding required.</p>
                 </div>
-            </div>
-            
-            <!-- Feature 2 -->
-            <div class="card hover-lift overflow-hidden transition-all duration-300 hover:border-primary/20 hover:bg-accent/70">
-                <div class="p-6 flex flex-col items-start">
-                    <div class="p-3 rounded-lg bg-primary/10 text-primary mb-4">
-                        <i class="fas fa-chart-bar text-2xl"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold mb-2">Powerful Analytics</h3>
-                    <p class="text-muted-foreground">Get real-time insights with customizable reports and advanced visualizations.</p>
-                </div>
-            </div>
-            
-            <!-- Feature 3 -->
-            <div class="card hover-lift overflow-hidden transition-all duration-300 hover:border-primary/20 hover:bg-accent/70">
-                <div class="p-6 flex flex-col items-start">
-                    <div class="p-3 rounded-lg bg-primary/10 text-primary mb-4">
-                        <i class="fas fa-check-square text-2xl"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold mb-2">Multiple Question Types</h3>
-                    <p class="text-muted-foreground">Choose from a variety of question types to gather the precise data you need.</p>
-                </div>
-            </div>
-            
-            <!-- Feature 4 -->
-            <div class="card hover-lift overflow-hidden transition-all duration-300 hover:border-primary/20 hover:bg-accent/70">
-                <div class="p-6 flex flex-col items-start">
-                    <div class="p-3 rounded-lg bg-primary/10 text-primary mb-4">
-                        <i class="fas fa-star text-2xl"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold mb-2">Rating Scales</h3>
-                    <p class="text-muted-foreground">Measure sentiment and satisfaction with customizable rating scales.</p>
-                </div>
-            </div>
-            
-            <!-- Feature 5 -->
-            <div class="card hover-lift overflow-hidden transition-all duration-300 hover:border-primary/20 hover:bg-accent/70">
-                <div class="p-6 flex flex-col items-start">
-                    <div class="p-3 rounded-lg bg-primary/10 text-primary mb-4">
-                        <i class="fas fa-arrows-alt-v text-2xl"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold mb-2">Ranking Questions</h3>
-                    <p class="text-muted-foreground">Allow respondents to rank items in order of preference or importance.</p>
-                </div>
-            </div>
-            
-            <!-- Feature 6 -->
-            <div class="card hover-lift overflow-hidden transition-all duration-300 hover:border-primary/20 hover:bg-accent/70">
-                <div class="p-6 flex flex-col items-start">
-                    <div class="p-3 rounded-lg bg-primary/10 text-primary mb-4">
-                        <i class="fas fa-plus-circle text-2xl"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold mb-2">Logic Branching</h3>
-                    <p class="text-muted-foreground">Create dynamic surveys that adapt based on previous answers.</p>
-                </div>
-            </div>
+            }
         </div>
     </div>
 </section>
