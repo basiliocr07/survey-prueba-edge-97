@@ -20,38 +20,56 @@
                         <i class="fas fa-clipboard-list text-blue-600 mr-2"></i>SurveyApp
                     </a>
                     <div class="hidden md:flex space-x-6">
-                        <a asp-controller="Dashboard" asp-action="Index" class="text-gray-700 hover:text-blue-600 transition-colors">
-                            <i class="fas fa-tachometer-alt mr-1"></i> Panel
+                        <a asp-controller="Home" asp-action="Index" class="text-gray-700 hover:text-blue-600 transition-colors">
+                            <i class="fas fa-home mr-1"></i> Inicio
                         </a>
-                        <a asp-controller="Survey" asp-action="Index" class="text-gray-700 hover:text-blue-600 transition-colors">
-                            <i class="fas fa-poll mr-1"></i> Encuestas
-                        </a>
-                        <a asp-controller="Suggestions" asp-action="Index" class="text-gray-700 hover:text-blue-600 transition-colors">
-                            <i class="fas fa-lightbulb mr-1"></i> Sugerencias
-                        </a>
-                        <a asp-controller="Requirements" asp-action="Index" class="text-gray-700 hover:text-blue-600 transition-colors">
-                            <i class="fas fa-tasks mr-1"></i> Requerimientos
-                        </a>
-                        <a asp-controller="Analytics" asp-action="Index" class="text-gray-700 hover:text-blue-600 transition-colors">
-                            <i class="fas fa-chart-line mr-1"></i> Análisis
-                        </a>
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <a asp-controller="Dashboard" asp-action="Index" class="text-gray-700 hover:text-blue-600 transition-colors">
+                                    <i class="fas fa-tachometer-alt mr-1"></i> Panel
+                                </a>
+                                <a asp-controller="Survey" asp-action="Index" class="text-gray-700 hover:text-blue-600 transition-colors">
+                                    <i class="fas fa-poll mr-1"></i> Encuestas
+                                </a>
+                                <a asp-controller="Analytics" asp-action="Index" class="text-gray-700 hover:text-blue-600 transition-colors">
+                                    <i class="fas fa-chart-line mr-1"></i> Análisis
+                                </a>
+                                <a asp-controller="Customers" asp-action="Index" class="text-gray-700 hover:text-blue-600 transition-colors">
+                                    <i class="fas fa-users mr-1"></i> Clientes
+                                </a>
+                            }
+                            <a asp-controller="Suggestions" asp-action="Index" class="text-gray-700 hover:text-blue-600 transition-colors">
+                                <i class="fas fa-lightbulb mr-1"></i> Sugerencias
+                            </a>
+                            <a asp-controller="Requirements" asp-action="Index" class="text-gray-700 hover:text-blue-600 transition-colors">
+                                <i class="fas fa-tasks mr-1"></i> Requerimientos
+                            </a>
+                        }
                     </div>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <button class="text-gray-600 hover:text-blue-600 p-2 rounded-full hover:bg-blue-50 transition-colors">
-                        <i class="fas fa-bell"></i>
-                    </button>
-                    <button class="text-gray-600 hover:text-blue-600 p-2 rounded-full hover:bg-blue-50 transition-colors">
-                        <i class="fas fa-cog"></i>
-                    </button>
-                    <div class="border-l pl-2 ml-2">
-                        <button class="flex items-center space-x-2 bg-gray-100 hover:bg-gray-200 rounded-full py-1 pl-1 pr-3 transition-colors">
-                            <div class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center">
-                                <i class="fas fa-user"></i>
-                            </div>
-                            <span class="text-sm font-medium">Admin</span>
-                        </button>
-                    </div>
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <div class="flex items-center space-x-2">
+                            <span class="text-gray-700">Hola, @User.Identity.Name</span>
+                            <form asp-controller="Account" asp-action="Logout" method="post">
+                                <button type="submit" class="text-gray-600 hover:text-blue-600 p-2 rounded-full hover:bg-blue-50 transition-colors">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                </button>
+                            </form>
+                        </div>
+                    }
+                    else
+                    {
+                        <a asp-controller="Account" asp-action="Login" class="text-gray-600 hover:text-blue-600 p-2 rounded-full hover:bg-blue-50 transition-colors">
+                            <i class="fas fa-sign-in-alt mr-1"></i> Iniciar Sesión
+                        </a>
+                        <a asp-controller="Account" asp-action="Register" class="text-gray-600 hover:text-blue-600 p-2 rounded-full hover:bg-blue-50 transition-colors">
+                            <i class="fas fa-user-plus mr-1"></i> Registrarse
+                        </a>
+                    }
                 </div>
             </div>
         </nav>

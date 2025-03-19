@@ -5,11 +5,35 @@ using SurveyApp.Application.Services;
 using SurveyApp.Infrastructure.Data;
 using SurveyApp.Infrastructure.Repositories;
 using SurveyApp.Infrastructure.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+// Configurar la autenticación con cookies
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Account/Login";
+        options.LogoutPath = "/Account/Logout";
+        options.AccessDeniedPath = "/Account/AccessDenied";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SameSite = SameSiteMode.Strict;
+    });
+
+// Configurar las políticas de autorización
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("ClientAccess", policy =>
+        policy.RequireRole("Admin", "Client"));
+});
 
 // Configure EF Core
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -63,6 +87,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+// Agregar autenticación y autorización al pipeline
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
@@ -99,6 +125,11 @@ app.MapControllerRoute(
     name: "customers",
     pattern: "customers/{action=Index}/{id?}",
     defaults: new { controller = "Customers" });
+
+app.MapControllerRoute(
+    name: "account",
+    pattern: "account/{action=Login}/{id?}",
+    defaults: new { controller = "Account" });
 
 app.MapControllers(); // Map API controllers
 

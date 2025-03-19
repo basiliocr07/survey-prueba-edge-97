@@ -17,6 +17,7 @@ import Surveys from "./pages/Surveys";
 import Dashboard from "./pages/Dashboard";
 import About from "./pages/About";
 import ClientAccess from "./pages/ClientAccess";
+import ClientLogin from "./pages/ClientLogin";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,7 @@ const App = () => (
               <Route path="/requirements" element={<Requirements />} />
               <Route path="/about" element={<About />} />
               <Route path="/client" element={<ClientAccess />} />
+              <Route path="/login" element={<ClientLogin />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>

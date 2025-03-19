@@ -1,161 +1,140 @@
+
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using SurveyApp.Application.DTOs;
 using SurveyApp.Application.Services;
 using SurveyApp.WebMvc.Models;
 
 namespace SurveyApp.WebMvc.Controllers
 {
+    [Authorize(Policy = "ClientAccess")]
     public class RequirementsController : Controller
     {
-        private readonly ISuggestionService _suggestionService;
         private readonly IKnowledgeBaseService _knowledgeBaseService;
+        private readonly ILogger<RequirementsController> _logger;
 
-        public RequirementsController(ISuggestionService suggestionService, IKnowledgeBaseService knowledgeBaseService)
+        public RequirementsController(
+            IKnowledgeBaseService knowledgeBaseService,
+            ILogger<RequirementsController> logger)
         {
-            _suggestionService = suggestionService;
             _knowledgeBaseService = knowledgeBaseService;
+            _logger = logger;
         }
 
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            var suggestions = await _suggestionService.GetAllSuggestionsAsync();
-            var knowledgeBase = await _knowledgeBaseService.GetAllItemsAsync();
-            
-            var viewModel = new RequirementsViewModel
+            // Los clientes son redirigidos a la página de creación
+            if (!User.IsInRole("Admin"))
             {
-                Requirements = suggestions,
-                KnowledgeBase = knowledgeBase,
-                Categories = new[] {
-                    "Feature Request", 
-                    "Bug Fix", 
-                    "Integration", 
-                    "Performance", 
-                    "Documentation", 
-                    "Security", 
-                    "Other"
-                },
-                ProposedCount = suggestions.Count(s => s.Status.ToLower() == "proposed" || s.Status.ToLower() == "new"),
-                InProgressCount = suggestions.Count(s => s.Status.ToLower() == "in progress"),
-                TestingCount = suggestions.Count(s => s.Status.ToLower() == "testing"),
-                CompletedCount = suggestions.Count(s => s.Status.ToLower() == "completed"),
-                TotalCount = suggestions.Count,
-                
-                CriticalCount = suggestions.Count(s => s.Priority.ToLower() == "critical"),
-                HighCount = suggestions.Count(s => s.Priority.ToLower() == "high"),
-                MediumCount = suggestions.Count(s => s.Priority.ToLower() == "medium"),
-                LowCount = suggestions.Count(s => s.Priority.ToLower() == "low")
-            };
-            
+                return RedirectToAction("Create");
+            }
+
+            try
+            {
+                var viewModel = new RequirementsViewModel
+                {
+                    Title = "Gestión de Requerimientos",
+                    Description = "Visualiza y gestiona los requerimientos del sistema."
+                };
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al cargar la página de requerimientos");
+                return View("Error");
+            }
+        }
+
+        [HttpGet]
+        public IActionResult Create()
+        {
+            var viewModel = new NewRequirementViewModel();
             return View(viewModel);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Submit(CreateSuggestionDto requirementDto)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(NewRequirementViewModel model)
         {
-            if (!ModelState.IsValid)
+            if (ModelState.IsValid)
             {
-                TempData["ErrorMessage"] = "Please correct the errors in the form.";
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    // Convertimos el requerimiento en un artículo de la base de conocimientos
+                    var dto = new CreateKnowledgeBaseItemDto
+                    {
+                        Title = model.Title,
+                        Content = model.Description,
+                        Category = "Requerimiento",
+                        Tags = new[] { model.Priority, model.ProjectArea }
+                    };
+
+                    await _knowledgeBaseService.CreateKnowledgeBaseItemAsync(dto);
+
+                    TempData["SuccessMessage"] = "Requerimiento enviado correctamente.";
+                    return RedirectToAction(User.IsInRole("Admin") ? "Index" : "Create");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error al crear el requerimiento");
+                    ModelState.AddModelError("", "Ocurrió un error al enviar el requerimiento.");
+                }
             }
 
-            await _suggestionService.CreateSuggestionAsync(requirementDto);
-            TempData["SuccessMessage"] = "Your requirement has been submitted successfully.";
-            
-            return RedirectToAction(nameof(Index));
+            return View(model);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Create(CreateSuggestionDto requirementDto)
+        [HttpGet]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> ViewRequirements()
         {
-            if (!ModelState.IsValid)
+            try
             {
-                TempData["ErrorMessage"] = "Please correct the errors in the form.";
-                return RedirectToAction(nameof(Index));
+                var items = await _knowledgeBaseService.GetKnowledgeBaseItemsByCategoryAsync("Requerimiento");
+                var viewModel = new RequirementsListViewModel
+                {
+                    Requirements = items.Select(i => new RequirementViewModel
+                    {
+                        Id = i.Id,
+                        Title = i.Title,
+                        Description = i.Content,
+                        CreatedAt = i.CreatedAt,
+                        UpdatedAt = i.UpdatedAt,
+                        Priority = i.Tags.FirstOrDefault(t => t == "Alta" || t == "Media" || t == "Baja") ?? "Normal",
+                        ProjectArea = i.Tags.FirstOrDefault(t => t != "Alta" && t != "Media" && t != "Baja") ?? "General"
+                    }).ToList()
+                };
+                return View(viewModel);
             }
-
-            // Aseguramos que el contenido se establezca a partir de la descripción si está vacío
-            if (string.IsNullOrEmpty(requirementDto.Content) && !string.IsNullOrEmpty(requirementDto.Description))
+            catch (Exception ex)
             {
-                requirementDto.Content = requirementDto.Description;
+                _logger.LogError(ex, "Error al obtener los requerimientos");
+                return View("Error");
             }
-
-            await _suggestionService.CreateSuggestionAsync(requirementDto);
-            TempData["SuccessMessage"] = "Your requirement has been submitted successfully.";
-            
-            return RedirectToAction(nameof(Index));
         }
 
-        [HttpGet("requirements/view")]
-        public async Task<IActionResult> ViewRequirements(string category = null, string search = null)
+        [HttpGet]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> KnowledgeBase()
         {
-            var requirements = await _suggestionService.GetAllSuggestionsAsync();
-            
-            // Apply filters if provided
-            if (!string.IsNullOrEmpty(category))
+            try
             {
-                requirements = await _suggestionService.GetSuggestionsByCategoryAsync(category);
+                var items = await _knowledgeBaseService.GetAllKnowledgeBaseItemsAsync();
+                var viewModel = new KnowledgeBaseViewModel
+                {
+                    KnowledgeBaseItems = items
+                };
+                return View(viewModel);
             }
-            
-            if (!string.IsNullOrEmpty(search))
+            catch (Exception ex)
             {
-                requirements = await _suggestionService.SearchSuggestionsAsync(search);
+                _logger.LogError(ex, "Error al obtener la base de conocimientos");
+                return View("Error");
             }
-            
-            var viewModel = new RequirementsListViewModel
-            {
-                Requirements = requirements,
-                Categories = new[] {
-                    "Feature Request", 
-                    "Bug Fix", 
-                    "Integration", 
-                    "Performance", 
-                    "Documentation", 
-                    "Security", 
-                    "Other"
-                },
-                CategoryFilter = category,
-                SearchTerm = search
-            };
-            
-            return View(viewModel);
-        }
-
-        [HttpGet("requirements/knowledge")]
-        public async Task<IActionResult> KnowledgeBase(string search = null)
-        {
-            var knowledgeBaseItems = string.IsNullOrEmpty(search)
-                ? await _knowledgeBaseService.GetAllItemsAsync()
-                : await _knowledgeBaseService.SearchItemsAsync(search);
-            
-            var viewModel = new KnowledgeBaseViewModel
-            {
-                KnowledgeBaseItems = knowledgeBaseItems,
-                SearchTerm = search
-            };
-            
-            return View(viewModel);
-        }
-        
-        [HttpGet("requirements/similar")]
-        public async Task<IActionResult> FindSimilar(string content)
-        {
-            if (string.IsNullOrWhiteSpace(content))
-            {
-                return Json(new { success = false, message = "Content is required" });
-            }
-            
-            var requirements = await _suggestionService.FindSimilarSuggestionsAsync(content);
-            var knowledgeItems = await _knowledgeBaseService.SearchItemsAsync(content);
-            
-            return Json(new
-            {
-                success = true,
-                requirements,
-                knowledgeItems
-            });
         }
     }
 }

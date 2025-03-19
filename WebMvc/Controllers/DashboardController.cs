@@ -1,27 +1,36 @@
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using SurveyApp.Application.Services;
-using SurveyApp.Domain.Entities;
 using SurveyApp.WebMvc.Models;
 
 namespace SurveyApp.WebMvc.Controllers
 {
+    [Authorize(Policy = "AdminOnly")]
     public class DashboardController : Controller
     {
         private readonly ISurveyService _surveyService;
+        private readonly ICustomerService _customerService;
         private readonly ISuggestionService _suggestionService;
+        private readonly IAnalyticsService _analyticsService;
         private readonly ILogger<DashboardController> _logger;
 
         public DashboardController(
             ISurveyService surveyService,
+            ICustomerService customerService,
             ISuggestionService suggestionService,
+            IAnalyticsService analyticsService,
             ILogger<DashboardController> logger)
         {
             _surveyService = surveyService;
+            _customerService = customerService;
             _suggestionService = suggestionService;
+            _analyticsService = analyticsService;
             _logger = logger;
         }
 

@@ -1,8 +1,9 @@
 
 using System;
-using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using SurveyApp.Application.DTOs;
 using SurveyApp.Application.Services;
 using SurveyApp.Domain.Entities;
@@ -10,155 +11,158 @@ using SurveyApp.WebMvc.Models;
 
 namespace SurveyApp.WebMvc.Controllers
 {
+    [Authorize(Policy = "ClientAccess")]
     public class SuggestionsController : Controller
     {
         private readonly ISuggestionService _suggestionService;
-        private readonly IKnowledgeBaseService _knowledgeBaseService;
+        private readonly ILogger<SuggestionsController> _logger;
 
-        public SuggestionsController(ISuggestionService suggestionService, IKnowledgeBaseService knowledgeBaseService)
+        public SuggestionsController(
+            ISuggestionService suggestionService,
+            ILogger<SuggestionsController> logger)
         {
             _suggestionService = suggestionService;
-            _knowledgeBaseService = knowledgeBaseService;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index()
         {
-            var suggestions = await _suggestionService.GetAllSuggestionsAsync();
-            
-            var viewModel = new SuggestionIndexViewModel
+            // Solo administradores pueden ver el listado completo
+            if (!User.IsInRole("Admin"))
             {
-                Suggestions = suggestions,
-                TotalSuggestions = suggestions.Count,
-                NewSuggestions = suggestions.Count(s => s.Status.ToLower() == "new"),
-                InProgressSuggestions = suggestions.Count(s => s.Status.ToLower() == "in progress"),
-                CompletedSuggestions = suggestions.Count(s => s.Status.ToLower() == "completed"),
-                Categories = new[] {
-                    "UI/UX", 
-                    "Features", 
-                    "Performance", 
-                    "Integrations", 
-                    "Reporting", 
-                    "Mobile App", 
-                    "Other"
-                }
-            };
-            
-            return View(viewModel);
+                return RedirectToAction("Create");
+            }
+
+            try
+            {
+                var suggestions = await _suggestionService.GetAllSuggestionsAsync();
+                var viewModel = new SuggestionListViewModel
+                {
+                    Suggestions = suggestions
+                };
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener las sugerencias");
+                return View("Error");
+            }
+        }
+
+        [HttpGet]
+        public IActionResult Create()
+        {
+            return View();
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(CreateSuggestionDto suggestionDto)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(CreateSuggestionViewModel model)
         {
-            if (!ModelState.IsValid)
+            if (ModelState.IsValid)
             {
-                TempData["ErrorMessage"] = "Please correct the errors in the form.";
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    var dto = new CreateSuggestionDto
+                    {
+                        Content = model.Content,
+                        CustomerName = model.CustomerName,
+                        CustomerEmail = model.CustomerEmail,
+                        Category = model.Category
+                    };
+
+                    await _suggestionService.CreateSuggestionAsync(dto);
+
+                    TempData["SuccessMessage"] = "Sugerencia enviada correctamente.";
+                    return RedirectToAction(User.IsInRole("Admin") ? "Index" : "Create");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error al crear la sugerencia");
+                    ModelState.AddModelError("", "Ocurrió un error al enviar la sugerencia.");
+                }
             }
 
-            await _suggestionService.CreateSuggestionAsync(suggestionDto);
-            TempData["SuccessMessage"] = "Your suggestion has been submitted successfully.";
-            
-            return RedirectToAction(nameof(Index));
+            return View(model);
         }
 
-        [HttpGet("suggestions/view")]
-        public async Task<IActionResult> View(string status = null, string category = null, string search = null)
+        [HttpGet]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> View(Guid id)
         {
-            var suggestions = await _suggestionService.GetAllSuggestionsAsync();
-            
-            // Apply filters if provided
-            if (!string.IsNullOrEmpty(status) && Enum.TryParse<SuggestionStatus>(status, true, out var statusFilter))
+            try
             {
-                suggestions = await _suggestionService.GetSuggestionsByStatusAsync(statusFilter);
+                var suggestion = await _suggestionService.GetSuggestionByIdAsync(id);
+                if (suggestion == null)
+                {
+                    return NotFound();
+                }
+
+                var viewModel = new SuggestionDetailViewModel
+                {
+                    Id = suggestion.Id,
+                    Content = suggestion.Content,
+                    CustomerName = suggestion.CustomerName,
+                    CustomerEmail = suggestion.CustomerEmail,
+                    CreatedAt = suggestion.CreatedAt,
+                    Status = suggestion.Status.ToString(),
+                    Category = suggestion.Category,
+                    Response = suggestion.Response
+                };
+
+                return View(viewModel);
             }
-            
-            if (!string.IsNullOrEmpty(category))
+            catch (Exception ex)
             {
-                suggestions = await _suggestionService.GetSuggestionsByCategoryAsync(category);
+                _logger.LogError(ex, "Error al obtener la sugerencia");
+                return View("Error");
             }
-            
-            if (!string.IsNullOrEmpty(search))
-            {
-                suggestions = await _suggestionService.SearchSuggestionsAsync(search);
-            }
-            
-            var viewModel = new SuggestionListViewModel
-            {
-                Suggestions = suggestions,
-                Categories = new[] {
-                    "UI/UX", 
-                    "Features", 
-                    "Performance", 
-                    "Integrations", 
-                    "Reporting", 
-                    "Mobile App", 
-                    "Other"
-                },
-                StatusFilter = status,
-                CategoryFilter = category,
-                SearchTerm = search
-            };
-            
-            return View(viewModel);
         }
 
-        [HttpGet("suggestions/reports")]
-        public async Task<IActionResult> Reports(int months = 3)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> UpdateStatus(Guid id, string status, string response)
         {
-            if (months <= 0 || months > 12)
+            try
             {
-                months = 3;
+                if (!Enum.TryParse<SuggestionStatus>(status, out var suggestionStatus))
+                {
+                    ModelState.AddModelError("", "Estado de sugerencia no válido.");
+                    return RedirectToAction("View", new { id });
+                }
+
+                await _suggestionService.UpdateSuggestionStatusAsync(id, suggestionStatus, response);
+
+                TempData["SuccessMessage"] = "Estado de la sugerencia actualizado correctamente.";
+                return RedirectToAction("View", new { id });
             }
-            
-            var report = await _suggestionService.GenerateMonthlyReportAsync(months);
-            
-            var viewModel = new SuggestionReportViewModel
+            catch (Exception ex)
             {
-                Report = report,
-                MonthsRange = months
-            };
-            
-            return View(viewModel);
+                _logger.LogError(ex, "Error al actualizar el estado de la sugerencia");
+                TempData["ErrorMessage"] = "Ocurrió un error al actualizar el estado de la sugerencia.";
+                return RedirectToAction("View", new { id });
+            }
         }
 
-        [HttpPost("suggestions/{id}/status")]
-        public async Task<IActionResult> UpdateStatus(Guid id, UpdateSuggestionStatusDto updateDto)
+        [HttpGet]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> Reports()
         {
-            if (!ModelState.IsValid)
+            try
             {
-                TempData["ErrorMessage"] = "Please provide valid status information.";
-                return RedirectToAction(nameof(View));
+                var suggestions = await _suggestionService.GetAllSuggestionsAsync();
+                var viewModel = new SuggestionReportsViewModel
+                {
+                    Suggestions = suggestions
+                };
+                return View(viewModel);
             }
-
-            if (!Enum.TryParse<SuggestionStatus>(updateDto.Status, true, out var status))
+            catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "Invalid status value.";
-                return RedirectToAction(nameof(View));
+                _logger.LogError(ex, "Error al obtener los reportes de sugerencias");
+                return View("Error");
             }
-
-            await _suggestionService.UpdateSuggestionStatusAsync(id, status, updateDto.Response);
-            TempData["SuccessMessage"] = "Suggestion status updated successfully.";
-            
-            return RedirectToAction(nameof(View));
-        }
-        
-        [HttpGet("suggestions/similar")]
-        public async Task<IActionResult> FindSimilar(string content)
-        {
-            if (string.IsNullOrWhiteSpace(content))
-            {
-                return Json(new { success = false, message = "Content is required" });
-            }
-            
-            var suggestions = await _suggestionService.FindSimilarSuggestionsAsync(content);
-            var knowledgeItems = await _knowledgeBaseService.SearchItemsAsync(content);
-            
-            return Json(new
-            {
-                success = true,
-                suggestions,
-                knowledgeItems
-            });
         }
     }
 }

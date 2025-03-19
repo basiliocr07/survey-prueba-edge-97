@@ -1,13 +1,15 @@
+
+using System;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using SurveyApp.Application.Services;
 using SurveyApp.WebMvc.Models;
-using System.Linq;
-using System;
-using System.Collections.Generic;
 
 namespace SurveyApp.WebMvc.Controllers
 {
+    [Authorize(Policy = "AdminOnly")]
     public class AnalyticsController : Controller
     {
         private readonly IAnalyticsService _analyticsService;
