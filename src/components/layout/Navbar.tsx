@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -15,6 +14,22 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 
+interface NavFeature {
+  name: string;
+  description: string;
+  href: string;
+  roles?: string[];
+}
+
+interface NavMenuItem {
+  label: string;
+  icon?: React.ReactNode;
+  href: string;
+  description?: string;
+  roles: string[];
+  features?: NavFeature[];
+}
+
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -26,7 +41,6 @@ export default function Navbar() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Verificar si el usuario está logueado
     const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
     const role = localStorage.getItem('userRole') || '';
     const name = localStorage.getItem('username') || '';
@@ -66,7 +80,6 @@ export default function Navbar() {
     navigate('/');
   };
 
-  // Filtrar las opciones de navegación según el rol
   const getFilteredNavItems = () => {
     const allNavItems = [
       { path: '/', label: 'Home', icon: <Home className="w-4 h-4 mr-2" />, roles: ['admin', 'client', ''] },
@@ -78,7 +91,6 @@ export default function Navbar() {
       { path: '/requirements', label: 'Requirements', icon: <FileText className="w-4 h-4 mr-2" />, roles: ['admin', 'client'] },
     ];
 
-    // Filtra las opciones según el rol del usuario
     return allNavItems.filter(item => {
       if (!isLoggedIn && item.roles.includes('')) return true;
       if (isLoggedIn && (item.roles.includes(userRole.toLowerCase()) || item.roles.includes(''))) return true;
@@ -88,9 +100,8 @@ export default function Navbar() {
 
   const filteredNavItems = getFilteredNavItems();
 
-  // Menú de navegación con submenús
   const getFilteredNavMenuItems = () => {
-    const allMenuItems = [
+    const allMenuItems: NavMenuItem[] = [
       {
         label: 'Home',
         icon: <Home className="w-4 h-4 mr-2" />,
@@ -105,9 +116,9 @@ export default function Navbar() {
         description: 'Overview of your latest activity',
         roles: ['admin'],
         features: [
-          { name: 'Recent Surveys', description: 'View your most recent surveys', href: '/dashboard#surveys' },
-          { name: 'Latest Suggestions', description: 'Check customer suggestions', href: '/dashboard#suggestions' },
-          { name: 'Requirements', description: 'View latest requirements', href: '/dashboard#requirements' },
+          { name: 'Recent Surveys', description: 'View your most recent surveys', href: '/dashboard#surveys', roles: ['admin'] },
+          { name: 'Latest Suggestions', description: 'Check customer suggestions', href: '/dashboard#suggestions', roles: ['admin'] },
+          { name: 'Requirements', description: 'View latest requirements', href: '/dashboard#requirements', roles: ['admin'] },
         ]
       },
       {
@@ -117,9 +128,9 @@ export default function Navbar() {
         description: 'Create and manage surveys',
         roles: ['admin'],
         features: [
-          { name: 'All Surveys', description: 'View all your surveys', href: '/surveys' },
-          { name: 'Create Survey', description: 'Build a new survey', href: '/create' },
-          { name: 'Survey Responses', description: 'View collected responses', href: '/results' },
+          { name: 'All Surveys', description: 'View all your surveys', href: '/surveys', roles: ['admin'] },
+          { name: 'Create Survey', description: 'Build a new survey', href: '/create', roles: ['admin'] },
+          { name: 'Survey Responses', description: 'View collected responses', href: '/results', roles: ['admin'] },
         ]
       },
       {
@@ -129,9 +140,9 @@ export default function Navbar() {
         description: 'Analyze survey results',
         roles: ['admin'],
         features: [
-          { name: 'Data Visualization', description: 'View charts and graphs', href: '/results#charts' },
-          { name: 'Response Analytics', description: 'Detailed response analysis', href: '/results#analytics' },
-          { name: 'Export Data', description: 'Download survey results', href: '/results#export' },
+          { name: 'Data Visualization', description: 'View charts and graphs', href: '/results#charts', roles: ['admin'] },
+          { name: 'Response Analytics', description: 'Detailed response analysis', href: '/results#analytics', roles: ['admin'] },
+          { name: 'Export Data', description: 'Download survey results', href: '/results#export', roles: ['admin'] },
         ]
       },
       {
@@ -153,9 +164,9 @@ export default function Navbar() {
         description: 'Manage and grow your customer base',
         roles: ['admin'],
         features: [
-          { name: 'Customer List', description: 'View all customers', href: '/customers' },
-          { name: 'Customer Analysis', description: 'Analyze customer growth', href: '/customers#analysis' },
-          { name: 'Add Customer', description: 'Add a new customer', href: '/customers#add' },
+          { name: 'Customer List', description: 'View all customers', href: '/customers', roles: ['admin'] },
+          { name: 'Customer Analysis', description: 'Analyze customer growth', href: '/customers#analysis', roles: ['admin'] },
+          { name: 'Add Customer', description: 'Add a new customer', href: '/customers#add', roles: ['admin'] },
         ]
       },
       {
@@ -178,16 +189,14 @@ export default function Navbar() {
       }
     ];
 
-    // Filtra las opciones según el rol del usuario
     return allMenuItems.filter(item => {
       if (!isLoggedIn && item.roles.includes('')) return true;
       if (isLoggedIn && (item.roles.includes(userRole.toLowerCase()) || item.roles.includes(''))) return true;
       return false;
     }).map(item => {
-      // Si el item tiene características (features), filtra estas también por rol
       if (item.features) {
         const filteredFeatures = item.features.filter(feature => {
-          if (!feature.roles) return true; // Si no tiene roles especificados, lo mostramos a todos
+          if (!feature.roles) return true;
           if (!isLoggedIn && feature.roles.includes('')) return true;
           if (isLoggedIn && (feature.roles.includes(userRole.toLowerCase()) || feature.roles.includes(''))) return true;
           return false;
@@ -215,7 +224,6 @@ export default function Navbar() {
           <span className="text-primary">SurveyMaster</span>
         </Link>
 
-        {/* Desktop Navigation with Hover Menus */}
         <NavigationMenu className="hidden md:flex">
           <NavigationMenuList>
             {filteredNavMenuItems.map((item) => (
@@ -269,7 +277,6 @@ export default function Navbar() {
           </NavigationMenuList>
         </NavigationMenu>
 
-        {/* Login/Logout buttons */}
         <div className="hidden md:flex items-center space-x-2">
           {isLoggedIn ? (
             <div className="flex items-center space-x-2">
@@ -301,7 +308,6 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Mobile Menu Toggle */}
         <Button 
           variant="ghost" 
           size="icon" 
@@ -313,7 +319,6 @@ export default function Navbar() {
         </Button>
       </div>
 
-      {/* Mobile Navigation Overlay */}
       <div 
         className={cn(
           "fixed inset-0 bg-background z-40 md:hidden transition-all duration-300 flex flex-col",
