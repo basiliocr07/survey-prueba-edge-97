@@ -22,6 +22,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useNavigate } from 'react-router-dom';
+import StarRating from '@/components/survey/StarRating';
+import NPSRating from '@/components/survey/NPSRating';
 
 export default function CreateSurvey() {
   const { toast } = useToast();
@@ -432,16 +434,21 @@ export default function CreateSurvey() {
                           )}
                           
                           {question.type === 'rating' && (
-                            <div className="flex space-x-2">
-                              {[1, 2, 3, 4, 5].map((value) => (
-                                <button
-                                  key={value}
-                                  className="w-10 h-10 rounded-full border flex items-center justify-center hover:bg-accent transition-colors"
-                                >
-                                  {value}
-                                </button>
-                              ))}
-                            </div>
+                            <StarRating 
+                              name={`preview-${question.id}`} 
+                              value="3" 
+                              onChange={() => {}}
+                              required={false}
+                            />
+                          )}
+                          
+                          {question.type === 'nps' && (
+                            <NPSRating 
+                              name={`preview-${question.id}`} 
+                              value="7" 
+                              onChange={() => {}}
+                              required={false}
+                            />
                           )}
                         </div>
                       </div>

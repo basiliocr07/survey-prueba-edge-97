@@ -54,8 +54,12 @@ export default function TakeSurvey() {
   useEffect(() => {
     const loadSurvey = () => {
       try {
+        console.log("Loading survey with ID:", surveyId);
         const savedSurveys = JSON.parse(localStorage.getItem('surveys') || '[]');
+        console.log("All surveys:", savedSurveys);
+        
         const foundSurvey = savedSurveys.find((s: Survey) => s.id === surveyId);
+        console.log("Found survey:", foundSurvey);
         
         if (foundSurvey) {
           setSurvey(foundSurvey);
@@ -77,11 +81,13 @@ export default function TakeSurvey() {
             answers: initialAnswers 
           });
         } else {
+          console.error("Survey not found with ID:", surveyId);
           setError('Survey not found');
         }
         
         setLoading(false);
       } catch (err) {
+        console.error("Error loading survey:", err);
         setError('Failed to load survey');
         setLoading(false);
       }
