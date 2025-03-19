@@ -102,73 +102,79 @@ namespace SurveyApp.WebMvc.Controllers
                     if (key.StartsWith("Answers[") && key.EndsWith("]") && Request.Form[key].Count > 1)
                     {
                         // Extraer ID de pregunta
-                        var questionId = key.Substring(8, key.Length - 9);
-                        
-                        // Obtener todos los valores para esta pregunta (múltiple opción)
+                        var questionIdStr = key.Substring(8, key.Length - 9);
                         var values = Request.Form[key].ToList();
                         
-                        // Añadir al modelo.Answers
-                        model.Answers[questionId] = values;
+                        // Añadir al diccionario como lista
+                        model.Answers[questionIdStr] = values;
+                    }
+                    else if (key.StartsWith("Answers[") && key.EndsWith("]") && !model.Answers.ContainsKey(key.Substring(8, key.Length - 9)))
+                    {
+                        var questionIdStr = key.Substring(8, key.Length - 9);
+                        var value = Request.Form[key].ToString();
+                        model.Answers[questionIdStr] = value;
                     }
                 }
 
-                // Convertir todas las claves de questionId a Guid
-                var createResponseDto = new CreateSurveyResponseDto
+                // Crear el DTO para enviar al servicio
+                var responseDto = new CreateSurveyResponseDto
                 {
                     SurveyId = id,
-                    RespondentName = model.RespondentName?.Trim(),
-                    RespondentEmail = model.RespondentEmail?.Trim(),
-                    Answers = new Dictionary<string, object>()
+                    RespondentName = model.RespondentName,
+                    RespondentEmail = model.RespondentEmail,
+                    RespondentPhone = model.RespondentPhone,
+                    RespondentCompany = model.RespondentCompany,
+                    Answers = model.Answers,
+                    IsExistingClient = model.IsExistingClient,
+                    ExistingClientId = model.ExistingClientId
                 };
 
-                // Asegurar que todas las respuestas estén correctamente formateadas
-                foreach (var answer in model.Answers)
-                {
-                    try
-                    {
-                        // Verificar si es un ID de pregunta válido
-                        if (Guid.TryParse(answer.Key, out Guid questionId))
-                        {
-                            // Verificar que la pregunta pertenece a esta encuesta
-                            if (survey.Questions.Any(q => q.Id == questionId))
-                            {
-                                createResponseDto.Answers[answer.Key] = answer.Value;
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Error procesando respuesta para pregunta {QuestionId}", answer.Key);
-                    }
-                }
+                // Enviar la respuesta
+                await _surveyService.SubmitSurveyResponseAsync(responseDto);
 
-                // Guardar la respuesta en la base de datos
-                await _surveyService.SubmitSurveyResponseAsync(createResponseDto);
-                
-                _logger.LogInformation("Respuesta de encuesta guardada exitosamente. SurveyId: {SurveyId}, Email: {Email}", 
-                    id, model.RespondentEmail);
-                
-                TempData["SuccessMessage"] = "¡Gracias! Tu respuesta ha sido enviada correctamente.";
-                return RedirectToAction("ThankYou");
-            }
-            catch (KeyNotFoundException ex)
-            {
-                _logger.LogWarning(ex, "Encuesta no encontrada al enviar respuesta. SurveyId: {SurveyId}", id);
-                TempData["ErrorMessage"] = "La encuesta solicitada no existe.";
-                return RedirectToAction("Index", "Home");
+                // Redireccionar a la página de agradecimiento
+                return RedirectToAction("ThankYou", new { id });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al enviar la respuesta de la encuesta. SurveyId: {SurveyId}", id);
-                TempData["ErrorMessage"] = "Ocurrió un error al enviar tu respuesta.";
+                _logger.LogError(ex, "Error al enviar respuesta de encuesta: {Message}", ex.Message);
+                TempData["ErrorMessage"] = "Ocurrió un error al procesar su respuesta.";
                 return RedirectToAction(nameof(Respond), new { id });
             }
         }
 
-        [HttpGet("thank-you")]
-        public IActionResult ThankYou()
+        [HttpGet("respond/{id}/thankyou")]
+        public async Task<IActionResult> ThankYou(Guid id)
         {
-            return View();
+            try
+            {
+                var survey = await _surveyService.GetSurveyByIdAsync(id);
+                ViewBag.SurveyTitle = survey.Title;
+                ViewBag.ThankYouMessage = "¡Gracias por completar nuestra encuesta!";
+                
+                return View();
+            }
+            catch
+            {
+                return View(); // Mostrar un mensaje genérico si no se puede cargar la encuesta
+            }
+        }
+        
+        [HttpGet("responses")]
+        public async Task<IActionResult> List()
+        {
+            try
+            {
+                var recentResponses = await _surveyService.GetRecentResponsesAsync(20);
+                
+                return View(recentResponses);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al listar respuestas");
+                TempData["ErrorMessage"] = "Error al cargar las respuestas.";
+                return RedirectToAction("Index", "Dashboard");
+            }
         }
     }
 }

@@ -25,9 +25,11 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // Register repositories
 builder.Services.AddScoped<ISurveyRepository, SurveyRepository>();
+builder.Services.AddScoped<ISurveyResponseRepository, SurveyResponseRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
 builder.Services.AddScoped<ISuggestionRepository, SuggestionRepository>();
+builder.Services.AddScoped<IRequirementRepository, RequirementRepository>();
 builder.Services.AddScoped<IKnowledgeBaseRepository, KnowledgeBaseRepository>();
 
 // Register application services
@@ -36,6 +38,7 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 builder.Services.AddScoped<ISuggestionService, SuggestionService>();
+builder.Services.AddScoped<IRequirementService, RequirementService>();
 builder.Services.AddScoped<IKnowledgeBaseService, KnowledgeBaseService>();
 
 // Add API controllers
@@ -70,6 +73,16 @@ app.MapControllerRoute(
     name: "dashboard",
     pattern: "dashboard/{action=Index}/{id?}",
     defaults: new { controller = "Dashboard" });
+
+app.MapControllerRoute(
+    name: "surveys",
+    pattern: "surveys/{action=Index}/{id?}",
+    defaults: new { controller = "Surveys" });
+
+app.MapControllerRoute(
+    name: "responses",
+    pattern: "responses/{action=Index}/{id?}",
+    defaults: new { controller = "SurveyResponse" });
 
 app.MapControllerRoute(
     name: "customers",

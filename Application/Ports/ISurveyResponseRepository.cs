@@ -13,5 +13,6 @@ namespace SurveyApp.Application.Ports
         Task<SurveyResponse> CreateAsync(SurveyResponse response);
         Task<int> GetResponseCountForSurveyAsync(Guid surveyId);
         Task<Dictionary<string, int>> GetQuestionResponseStatisticsAsync(Guid surveyId, Guid questionId);
+        Task<List<SurveyResponse>> GetRecentResponsesAsync(int count);
     }
 }
