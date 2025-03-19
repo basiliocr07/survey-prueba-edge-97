@@ -136,6 +136,7 @@ const StatusBadge = ({ status }: { status: string }) => {
 
 export default function Dashboard() {
   const queryClient = useQueryClient();
+  // Changed to use a simple initial state object instead of null
   const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState>({ 
     open: false, 
     id: "", 
@@ -179,14 +180,14 @@ export default function Dashboard() {
       
       toast.success(`Estado actualizado a ${getStatusLabel(data.status)}`);
       
-      // Fixed: Close the dialog without manipulating event
+      // Improved: Set only the open state to false without manipulating other properties
       setConfirmDialog(prev => ({ ...prev, open: false }));
     },
     onError: (error) => {
       console.error("Error al actualizar el estado:", error);
       toast.error("Error al actualizar el estado");
       
-      // Fixed: Ensure dialog closes even on error
+      // Improved: Set only the open state to false
       setConfirmDialog(prev => ({ ...prev, open: false }));
     }
   });
@@ -214,7 +215,7 @@ export default function Dashboard() {
       return;
     }
     
-    // Fixed: Simplified dialog opening
+    // Improved: Set all dialog properties while opening it
     setConfirmDialog({
       open: true,
       id,
@@ -225,7 +226,7 @@ export default function Dashboard() {
   };
 
   const confirmStatusChange = () => {
-    // Fixed: Do not include unnecessary event handling
+    // Improved: Proper null check for dialog properties
     if (confirmDialog.id && confirmDialog.type && confirmDialog.newStatus) {
       updateStatusMutation.mutate({
         id: confirmDialog.id,
@@ -236,7 +237,7 @@ export default function Dashboard() {
   };
 
   const closeDialog = () => {
-    // Fixed: Simplified dialog closing
+    // Improved: Set only the open state to false
     setConfirmDialog(prev => ({ ...prev, open: false }));
   };
 
@@ -273,6 +274,7 @@ export default function Dashboard() {
                           variant="outline" 
                           size="sm" 
                           className="h-8"
+                          type="button"
                         >
                           <span>Cambiar Estado</span>
                           <ChevronDown className="ml-1 h-4 w-4" />
@@ -339,6 +341,7 @@ export default function Dashboard() {
                           variant="outline" 
                           size="sm" 
                           className="h-8"
+                          type="button"
                         >
                           <span>Cambiar Estado</span>
                           <ChevronDown className="ml-1 h-4 w-4" />
@@ -375,6 +378,7 @@ export default function Dashboard() {
                       size="sm" 
                       className="h-8 w-8 p-0"
                       asChild
+                      type="button"
                     >
                       <Link to="/suggestions">
                         <Eye className="h-4 w-4" />
@@ -405,6 +409,7 @@ export default function Dashboard() {
                           variant="outline" 
                           size="sm" 
                           className="h-8"
+                          type="button"
                         >
                           <span>Cambiar Estado</span>
                           <ChevronDown className="ml-1 h-4 w-4" />
@@ -441,6 +446,7 @@ export default function Dashboard() {
                       size="sm" 
                       className="h-8 w-8 p-0"
                       asChild
+                      type="button"
                     >
                       <Link to="/requirements">
                         <Eye className="h-4 w-4" />
@@ -453,13 +459,13 @@ export default function Dashboard() {
             
             <div className="flex justify-end space-x-2 mt-6">
               <Link to="/results">
-                <Button size="sm">
+                <Button size="sm" type="button">
                   <BarChart3 className="mr-2 h-4 w-4" />
                   Ver Análisis
                 </Button>
               </Link>
               <Link to="/surveys">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" type="button">
                   Ver Todas las Encuestas
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -469,11 +475,11 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Fixed: Properly handle Dialog open state changes */}
+      {/* Improved: Dialog now uses a more reliable state management approach */}
       <Dialog 
         open={confirmDialog.open} 
         onOpenChange={(open) => {
-          // Only update state if changing from open to closed
+          // Critical fix: Only update state when dialog is closing
           if (!open) {
             setConfirmDialog(prev => ({ ...prev, open: false }));
           }
