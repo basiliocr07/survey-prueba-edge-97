@@ -291,11 +291,12 @@
 
 @section Scripts {
     <script>
-        // Initialization for Bootstrap dropdowns
         document.addEventListener('DOMContentLoaded', function() {
-            var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'));
-            dropdownElementList.map(function(dropdownToggleEl) {
-                return new bootstrap.Dropdown(dropdownToggleEl);
+            // Initialize collapsible sections
+            document.querySelectorAll('.collapsible-container button').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault(); // Prevent default button behavior
+                });
             });
         });
         

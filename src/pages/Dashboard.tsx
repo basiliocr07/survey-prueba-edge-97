@@ -11,26 +11,13 @@ import {
   CheckCircle2,
   ChevronDown
 } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import Navbar from "@/components/layout/Navbar";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogFooter, 
-  DialogDescription 
-} from "@/components/ui/dialog";
-import { useState, useCallback } from "react";
+import { cn } from "@/lib/utils";
+import { useState } from "react";
 
+// Data types for our dashboard items
 interface SurveyItem {
   id: string;
   title: string;
@@ -38,6 +25,14 @@ interface SurveyItem {
   createdAt: string;
   responses: number;
   status: string;
+}
+
+interface SurveyResponseItem {
+  id: string;
+  surveyId: string;
+  surveyTitle: string;
+  respondentName: string;
+  submittedAt: string;
 }
 
 interface SuggestionItem {
@@ -57,20 +52,7 @@ interface RequirementItem {
   status: string;
 }
 
-interface UpdateStatusParams {
-  id: string;
-  type: string;
-  newStatus: string;
-}
-
-interface ConfirmDialogState {
-  open: boolean;
-  id: string;
-  type: string;
-  newStatus: string;
-  currentStatus: string;
-}
-
+// Mock data fetching functions - these would connect to your API
 const fetchLatestSurvey = async (): Promise<SurveyItem> => {
   return {
     id: "1",
@@ -82,6 +64,32 @@ const fetchLatestSurvey = async (): Promise<SurveyItem> => {
   };
 };
 
+const fetchRecentResponses = async (): Promise<SurveyResponseItem[]> => {
+  return [
+    {
+      id: "1",
+      surveyId: "1",
+      surveyTitle: "Encuesta de Satisfacción del Cliente",
+      respondentName: "María López",
+      submittedAt: "2023-12-18T14:30:00Z"
+    },
+    {
+      id: "2",
+      surveyId: "1",
+      surveyTitle: "Encuesta de Satisfacción del Cliente",
+      respondentName: "Juan Pérez",
+      submittedAt: "2023-12-17T09:15:00Z"
+    },
+    {
+      id: "3",
+      surveyId: "1",
+      surveyTitle: "Encuesta de Satisfacción del Cliente",
+      respondentName: "Ana Martínez",
+      submittedAt: "2023-12-16T16:45:00Z"
+    }
+  ];
+};
+
 const fetchLatestSuggestion = async (): Promise<SuggestionItem> => {
   return {
     id: "1",
@@ -90,6 +98,32 @@ const fetchLatestSuggestion = async (): Promise<SuggestionItem> => {
     createdAt: "2023-12-10T09:30:00Z",
     status: "pending"
   };
+};
+
+const fetchRecentSuggestions = async (): Promise<SuggestionItem[]> => {
+  return [
+    {
+      id: "1",
+      content: "Agregar modo oscuro al portal del cliente",
+      customerName: "Juan Pérez",
+      createdAt: "2023-12-10T09:30:00Z",
+      status: "pending"
+    },
+    {
+      id: "2",
+      content: "Mejorar la velocidad de carga de las páginas",
+      customerName: "María López",
+      createdAt: "2023-12-09T15:20:00Z",
+      status: "in-progress"
+    },
+    {
+      id: "3",
+      content: "Añadir más opciones de pago en la checkout",
+      customerName: "Carlos Gómez",
+      createdAt: "2023-12-08T11:45:00Z",
+      status: "closed"
+    }
+  ];
 };
 
 const fetchLatestRequirement = async (): Promise<RequirementItem> => {
@@ -103,12 +137,36 @@ const fetchLatestRequirement = async (): Promise<RequirementItem> => {
   };
 };
 
-const updateStatus = async ({ id, type, newStatus }: UpdateStatusParams) => {
-  console.log(`Actualizando ${type} con id ${id} a estado: ${newStatus}`);
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return { id, type, status: newStatus };
+const fetchRecentRequirements = async (): Promise<RequirementItem[]> => {
+  return [
+    {
+      id: "1",
+      title: "Diseño responsivo para móviles",
+      description: "La aplicación debe ser completamente responsiva en todos los dispositivos móviles",
+      priority: "high",
+      createdAt: "2023-12-05T14:20:00Z",
+      status: "closed"
+    },
+    {
+      id: "2",
+      title: "Implementar autenticación con Google",
+      description: "Permitir a los usuarios iniciar sesión con sus cuentas de Google",
+      priority: "medium",
+      createdAt: "2023-12-04T10:15:00Z",
+      status: "in-progress"
+    },
+    {
+      id: "3",
+      title: "Optimizar rendimiento en navegadores antiguos",
+      description: "Mejorar la compatibilidad con IE11 y otros navegadores obsoletos",
+      priority: "low",
+      createdAt: "2023-12-03T09:30:00Z",
+      status: "pending"
+    }
+  ];
 };
 
+// Component for status badges
 const StatusBadge = ({ status }: { status: string }) => {
   switch (status) {
     case "pending":
@@ -134,75 +192,95 @@ const StatusBadge = ({ status }: { status: string }) => {
   }
 };
 
+// Collapsible section component
+const CollapsibleSection = ({ 
+  title, 
+  children, 
+  content, 
+  expanded, 
+  onToggle 
+}: { 
+  title: React.ReactNode, 
+  children: React.ReactNode, 
+  content: React.ReactNode, 
+  expanded: boolean, 
+  onToggle: () => void 
+}) => {
+  return (
+    <div className="border-b last:border-b-0">
+      <div 
+        className="w-full px-6 py-4 flex justify-between items-center hover:bg-gray-50 transition-colors cursor-pointer"
+        onClick={onToggle}
+      >
+        <div>{title}</div>
+        <ChevronDown className={cn(
+          "h-5 w-5 text-gray-400 transition-transform",
+          expanded && "transform rotate-180"
+        )} />
+      </div>
+      <div className={cn(
+        "bg-gray-50 px-6 py-3 grid transition-all",
+        expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+      )}>
+        <div className="overflow-hidden">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function Dashboard() {
-  const queryClient = useQueryClient();
-  const [dialogState, setDialogState] = useState<ConfirmDialogState>({
-    open: false,
-    id: "",
-    type: "",
-    newStatus: "",
-    currentStatus: ""
+  // State for tracking which sections are expanded
+  const [expandedSections, setExpandedSections] = useState({
+    surveys: false,
+    suggestions: false,
+    requirements: false
   });
 
-  const { data: latestSurvey, isLoading: loadingSurvey } = useQuery({
+  // Toggle a section's expanded state
+  const toggleSection = (section: keyof typeof expandedSections) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  // Fetch data with React Query
+  const { data: latestSurvey } = useQuery({
     queryKey: ['latestSurvey'],
     queryFn: fetchLatestSurvey
   });
 
-  const { data: latestSuggestion, isLoading: loadingSuggestion } = useQuery({
+  const { data: recentResponses } = useQuery({
+    queryKey: ['recentResponses'],
+    queryFn: fetchRecentResponses,
+    enabled: expandedSections.surveys // Only fetch when section is expanded
+  });
+
+  const { data: latestSuggestion } = useQuery({
     queryKey: ['latestSuggestion'],
     queryFn: fetchLatestSuggestion
   });
 
-  const { data: latestRequirement, isLoading: loadingRequirement } = useQuery({
+  const { data: recentSuggestions } = useQuery({
+    queryKey: ['recentSuggestions'],
+    queryFn: fetchRecentSuggestions,
+    enabled: expandedSections.suggestions // Only fetch when section is expanded
+  });
+
+  const { data: latestRequirement } = useQuery({
     queryKey: ['latestRequirement'],
     queryFn: fetchLatestRequirement
   });
 
-  const updateStatusMutation = useMutation({
-    mutationFn: updateStatus,
-    onSuccess: (data) => {
-      const queryKey = data.type === 'Survey' 
-        ? 'latestSurvey' 
-        : data.type === 'Suggestion' 
-          ? 'latestSuggestion' 
-          : 'latestRequirement';
-      
-      queryClient.setQueryData([queryKey], (oldData: any) => {
-        if (!oldData) return oldData;
-        
-        return {
-          ...oldData,
-          status: data.status
-        };
-      });
-      
-      toast.success(`Estado actualizado a ${getStatusLabel(data.status)}`);
-      
-      // Close dialog by creating a new state object with open: false
-      setDialogState({
-        open: false,
-        id: "",
-        type: "",
-        newStatus: "",
-        currentStatus: ""
-      });
-    },
-    onError: (error) => {
-      console.error("Error al actualizar el estado:", error);
-      toast.error("Error al actualizar el estado");
-      
-      // Close dialog by creating a new state object with open: false
-      setDialogState({
-        open: false,
-        id: "",
-        type: "",
-        newStatus: "",
-        currentStatus: ""
-      });
-    }
+  const { data: recentRequirements } = useQuery({
+    queryKey: ['recentRequirements'],
+    queryFn: fetchRecentRequirements,
+    enabled: expandedSections.requirements // Only fetch when section is expanded
   });
 
+  // Format date strings
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('es-ES', { 
@@ -211,61 +289,6 @@ export default function Dashboard() {
       day: 'numeric' 
     }).format(date);
   };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case "pending": return "Pendiente";
-      case "in-progress": return "En curso";
-      case "closed": return "Cerrada";
-      default: return status;
-    }
-  };
-
-  // Memoize this function to prevent unnecessary re-renders
-  const handleStatusChange = useCallback((id: string, type: string, newStatus: string, currentStatus: string) => {
-    if (newStatus === currentStatus) {
-      return;
-    }
-    
-    // Create a completely new state object to avoid partial updates
-    setDialogState({
-      open: true,
-      id,
-      type,
-      newStatus,
-      currentStatus
-    });
-  }, []);
-
-  const confirmStatusChange = useCallback(() => {
-    // Only proceed if we have valid data
-    const { id, type, newStatus } = dialogState;
-    if (id && type && newStatus) {
-      updateStatusMutation.mutate({
-        id,
-        type,
-        newStatus
-      });
-    }
-  }, [dialogState, updateStatusMutation]);
-
-  const closeDialog = useCallback(() => {
-    // Create a completely new state object with open: false
-    setDialogState({
-      open: false,
-      id: "",
-      type: "",
-      newStatus: "",
-      currentStatus: ""
-    });
-  }, []);
-
-  // Handle dialog open state changes
-  const handleDialogOpenChange = useCallback((open: boolean) => {
-    if (!open) {
-      closeDialog();
-    }
-  }, [closeDialog]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -277,266 +300,198 @@ export default function Dashboard() {
           <CardHeader className="pb-2">
             <CardTitle className="text-xl">Vista Rápida de Elementos Recientes</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-start justify-between border-b pb-3">
+          <CardContent className="p-0">
+            {/* Survey Section */}
+            <CollapsibleSection
+              expanded={expandedSections.surveys}
+              onToggle={() => toggleSection('surveys')}
+              title={
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-medium text-sm text-muted-foreground">Última Encuesta</h3>
+                    <h3 className="font-medium">Encuestas</h3>
                     {latestSurvey && <StatusBadge status={latestSurvey.status} />}
                   </div>
-                  <p className="font-semibold">{latestSurvey?.title || "No hay encuestas aún"}</p>
-                  {latestSurvey && (
-                    <p className="text-xs text-muted-foreground">
-                      Creada {formatDate(latestSurvey.createdAt)} • {latestSurvey.responses} respuestas
-                    </p>
+                  {latestSurvey ? (
+                    <>
+                      <p className="font-semibold">{latestSurvey.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Creada {formatDate(latestSurvey.createdAt)} • {latestSurvey.responses} respuestas
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-gray-500">No hay encuestas disponibles</p>
                   )}
                 </div>
-                <div className="flex items-center space-x-2">
-                  {latestSurvey && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="h-8"
-                          type="button"
-                        >
-                          <span>Cambiar Estado</span>
-                          <ChevronDown className="ml-1 h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem 
-                          onClick={() => handleStatusChange(latestSurvey.id, "Survey", "pending", latestSurvey.status)}
-                          disabled={latestSurvey.status === "pending"}
-                        >
-                          <Clock className="mr-2 h-4 w-4" />
-                          <span>Pendiente</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => handleStatusChange(latestSurvey.id, "Survey", "in-progress", latestSurvey.status)}
-                          disabled={latestSurvey.status === "in-progress"}
-                        >
-                          <LineChart className="mr-2 h-4 w-4" />
-                          <span>En curso</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => handleStatusChange(latestSurvey.id, "Survey", "closed", latestSurvey.status)}
-                          disabled={latestSurvey.status === "closed"}
-                        >
-                          <CheckCircle2 className="mr-2 h-4 w-4" />
-                          <span>Cerrada</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
-                  {latestSurvey && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-8 w-8 p-0"
-                      asChild
-                    >
-                      <Link to={`/survey/${latestSurvey.id}`}>
-                        <Eye className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                  )}
+              }
+              content={recentResponses}
+            >
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium mb-2">Últimas 5 respuestas</h4>
+                {recentResponses && recentResponses.length > 0 ? (
+                  <div className="space-y-2">
+                    {recentResponses.map(response => (
+                      <div key={response.id} className="bg-white p-3 rounded border text-sm">
+                        <div className="flex justify-between">
+                          <span className="font-medium">{response.respondentName}</span>
+                          <span className="text-gray-500 text-xs">{formatDate(response.submittedAt)}</span>
+                        </div>
+                        <p className="text-gray-600">{response.surveyTitle}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">No hay respuestas recientes</p>
+                )}
+                <div className="mt-3 text-right">
+                  <Link to="/surveys" className="text-sm text-blue-600 hover:underline inline-flex items-center">
+                    Ver todas las encuestas <ArrowRight className="ml-1 h-3 w-3" />
+                  </Link>
                 </div>
               </div>
-              
-              <div className="flex items-start justify-between border-b pb-3">
+            </CollapsibleSection>
+
+            {/* Suggestions Section */}
+            <CollapsibleSection
+              expanded={expandedSections.suggestions}
+              onToggle={() => toggleSection('suggestions')}
+              title={
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-medium text-sm text-muted-foreground">Última Sugerencia</h3>
+                    <h3 className="font-medium">Sugerencias</h3>
                     {latestSuggestion && <StatusBadge status={latestSuggestion.status} />}
                   </div>
-                  <p className="font-semibold">{latestSuggestion?.content || "No hay sugerencias aún"}</p>
-                  {latestSuggestion && (
-                    <p className="text-xs text-muted-foreground">
-                      De {latestSuggestion.customerName} • {formatDate(latestSuggestion.createdAt)}
-                    </p>
+                  {latestSuggestion ? (
+                    <>
+                      <p className="font-semibold">{latestSuggestion.content}</p>
+                      <p className="text-xs text-muted-foreground">
+                        De {latestSuggestion.customerName} • {formatDate(latestSuggestion.createdAt)}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-gray-500">No hay sugerencias disponibles</p>
                   )}
                 </div>
-                <div className="flex items-center space-x-2">
-                  {latestSuggestion && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="h-8"
-                          type="button"
-                        >
-                          <span>Cambiar Estado</span>
-                          <ChevronDown className="ml-1 h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem 
-                          onClick={() => handleStatusChange(latestSuggestion.id, "Suggestion", "pending", latestSuggestion.status)}
-                          disabled={latestSuggestion.status === "pending"}
-                        >
-                          <Clock className="mr-2 h-4 w-4" />
-                          <span>Pendiente</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => handleStatusChange(latestSuggestion.id, "Suggestion", "in-progress", latestSuggestion.status)}
-                          disabled={latestSuggestion.status === "in-progress"}
-                        >
-                          <LineChart className="mr-2 h-4 w-4" />
-                          <span>En curso</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => handleStatusChange(latestSuggestion.id, "Suggestion", "closed", latestSuggestion.status)}
-                          disabled={latestSuggestion.status === "closed"}
-                        >
-                          <CheckCircle2 className="mr-2 h-4 w-4" />
-                          <span>Cerrada</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
-                  {latestSuggestion && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-8 w-8 p-0"
-                      asChild
-                      type="button"
-                    >
-                      <Link to="/suggestions">
-                        <Eye className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                  )}
+              }
+              content={recentSuggestions}
+            >
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium mb-2">Últimas 5 sugerencias</h4>
+                {recentSuggestions && recentSuggestions.length > 0 ? (
+                  <div className="space-y-2">
+                    {recentSuggestions.map(suggestion => (
+                      <div key={suggestion.id} className="bg-white p-3 rounded border text-sm">
+                        <div className="flex justify-between">
+                          <span className="font-medium">{suggestion.customerName}</span>
+                          <span className="text-gray-500 text-xs">{formatDate(suggestion.createdAt)}</span>
+                        </div>
+                        <p className="text-gray-600">
+                          {suggestion.content.length > 60 
+                            ? `${suggestion.content.substring(0, 60)}...` 
+                            : suggestion.content}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">No hay sugerencias recientes</p>
+                )}
+                <div className="mt-3 text-right">
+                  <Link to="/suggestions" className="text-sm text-blue-600 hover:underline inline-flex items-center">
+                    Ver todas las sugerencias <ArrowRight className="ml-1 h-3 w-3" />
+                  </Link>
                 </div>
               </div>
-              
-              <div className="flex items-start justify-between pb-3">
+            </CollapsibleSection>
+
+            {/* Requirements Section */}
+            <CollapsibleSection
+              expanded={expandedSections.requirements}
+              onToggle={() => toggleSection('requirements')}
+              title={
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-medium text-sm text-muted-foreground">Último Requerimiento</h3>
+                    <h3 className="font-medium">Requerimientos</h3>
                     {latestRequirement && <StatusBadge status={latestRequirement.status} />}
                   </div>
-                  <p className="font-semibold">{latestRequirement?.title || "No hay requerimientos aún"}</p>
-                  {latestRequirement && (
-                    <p className="text-xs text-muted-foreground">
-                      Prioridad: {latestRequirement.priority === 'high' ? 'Alta' : latestRequirement.priority === 'medium' ? 'Media' : 'Baja'} • {formatDate(latestRequirement.createdAt)}
-                    </p>
+                  {latestRequirement ? (
+                    <>
+                      <p className="font-semibold">{latestRequirement.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Prioridad: {latestRequirement.priority === 'high' 
+                          ? 'Alta' 
+                          : latestRequirement.priority === 'medium' 
+                            ? 'Media' 
+                            : 'Baja'} • {formatDate(latestRequirement.createdAt)}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-gray-500">No hay requerimientos disponibles</p>
                   )}
                 </div>
-                <div className="flex items-center space-x-2">
-                  {latestRequirement && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="h-8"
-                          type="button"
-                        >
-                          <span>Cambiar Estado</span>
-                          <ChevronDown className="ml-1 h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem 
-                          onClick={() => handleStatusChange(latestRequirement.id, "Requirement", "pending", latestRequirement.status)}
-                          disabled={latestRequirement.status === "pending"}
-                        >
-                          <Clock className="mr-2 h-4 w-4" />
-                          <span>Pendiente</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => handleStatusChange(latestRequirement.id, "Requirement", "in-progress", latestRequirement.status)}
-                          disabled={latestRequirement.status === "in-progress"}
-                        >
-                          <LineChart className="mr-2 h-4 w-4" />
-                          <span>En curso</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => handleStatusChange(latestRequirement.id, "Requirement", "closed", latestRequirement.status)}
-                          disabled={latestRequirement.status === "closed"}
-                        >
-                          <CheckCircle2 className="mr-2 h-4 w-4" />
-                          <span>Cerrada</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
-                  {latestRequirement && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-8 w-8 p-0"
-                      asChild
-                      type="button"
-                    >
-                      <Link to="/requirements">
-                        <Eye className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                  )}
+              }
+              content={recentRequirements}
+            >
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium mb-2">Últimos 5 requerimientos</h4>
+                {recentRequirements && recentRequirements.length > 0 ? (
+                  <div className="space-y-2">
+                    {recentRequirements.map(requirement => (
+                      <div key={requirement.id} className="bg-white p-3 rounded border text-sm">
+                        <div className="flex justify-between">
+                          <span className="font-medium">{requirement.title}</span>
+                          <Badge className={cn(
+                            "text-xs",
+                            requirement.priority === 'high' 
+                              ? "bg-red-50 text-red-700 border-red-200" 
+                              : requirement.priority === 'medium' 
+                                ? "bg-amber-50 text-amber-700 border-amber-200"
+                                : "bg-green-50 text-green-700 border-green-200"
+                          )}>
+                            {requirement.priority === 'high' 
+                              ? 'Alta' 
+                              : requirement.priority === 'medium' 
+                                ? 'Media' 
+                                : 'Baja'}
+                          </Badge>
+                        </div>
+                        <p className="text-gray-600">
+                          {requirement.description && requirement.description.length > 60 
+                            ? `${requirement.description.substring(0, 60)}...` 
+                            : requirement.description}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">No hay requerimientos recientes</p>
+                )}
+                <div className="mt-3 text-right">
+                  <Link to="/requirements" className="text-sm text-blue-600 hover:underline inline-flex items-center">
+                    Ver todos los requerimientos <ArrowRight className="ml-1 h-3 w-3" />
+                  </Link>
                 </div>
               </div>
-            </div>
-            
-            <div className="flex justify-end space-x-2 mt-6">
+            </CollapsibleSection>
+          </CardContent>
+
+          <div className="px-6 py-4 bg-gray-50 border-t">
+            <div className="flex justify-end space-x-2">
               <Link to="/results">
-                <Button size="sm" type="button">
+                <Button size="sm">
                   <BarChart3 className="mr-2 h-4 w-4" />
                   Ver Análisis
                 </Button>
               </Link>
               <Link to="/surveys">
-                <Button variant="outline" size="sm" type="button">
+                <Button variant="outline" size="sm">
                   Ver Todas las Encuestas
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
             </div>
-          </CardContent>
+          </div>
         </Card>
       </div>
-
-      <Dialog 
-        open={dialogState.open} 
-        onOpenChange={handleDialogOpenChange}
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Confirmar Cambio de Estado</DialogTitle>
-            <DialogDescription>
-              ¿Estás seguro de que deseas cambiar el estado?
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <p>¿Estás seguro de que deseas cambiar el estado de
-              {dialogState.type === 'Survey' && ' esta encuesta '}
-              {dialogState.type === 'Suggestion' && ' esta sugerencia '}
-              {dialogState.type === 'Requirement' && ' este requerimiento '}
-              de <strong>{getStatusLabel(dialogState.currentStatus)}</strong> a <strong>{getStatusLabel(dialogState.newStatus)}</strong>?</p>
-          </div>
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={closeDialog}
-              type="button"
-            >
-              Cancelar
-            </Button>
-            <Button 
-              onClick={confirmStatusChange}
-              disabled={updateStatusMutation.isPending}
-              type="button"
-            >
-              {updateStatusMutation.isPending ? "Actualizando..." : "Confirmar"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
