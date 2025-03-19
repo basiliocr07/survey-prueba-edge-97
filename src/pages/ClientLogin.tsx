@@ -24,8 +24,38 @@ export default function ClientLogin() {
 
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // En un caso real, aquí se enviarían los datos al servidor
-    // Simulamos un login exitoso
+    
+    // Verificar si es administrador
+    if (loginFormData.username === 'admin' && loginFormData.password === 'adminpass') {
+      localStorage.setItem('userRole', 'admin');
+      localStorage.setItem('username', loginFormData.username);
+      localStorage.setItem('isLoggedIn', 'true');
+      
+      toast({
+        title: "Inicio de sesión exitoso",
+        description: "Bienvenido administrador",
+      });
+      
+      navigate('/dashboard');
+      return;
+    }
+    
+    // Verificar si es cliente
+    if (loginFormData.username === 'client' && loginFormData.password === 'clientpass') {
+      localStorage.setItem('userRole', 'client');
+      localStorage.setItem('username', loginFormData.username);
+      localStorage.setItem('isLoggedIn', 'true');
+      
+      toast({
+        title: "Inicio de sesión exitoso",
+        description: "Bienvenido cliente",
+      });
+      
+      navigate('/');
+      return;
+    }
+    
+    // En caso de credenciales incorrectas o para usuarios normales
     if (loginFormData.username && loginFormData.password) {
       localStorage.setItem('userRole', 'client');
       localStorage.setItem('username', loginFormData.username);
@@ -114,6 +144,12 @@ export default function ClientLogin() {
                     value={loginFormData.password}
                     onChange={(e) => setLoginFormData({...loginFormData, password: e.target.value})}
                   />
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  <p>Para iniciar como administrador:</p>
+                  <p>Usuario: admin / Contraseña: adminpass</p>
+                  <p>Para iniciar como cliente:</p>
+                  <p>Usuario: client / Contraseña: clientpass</p>
                 </div>
               </CardContent>
               <CardFooter>
