@@ -21,7 +21,9 @@
                 </div>
             }
 
-            <form method="post" asp-action="Submit" asp-route-id="@Model.SurveyId">
+            <form method="post" asp-action="Submit" asp-route-id="@Model.SurveyId" id="surveyResponseForm">
+                <input type="hidden" name="SurveyId" value="@Model.SurveyId" />
+                
                 <div class="mb-6">
                     <h2 class="text-lg font-semibold mb-4">Sus datos</h2>
                     <div class="mb-4">
@@ -42,7 +44,7 @@
                     @for (int i = 0; i < Model.Questions.Count; i++)
                     {
                         var question = Model.Questions[i];
-                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200" data-question-id="@question.Id">
                             <h3 class="font-medium mb-2">
                                 <span class="mr-2">@(i + 1).</span>
                                 @question.Title
@@ -60,7 +62,10 @@
                             @if (question.Type == "text")
                             {
                                 <div class="mt-3">
-                                    <textarea name="Answers[@question.Id]" rows="3" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" @(question.Required ? "required" : "")></textarea>
+                                    <textarea name="Answers[@question.Id]" rows="3" 
+                                              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                              @(question.Required ? "required data-val=\"true\" data-val-required=\"Esta pregunta es obligatoria\"" : "")></textarea>
+                                    <span class="field-validation-error text-red-500 text-sm" data-valmsg-for="Answers[@question.Id]"></span>
                                 </div>
                             }
                             else if (question.Type == "single-choice" && question.Options != null)
@@ -69,38 +74,53 @@
                                     @foreach (var option in question.Options)
                                     {
                                         <div class="flex items-center">
-                                            <input type="radio" id="q@(question.Id)_@option.GetHashCode()" name="Answers[@question.Id]" value="@option" @(question.Required ? "required" : "") class="mr-2" />
+                                            <input type="radio" id="q@(question.Id)_@option.GetHashCode()" 
+                                                   name="Answers[@question.Id]" value="@option" 
+                                                   class="mr-2" 
+                                                   @(question.Required ? "required data-val=\"true\" data-val-required=\"Esta pregunta es obligatoria\"" : "") />
                                             <label for="q@(question.Id)_@option.GetHashCode()">@option</label>
                                         </div>
                                     }
+                                    <span class="field-validation-error text-red-500 text-sm" data-valmsg-for="Answers[@question.Id]"></span>
                                 </div>
                             }
                             else if (question.Type == "multiple-choice" && question.Options != null)
                             {
                                 <div class="mt-3 space-y-2">
+                                    <input type="hidden" name="Answers[@question.Id]" value="" /> <!-- Para asegurar que se envía el campo incluso si no se selecciona nada -->
                                     @foreach (var option in question.Options)
                                     {
                                         <div class="flex items-center">
-                                            <input type="checkbox" id="q@(question.Id)_@option.GetHashCode()" name="Answers[@question.Id]" value="@option" class="mr-2" />
+                                            <input type="checkbox" id="q@(question.Id)_@option.GetHashCode()" 
+                                                   name="Answers[@question.Id]" value="@option" 
+                                                   class="mr-2 checkbox-group-@question.Id" />
                                             <label for="q@(question.Id)_@option.GetHashCode()">@option</label>
                                         </div>
+                                    }
+                                    @if (question.Required)
+                                    {
+                                        <span class="field-validation-error text-red-500 text-sm" data-valmsg-for="Answers[@question.Id]" id="error-@question.Id"></span>
                                     }
                                 </div>
                             }
                             else if (question.Type == "rating")
                             {
                                 <div class="mt-3">
-                                    <div class="flex space-x-2">
+                                    <div class="flex space-x-4">
                                         @for (int rating = 1; rating <= 5; rating++)
                                         {
                                             <div class="text-center">
-                                                <input type="radio" id="q@(question.Id)_@rating" name="Answers[@question.Id]" value="@rating" @(question.Required ? "required" : "") class="hidden peer" />
+                                                <input type="radio" id="q@(question.Id)_@rating" 
+                                                       name="Answers[@question.Id]" value="@rating" 
+                                                       @(question.Required ? "required data-val=\"true\" data-val-required=\"Esta pregunta es obligatoria\"" : "") 
+                                                       class="hidden peer" />
                                                 <label for="q@(question.Id)_@rating" class="inline-block w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center cursor-pointer peer-checked:bg-blue-500 peer-checked:text-white peer-checked:border-blue-500 hover:bg-gray-100">
                                                     @rating
                                                 </label>
                                             </div>
                                         }
                                     </div>
+                                    <span class="field-validation-error text-red-500 text-sm" data-valmsg-for="Answers[@question.Id]"></span>
                                 </div>
                             }
                         </div>
@@ -118,49 +138,89 @@
 </div>
 
 @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
     <script>
-        // Validación del lado del cliente
         document.addEventListener('DOMContentLoaded', function() {
-            const form = document.querySelector('form');
+            const form = document.getElementById('surveyResponseForm');
+            
+            // Para validar grupos de checkboxes requeridos
+            const requiredCheckboxGroups = document.querySelectorAll('[data-question-id]');
+            requiredCheckboxGroups.forEach(group => {
+                const questionId = group.getAttribute('data-question-id');
+                const checkboxes = group.querySelectorAll('.checkbox-group-' + questionId);
+                const errorSpan = document.getElementById('error-' + questionId);
+                
+                if (checkboxes.length > 0 && errorSpan) {
+                    checkboxes.forEach(checkbox => {
+                        checkbox.addEventListener('change', function() {
+                            validateCheckboxGroup(questionId, checkboxes, errorSpan);
+                        });
+                    });
+                }
+            });
+            
+            function validateCheckboxGroup(questionId, checkboxes, errorSpan) {
+                const isChecked = Array.from(checkboxes).some(cb => cb.checked);
+                if (!isChecked) {
+                    errorSpan.textContent = 'Por favor, seleccione al menos una opción';
+                } else {
+                    errorSpan.textContent = '';
+                }
+                return isChecked;
+            }
             
             form.addEventListener('submit', function(e) {
-                const requiredQuestions = document.querySelectorAll('[required]');
-                let allValid = true;
+                let isValid = true;
                 
-                requiredQuestions.forEach(function(field) {
-                    if (field.type === 'radio') {
-                        // Para radio buttons, verificar si alguno del grupo está seleccionado
-                        const name = field.name;
-                        const checkedRadio = document.querySelector(`input[name="${name}"]:checked`);
+                // Validar grupos de checkboxes requeridos
+                requiredCheckboxGroups.forEach(group => {
+                    const questionId = group.getAttribute('data-question-id');
+                    const isRequired = group.querySelector('h3 span.text-red-500') !== null;
+                    
+                    if (isRequired) {
+                        const checkboxes = group.querySelectorAll('.checkbox-group-' + questionId);
+                        const errorSpan = document.getElementById('error-' + questionId);
                         
-                        if (!checkedRadio) {
-                            allValid = false;
-                            // Buscar el elemento de pregunta padre para mostrar error
-                            const questionDiv = field.closest('.bg-gray-50');
-                            if (questionDiv && !questionDiv.querySelector('.text-red-500')) {
-                                const errorMsg = document.createElement('p');
-                                errorMsg.className = 'text-red-500 mt-2';
-                                errorMsg.textContent = 'Esta pregunta es obligatoria';
-                                questionDiv.appendChild(errorMsg);
-                            }
+                        if (checkboxes.length > 0 && errorSpan) {
+                            const valid = validateCheckboxGroup(questionId, checkboxes, errorSpan);
+                            if (!valid) isValid = false;
                         }
-                    } else if (!field.value.trim()) {
-                        allValid = false;
                     }
                 });
                 
-                if (!allValid) {
+                if (!isValid) {
                     e.preventDefault();
-                    // Crear mensaje de error general si no existe
-                    if (!document.querySelector('.bg-red-100')) {
-                        const errorDiv = document.createElement('div');
-                        errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4';
-                        errorDiv.innerHTML = '<span class="block sm:inline">Por favor complete todos los campos requeridos.</span>';
-                        form.prepend(errorDiv);
+                    // Scroll to the first error
+                    const firstError = document.querySelector('.field-validation-error:not(:empty)');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+            });
+            
+            // Serializar los datos del formulario antes de enviar
+            form.addEventListener('submit', function(e) {
+                if (!e.defaultPrevented) {
+                    const formData = new FormData(form);
+                    const answers = {};
+                    
+                    // Procesar respuestas de opción múltiple
+                    for (let [key, value] of formData.entries()) {
+                        if (key.startsWith('Answers[') && key.endsWith(']')) {
+                            const questionId = key.substring(8, key.length - 1);
+                            if (answers[questionId]) {
+                                if (!Array.isArray(answers[questionId])) {
+                                    answers[questionId] = [answers[questionId]];
+                                }
+                                answers[questionId].push(value);
+                            } else {
+                                answers[questionId] = value;
+                            }
+                        }
                     }
                     
-                    // Desplazarse al inicio del formulario
-                    window.scrollTo(0, 0);
+                    // Asignar respuestas al campo oculto (si se necesita)
+                    // Si estás usando un enfoque diferente para manejar los datos, ajusta según sea necesario
                 }
             });
         });

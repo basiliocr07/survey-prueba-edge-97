@@ -68,12 +68,20 @@ namespace SurveyApp.WebMvc.Controllers
                     var dto = new CreateSuggestionDto
                     {
                         Content = model.Content,
-                        CustomerName = model.CustomerName,
+                        CustomerName = model.IsAnonymous ? "Anonymous" : model.CustomerName,
                         CustomerEmail = model.CustomerEmail,
-                        Category = model.Category
+                        Category = model.Category ?? "Other",
+                        IsAnonymous = model.IsAnonymous,
+                        // Asignamos valores adicionales útiles para el seguimiento
+                        Title = model.Content.Length > 50 ? model.Content.Substring(0, 47) + "..." : model.Content,
+                        Description = model.Content,
+                        Source = "WebForm"
                     };
 
                     await _suggestionService.CreateSuggestionAsync(dto);
+
+                    _logger.LogInformation("Sugerencia creada exitosamente por {CustomerName}, Email: {CustomerEmail}, Categoría: {Category}",
+                        model.CustomerName, model.CustomerEmail, model.Category);
 
                     TempData["SuccessMessage"] = "Sugerencia enviada correctamente.";
                     return RedirectToAction(User.IsInRole("Admin") ? "Index" : "Create");
@@ -83,6 +91,11 @@ namespace SurveyApp.WebMvc.Controllers
                     _logger.LogError(ex, "Error al crear la sugerencia");
                     ModelState.AddModelError("", "Ocurrió un error al enviar la sugerencia.");
                 }
+            }
+            else
+            {
+                _logger.LogWarning("Modelo inválido al crear sugerencia. Errores: {@Errors}", 
+                    ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
             }
 
             ViewData["PageTitle"] = User.IsInRole("Admin") ? 

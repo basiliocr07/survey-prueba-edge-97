@@ -51,6 +51,8 @@ namespace SurveyApp.WebApi.Controllers
         {
             if (!ModelState.IsValid)
             {
+                _logger.LogWarning("Modelo inválido al enviar respuesta de encuesta. Errores: {@Errors}", 
+                    ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
                 return BadRequest(ModelState);
             }
 
@@ -66,6 +68,17 @@ namespace SurveyApp.WebApi.Controllers
                 if (createResponseDto.Answers == null || createResponseDto.Answers.Count == 0)
                 {
                     return BadRequest(new { message = "No se han proporcionado respuestas." });
+                }
+
+                // Validar que el respondente proporcionó su nombre y email
+                if (string.IsNullOrWhiteSpace(createResponseDto.RespondentName))
+                {
+                    return BadRequest(new { message = "El nombre del respondente es requerido." });
+                }
+
+                if (string.IsNullOrWhiteSpace(createResponseDto.RespondentEmail))
+                {
+                    return BadRequest(new { message = "El email del respondente es requerido." });
                 }
 
                 // Guardar la respuesta en la base de datos
