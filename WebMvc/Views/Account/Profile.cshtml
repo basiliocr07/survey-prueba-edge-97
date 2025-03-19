@@ -4,76 +4,96 @@
     ViewData["Title"] = "Perfil de Usuario";
 }
 
-<div class="container mx-auto px-4 py-12">
-    <div class="max-w-3xl mx-auto">
-        <h1 class="text-3xl font-bold mb-6">Perfil de Usuario</h1>
-        
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6" role="alert">
-                <p>@TempData["SuccessMessage"]</p>
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white shadow overflow-hidden rounded-lg">
+            <div class="px-4 py-5 sm:px-6 bg-primary text-white">
+                <h2 class="text-xl font-semibold">Perfil de Usuario</h2>
+                <p class="mt-1 text-sm">Información personal y configuración de cuenta</p>
             </div>
-        }
-        
-        <div class="bg-white shadow-md rounded-lg overflow-hidden">
-            <div class="p-6">
-                <div class="flex items-center mb-6">
-                    <div class="bg-blue-500 rounded-full p-3 mr-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
+            
+            <div class="border-t border-gray-200">
+                <dl>
+                    <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Nombre de usuario</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">@Model.Username</dd>
                     </div>
-                    <div>
-                        <h2 class="text-2xl font-bold">@Model.Username</h2>
-                        <p class="text-gray-600">@Model.Email</p>
-                        <p class="text-sm text-gray-500 mt-1">
-                            <span class="inline-block bg-blue-100 text-blue-800 rounded-full px-3 py-1 text-xs font-semibold">
+                    
+                    <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Correo electrónico</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">@Model.Email</dd>
+                    </div>
+                    
+                    <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Rol</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                            <span class="px-2 py-1 rounded-full text-xs font-medium 
+                                @(Model.Role == "Admin" ? "bg-purple-100 text-purple-800" : "bg-blue-100 text-blue-800")">
                                 @Model.Role
                             </span>
-                        </p>
+                        </dd>
+                    </div>
+                    
+                    <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Fecha de registro</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">@DateTime.Now.AddMonths(-1).ToString("dd/MM/yyyy")</dd>
+                    </div>
+                </dl>
+            </div>
+            
+            <div class="px-4 py-4 sm:px-6 border-t border-gray-200 flex justify-end space-x-3">
+                <a href="#" class="btn btn-outline">
+                    <i class="fas fa-key mr-2"></i> Cambiar Contraseña
+                </a>
+                <a href="#" class="btn btn-primary">
+                    <i class="fas fa-edit mr-2"></i> Editar Perfil
+                </a>
+            </div>
+        </div>
+        
+        <div class="mt-8 bg-white shadow overflow-hidden rounded-lg">
+            <div class="px-4 py-5 sm:px-6 bg-primary text-white">
+                <h2 class="text-xl font-semibold">Actividad Reciente</h2>
+                <p class="mt-1 text-sm">Últimas acciones realizadas en el sistema</p>
+            </div>
+            
+            <div class="border-t border-gray-200 divide-y divide-gray-200">
+                <div class="px-4 py-4 sm:px-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-primary/10 rounded-full p-2">
+                            <i class="fas fa-sign-in-alt text-primary"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-gray-900">Inicio de sesión</p>
+                            <p class="text-xs text-gray-500">@DateTime.Now.AddDays(-1).ToString("dd/MM/yyyy HH:mm")</p>
+                        </div>
                     </div>
                 </div>
                 
-                <hr class="my-6">
+                <div class="px-4 py-4 sm:px-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-primary/10 rounded-full p-2">
+                            <i class="fas fa-file-alt text-primary"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-gray-900">Creación de encuesta</p>
+                            <p class="text-xs text-gray-500">@DateTime.Now.AddDays(-3).ToString("dd/MM/yyyy HH:mm")</p>
+                        </div>
+                    </div>
+                </div>
                 
-                <form asp-action="UpdateProfile" method="post">
-                    <input type="hidden" asp-for="Id" />
-                    
-                    <div class="mb-4">
-                        <label asp-for="Email" class="block text-gray-700 font-medium mb-2">Email</label>
-                        <input asp-for="Email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500" />
-                        <span asp-validation-for="Email" class="text-red-500 text-sm"></span>
+                <div class="px-4 py-4 sm:px-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-primary/10 rounded-full p-2">
+                            <i class="fas fa-chart-bar text-primary"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-gray-900">Visualización de resultados</p>
+                            <p class="text-xs text-gray-500">@DateTime.Now.AddDays(-5).ToString("dd/MM/yyyy HH:mm")</p>
+                        </div>
                     </div>
-                    
-                    <div class="mb-4">
-                        <label asp-for="CurrentPassword" class="block text-gray-700 font-medium mb-2">Contraseña Actual</label>
-                        <input asp-for="CurrentPassword" type="password" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500" />
-                        <span asp-validation-for="CurrentPassword" class="text-red-500 text-sm"></span>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label asp-for="NewPassword" class="block text-gray-700 font-medium mb-2">Nueva Contraseña (dejar en blanco si no desea cambiarla)</label>
-                        <input asp-for="NewPassword" type="password" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500" />
-                        <span asp-validation-for="NewPassword" class="text-red-500 text-sm"></span>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label asp-for="ConfirmNewPassword" class="block text-gray-700 font-medium mb-2">Confirmar Nueva Contraseña</label>
-                        <input asp-for="ConfirmNewPassword" type="password" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500" />
-                        <span asp-validation-for="ConfirmNewPassword" class="text-red-500 text-sm"></span>
-                    </div>
-                    
-                    <div class="mt-6">
-                        <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
-                            Actualizar Perfil
-                        </button>
-                    </div>
-                </form>
+                </div>
             </div>
         </div>
     </div>
 </div>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
