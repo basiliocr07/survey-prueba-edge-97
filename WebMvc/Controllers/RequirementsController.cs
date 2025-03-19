@@ -53,6 +53,8 @@ namespace SurveyApp.WebMvc.Controllers
         public IActionResult Create()
         {
             var viewModel = new NewRequirementViewModel();
+            ViewData["PageTitle"] = User.IsInRole("Admin") ? 
+                "Gestión de Requerimientos" : "Enviar Requerimiento";
             return View(viewModel);
         }
 
@@ -85,6 +87,8 @@ namespace SurveyApp.WebMvc.Controllers
                 }
             }
 
+            ViewData["PageTitle"] = User.IsInRole("Admin") ? 
+                "Gestión de Requerimientos" : "Enviar Requerimiento";
             return View(model);
         }
 

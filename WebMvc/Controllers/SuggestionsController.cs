@@ -52,7 +52,9 @@ namespace SurveyApp.WebMvc.Controllers
         [HttpGet]
         public IActionResult Create()
         {
-            return View();
+            ViewData["PageTitle"] = User.IsInRole("Admin") ? 
+                "Gestión de Sugerencias" : "Enviar Sugerencia";
+            return View(new CreateSuggestionViewModel());
         }
 
         [HttpPost]
@@ -83,6 +85,8 @@ namespace SurveyApp.WebMvc.Controllers
                 }
             }
 
+            ViewData["PageTitle"] = User.IsInRole("Admin") ? 
+                "Gestión de Sugerencias" : "Enviar Sugerencia";
             return View(model);
         }
 

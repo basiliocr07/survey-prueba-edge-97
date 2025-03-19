@@ -1,13 +1,13 @@
 
 @model SurveyApp.WebMvc.Models.NewRequirementViewModel
 @{
-    ViewData["Title"] = "Nuevo Requerimiento";
+    ViewData["Title"] = ViewData["PageTitle"] ?? "Nuevo Requerimiento";
     Layout = "_Layout";
 }
 
 <div class="container mx-auto px-4 py-8">
     <div class="max-w-3xl mx-auto">
-        <h1 class="text-2xl font-bold mb-6">Nuevo Requerimiento</h1>
+        <h1 class="text-2xl font-bold mb-6">@ViewData["Title"]</h1>
 
         @if (TempData["SuccessMessage"] != null)
         {
