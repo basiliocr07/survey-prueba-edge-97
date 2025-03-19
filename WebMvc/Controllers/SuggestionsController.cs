@@ -15,13 +15,16 @@ namespace SurveyApp.WebMvc.Controllers
     public class SuggestionsController : Controller
     {
         private readonly ISuggestionService _suggestionService;
+        private readonly ICustomerService _customerService;
         private readonly ILogger<SuggestionsController> _logger;
 
         public SuggestionsController(
             ISuggestionService suggestionService,
+            ICustomerService customerService,
             ILogger<SuggestionsController> logger)
         {
             _suggestionService = suggestionService;
+            _customerService = customerService;
             _logger = logger;
         }
 
@@ -65,6 +68,43 @@ namespace SurveyApp.WebMvc.Controllers
             {
                 try
                 {
+                    // Verificar si ya existe un cliente con este email
+                    CustomerDto existingCustomer = null;
+                    try
+                    {
+                        var customers = await _customerService.GetCustomerByEmailAsync(model.CustomerEmail);
+                        existingCustomer = customers.Count > 0 ? customers[0] : null;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Error al buscar cliente por email: {Email}", model.CustomerEmail);
+                        // Continuamos el proceso aunque no encontremos cliente
+                    }
+
+                    // Si no existe el cliente y se proporcionó información de compañía, crear nuevo cliente
+                    if (existingCustomer == null && !string.IsNullOrWhiteSpace(model.Company))
+                    {
+                        try
+                        {
+                            var newCustomer = new CreateCustomerDto
+                            {
+                                BrandName = model.Company,
+                                ContactEmail = model.CustomerEmail,
+                                ContactPhone = model.Phone,
+                                ContactName = model.CustomerName,
+                                AcquiredServices = new List<string> { "Suggestion" }
+                            };
+                            
+                            existingCustomer = await _customerService.CreateCustomerAsync(newCustomer);
+                            _logger.LogInformation("Nuevo cliente creado: {CustomerId}", existingCustomer.Id);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Error al crear un nuevo cliente");
+                            // No falla el proceso si no se puede crear el cliente
+                        }
+                    }
+
                     var dto = new CreateSuggestionDto
                     {
                         Content = model.Content,
@@ -75,8 +115,16 @@ namespace SurveyApp.WebMvc.Controllers
                         // Asignamos valores adicionales útiles para el seguimiento
                         Title = model.Content.Length > 50 ? model.Content.Substring(0, 47) + "..." : model.Content,
                         Description = model.Content,
-                        Source = "WebForm"
+                        Source = existingCustomer != null ? "ExistingCustomer" : "WebForm",
+                        // Guardamos información de contacto adicional
+                        CustomerPhone = model.Phone,
+                        CustomerCompany = model.Company
                     };
+
+                    if (existingCustomer != null)
+                    {
+                        dto.CustomerId = existingCustomer.Id;
+                    }
 
                     await _suggestionService.CreateSuggestionAsync(dto);
 

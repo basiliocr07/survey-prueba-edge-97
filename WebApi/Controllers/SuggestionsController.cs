@@ -1,7 +1,7 @@
-
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using SurveyApp.Application.DTOs;
 using SurveyApp.Application.Services;
 using SurveyApp.Domain.Entities;
@@ -13,10 +13,17 @@ namespace SurveyApp.WebApi.Controllers
     public class SuggestionsController : ControllerBase
     {
         private readonly ISuggestionService _suggestionService;
+        private readonly ICustomerService _customerService;
+        private readonly ILogger<SuggestionsController> _logger;
 
-        public SuggestionsController(ISuggestionService suggestionService)
+        public SuggestionsController(
+            ISuggestionService suggestionService,
+            ICustomerService customerService,
+            ILogger<SuggestionsController> logger)
         {
             _suggestionService = suggestionService;
+            _customerService = customerService;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -68,11 +75,60 @@ namespace SurveyApp.WebApi.Controllers
         {
             if (!ModelState.IsValid)
             {
+                _logger.LogWarning("Modelo inválido al crear sugerencia. Errores: {@Errors}", 
+                    ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
                 return BadRequest(ModelState);
             }
             
-            var createdSuggestion = await _suggestionService.CreateSuggestionAsync(suggestionDto);
-            return CreatedAtAction(nameof(GetById), new { id = createdSuggestion.Id }, createdSuggestion);
+            try
+            {
+                // Verificar si existe un cliente con este email
+                if (!string.IsNullOrWhiteSpace(suggestionDto.CustomerEmail) && !suggestionDto.IsAnonymous)
+                {
+                    try
+                    {
+                        var customers = await _customerService.GetCustomerByEmailAsync(suggestionDto.CustomerEmail);
+                        var existingCustomer = customers.Count > 0 ? customers[0] : null;
+                        
+                        if (existingCustomer != null)
+                        {
+                            _logger.LogInformation("Cliente existente encontrado para sugerencia: {CustomerId}", existingCustomer.Id);
+                            suggestionDto.CustomerId = existingCustomer.Id;
+                        }
+                        else if (!string.IsNullOrWhiteSpace(suggestionDto.CustomerCompany))
+                        {
+                            // Crear nuevo cliente si proporcionó info de compañía
+                            var newCustomer = new CreateCustomerDto
+                            {
+                                BrandName = suggestionDto.CustomerCompany,
+                                ContactEmail = suggestionDto.CustomerEmail,
+                                ContactPhone = suggestionDto.CustomerPhone,
+                                ContactName = suggestionDto.CustomerName,
+                                AcquiredServices = new List<string> { "Suggestion" }
+                            };
+                            
+                            var createdCustomer = await _customerService.CreateCustomerAsync(newCustomer);
+                            _logger.LogInformation("Nuevo cliente creado para sugerencia: {CustomerId}", createdCustomer.Id);
+                            suggestionDto.CustomerId = createdCustomer.Id;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Error al verificar cliente existente: {Email}", suggestionDto.CustomerEmail);
+                        // Continuamos aunque no podamos verificar el cliente
+                    }
+                }
+                
+                var createdSuggestion = await _suggestionService.CreateSuggestionAsync(suggestionDto);
+                _logger.LogInformation("Sugerencia API creada exitosamente: {Id}", createdSuggestion.Id);
+                
+                return CreatedAtAction(nameof(GetById), new { id = createdSuggestion.Id }, createdSuggestion);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al crear sugerencia API");
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpPut("{id}/status")]

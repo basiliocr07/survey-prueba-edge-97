@@ -14,13 +14,16 @@ namespace SurveyApp.WebApi.Controllers
     public class SurveyResponsesController : ControllerBase
     {
         private readonly ISurveyService _surveyService;
+        private readonly ICustomerService _customerService;
         private readonly ILogger<SurveyResponsesController> _logger;
 
         public SurveyResponsesController(
             ISurveyService surveyService,
+            ICustomerService customerService,
             ILogger<SurveyResponsesController> logger)
         {
             _surveyService = surveyService;
+            _customerService = customerService;
             _logger = logger;
         }
 
@@ -79,6 +82,56 @@ namespace SurveyApp.WebApi.Controllers
                 if (string.IsNullOrWhiteSpace(createResponseDto.RespondentEmail))
                 {
                     return BadRequest(new { message = "El email del respondente es requerido." });
+                }
+
+                // Verificar si el respondente es un cliente existente o crear uno nuevo
+                if (createResponseDto.IsExistingClient && createResponseDto.ExistingClientId.HasValue)
+                {
+                    // Verificar que el cliente existe
+                    try
+                    {
+                        var existingCustomer = await _customerService.GetCustomerByIdAsync(createResponseDto.ExistingClientId.Value);
+                        // Actualizar la información del cliente si es necesario
+                        if (existingCustomer != null)
+                        {
+                            _logger.LogInformation("Cliente existente encontrado: {CustomerId}", existingCustomer.Id);
+                        }
+                    }
+                    catch (KeyNotFoundException)
+                    {
+                        _logger.LogWarning("Cliente no encontrado con ID: {CustomerId}", createResponseDto.ExistingClientId.Value);
+                        return BadRequest(new { message = "El cliente seleccionado no existe." });
+                    }
+                }
+                else
+                {
+                    // Si el cliente no existe y proporcionó datos de empresa, crearlo
+                    if (!string.IsNullOrWhiteSpace(createResponseDto.RespondentCompany))
+                    {
+                        try
+                        {
+                            var newCustomer = new CreateCustomerDto
+                            {
+                                BrandName = createResponseDto.RespondentCompany,
+                                ContactEmail = createResponseDto.RespondentEmail,
+                                ContactPhone = createResponseDto.RespondentPhone,
+                                ContactName = createResponseDto.RespondentName,
+                                AcquiredServices = new List<string> { "Survey" }
+                            };
+                            
+                            var createdCustomer = await _customerService.CreateCustomerAsync(newCustomer);
+                            _logger.LogInformation("Nuevo cliente creado: {CustomerId}", createdCustomer.Id);
+                            
+                            // Asignar el ID del cliente creado a la respuesta
+                            createResponseDto.ExistingClientId = createdCustomer.Id;
+                            createResponseDto.IsExistingClient = true;
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Error al crear un nuevo cliente");
+                            // No falla el proceso si no se puede crear el cliente
+                        }
+                    }
                 }
 
                 // Guardar la respuesta en la base de datos
