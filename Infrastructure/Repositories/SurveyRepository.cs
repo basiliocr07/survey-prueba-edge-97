@@ -232,7 +232,9 @@ namespace SurveyApp.Infrastructure.Repositories
         
         public async Task<bool> SaveChangesAsync()
         {
-            return await _dbContext.SaveChangesAsync() > 0;
+            // Corregimos la comparación con el método SaveChangesAsync()
+            // El método SaveChangesAsync() retorna un int, y necesitamos compararlo con 0
+            return (await _dbContext.SaveChangesAsync()) > 0;
         }
     }
 }

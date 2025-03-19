@@ -18,6 +18,8 @@ namespace SurveyApp.WebApi.DependencyInjection
             services.AddScoped<ICustomerService, CustomerService>();
             services.AddScoped<IKnowledgeBaseService, KnowledgeBaseService>();
             services.AddScoped<IAnalyticsService, AnalyticsService>();
+            
+            // Corregimos la ambigüedad en la interfaz de autenticación
             services.AddScoped<Application.Ports.IAuthenticationService, Application.Services.AuthenticationService>();
             
             return services;

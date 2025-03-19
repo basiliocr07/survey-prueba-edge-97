@@ -124,9 +124,10 @@ namespace SurveyApp.Infrastructure.Data
                 entity.Property(e => e.Priority).HasConversion<string>().IsRequired(false);
                 entity.Property(e => e.Response).HasMaxLength(1000);
 
+                // Modificamos esta línea para convertir correctamente List<string> a string[]
                 entity.Property(e => e.SimilarSuggestions).HasConversion(
                     v => JsonSerializer.Serialize(v, new JsonSerializerOptions()),
-                    v => JsonSerializer.Deserialize<List<string>>(v, new JsonSerializerOptions())
+                    v => JsonSerializer.Deserialize<string[]>(v, new JsonSerializerOptions()) ?? Array.Empty<string>()
                 );
             });
 
