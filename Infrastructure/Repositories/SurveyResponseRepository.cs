@@ -22,14 +22,12 @@ namespace SurveyApp.Infrastructure.Repositories
         public async Task<SurveyResponse> GetByIdAsync(Guid id)
         {
             return await _dbContext.SurveyResponses
-                .Include(r => r.Answers)
                 .FirstOrDefaultAsync(r => r.Id == id);
         }
 
         public async Task<List<SurveyResponse>> GetBySurveyIdAsync(Guid surveyId)
         {
             return await _dbContext.SurveyResponses
-                .Include(r => r.Answers)
                 .Where(r => r.SurveyId == surveyId)
                 .ToListAsync();
         }
@@ -56,30 +54,33 @@ namespace SurveyApp.Infrastructure.Repositories
             
             // Obtener todas las respuestas para la pregunta específica
             var responses = await _dbContext.SurveyResponses
-                .Include(r => r.Answers)
                 .Where(r => r.SurveyId == surveyId)
-                .SelectMany(r => r.Answers)
-                .Where(a => a.QuestionId == questionId)
                 .ToListAsync();
 
+            // Procesar las respuestas para obtener estadísticas
             foreach (var response in responses)
             {
-                if (!string.IsNullOrEmpty(response.Answer))
+                var questionResponses = response.Answers.Where(a => a.QuestionId == questionId).ToList();
+                
+                foreach (var qResponse in questionResponses)
                 {
-                    if (results.ContainsKey(response.Answer))
-                        results[response.Answer]++;
-                    else
-                        results[response.Answer] = 1;
-                }
-
-                if (response.MultipleAnswers != null && response.MultipleAnswers.Any())
-                {
-                    foreach (var answer in response.MultipleAnswers)
+                    if (!string.IsNullOrEmpty(qResponse.Answer))
                     {
-                        if (results.ContainsKey(answer))
-                            results[answer]++;
+                        if (results.ContainsKey(qResponse.Answer))
+                            results[qResponse.Answer]++;
                         else
-                            results[answer] = 1;
+                            results[qResponse.Answer] = 1;
+                    }
+
+                    if (qResponse.MultipleAnswers != null && qResponse.MultipleAnswers.Any())
+                    {
+                        foreach (var answer in qResponse.MultipleAnswers)
+                        {
+                            if (results.ContainsKey(answer))
+                                results[answer]++;
+                            else
+                                results[answer] = 1;
+                        }
                     }
                 }
             }
@@ -90,7 +91,6 @@ namespace SurveyApp.Infrastructure.Repositories
         public async Task<List<SurveyResponse>> GetRecentResponsesAsync(int count)
         {
             return await _dbContext.SurveyResponses
-                .Include(r => r.Answers)
                 .OrderByDescending(r => r.SubmittedAt)
                 .Take(count)
                 .ToListAsync();

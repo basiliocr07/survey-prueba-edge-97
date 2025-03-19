@@ -41,7 +41,6 @@ namespace SurveyApp.Application.Services
 
         public async Task<SurveyDto> CreateSurveyAsync(CreateSurveyDto surveyDto)
         {
-            // Crear la entidad de encuesta con los datos del DTO
             var survey = new Survey
             {
                 Id = Guid.NewGuid(),
@@ -52,7 +51,6 @@ namespace SurveyApp.Application.Services
                 Responses = 0
             };
 
-            // Agregar preguntas a la encuesta
             if (surveyDto.Questions != null)
             {
                 foreach (var questionDto in surveyDto.Questions)
@@ -71,7 +69,6 @@ namespace SurveyApp.Application.Services
                 }
             }
 
-            // Agregar configuración de entrega si existe
             if (surveyDto.DeliveryConfig != null)
             {
                 var deliveryConfig = new DeliveryConfig
@@ -105,10 +102,8 @@ namespace SurveyApp.Application.Services
                 survey.SetDeliveryConfig(deliveryConfig);
             }
 
-            // Guardar la encuesta en el repositorio
             var createdSurvey = await _surveyRepository.CreateAsync(survey);
 
-            // Mapear la entidad a DTO para retornar
             return MapToSurveyDto(createdSurvey);
         }
 
@@ -118,11 +113,9 @@ namespace SurveyApp.Application.Services
             if (survey == null)
                 throw new KeyNotFoundException($"Survey with ID {id} not found");
 
-            // Actualizar propiedades básicas
             survey.Title = surveyDto.Title;
             survey.Description = surveyDto.Description;
-            
-            // Actualizar configuración de entrega si existe
+
             if (surveyDto.DeliveryConfig != null)
             {
                 var deliveryConfig = new DeliveryConfig
