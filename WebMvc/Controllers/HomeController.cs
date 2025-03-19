@@ -1,6 +1,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -71,7 +72,11 @@ namespace SurveyApp.WebMvc.Controllers
                             Description = "Create dynamic surveys that adapt based on previous answers.",
                             Icon = "fa-plus-circle"
                         }
-                    }
+                    },
+                    // Añadir información del usuario
+                    IsAuthenticated = User.Identity.IsAuthenticated,
+                    Username = User.Identity.IsAuthenticated ? User.Identity.Name : string.Empty,
+                    UserRole = User.Identity.IsAuthenticated ? User.FindFirst(ClaimTypes.Role)?.Value : string.Empty
                 };
 
                 return View(viewModel);

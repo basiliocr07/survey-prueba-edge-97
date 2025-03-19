@@ -18,12 +18,36 @@
                 Build beautiful surveys, collect responses, and analyze results with our intuitive platform. No coding required.
             </p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <a asp-controller="Survey" asp-action="Create" class="btn btn-primary btn-lg animate-slide-up transition-all duration-300">
-                    <i class="fas fa-plus-circle mr-2"></i> Create a Survey
-                </a>
-                <a asp-controller="Analytics" asp-action="Index" class="btn btn-outline btn-lg animate-slide-up transition-all duration-300 delay-100">
-                    <i class="fas fa-chart-bar mr-2"></i> Explore Analytics
-                </a>
+                @if (Model.IsAuthenticated)
+                {
+                    @if (Model.UserRole?.ToLower() == "admin")
+                    {
+                        <a asp-controller="Survey" asp-action="Create" class="btn btn-primary btn-lg animate-slide-up transition-all duration-300">
+                            <i class="fas fa-plus-circle mr-2"></i> Create a Survey
+                        </a>
+                        <a asp-controller="Analytics" asp-action="Index" class="btn btn-outline btn-lg animate-slide-up transition-all duration-300 delay-100">
+                            <i class="fas fa-chart-bar mr-2"></i> Explore Analytics
+                        </a>
+                    }
+                    else if (Model.UserRole?.ToLower() == "client")
+                    {
+                        <a asp-controller="Suggestions" asp-action="Create" class="btn btn-primary btn-lg animate-slide-up transition-all duration-300">
+                            <i class="fas fa-lightbulb mr-2"></i> Enviar Sugerencia
+                        </a>
+                        <a asp-controller="Requirements" asp-action="Create" class="btn btn-outline btn-lg animate-slide-up transition-all duration-300 delay-100">
+                            <i class="fas fa-file-alt mr-2"></i> Enviar Requerimiento
+                        </a>
+                    }
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="Login" class="btn btn-primary btn-lg animate-slide-up transition-all duration-300">
+                        <i class="fas fa-sign-in-alt mr-2"></i> Iniciar Sesión
+                    </a>
+                    <a asp-controller="Account" asp-action="Register" class="btn btn-outline btn-lg animate-slide-up transition-all duration-300 delay-100">
+                        <i class="fas fa-user-plus mr-2"></i> Registrarse
+                    </a>
+                }
             </div>
         </div>
     </div>
@@ -63,8 +87,26 @@
         <p class="text-lg text-muted-foreground max-w-3xl mx-auto mb-10">
             Join thousands of users who are already collecting valuable insights with our platform.
         </p>
-        <a asp-controller="Survey" asp-action="Create" class="btn btn-primary btn-lg animate-pulse-slow">
-            Get Started Now
-        </a>
+        @if (Model.IsAuthenticated)
+        {
+            @if (Model.UserRole?.ToLower() == "admin")
+            {
+                <a asp-controller="Survey" asp-action="Create" class="btn btn-primary btn-lg animate-pulse-slow">
+                    Get Started Now
+                </a>
+            }
+            else if (Model.UserRole?.ToLower() == "client")
+            {
+                <a asp-controller="ClientAccess" asp-action="Survey" class="btn btn-primary btn-lg animate-pulse-slow">
+                    Respond to Surveys
+                </a>
+            }
+        }
+        else
+        {
+            <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-lg animate-pulse-slow">
+                Get Started Now
+            </a>
+        }
     </div>
 </section>
