@@ -1,7 +1,32 @@
 
 <div class="bg-white p-6 rounded-lg shadow-md animate-fade-in">
-    <h3 class="text-lg font-bold mb-4">Datos Actualizados</h3>
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold">Datos Actualizados</h3>
+        <button class="text-gray-500 hover:text-gray-700" onclick="closeAnimatedPartial()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    
     <p>Este contenido se ha cargado de forma dinámica y con una animación de entrada.</p>
+    
+    <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="border rounded-md p-3">
+            <div class="text-sm font-medium">Nuevas Respuestas</div>
+            <div class="text-2xl font-bold mt-1">+28</div>
+            <div class="text-xs text-green-600 mt-1">
+                <i class="fas fa-arrow-up mr-1"></i> 12% desde ayer
+            </div>
+        </div>
+        
+        <div class="border rounded-md p-3">
+            <div class="text-sm font-medium">Tasa de Finalización</div>
+            <div class="text-2xl font-bold mt-1">94%</div>
+            <div class="text-xs text-green-600 mt-1">
+                <i class="fas fa-arrow-up mr-1"></i> 3% desde ayer
+            </div>
+        </div>
+    </div>
+    
     <div class="mt-4 flex justify-end">
         <button class="btn btn-sm btn-outline" onclick="closeAnimatedPartial()">Cerrar</button>
     </div>
@@ -26,6 +51,10 @@
         animation: fadeOut 0.3s ease-in-out;
     }
     
+    .animate-scale-in {
+        animation: scaleIn 0.3s ease-in-out;
+    }
+    
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(-10px); }
         to { opacity: 1; transform: translateY(0); }
@@ -34,5 +63,10 @@
     @keyframes fadeOut {
         from { opacity: 1; transform: translateY(0); }
         to { opacity: 0; transform: translateY(-10px); }
+    }
+    
+    @keyframes scaleIn {
+        from { transform: scale(0.95); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
     }
 </style>
