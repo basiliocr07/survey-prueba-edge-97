@@ -1,6 +1,7 @@
 
 using System;
 using System.Collections.Generic;
+using SurveyApp.Application.DTOs;
 
 namespace SurveyApp.WebMvc.Models
 {
@@ -10,7 +11,7 @@ namespace SurveyApp.WebMvc.Models
         public SuggestionListItemViewModel LatestSuggestion { get; set; }
         public RequirementListItemViewModel LatestRequirement { get; set; }
         
-        // Nuevas propiedades para las listas de elementos recientes
+        // Listas de elementos recientes
         public List<SurveyResponseItemViewModel> RecentSurveyResponses { get; set; } = new List<SurveyResponseItemViewModel>();
         public List<SuggestionListItemViewModel> RecentSuggestions { get; set; } = new List<SuggestionListItemViewModel>();
         public List<RequirementListItemViewModel> RecentRequirements { get; set; } = new List<RequirementListItemViewModel>();
@@ -33,6 +34,7 @@ namespace SurveyApp.WebMvc.Models
         public string Priority { get; set; }
         public DateTime CreatedAt { get; set; }
         public string Status { get; set; }
+        public string ProjectArea { get; set; }
     }
     
     public class SurveyResponseItemViewModel

@@ -39,7 +39,9 @@ namespace SurveyApp.Infrastructure.Repositories
         {
             try
             {
-                return await _context.Requirements.ToListAsync();
+                return await _context.Requirements
+                    .OrderByDescending(r => r.CreatedAt)
+                    .ToListAsync();
             }
             catch (Exception ex)
             {
@@ -52,6 +54,7 @@ namespace SurveyApp.Infrastructure.Repositories
         {
             try
             {
+                requirement.CreatedAt = DateTime.UtcNow;
                 _context.Requirements.Add(requirement);
                 await _context.SaveChangesAsync();
                 return requirement;
@@ -67,6 +70,7 @@ namespace SurveyApp.Infrastructure.Repositories
         {
             try
             {
+                requirement.UpdatedAt = DateTime.UtcNow;
                 _context.Entry(requirement).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
             }
@@ -117,6 +121,7 @@ namespace SurveyApp.Infrastructure.Repositories
             {
                 return await _context.Requirements
                     .Where(r => r.Status.ToLower() == status.ToLower())
+                    .OrderByDescending(r => r.CreatedAt)
                     .ToListAsync();
             }
             catch (Exception ex)
@@ -132,11 +137,46 @@ namespace SurveyApp.Infrastructure.Repositories
             {
                 return await _context.Requirements
                     .Where(r => r.Priority.ToLower() == priority.ToLower())
+                    .OrderByDescending(r => r.CreatedAt)
                     .ToListAsync();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error al obtener los requerimientos por prioridad {priority}");
+                throw;
+            }
+        }
+        
+        public async Task<List<Requirement>> SearchRequirementsAsync(string searchTerm)
+        {
+            try
+            {
+                return await _context.Requirements
+                    .Where(r => r.Title.Contains(searchTerm) || 
+                               r.Description.Contains(searchTerm) ||
+                               r.ProjectArea.Contains(searchTerm))
+                    .OrderByDescending(r => r.CreatedAt)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al buscar requerimientos con término '{searchTerm}'");
+                throw;
+            }
+        }
+        
+        public async Task<List<Requirement>> GetRequirementsByProjectAreaAsync(string projectArea)
+        {
+            try
+            {
+                return await _context.Requirements
+                    .Where(r => r.ProjectArea.ToLower() == projectArea.ToLower())
+                    .OrderByDescending(r => r.CreatedAt)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al obtener los requerimientos por área de proyecto {projectArea}");
                 throw;
             }
         }

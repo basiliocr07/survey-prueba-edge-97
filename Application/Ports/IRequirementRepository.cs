@@ -16,5 +16,7 @@ namespace SurveyApp.Application.Ports
         Task<List<Requirement>> GetRecentRequirementsAsync(int count);
         Task<List<Requirement>> GetRequirementsByStatusAsync(string status);
         Task<List<Requirement>> GetRequirementsByPriorityAsync(string priority);
+        Task<List<Requirement>> SearchRequirementsAsync(string searchTerm);
+        Task<List<Requirement>> GetRequirementsByProjectAreaAsync(string projectArea);
     }
 }

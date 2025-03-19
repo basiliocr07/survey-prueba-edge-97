@@ -1,4 +1,5 @@
 
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace SurveyApp.WebMvc.Models
@@ -19,5 +20,15 @@ namespace SurveyApp.WebMvc.Models
 
         [Display(Name = "Área del Proyecto")]
         public string ProjectArea { get; set; } = "General";
+        
+        [Display(Name = "Estado")]
+        public string Status { get; set; } = "Propuesto";
+        
+        [Display(Name = "Nombre del Cliente")]
+        public string CustomerName { get; set; }
+        
+        [EmailAddress]
+        [Display(Name = "Email del Cliente")]
+        public string CustomerEmail { get; set; }
     }
 }
