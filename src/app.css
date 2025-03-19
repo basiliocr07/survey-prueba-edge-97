@@ -88,27 +88,3 @@ input[type="radio"]:hover + label svg {
 input[type="radio"]:checked + label {
   border-color: hsl(var(--primary));
 }
-
-/* Star Labels */
-.star-labels {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  text-align: center;
-  font-size: 0.75rem;
-  color: hsl(var(--muted-foreground));
-  margin-bottom: 0.25rem;
-}
-
-/* Star Rating Container */
-.star-rating-container {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-}
-
-/* Star Rating */
-.star-rating {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}

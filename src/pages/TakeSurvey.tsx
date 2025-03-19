@@ -22,8 +22,8 @@ const formSchema = z.object({
   respondentPhone: z.string().optional(),
   respondentCompany: z.string().optional(),
   answers: z.record(z.union([
-    z.string(),
-    z.array(z.string())
+    z.string().min(1, { message: "This field is required" }),
+    z.array(z.string()).min(1, { message: "Please select at least one option" })
   ]))
 });
 
@@ -312,8 +312,7 @@ export default function TakeSurvey() {
                             {question.type === 'text' && (
                               <Textarea 
                                 placeholder="Your answer"
-                                value={field.value as string}
-                                onChange={(e) => field.onChange(e.target.value)}
+                                {...field}
                                 className="min-h-[100px]"
                               />
                             )}
@@ -366,7 +365,7 @@ export default function TakeSurvey() {
                             {question.type === 'rating' && (
                               <StarRating
                                 name={`rating-${question.id}`}
-                                value={typeof field.value === 'string' ? field.value : ''}
+                                value={field.value}
                                 onChange={field.onChange}
                                 required={question.required}
                               />
@@ -375,7 +374,7 @@ export default function TakeSurvey() {
                             {question.type === 'nps' && (
                               <NPSRating
                                 name={`nps-${question.id}`}
-                                value={typeof field.value === 'string' ? field.value : ''}
+                                value={field.value}
                                 onChange={field.onChange}
                                 required={question.required}
                               />
