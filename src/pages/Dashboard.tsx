@@ -1,5 +1,6 @@
 
-import { Link } from "react-router-dom";
+import { useState, useEffect, useCallback } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -33,16 +34,15 @@ import {
   DialogDescription 
 } from "@/components/ui/dialog";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-  SheetClose,
-  SheetFooter,
-} from "@/components/ui/sheet";
-import { useState, useCallback } from "react";
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+  DrawerFooter,
+  DrawerClose,
+} from "@/components/ui/drawer";
 
 interface SurveyItem {
   id: string;
@@ -283,8 +283,6 @@ export default function Dashboard() {
     currentStatus: ""
   });
   
-  const [activeSheet, setActiveSheet] = useState<string | null>(null);
-
   const { data: latestSurveys, isLoading: loadingSurveys } = useQuery({
     queryKey: ['latestSurveys'],
     queryFn: fetchLatestSurveys
@@ -421,11 +419,6 @@ export default function Dashboard() {
     }
   }, [closeDialog]);
 
-  // Function to open a specific sheet
-  const openSheet = (sheetName: string) => {
-    setActiveSheet(sheetName);
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -438,9 +431,9 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              {/* Button for Surveys */}
-              <Sheet>
-                <SheetTrigger asChild>
+              {/* Dropdown for Surveys */}
+              <Drawer>
+                <DrawerTrigger asChild>
                   <Button 
                     variant="outline" 
                     className="h-24 w-full justify-start flex-col items-start p-4 bg-blue-50 hover:bg-blue-100 border-blue-200"
@@ -454,15 +447,15 @@ export default function Dashboard() {
                       Ver las {latestSurveys?.length || 0} encuestas más recientes
                     </p>
                   </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="sm:max-w-lg w-full">
-                  <SheetHeader>
-                    <SheetTitle>Últimas Encuestas</SheetTitle>
-                    <SheetDescription>
+                </DrawerTrigger>
+                <DrawerContent>
+                  <DrawerHeader className="text-left">
+                    <DrawerTitle>Últimas Encuestas</DrawerTitle>
+                    <DrawerDescription>
                       Las 5 encuestas más recientes en el sistema
-                    </SheetDescription>
-                  </SheetHeader>
-                  <div className="mt-6 space-y-4">
+                    </DrawerDescription>
+                  </DrawerHeader>
+                  <div className="px-4 py-2 space-y-4">
                     {loadingSurveys ? (
                       <p>Cargando encuestas...</p>
                     ) : (
@@ -532,23 +525,23 @@ export default function Dashboard() {
                       ))
                     )}
                   </div>
-                  <SheetFooter className="mt-4">
-                    <SheetClose asChild>
+                  <DrawerFooter className="flex-row justify-end space-x-2">
+                    <DrawerClose asChild>
                       <Button variant="outline" type="button">Cerrar</Button>
-                    </SheetClose>
+                    </DrawerClose>
                     <Link to="/surveys">
                       <Button type="button">
                         Ver Todas
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
                     </Link>
-                  </SheetFooter>
-                </SheetContent>
-              </Sheet>
+                  </DrawerFooter>
+                </DrawerContent>
+              </Drawer>
 
-              {/* Button for Suggestions */}
-              <Sheet>
-                <SheetTrigger asChild>
+              {/* Dropdown for Suggestions */}
+              <Drawer>
+                <DrawerTrigger asChild>
                   <Button 
                     variant="outline" 
                     className="h-24 w-full justify-start flex-col items-start p-4 bg-amber-50 hover:bg-amber-100 border-amber-200"
@@ -562,15 +555,15 @@ export default function Dashboard() {
                       Ver las {latestSuggestions?.length || 0} sugerencias más recientes
                     </p>
                   </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="sm:max-w-lg w-full">
-                  <SheetHeader>
-                    <SheetTitle>Últimas Sugerencias</SheetTitle>
-                    <SheetDescription>
+                </DrawerTrigger>
+                <DrawerContent>
+                  <DrawerHeader className="text-left">
+                    <DrawerTitle>Últimas Sugerencias</DrawerTitle>
+                    <DrawerDescription>
                       Las 5 sugerencias más recientes en el sistema
-                    </SheetDescription>
-                  </SheetHeader>
-                  <div className="mt-6 space-y-4">
+                    </DrawerDescription>
+                  </DrawerHeader>
+                  <div className="px-4 py-2 space-y-4">
                     {loadingSuggestions ? (
                       <p>Cargando sugerencias...</p>
                     ) : (
@@ -640,23 +633,23 @@ export default function Dashboard() {
                       ))
                     )}
                   </div>
-                  <SheetFooter className="mt-4">
-                    <SheetClose asChild>
+                  <DrawerFooter className="flex-row justify-end space-x-2">
+                    <DrawerClose asChild>
                       <Button variant="outline" type="button">Cerrar</Button>
-                    </SheetClose>
+                    </DrawerClose>
                     <Link to="/suggestions">
                       <Button type="button">
                         Ver Todas
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
                     </Link>
-                  </SheetFooter>
-                </SheetContent>
-              </Sheet>
+                  </DrawerFooter>
+                </DrawerContent>
+              </Drawer>
 
-              {/* Button for Requirements */}
-              <Sheet>
-                <SheetTrigger asChild>
+              {/* Dropdown for Requirements */}
+              <Drawer>
+                <DrawerTrigger asChild>
                   <Button 
                     variant="outline" 
                     className="h-24 w-full justify-start flex-col items-start p-4 bg-green-50 hover:bg-green-100 border-green-200"
@@ -670,15 +663,15 @@ export default function Dashboard() {
                       Ver los {latestRequirements?.length || 0} requerimientos más recientes
                     </p>
                   </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="sm:max-w-lg w-full">
-                  <SheetHeader>
-                    <SheetTitle>Últimos Requerimientos</SheetTitle>
-                    <SheetDescription>
+                </DrawerTrigger>
+                <DrawerContent>
+                  <DrawerHeader className="text-left">
+                    <DrawerTitle>Últimos Requerimientos</DrawerTitle>
+                    <DrawerDescription>
                       Los 5 requerimientos más recientes en el sistema
-                    </SheetDescription>
-                  </SheetHeader>
-                  <div className="mt-6 space-y-4">
+                    </DrawerDescription>
+                  </DrawerHeader>
+                  <div className="px-4 py-2 space-y-4">
                     {loadingRequirements ? (
                       <p>Cargando requerimientos...</p>
                     ) : (
@@ -752,19 +745,19 @@ export default function Dashboard() {
                       ))
                     )}
                   </div>
-                  <SheetFooter className="mt-4">
-                    <SheetClose asChild>
+                  <DrawerFooter className="flex-row justify-end space-x-2">
+                    <DrawerClose asChild>
                       <Button variant="outline" type="button">Cerrar</Button>
-                    </SheetClose>
+                    </DrawerClose>
                     <Link to="/requirements">
                       <Button type="button">
                         Ver Todos
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
                     </Link>
-                  </SheetFooter>
-                </SheetContent>
-              </Sheet>
+                  </DrawerFooter>
+                </DrawerContent>
+              </Drawer>
             </div>
             
             <div className="flex justify-end space-x-2 mt-6">
