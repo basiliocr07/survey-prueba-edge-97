@@ -5,6 +5,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
 using SurveyApp.Infrastructure.Data;
 using SurveyApp.WebApi.DependencyInjection;
+using Swashbuckle.AspNetCore.SwaggerUI;
+using Swashbuckle.AspNetCore.Swagger;
 
 var builder = WebApplication.CreateBuilder(args);
 

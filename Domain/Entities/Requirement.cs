@@ -10,7 +10,9 @@ namespace SurveyApp.Domain.Entities
         public string Description { get; private set; }
         public string Priority { get; private set; }
         public DateTime CreatedAt { get; private set; }
+        public DateTime? UpdatedAt { get; private set; } // Added UpdatedAt property
         public string Status { get; private set; }
+        public string ProjectArea { get; private set; } // Added ProjectArea property
 
         // Parameterless constructor for EF Core
         private Requirement() { }
@@ -23,6 +25,7 @@ namespace SurveyApp.Domain.Entities
             Priority = priority ?? "medium";
             CreatedAt = DateTime.UtcNow;
             Status = "pending";
+            ProjectArea = "general";
         }
 
         public void UpdateTitle(string title)
@@ -43,6 +46,16 @@ namespace SurveyApp.Domain.Entities
         public void SetStatus(string status)
         {
             Status = status ?? "pending";
+        }
+
+        public void SetProjectArea(string area)
+        {
+            ProjectArea = area ?? "general";
+        }
+
+        public void UpdateLastModified()
+        {
+            UpdatedAt = DateTime.UtcNow;
         }
     }
 }

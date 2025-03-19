@@ -13,6 +13,7 @@ namespace SurveyApp.Domain.Entities
         public int Responses { get; set; }
         public int CompletionRate { get; set; }
         public string Status { get; set; }
+        public string Category { get; set; } // Added Category property
         public List<Question> Questions { get; set; }
         public DeliveryConfig DeliveryConfig { get; set; }
 

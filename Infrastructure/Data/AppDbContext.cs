@@ -22,6 +22,12 @@ namespace SurveyApp.Infrastructure.Data
         public DbSet<SurveyResponseTrend> ResponseTrends { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Requirement> Requirements { get; set; }
+        public DbSet<SurveyResponse> SurveyResponses { get; set; }
+
+        public void EnsureDatabaseCreated()
+        {
+            Database.EnsureCreated();
+        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -49,6 +55,7 @@ namespace SurveyApp.Infrastructure.Data
                 entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.Description).HasMaxLength(1000);
                 entity.Property(e => e.CreatedAt).IsRequired();
+                entity.Property(e => e.Category).HasMaxLength(100);
 
                 entity.HasMany(e => e.Questions)
                       .WithOne()
@@ -183,6 +190,20 @@ namespace SurveyApp.Infrastructure.Data
                 entity.Property(e => e.Priority).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.CreatedAt).IsRequired();
                 entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.UpdatedAt);
+                entity.Property(e => e.ProjectArea).HasMaxLength(100);
+            });
+
+            // Configure SurveyResponse entity
+            modelBuilder.Entity<SurveyResponse>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.SurveyId).IsRequired();
+                entity.Property(e => e.ResponseDate).IsRequired();
+                entity.Property(e => e.Answers).HasConversion(
+                    v => JsonSerializer.Serialize(v, new JsonSerializerOptions()),
+                    v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, new JsonSerializerOptions()) ?? new Dictionary<string, string>()
+                );
             });
         }
     }

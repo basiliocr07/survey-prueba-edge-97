@@ -18,5 +18,11 @@ namespace SurveyApp.Domain.Entities
             Id = Guid.NewGuid();
             Options = new List<string>();
         }
+
+        // Added the SetOptions method
+        public void SetOptions(List<string> options)
+        {
+            Options = options ?? new List<string>();
+        }
     }
 }
