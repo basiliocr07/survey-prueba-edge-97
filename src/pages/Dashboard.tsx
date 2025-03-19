@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,7 +20,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter, 
+  DialogDescription 
+} from "@/components/ui/dialog";
 import { useState } from "react";
 
 interface SurveyItem {
@@ -155,7 +161,6 @@ export default function Dashboard() {
   const updateStatusMutation = useMutation({
     mutationFn: updateStatus,
     onSuccess: (data) => {
-      // Use the returned data.type to determine which query to update
       const queryKey = data.type === 'Survey' 
         ? 'latestSurvey' 
         : data.type === 'Suggestion' 
@@ -172,13 +177,11 @@ export default function Dashboard() {
       });
       
       toast.success(`Estado actualizado a ${getStatusLabel(data.status)}`);
-      // Close the dialog and reset state
       setConfirmDialog({ open: false, id: "", type: "", newStatus: "", currentStatus: "" });
     },
     onError: (error) => {
       console.error("Error al actualizar el estado:", error);
       toast.error("Error al actualizar el estado");
-      // Close the dialog and reset state
       setConfirmDialog({ open: false, id: "", type: "", newStatus: "", currentStatus: "" });
     }
   });
@@ -201,11 +204,7 @@ export default function Dashboard() {
     }
   };
 
-  const handleStatusChange = (e: React.MouseEvent, id: string, type: string, newStatus: string, currentStatus: string) => {
-    // Prevent event propagation to stop triggering parent elements
-    e.preventDefault();
-    e.stopPropagation();
-    
+  const handleStatusChange = (id: string, type: string, newStatus: string, currentStatus: string) => {
     if (newStatus === currentStatus) {
       return;
     }
@@ -219,11 +218,7 @@ export default function Dashboard() {
     });
   };
 
-  const confirmStatusChange = (e: React.MouseEvent) => {
-    // Prevent event propagation
-    e.preventDefault();
-    e.stopPropagation();
-    
+  const confirmStatusChange = () => {
     updateStatusMutation.mutate({
       id: confirmDialog.id,
       type: confirmDialog.type,
@@ -231,15 +226,6 @@ export default function Dashboard() {
     });
   };
 
-  const closeDialog = (e: React.MouseEvent) => {
-    // Prevent event propagation
-    e.preventDefault();
-    e.stopPropagation();
-    
-    setConfirmDialog({ open: false, id: "", type: "", newStatus: "", currentStatus: "" });
-  };
-
-  // Helper function to get the current state of each item
   const getCurrentStatus = (type: string) => {
     if (type === 'Survey' && latestSurvey) {
       return latestSurvey.status;
@@ -279,7 +265,7 @@ export default function Dashboard() {
                 <div className="flex items-center space-x-2">
                   {latestSurvey && (
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenuTrigger asChild>
                         <Button 
                           variant="outline" 
                           size="sm" 
@@ -291,21 +277,21 @@ export default function Dashboard() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem 
-                          onClick={(e) => handleStatusChange(e, latestSurvey.id, "Survey", "pending", latestSurvey.status)}
+                          onClick={() => handleStatusChange(latestSurvey.id, "Survey", "pending", latestSurvey.status)}
                           disabled={latestSurvey.status === "pending"}
                         >
                           <Clock className="mr-2 h-4 w-4" />
                           <span>Pendiente</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem 
-                          onClick={(e) => handleStatusChange(e, latestSurvey.id, "Survey", "in-progress", latestSurvey.status)}
+                          onClick={() => handleStatusChange(latestSurvey.id, "Survey", "in-progress", latestSurvey.status)}
                           disabled={latestSurvey.status === "in-progress"}
                         >
                           <LineChart className="mr-2 h-4 w-4" />
                           <span>En curso</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem 
-                          onClick={(e) => handleStatusChange(e, latestSurvey.id, "Survey", "closed", latestSurvey.status)}
+                          onClick={() => handleStatusChange(latestSurvey.id, "Survey", "closed", latestSurvey.status)}
                           disabled={latestSurvey.status === "closed"}
                         >
                           <CheckCircle2 className="mr-2 h-4 w-4" />
@@ -345,7 +331,7 @@ export default function Dashboard() {
                 <div className="flex items-center space-x-2">
                   {latestSuggestion && (
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenuTrigger asChild>
                         <Button 
                           variant="outline" 
                           size="sm" 
@@ -357,21 +343,21 @@ export default function Dashboard() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem 
-                          onClick={(e) => handleStatusChange(e, latestSuggestion.id, "Suggestion", "pending", latestSuggestion.status)}
+                          onClick={() => handleStatusChange(latestSuggestion.id, "Suggestion", "pending", latestSuggestion.status)}
                           disabled={latestSuggestion.status === "pending"}
                         >
                           <Clock className="mr-2 h-4 w-4" />
                           <span>Pendiente</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem 
-                          onClick={(e) => handleStatusChange(e, latestSuggestion.id, "Suggestion", "in-progress", latestSuggestion.status)}
+                          onClick={() => handleStatusChange(latestSuggestion.id, "Suggestion", "in-progress", latestSuggestion.status)}
                           disabled={latestSuggestion.status === "in-progress"}
                         >
                           <LineChart className="mr-2 h-4 w-4" />
                           <span>En curso</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem 
-                          onClick={(e) => handleStatusChange(e, latestSuggestion.id, "Suggestion", "closed", latestSuggestion.status)}
+                          onClick={() => handleStatusChange(latestSuggestion.id, "Suggestion", "closed", latestSuggestion.status)}
                           disabled={latestSuggestion.status === "closed"}
                         >
                           <CheckCircle2 className="mr-2 h-4 w-4" />
@@ -411,7 +397,7 @@ export default function Dashboard() {
                 <div className="flex items-center space-x-2">
                   {latestRequirement && (
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenuTrigger asChild>
                         <Button 
                           variant="outline" 
                           size="sm" 
@@ -423,21 +409,21 @@ export default function Dashboard() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem 
-                          onClick={(e) => handleStatusChange(e, latestRequirement.id, "Requirement", "pending", latestRequirement.status)}
+                          onClick={() => handleStatusChange(latestRequirement.id, "Requirement", "pending", latestRequirement.status)}
                           disabled={latestRequirement.status === "pending"}
                         >
                           <Clock className="mr-2 h-4 w-4" />
                           <span>Pendiente</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem 
-                          onClick={(e) => handleStatusChange(e, latestRequirement.id, "Requirement", "in-progress", latestRequirement.status)}
+                          onClick={() => handleStatusChange(latestRequirement.id, "Requirement", "in-progress", latestRequirement.status)}
                           disabled={latestRequirement.status === "in-progress"}
                         >
                           <LineChart className="mr-2 h-4 w-4" />
                           <span>En curso</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem 
-                          onClick={(e) => handleStatusChange(e, latestRequirement.id, "Requirement", "closed", latestRequirement.status)}
+                          onClick={() => handleStatusChange(latestRequirement.id, "Requirement", "closed", latestRequirement.status)}
                           disabled={latestRequirement.status === "closed"}
                         >
                           <CheckCircle2 className="mr-2 h-4 w-4" />
@@ -480,10 +466,13 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Removed the onClick from the Dialog component itself */}
       <Dialog 
         open={confirmDialog.open} 
-        onOpenChange={(open) => !open && setConfirmDialog(prev => ({ ...prev, open: false }))}
+        onOpenChange={(open) => {
+          if (!open) {
+            setConfirmDialog(prev => ({ ...prev, open: false }));
+          }
+        }}
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -502,7 +491,7 @@ export default function Dashboard() {
           <DialogFooter>
             <Button 
               variant="outline" 
-              onClick={closeDialog}
+              onClick={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
             >
               Cancelar
             </Button>
