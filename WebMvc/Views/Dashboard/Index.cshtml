@@ -28,286 +28,238 @@
             <h2 class="text-xl font-semibold">Vista Rápida de Elementos Recientes</h2>
         </div>
         
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-6">
-            <!-- Encuestas -->
-            <div class="dropdown">
-                <button class="w-full flex flex-col items-start p-4 rounded-lg border border-blue-200 bg-blue-50 hover:bg-blue-100 transition-colors" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <div class="flex items-center mb-2">
-                        <i class="fas fa-file-alt text-blue-700 mr-2"></i>
-                        <span class="font-medium text-blue-700">Últimas Encuestas</span>
-                    </div>
-                    <p class="text-sm text-blue-600">Ver las últimas encuestas</p>
-                </button>
-                
-                <div class="dropdown-menu w-full bg-white shadow-lg rounded-lg border border-gray-200 max-h-80 overflow-y-auto">
-                    <div class="p-3 border-b bg-gray-50">
-                        <h3 class="font-medium">Últimas 5 Encuestas</h3>
-                    </div>
-                    <div class="p-0">
+        <div class="divide-y">
+            <!-- Última Encuesta -->
+            <div class="px-6 py-4">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <h3 class="font-medium">Última Encuesta</h3>
+                            @if (Model.LatestSurvey != null)
+                            {
+                                <span class="status-badge @(Model.LatestSurvey.Status == "pending" ? "bg-amber-50 text-amber-700 border-amber-200" : 
+                                                          Model.LatestSurvey.Status == "in-progress" ? "bg-blue-50 text-blue-700 border-blue-200" : 
+                                                          "bg-green-50 text-green-700 border-green-200")">
+                                    @(Model.LatestSurvey.Status == "pending" ? "Pendiente" : 
+                                      Model.LatestSurvey.Status == "in-progress" ? "En curso" : "Cerrada")
+                                </span>
+                            }
+                        </div>
                         @if (Model.LatestSurvey != null)
                         {
-                            <div class="border-b p-3">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <div class="flex items-center gap-2 mb-1">
-                                            <p class="font-semibold">@Model.LatestSurvey.Title</p>
-                                            <span class="status-badge @(Model.LatestSurvey.Status == "pending" ? "bg-amber-50 text-amber-700 border-amber-200" : 
-                                                                  Model.LatestSurvey.Status == "in-progress" ? "bg-blue-50 text-blue-700 border-blue-200" : 
-                                                                  "bg-green-50 text-green-700 border-green-200")">
-                                                @(Model.LatestSurvey.Status == "pending" ? "Pendiente" : 
-                                                Model.LatestSurvey.Status == "in-progress" ? "En curso" : "Cerrada")
-                                            </span>
-                                        </div>
-                                        <p class="text-sm text-gray-600">
-                                            Creada el @Model.LatestSurvey.CreatedAt.ToString("dd/MM/yyyy") • @Model.LatestSurvey.ResponseCount respuestas
-                                        </p>
-                                    </div>
-                                    <div class="flex space-x-2">
-                                        <div class="dropdown">
-                                            <button class="btn btn-outline btn-sm dropdown-toggle" type="button" id="surveyStatusDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                                Estado
-                                            </button>
-                                            <ul class="dropdown-menu" aria-labelledby="surveyStatusDropdown">
-                                                <li>
-                                                    <form asp-action="UpdateSurveyStatus" method="post" class="dropdown-form">
-                                                        <input type="hidden" name="id" value="@Model.LatestSurvey.Id" />
-                                                        <input type="hidden" name="newStatus" value="pending" />
-                                                        <button type="submit" class="dropdown-item @(Model.LatestSurvey.Status == "pending" ? "disabled" : "")" 
-                                                                @(Model.LatestSurvey.Status == "pending" ? "disabled" : "")>
-                                                            <i class="fas fa-clock mr-2"></i> Pendiente
-                                                        </button>
-                                                    </form>
-                                                </li>
-                                                <li>
-                                                    <form asp-action="UpdateSurveyStatus" method="post" class="dropdown-form">
-                                                        <input type="hidden" name="id" value="@Model.LatestSurvey.Id" />
-                                                        <input type="hidden" name="newStatus" value="in-progress" />
-                                                        <button type="submit" class="dropdown-item @(Model.LatestSurvey.Status == "in-progress" ? "disabled" : "")" 
-                                                                @(Model.LatestSurvey.Status == "in-progress" ? "disabled" : "")>
-                                                            <i class="fas fa-chart-line mr-2"></i> En curso
-                                                        </button>
-                                                    </form>
-                                                </li>
-                                                <li>
-                                                    <form asp-action="UpdateSurveyStatus" method="post" class="dropdown-form">
-                                                        <input type="hidden" name="id" value="@Model.LatestSurvey.Id" />
-                                                        <input type="hidden" name="newStatus" value="closed" />
-                                                        <button type="submit" class="dropdown-item @(Model.LatestSurvey.Status == "closed" ? "disabled" : "")" 
-                                                                @(Model.LatestSurvey.Status == "closed" ? "disabled" : "")>
-                                                            <i class="fas fa-check-circle mr-2"></i> Cerrada
-                                                        </button>
-                                                    </form>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                        <a asp-controller="Survey" asp-action="Details" asp-route-id="@Model.LatestSurvey.Id" class="btn btn-icon btn-ghost">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
+                            <p class="font-semibold">@Model.LatestSurvey.Title</p>
+                            <p class="text-sm text-gray-600">
+                                Creada el @Model.LatestSurvey.CreatedAt.ToString("dd/MM/yyyy") • @Model.LatestSurvey.ResponseCount respuestas
+                            </p>
                         }
                         else
                         {
-                            <div class="p-3 text-center text-gray-500">
-                                No hay encuestas disponibles
-                            </div>
+                            <p class="text-gray-500">No hay encuestas disponibles</p>
                         }
-                        <div class="p-3 border-t bg-gray-50 text-right">
-                            <a asp-controller="Survey" asp-action="Index" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                                Ver todas las encuestas <i class="fas fa-arrow-right ml-1"></i>
+                    </div>
+                    
+                    @if (Model.LatestSurvey != null)
+                    {
+                        <div class="flex space-x-2">
+                            <div class="dropdown">
+                                <button class="btn btn-outline btn-sm dropdown-toggle" type="button" id="surveyStatusDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Cambiar Estado
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="surveyStatusDropdown">
+                                    <li>
+                                        <form asp-action="UpdateSurveyStatus" method="post" class="dropdown-form">
+                                            <input type="hidden" name="id" value="@Model.LatestSurvey.Id" />
+                                            <input type="hidden" name="newStatus" value="pending" />
+                                            <button type="submit" class="dropdown-item @(Model.LatestSurvey.Status == "pending" ? "disabled" : "")" 
+                                                    @(Model.LatestSurvey.Status == "pending" ? "disabled" : "")>
+                                                <i class="fas fa-clock mr-2"></i> Pendiente
+                                            </button>
+                                        </form>
+                                    </li>
+                                    <li>
+                                        <form asp-action="UpdateSurveyStatus" method="post" class="dropdown-form">
+                                            <input type="hidden" name="id" value="@Model.LatestSurvey.Id" />
+                                            <input type="hidden" name="newStatus" value="in-progress" />
+                                            <button type="submit" class="dropdown-item @(Model.LatestSurvey.Status == "in-progress" ? "disabled" : "")" 
+                                                    @(Model.LatestSurvey.Status == "in-progress" ? "disabled" : "")>
+                                                <i class="fas fa-chart-line mr-2"></i> En curso
+                                            </button>
+                                        </form>
+                                    </li>
+                                    <li>
+                                        <form asp-action="UpdateSurveyStatus" method="post" class="dropdown-form">
+                                            <input type="hidden" name="id" value="@Model.LatestSurvey.Id" />
+                                            <input type="hidden" name="newStatus" value="closed" />
+                                            <button type="submit" class="dropdown-item @(Model.LatestSurvey.Status == "closed" ? "disabled" : "")" 
+                                                    @(Model.LatestSurvey.Status == "closed" ? "disabled" : "")>
+                                                <i class="fas fa-check-circle mr-2"></i> Cerrada
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                            <a asp-controller="Survey" asp-action="Details" asp-route-id="@Model.LatestSurvey.Id" class="btn btn-icon btn-ghost">
+                                <i class="fas fa-eye"></i>
                             </a>
                         </div>
-                    </div>
+                    }
                 </div>
             </div>
             
-            <!-- Sugerencias -->
-            <div class="dropdown">
-                <button class="w-full flex flex-col items-start p-4 rounded-lg border border-amber-200 bg-amber-50 hover:bg-amber-100 transition-colors" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <div class="flex items-center mb-2">
-                        <i class="fas fa-comment-alt text-amber-700 mr-2"></i>
-                        <span class="font-medium text-amber-700">Últimas Sugerencias</span>
-                    </div>
-                    <p class="text-sm text-amber-600">Ver las últimas sugerencias</p>
-                </button>
-                
-                <div class="dropdown-menu w-full bg-white shadow-lg rounded-lg border border-gray-200 max-h-80 overflow-y-auto">
-                    <div class="p-3 border-b bg-gray-50">
-                        <h3 class="font-medium">Últimas 5 Sugerencias</h3>
-                    </div>
-                    <div class="p-0">
+            <!-- Última Sugerencia -->
+            <div class="px-6 py-4">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <h3 class="font-medium">Última Sugerencia</h3>
+                            @if (Model.LatestSuggestion != null)
+                            {
+                                <span class="status-badge @(Model.LatestSuggestion.Status == "pending" ? "bg-amber-50 text-amber-700 border-amber-200" : 
+                                                          Model.LatestSuggestion.Status == "in-progress" ? "bg-blue-50 text-blue-700 border-blue-200" : 
+                                                          "bg-green-50 text-green-700 border-green-200")">
+                                    @(Model.LatestSuggestion.Status == "pending" ? "Pendiente" : 
+                                      Model.LatestSuggestion.Status == "in-progress" ? "En curso" : "Cerrada")
+                                </span>
+                            }
+                        </div>
                         @if (Model.LatestSuggestion != null)
                         {
-                            <div class="border-b p-3">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <div class="flex items-center gap-2 mb-1">
-                                            <p class="font-semibold">@Model.LatestSuggestion.Content</p>
-                                            <span class="status-badge @(Model.LatestSuggestion.Status == "pending" ? "bg-amber-50 text-amber-700 border-amber-200" : 
-                                                                  Model.LatestSuggestion.Status == "in-progress" ? "bg-blue-50 text-blue-700 border-blue-200" : 
-                                                                  "bg-green-50 text-green-700 border-green-200")">
-                                                @(Model.LatestSuggestion.Status == "pending" ? "Pendiente" : 
-                                                Model.LatestSuggestion.Status == "in-progress" ? "En curso" : "Cerrada")
-                                            </span>
-                                        </div>
-                                        <p class="text-sm text-gray-600">
-                                            De @Model.LatestSuggestion.CustomerName • @Model.LatestSuggestion.CreatedAt.ToString("dd/MM/yyyy")
-                                        </p>
-                                    </div>
-                                    <div class="flex space-x-2">
-                                        <div class="dropdown">
-                                            <button class="btn btn-outline btn-sm dropdown-toggle" type="button" id="suggestionStatusDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                                Estado
-                                            </button>
-                                            <ul class="dropdown-menu" aria-labelledby="suggestionStatusDropdown">
-                                                <li>
-                                                    <form asp-action="UpdateSuggestionStatus" method="post" class="dropdown-form">
-                                                        <input type="hidden" name="id" value="@Model.LatestSuggestion.Id" />
-                                                        <input type="hidden" name="newStatus" value="pending" />
-                                                        <button type="submit" class="dropdown-item @(Model.LatestSuggestion.Status == "pending" ? "disabled" : "")" 
-                                                                @(Model.LatestSuggestion.Status == "pending" ? "disabled" : "")>
-                                                            <i class="fas fa-clock mr-2"></i> Pendiente
-                                                        </button>
-                                                    </form>
-                                                </li>
-                                                <li>
-                                                    <form asp-action="UpdateSuggestionStatus" method="post" class="dropdown-form">
-                                                        <input type="hidden" name="id" value="@Model.LatestSuggestion.Id" />
-                                                        <input type="hidden" name="newStatus" value="in-progress" />
-                                                        <button type="submit" class="dropdown-item @(Model.LatestSuggestion.Status == "in-progress" ? "disabled" : "")" 
-                                                                @(Model.LatestSuggestion.Status == "in-progress" ? "disabled" : "")>
-                                                            <i class="fas fa-chart-line mr-2"></i> En curso
-                                                        </button>
-                                                    </form>
-                                                </li>
-                                                <li>
-                                                    <form asp-action="UpdateSuggestionStatus" method="post" class="dropdown-form">
-                                                        <input type="hidden" name="id" value="@Model.LatestSuggestion.Id" />
-                                                        <input type="hidden" name="newStatus" value="closed" />
-                                                        <button type="submit" class="dropdown-item @(Model.LatestSuggestion.Status == "closed" ? "disabled" : "")" 
-                                                                @(Model.LatestSuggestion.Status == "closed" ? "disabled" : "")>
-                                                            <i class="fas fa-check-circle mr-2"></i> Cerrada
-                                                        </button>
-                                                    </form>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                        <a asp-controller="Suggestions" asp-action="View" asp-route-id="@Model.LatestSuggestion.Id" class="btn btn-icon btn-ghost">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
+                            <p class="font-semibold">@Model.LatestSuggestion.Content</p>
+                            <p class="text-sm text-gray-600">
+                                De @Model.LatestSuggestion.CustomerName • @Model.LatestSuggestion.CreatedAt.ToString("dd/MM/yyyy")
+                            </p>
                         }
                         else
                         {
-                            <div class="p-3 text-center text-gray-500">
-                                No hay sugerencias disponibles
-                            </div>
+                            <p class="text-gray-500">No hay sugerencias disponibles</p>
                         }
-                        <div class="p-3 border-t bg-gray-50 text-right">
-                            <a asp-controller="Suggestions" asp-action="Index" class="text-amber-600 hover:text-amber-800 text-sm font-medium">
-                                Ver todas las sugerencias <i class="fas fa-arrow-right ml-1"></i>
+                    </div>
+                    
+                    @if (Model.LatestSuggestion != null)
+                    {
+                        <div class="flex space-x-2">
+                            <div class="dropdown">
+                                <button class="btn btn-outline btn-sm dropdown-toggle" type="button" id="suggestionStatusDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Cambiar Estado
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="suggestionStatusDropdown">
+                                    <li>
+                                        <form asp-action="UpdateSuggestionStatus" method="post" class="dropdown-form">
+                                            <input type="hidden" name="id" value="@Model.LatestSuggestion.Id" />
+                                            <input type="hidden" name="newStatus" value="pending" />
+                                            <button type="submit" class="dropdown-item @(Model.LatestSuggestion.Status == "pending" ? "disabled" : "")" 
+                                                    @(Model.LatestSuggestion.Status == "pending" ? "disabled" : "")>
+                                                <i class="fas fa-clock mr-2"></i> Pendiente
+                                            </button>
+                                        </form>
+                                    </li>
+                                    <li>
+                                        <form asp-action="UpdateSuggestionStatus" method="post" class="dropdown-form">
+                                            <input type="hidden" name="id" value="@Model.LatestSuggestion.Id" />
+                                            <input type="hidden" name="newStatus" value="in-progress" />
+                                            <button type="submit" class="dropdown-item @(Model.LatestSuggestion.Status == "in-progress" ? "disabled" : "")" 
+                                                    @(Model.LatestSuggestion.Status == "in-progress" ? "disabled" : "")>
+                                                <i class="fas fa-chart-line mr-2"></i> En curso
+                                            </button>
+                                        </form>
+                                    </li>
+                                    <li>
+                                        <form asp-action="UpdateSuggestionStatus" method="post" class="dropdown-form">
+                                            <input type="hidden" name="id" value="@Model.LatestSuggestion.Id" />
+                                            <input type="hidden" name="newStatus" value="closed" />
+                                            <button type="submit" class="dropdown-item @(Model.LatestSuggestion.Status == "closed" ? "disabled" : "")" 
+                                                    @(Model.LatestSuggestion.Status == "closed" ? "disabled" : "")>
+                                                <i class="fas fa-check-circle mr-2"></i> Cerrada
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                            <a asp-controller="Suggestions" asp-action="View" asp-route-id="@Model.LatestSuggestion.Id" class="btn btn-icon btn-ghost">
+                                <i class="fas fa-eye"></i>
                             </a>
                         </div>
-                    </div>
+                    }
                 </div>
             </div>
             
-            <!-- Requerimientos -->
-            <div class="dropdown">
-                <button class="w-full flex flex-col items-start p-4 rounded-lg border border-green-200 bg-green-50 hover:bg-green-100 transition-colors" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <div class="flex items-center mb-2">
-                        <i class="fas fa-tasks text-green-700 mr-2"></i>
-                        <span class="font-medium text-green-700">Últimos Requerimientos</span>
-                    </div>
-                    <p class="text-sm text-green-600">Ver los últimos requerimientos</p>
-                </button>
-                
-                <div class="dropdown-menu w-full bg-white shadow-lg rounded-lg border border-gray-200 max-h-80 overflow-y-auto">
-                    <div class="p-3 border-b bg-gray-50">
-                        <h3 class="font-medium">Últimos 5 Requerimientos</h3>
-                    </div>
-                    <div class="p-0">
+            <!-- Último Requerimiento -->
+            <div class="px-6 py-4">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <h3 class="font-medium">Último Requerimiento</h3>
+                            @if (Model.LatestRequirement != null)
+                            {
+                                <span class="status-badge @(Model.LatestRequirement.Status == "pending" ? "bg-amber-50 text-amber-700 border-amber-200" : 
+                                                          Model.LatestRequirement.Status == "in-progress" ? "bg-blue-50 text-blue-700 border-blue-200" : 
+                                                          "bg-green-50 text-green-700 border-green-200")">
+                                    @(Model.LatestRequirement.Status == "pending" ? "Pendiente" : 
+                                      Model.LatestRequirement.Status == "in-progress" ? "En curso" : "Cerrada")
+                                </span>
+                            }
+                        </div>
                         @if (Model.LatestRequirement != null)
                         {
-                            <div class="border-b p-3">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <div class="flex items-center gap-2 mb-1">
-                                            <p class="font-semibold">@Model.LatestRequirement.Title</p>
-                                            <span class="status-badge @(Model.LatestRequirement.Status == "pending" ? "bg-amber-50 text-amber-700 border-amber-200" : 
-                                                                  Model.LatestRequirement.Status == "in-progress" ? "bg-blue-50 text-blue-700 border-blue-200" : 
-                                                                  "bg-green-50 text-green-700 border-green-200")">
-                                                @(Model.LatestRequirement.Status == "pending" ? "Pendiente" : 
-                                                Model.LatestRequirement.Status == "in-progress" ? "En curso" : "Cerrada")
-                                            </span>
-                                        </div>
-                                        <p class="text-sm text-gray-600">
-                                            Prioridad: 
-                                            @(Model.LatestRequirement.Priority == "high" ? "Alta" : 
-                                            Model.LatestRequirement.Priority == "medium" ? "Media" : "Baja") • 
-                                            @Model.LatestRequirement.CreatedAt.ToString("dd/MM/yyyy")
-                                        </p>
-                                    </div>
-                                    <div class="flex space-x-2">
-                                        <div class="dropdown">
-                                            <button class="btn btn-outline btn-sm dropdown-toggle" type="button" id="requirementStatusDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                                Estado
-                                            </button>
-                                            <ul class="dropdown-menu" aria-labelledby="requirementStatusDropdown">
-                                                <li>
-                                                    <form asp-action="UpdateSuggestionStatus" method="post" class="dropdown-form">
-                                                        <input type="hidden" name="id" value="@Model.LatestRequirement.Id" />
-                                                        <input type="hidden" name="newStatus" value="pending" />
-                                                        <button type="submit" class="dropdown-item @(Model.LatestRequirement.Status == "pending" ? "disabled" : "")" 
-                                                                @(Model.LatestRequirement.Status == "pending" ? "disabled" : "")>
-                                                            <i class="fas fa-clock mr-2"></i> Pendiente
-                                                        </button>
-                                                    </form>
-                                                </li>
-                                                <li>
-                                                    <form asp-action="UpdateSuggestionStatus" method="post" class="dropdown-form">
-                                                        <input type="hidden" name="id" value="@Model.LatestRequirement.Id" />
-                                                        <input type="hidden" name="newStatus" value="in-progress" />
-                                                        <button type="submit" class="dropdown-item @(Model.LatestRequirement.Status == "in-progress" ? "disabled" : "")" 
-                                                                @(Model.LatestRequirement.Status == "in-progress" ? "disabled" : "")>
-                                                            <i class="fas fa-chart-line mr-2"></i> En curso
-                                                        </button>
-                                                    </form>
-                                                </li>
-                                                <li>
-                                                    <form asp-action="UpdateSuggestionStatus" method="post" class="dropdown-form">
-                                                        <input type="hidden" name="id" value="@Model.LatestRequirement.Id" />
-                                                        <input type="hidden" name="newStatus" value="closed" />
-                                                        <button type="submit" class="dropdown-item @(Model.LatestRequirement.Status == "closed" ? "disabled" : "")" 
-                                                                @(Model.LatestRequirement.Status == "closed" ? "disabled" : "")>
-                                                            <i class="fas fa-check-circle mr-2"></i> Cerrada
-                                                        </button>
-                                                    </form>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                        <a asp-controller="Requirements" asp-action="ViewRequirements" class="btn btn-icon btn-ghost">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
+                            <p class="font-semibold">@Model.LatestRequirement.Title</p>
+                            <p class="text-sm text-gray-600">
+                                Prioridad: 
+                                @(Model.LatestRequirement.Priority == "high" ? "Alta" : 
+                                Model.LatestRequirement.Priority == "medium" ? "Media" : "Baja") • 
+                                @Model.LatestRequirement.CreatedAt.ToString("dd/MM/yyyy")
+                            </p>
                         }
                         else
                         {
-                            <div class="p-3 text-center text-gray-500">
-                                No hay requerimientos disponibles
-                            </div>
+                            <p class="text-gray-500">No hay requerimientos disponibles</p>
                         }
-                        <div class="p-3 border-t bg-gray-50 text-right">
-                            <a asp-controller="Requirements" asp-action="ViewRequirements" class="text-green-600 hover:text-green-800 text-sm font-medium">
-                                Ver todos los requerimientos <i class="fas fa-arrow-right ml-1"></i>
+                    </div>
+                    
+                    @if (Model.LatestRequirement != null)
+                    {
+                        <div class="flex space-x-2">
+                            <div class="dropdown">
+                                <button class="btn btn-outline btn-sm dropdown-toggle" type="button" id="requirementStatusDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Cambiar Estado
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="requirementStatusDropdown">
+                                    <li>
+                                        <form asp-action="UpdateSuggestionStatus" method="post" class="dropdown-form">
+                                            <input type="hidden" name="id" value="@Model.LatestRequirement.Id" />
+                                            <input type="hidden" name="newStatus" value="pending" />
+                                            <button type="submit" class="dropdown-item @(Model.LatestRequirement.Status == "pending" ? "disabled" : "")" 
+                                                    @(Model.LatestRequirement.Status == "pending" ? "disabled" : "")>
+                                                <i class="fas fa-clock mr-2"></i> Pendiente
+                                            </button>
+                                        </form>
+                                    </li>
+                                    <li>
+                                        <form asp-action="UpdateSuggestionStatus" method="post" class="dropdown-form">
+                                            <input type="hidden" name="id" value="@Model.LatestRequirement.Id" />
+                                            <input type="hidden" name="newStatus" value="in-progress" />
+                                            <button type="submit" class="dropdown-item @(Model.LatestRequirement.Status == "in-progress" ? "disabled" : "")" 
+                                                    @(Model.LatestRequirement.Status == "in-progress" ? "disabled" : "")>
+                                                <i class="fas fa-chart-line mr-2"></i> En curso
+                                            </button>
+                                        </form>
+                                    </li>
+                                    <li>
+                                        <form asp-action="UpdateSuggestionStatus" method="post" class="dropdown-form">
+                                            <input type="hidden" name="id" value="@Model.LatestRequirement.Id" />
+                                            <input type="hidden" name="newStatus" value="closed" />
+                                            <button type="submit" class="dropdown-item @(Model.LatestRequirement.Status == "closed" ? "disabled" : "")" 
+                                                    @(Model.LatestRequirement.Status == "closed" ? "disabled" : "")>
+                                                <i class="fas fa-check-circle mr-2"></i> Cerrada
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                            <a asp-controller="Requirements" asp-action="ViewRequirements" class="btn btn-icon btn-ghost">
+                                <i class="fas fa-eye"></i>
                             </a>
                         </div>
-                    </div>
+                    }
                 </div>
             </div>
         </div>
@@ -363,16 +315,6 @@
         align-items: center;
         justify-content: center;
     }
-    
-    .dropdown-menu {
-        display: none;
-        position: absolute;
-        z-index: 1000;
-    }
-    
-    .dropdown-menu.show {
-        display: block;
-    }
 </style>
 
 @section Scripts {
@@ -382,35 +324,6 @@
             var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'));
             dropdownElementList.map(function(dropdownToggleEl) {
                 return new bootstrap.Dropdown(dropdownToggleEl);
-            });
-            
-            // Add positioning for dropdown menus to appear below the buttons
-            document.querySelectorAll('.dropdown').forEach(function(dropdown) {
-                var button = dropdown.querySelector('button');
-                var menu = dropdown.querySelector('.dropdown-menu');
-                
-                if (button && menu) {
-                    button.addEventListener('click', function() {
-                        // Position the dropdown menu under the button
-                        menu.classList.toggle('show');
-                        
-                        // Close other open dropdowns
-                        document.querySelectorAll('.dropdown-menu.show').forEach(function(openMenu) {
-                            if (openMenu !== menu) {
-                                openMenu.classList.remove('show');
-                            }
-                        });
-                    });
-                }
-            });
-            
-            // Close dropdowns when clicking outside
-            document.addEventListener('click', function(e) {
-                if (!e.target.closest('.dropdown')) {
-                    document.querySelectorAll('.dropdown-menu.show').forEach(function(menu) {
-                        menu.classList.remove('show');
-                    });
-                }
             });
         });
     </script>
