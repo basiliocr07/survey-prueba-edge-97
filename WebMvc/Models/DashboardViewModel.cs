@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using SurveyApp.Application.DTOs;
@@ -15,6 +14,11 @@ namespace SurveyApp.WebMvc.Models
         public List<SurveyResponseItemViewModel> RecentSurveyResponses { get; set; } = new List<SurveyResponseItemViewModel>();
         public List<SuggestionListItemViewModel> RecentSuggestions { get; set; } = new List<SuggestionListItemViewModel>();
         public List<RequirementListItemViewModel> RecentRequirements { get; set; } = new List<RequirementListItemViewModel>();
+        
+        // User authentication and role properties
+        public bool IsAuthenticated { get; set; }
+        public string UserRole { get; set; } = string.Empty;
+        public string Username { get; set; } = string.Empty;
     }
 
     public class SuggestionListItemViewModel

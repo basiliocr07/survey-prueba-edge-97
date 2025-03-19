@@ -1,4 +1,3 @@
-
 @model SurveyApp.WebMvc.Models.DashboardViewModel
 
 @{
@@ -8,259 +7,458 @@
 <div class="container mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-6">Panel de Control</h1>
     
-    <div class="bg-white shadow-md rounded-lg overflow-hidden">
-        <div class="px-6 py-4 border-b">
-            <h2 class="text-xl font-semibold">Vista Rápida de Elementos Recientes</h2>
-        </div>
-        
-        <!-- Sección de Encuestas -->
-        <div class="border-b" x-data="{ open: false }">
-            <div class="px-6 py-4 cursor-pointer hover:bg-gray-50 flex justify-between items-center" 
-                 @@click="open = !open">
-                <div>
-                    <div class="flex items-center gap-2 mb-1">
-                        <h3 class="font-medium">Encuestas</h3>
-                        @if (Model.LatestSurvey != null)
-                        {
-                            <partial name="_StatusBadge" model="Model.LatestSurvey.Status" />
-                        }
-                    </div>
-                    
-                    @if (Model.LatestSurvey != null)
-                    {
-                        <p class="font-semibold">@Model.LatestSurvey.Title</p>
-                        <p class="text-xs text-gray-500">
-                            Creada @Model.LatestSurvey.CreatedAt.ToString("dd MMM yyyy") • @Model.LatestSurvey.Responses respuestas
-                        </p>
-                    }
-                    else
-                    {
-                        <p class="text-gray-500">No hay encuestas disponibles</p>
-                    }
+    @if (Model.IsAuthenticated)
+    {
+        @if (Model.UserRole?.ToLower() == "admin")
+        {
+            <!-- Admin Dashboard Content -->
+            <div class="bg-white shadow-md rounded-lg overflow-hidden">
+                <div class="px-6 py-4 border-b">
+                    <h2 class="text-xl font-semibold">Vista Rápida de Elementos Recientes</h2>
                 </div>
-                <svg class="h-5 w-5 text-gray-400 transition-transform" x-bind:class="open ? 'transform rotate-180' : ''" 
-                     xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                </svg>
-            </div>
-            
-            <div class="bg-gray-50 px-6 py-3 grid transition-all" 
-                 x-bind:class="open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'">
-                <div class="overflow-hidden">
-                    <div class="space-y-3">
-                        <h4 class="text-sm font-medium mb-2">Últimas 5 respuestas</h4>
-                        
-                        @if (Model.RecentSurveyResponses != null && Model.RecentSurveyResponses.Any())
-                        {
-                            <div class="space-y-2">
-                                @foreach (var response in Model.RecentSurveyResponses)
+                
+                <!-- Sección de Encuestas -->
+                <div class="border-b" x-data="{ open: false }">
+                    <div class="px-6 py-4 cursor-pointer hover:bg-gray-50 flex justify-between items-center" 
+                         @@click="open = !open">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <h3 class="font-medium">Encuestas</h3>
+                                @if (Model.LatestSurvey != null)
                                 {
-                                    <div class="bg-white p-3 rounded border text-sm">
-                                        <div class="flex justify-between">
-                                            <span class="font-medium">@response.RespondentName</span>
-                                            <span class="text-gray-500 text-xs">@response.SubmittedAt.ToString("dd MMM yyyy")</span>
-                                        </div>
-                                        <p class="text-gray-600">@response.SurveyTitle</p>
-                                    </div>
+                                    <partial name="_StatusBadge" model="Model.LatestSurvey.Status" />
                                 }
                             </div>
-                        }
-                        else
-                        {
-                            <p class="text-sm text-gray-500">No hay respuestas recientes</p>
-                        }
-                        
-                        <div class="mt-3 text-right">
-                            <a href="@Url.Action("Index", "Surveys")" class="text-sm text-blue-600 hover:underline inline-flex items-center">
-                                Ver todas las encuestas
-                                <svg class="ml-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
-                            </a>
+                            
+                            @if (Model.LatestSurvey != null)
+                            {
+                                <p class="font-semibold">@Model.LatestSurvey.Title</p>
+                                <p class="text-xs text-gray-500">
+                                    Creada @Model.LatestSurvey.CreatedAt.ToString("dd MMM yyyy") • @Model.LatestSurvey.Responses respuestas
+                                </p>
+                            }
+                            else
+                            {
+                                <p class="text-gray-500">No hay encuestas disponibles</p>
+                            }
+                        </div>
+                        <svg class="h-5 w-5 text-gray-400 transition-transform" x-bind:class="open ? 'transform rotate-180' : ''" 
+                             xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    
+                    <div class="bg-gray-50 px-6 py-3 grid transition-all" 
+                         x-bind:class="open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'">
+                        <div class="overflow-hidden">
+                            <div class="space-y-3">
+                                <h4 class="text-sm font-medium mb-2">Últimas 5 respuestas</h4>
+                                
+                                @if (Model.RecentSurveyResponses != null && Model.RecentSurveyResponses.Any())
+                                {
+                                    <div class="space-y-2">
+                                        @foreach (var response in Model.RecentSurveyResponses)
+                                        {
+                                            <div class="bg-white p-3 rounded border text-sm">
+                                                <div class="flex justify-between">
+                                                    <span class="font-medium">@response.RespondentName</span>
+                                                    <span class="text-gray-500 text-xs">@response.SubmittedAt.ToString("dd MMM yyyy")</span>
+                                                </div>
+                                                <p class="text-gray-600">@response.SurveyTitle</p>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <p class="text-sm text-gray-500">No hay respuestas recientes</p>
+                                }
+                                
+                                <div class="mt-3 text-right">
+                                    <a href="@Url.Action("Index", "Surveys")" class="text-sm text-blue-600 hover:underline inline-flex items-center">
+                                        Ver todas las encuestas
+                                        <svg class="ml-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                        </svg>
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-        
-        <!-- Sección de Sugerencias -->
-        <div class="border-b" x-data="{ open: false }">
-            <div class="px-6 py-4 cursor-pointer hover:bg-gray-50 flex justify-between items-center" 
-                 @@click="open = !open">
-                <div>
-                    <div class="flex items-center gap-2 mb-1">
-                        <h3 class="font-medium">Sugerencias</h3>
-                        @if (Model.LatestSuggestion != null)
-                        {
-                            <partial name="_StatusBadge" model="Model.LatestSuggestion.Status" />
-                        }
-                    </div>
-                    
-                    @if (Model.LatestSuggestion != null)
-                    {
-                        <p class="font-semibold">@Model.LatestSuggestion.Content</p>
-                        <p class="text-xs text-gray-500">
-                            De @Model.LatestSuggestion.CustomerName • @Model.LatestSuggestion.CreatedAt.ToString("dd MMM yyyy")
-                        </p>
-                    }
-                    else
-                    {
-                        <p class="text-gray-500">No hay sugerencias disponibles</p>
-                    }
-                </div>
-                <svg class="h-5 w-5 text-gray-400 transition-transform" x-bind:class="open ? 'transform rotate-180' : ''" 
-                     xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                </svg>
-            </div>
-            
-            <div class="bg-gray-50 px-6 py-3 grid transition-all" 
-                 x-bind:class="open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'">
-                <div class="overflow-hidden">
-                    <div class="space-y-3">
-                        <h4 class="text-sm font-medium mb-2">Últimas 5 sugerencias</h4>
-                        
-                        @if (Model.RecentSuggestions != null && Model.RecentSuggestions.Any())
-                        {
-                            <div class="space-y-2">
-                                @foreach (var suggestion in Model.RecentSuggestions)
+                
+                <!-- Sección de Sugerencias -->
+                <div class="border-b" x-data="{ open: false }">
+                    <div class="px-6 py-4 cursor-pointer hover:bg-gray-50 flex justify-between items-center" 
+                         @@click="open = !open">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <h3 class="font-medium">Sugerencias</h3>
+                                @if (Model.LatestSuggestion != null)
                                 {
-                                    <div class="bg-white p-3 rounded border text-sm">
-                                        <div class="flex justify-between">
-                                            <span class="font-medium">@suggestion.CustomerName</span>
-                                            <span class="text-gray-500 text-xs">@suggestion.CreatedAt.ToString("dd MMM yyyy")</span>
-                                        </div>
-                                        <p class="text-gray-600">
-                                            @(suggestion.Content.Length > 60 
-                                                ? $"{suggestion.Content.Substring(0, 60)}..." 
-                                                : suggestion.Content)
-                                        </p>
-                                        <div class="flex justify-end mt-2">
-                                            <partial name="_StatusBadge" model="suggestion.Status" />
-                                        </div>
-                                    </div>
+                                    <partial name="_StatusBadge" model="Model.LatestSuggestion.Status" />
                                 }
                             </div>
-                        }
-                        else
-                        {
-                            <p class="text-sm text-gray-500">No hay sugerencias recientes</p>
-                        }
-                        
-                        <div class="mt-3 text-right">
-                            <a href="@Url.Action("Index", "Suggestions")" class="text-sm text-blue-600 hover:underline inline-flex items-center">
-                                Ver todas las sugerencias
-                                <svg class="ml-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
-                            </a>
+                            
+                            @if (Model.LatestSuggestion != null)
+                            {
+                                <p class="font-semibold">@Model.LatestSuggestion.Content</p>
+                                <p class="text-xs text-gray-500">
+                                    De @Model.LatestSuggestion.CustomerName • @Model.LatestSuggestion.CreatedAt.ToString("dd MMM yyyy")
+                                </p>
+                            }
+                            else
+                            {
+                                <p class="text-gray-500">No hay sugerencias disponibles</p>
+                            }
+                        </div>
+                        <svg class="h-5 w-5 text-gray-400 transition-transform" x-bind:class="open ? 'transform rotate-180' : ''" 
+                             xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    
+                    <div class="bg-gray-50 px-6 py-3 grid transition-all" 
+                         x-bind:class="open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'">
+                        <div class="overflow-hidden">
+                            <div class="space-y-3">
+                                <h4 class="text-sm font-medium mb-2">Últimas 5 sugerencias</h4>
+                                
+                                @if (Model.RecentSuggestions != null && Model.RecentSuggestions.Any())
+                                {
+                                    <div class="space-y-2">
+                                        @foreach (var suggestion in Model.RecentSuggestions)
+                                        {
+                                            <div class="bg-white p-3 rounded border text-sm">
+                                                <div class="flex justify-between">
+                                                    <span class="font-medium">@suggestion.CustomerName</span>
+                                                    <span class="text-gray-500 text-xs">@suggestion.CreatedAt.ToString("dd MMM yyyy")</span>
+                                                </div>
+                                                <p class="text-gray-600">
+                                                    @(suggestion.Content.Length > 60 
+                                                        ? $"{suggestion.Content.Substring(0, 60)}..." 
+                                                        : suggestion.Content)
+                                                </p>
+                                                <div class="flex justify-end mt-2">
+                                                    <partial name="_StatusBadge" model="suggestion.Status" />
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <p class="text-sm text-gray-500">No hay sugerencias recientes</p>
+                                }
+                                
+                                <div class="mt-3 text-right">
+                                    <a href="@Url.Action("Index", "Suggestions")" class="text-sm text-blue-600 hover:underline inline-flex items-center">
+                                        Ver todas las sugerencias
+                                        <svg class="ml-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                        </svg>
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-        
-        <!-- Sección de Requerimientos -->
-        <div class="border-b" x-data="{ open: false }">
-            <div class="px-6 py-4 cursor-pointer hover:bg-gray-50 flex justify-between items-center" 
-                 @@click="open = !open">
-                <div>
-                    <div class="flex items-center gap-2 mb-1">
-                        <h3 class="font-medium">Requerimientos</h3>
-                        @if (Model.LatestRequirement != null)
-                        {
-                            <partial name="_StatusBadge" model="Model.LatestRequirement.Status" />
-                        }
-                    </div>
-                    
-                    @if (Model.LatestRequirement != null)
-                    {
-                        <p class="font-semibold">@Model.LatestRequirement.Title</p>
-                        <p class="text-xs text-gray-500">
-                            Prioridad: @Model.LatestRequirement.Priority • @Model.LatestRequirement.CreatedAt.ToString("dd MMM yyyy")
-                        </p>
-                    }
-                    else
-                    {
-                        <p class="text-gray-500">No hay requerimientos disponibles</p>
-                    }
-                </div>
-                <svg class="h-5 w-5 text-gray-400 transition-transform" x-bind:class="open ? 'transform rotate-180' : ''" 
-                     xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                </svg>
-            </div>
-            
-            <div class="bg-gray-50 px-6 py-3 grid transition-all" 
-                 x-bind:class="open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'">
-                <div class="overflow-hidden">
-                    <div class="space-y-3">
-                        <h4 class="text-sm font-medium mb-2">Últimos 5 requerimientos</h4>
-                        
-                        @if (Model.RecentRequirements != null && Model.RecentRequirements.Any())
-                        {
-                            <div class="space-y-2">
-                                @foreach (var requirement in Model.RecentRequirements)
+                
+                <!-- Sección de Requerimientos -->
+                <div class="border-b" x-data="{ open: false }">
+                    <div class="px-6 py-4 cursor-pointer hover:bg-gray-50 flex justify-between items-center" 
+                         @@click="open = !open">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <h3 class="font-medium">Requerimientos</h3>
+                                @if (Model.LatestRequirement != null)
                                 {
-                                    <div class="bg-white p-3 rounded border text-sm">
-                                        <div class="flex justify-between">
-                                            <span class="font-medium">@requirement.Title</span>
-                                            <span class="@(requirement.Priority.ToLower() == "high" 
-                                                          ? "bg-red-100 text-red-800 border-red-200" 
-                                                          : requirement.Priority.ToLower() == "medium" 
-                                                            ? "bg-amber-100 text-amber-800 border-amber-200"
-                                                            : "bg-green-100 text-green-800 border-green-200") 
-                                                   px-2 py-1 text-xs rounded-full">
-                                                @requirement.Priority
-                                            </span>
-                                        </div>
-                                        <p class="text-gray-600">
-                                            @(requirement.Description.Length > 60 
-                                                ? $"{requirement.Description.Substring(0, 60)}..." 
-                                                : requirement.Description)
-                                        </p>
-                                        <div class="flex justify-end mt-2">
-                                            <partial name="_StatusBadge" model="requirement.Status" />
-                                        </div>
-                                    </div>
+                                    <partial name="_StatusBadge" model="Model.LatestRequirement.Status" />
                                 }
                             </div>
-                        }
-                        else
-                        {
-                            <p class="text-sm text-gray-500">No hay requerimientos recientes</p>
-                        }
-                        
-                        <div class="mt-3 text-right">
-                            <a href="@Url.Action("Index", "Requirements")" class="text-sm text-blue-600 hover:underline inline-flex items-center">
-                                Ver todos los requerimientos
-                                <svg class="ml-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
-                            </a>
+                            
+                            @if (Model.LatestRequirement != null)
+                            {
+                                <p class="font-semibold">@Model.LatestRequirement.Title</p>
+                                <p class="text-xs text-gray-500">
+                                    Prioridad: @Model.LatestRequirement.Priority • @Model.LatestRequirement.CreatedAt.ToString("dd MMM yyyy")
+                                </p>
+                            }
+                            else
+                            {
+                                <p class="text-gray-500">No hay requerimientos disponibles</p>
+                            }
+                        </div>
+                        <svg class="h-5 w-5 text-gray-400 transition-transform" x-bind:class="open ? 'transform rotate-180' : ''" 
+                             xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    
+                    <div class="bg-gray-50 px-6 py-3 grid transition-all" 
+                         x-bind:class="open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'">
+                        <div class="overflow-hidden">
+                            <div class="space-y-3">
+                                <h4 class="text-sm font-medium mb-2">Últimos 5 requerimientos</h4>
+                                
+                                @if (Model.RecentRequirements != null && Model.RecentRequirements.Any())
+                                {
+                                    <div class="space-y-2">
+                                        @foreach (var requirement in Model.RecentRequirements)
+                                        {
+                                            <div class="bg-white p-3 rounded border text-sm">
+                                                <div class="flex justify-between">
+                                                    <span class="font-medium">@requirement.Title</span>
+                                                    <span class="@(requirement.Priority.ToLower() == "high" 
+                                                                  ? "bg-red-100 text-red-800 border-red-200" 
+                                                                  : requirement.Priority.ToLower() == "medium" 
+                                                                    ? "bg-amber-100 text-amber-800 border-amber-200"
+                                                                    : "bg-green-100 text-green-800 border-green-200") 
+                                                     px-2 py-1 text-xs rounded-full">
+                                                        @requirement.Priority
+                                                    </span>
+                                                </div>
+                                                <p class="text-gray-600">
+                                                    @(requirement.Description.Length > 60 
+                                                        ? $"{requirement.Description.Substring(0, 60)}..." 
+                                                        : requirement.Description)
+                                                </p>
+                                                <div class="flex justify-end mt-2">
+                                                    <partial name="_StatusBadge" model="requirement.Status" />
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <p class="text-sm text-gray-500">No hay requerimientos recientes</p>
+                                }
+                                
+                                <div class="mt-3 text-right">
+                                    <a href="@Url.Action("Index", "Requirements")" class="text-sm text-blue-600 hover:underline inline-flex items-center">
+                                        Ver todos los requerimientos
+                                        <svg class="ml-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                        </svg>
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+                
+                <div class="px-6 py-4 bg-gray-50 border-t">
+                    <div class="flex justify-end space-x-2">
+                        <a href="@Url.Action("Index", "Analytics")" class="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                            <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                            </svg>
+                            Ver Análisis
+                        </a>
+                        <a href="@Url.Action("Index", "Surveys")" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 bg-white rounded hover:bg-gray-50">
+                            Ver Todas las Encuestas
+                            <svg class="ml-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
             </div>
-        </div>
-        
-        <div class="px-6 py-4 bg-gray-50 border-t">
-            <div class="flex justify-end space-x-2">
-                <a href="@Url.Action("Index", "Analytics")" class="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-                    <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
-                    </svg>
-                    Ver Análisis
+        }
+        else if (Model.UserRole?.ToLower() == "client")
+        {
+            <!-- Client Dashboard Content -->
+            <div class="bg-white shadow-md rounded-lg overflow-hidden">
+                <div class="px-6 py-4 border-b">
+                    <h2 class="text-xl font-semibold">Mis Interacciones Recientes</h2>
+                </div>
+                
+                <!-- Sección de Sugerencias del Cliente -->
+                <div class="border-b" x-data="{ open: false }">
+                    <div class="px-6 py-4 cursor-pointer hover:bg-gray-50 flex justify-between items-center" 
+                         @@click="open = !open">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <h3 class="font-medium">Mis Sugerencias</h3>
+                                @if (Model.LatestSuggestion != null)
+                                {
+                                    <partial name="_StatusBadge" model="Model.LatestSuggestion.Status" />
+                                }
+                            </div>
+                            
+                            @if (Model.LatestSuggestion != null)
+                            {
+                                <p class="font-semibold">@Model.LatestSuggestion.Content</p>
+                                <p class="text-xs text-gray-500">
+                                    Enviada el @Model.LatestSuggestion.CreatedAt.ToString("dd MMM yyyy")
+                                </p>
+                            }
+                            else
+                            {
+                                <p class="text-gray-500">No has enviado sugerencias todavía</p>
+                            }
+                        </div>
+                        <svg class="h-5 w-5 text-gray-400 transition-transform" x-bind:class="open ? 'transform rotate-180' : ''" 
+                             xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    
+                    <div class="bg-gray-50 px-6 py-3 grid transition-all" 
+                         x-bind:class="open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'">
+                        <div class="overflow-hidden">
+                            <div class="space-y-3">
+                                <h4 class="text-sm font-medium mb-2">Tus sugerencias recientes</h4>
+                                
+                                @if (Model.RecentSuggestions != null && Model.RecentSuggestions.Any())
+                                {
+                                    <div class="space-y-2">
+                                        @foreach (var suggestion in Model.RecentSuggestions.Where(s => s.CustomerName == Model.Username).Take(5))
+                                        {
+                                            <div class="bg-white p-3 rounded border text-sm">
+                                                <div class="flex justify-between">
+                                                    <span class="font-medium">@suggestion.Content.Substring(0, Math.Min(40, suggestion.Content.Length))@(suggestion.Content.Length > 40 ? "..." : "")</span>
+                                                    <span class="text-gray-500 text-xs">@suggestion.CreatedAt.ToString("dd MMM yyyy")</span>
+                                                </div>
+                                                <div class="flex justify-end mt-2">
+                                                    <partial name="_StatusBadge" model="suggestion.Status" />
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <p class="text-sm text-gray-500">No has enviado sugerencias todavía</p>
+                                }
+                                
+                                <div class="mt-3 text-right">
+                                    <a href="@Url.Action("Create", "Suggestions")" class="text-sm text-blue-600 hover:underline inline-flex items-center">
+                                        Enviar nueva sugerencia
+                                        <svg class="ml-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                        </svg>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sección de Requerimientos del Cliente -->
+                <div class="border-b" x-data="{ open: false }">
+                    <div class="px-6 py-4 cursor-pointer hover:bg-gray-50 flex justify-between items-center" 
+                         @@click="open = !open">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <h3 class="font-medium">Mis Requerimientos</h3>
+                                @if (Model.LatestRequirement != null)
+                                {
+                                    <partial name="_StatusBadge" model="Model.LatestRequirement.Status" />
+                                }
+                            </div>
+                            
+                            @if (Model.LatestRequirement != null)
+                            {
+                                <p class="font-semibold">@Model.LatestRequirement.Title</p>
+                                <p class="text-xs text-gray-500">
+                                    Prioridad: @Model.LatestRequirement.Priority • @Model.LatestRequirement.CreatedAt.ToString("dd MMM yyyy")
+                                </p>
+                            }
+                            else
+                            {
+                                <p class="text-gray-500">No has enviado requerimientos todavía</p>
+                            }
+                        </div>
+                        <svg class="h-5 w-5 text-gray-400 transition-transform" x-bind:class="open ? 'transform rotate-180' : ''" 
+                             xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    
+                    <div class="bg-gray-50 px-6 py-3 grid transition-all" 
+                         x-bind:class="open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'">
+                        <div class="overflow-hidden">
+                            <div class="space-y-3">
+                                <h4 class="text-sm font-medium mb-2">Tus requerimientos recientes</h4>
+                                
+                                @if (Model.RecentRequirements != null && Model.RecentRequirements.Any())
+                                {
+                                    <div class="space-y-2">
+                                        @foreach (var requirement in Model.RecentRequirements.Take(5))
+                                        {
+                                            <div class="bg-white p-3 rounded border text-sm">
+                                                <div class="flex justify-between">
+                                                    <span class="font-medium">@requirement.Title</span>
+                                                    <span class="@(requirement.Priority.ToLower() == "high" 
+                                                                ? "bg-red-100 text-red-800 border-red-200" 
+                                                                : requirement.Priority.ToLower() == "medium" 
+                                                                    ? "bg-amber-100 text-amber-800 border-amber-200"
+                                                                    : "bg-green-100 text-green-800 border-green-200") 
+                                                     px-2 py-1 text-xs rounded-full">
+                                                        @requirement.Priority
+                                                    </span>
+                                                </div>
+                                                <div class="flex justify-end mt-2">
+                                                    <partial name="_StatusBadge" model="requirement.Status" />
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <p class="text-sm text-gray-500">No has enviado requerimientos todavía</p>
+                                }
+                                
+                                <div class="mt-3 text-right">
+                                    <a href="@Url.Action("Create", "Requirements")" class="text-sm text-blue-600 hover:underline inline-flex items-center">
+                                        Enviar nuevo requerimiento
+                                        <svg class="ml-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                        </svg>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="px-6 py-4 bg-gray-50 border-t">
+                    <div class="flex justify-end space-x-2">
+                        <a href="@Url.Action("Survey", "ClientAccess")" class="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                            <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                            </svg>
+                            Responder Encuestas
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <!-- Not Authenticated Message -->
+        <div class="bg-white shadow-md rounded-lg p-8 text-center">
+            <div class="text-red-500 mb-4">
+                <svg class="h-16 w-16 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m0 0v2m0-2h2m-2 0H9m3-3V9m0 0V7m0 2h2m-2 0H9" />
+                </svg>
+            </div>
+            <h2 class="text-xl font-semibold mb-2">Acceso Restringido</h2>
+            <p class="text-gray-600 mb-6">Debes iniciar sesión para acceder al panel de control.</p>
+            <div class="flex justify-center space-x-4">
+                <a href="@Url.Action("Login", "Account")" class="btn btn-primary">
+                    Iniciar Sesión
                 </a>
-                <a href="@Url.Action("Index", "Surveys")" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 bg-white rounded hover:bg-gray-50">
-                    Ver Todas las Encuestas
-                    <svg class="ml-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                    </svg>
+                <a href="@Url.Action("Register", "Account")" class="btn btn-outline">
+                    Registrarse
                 </a>
             </div>
         </div>
-    </div>
+    }
 </div>
 
 @section Scripts {

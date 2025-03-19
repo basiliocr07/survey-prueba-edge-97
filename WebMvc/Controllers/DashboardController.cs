@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using SurveyApp.Application.Services;
@@ -10,6 +12,7 @@ using SurveyApp.WebMvc.Models;
 
 namespace SurveyApp.WebMvc.Controllers
 {
+    [Authorize] // Require authentication
     public class DashboardController : Controller
     {
         private readonly ISurveyService _surveyService;
@@ -33,6 +36,15 @@ namespace SurveyApp.WebMvc.Controllers
         {
             try
             {
+                // Check user role
+                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+                
+                // If not admin or client, redirect to access denied
+                if (userRole != "Admin" && userRole != "Client")
+                {
+                    return RedirectToAction("AccessDenied", "Account");
+                }
+                
                 // Get latest survey and its most recent responses
                 var surveys = await _surveyService.GetAllSurveysAsync();
                 var latestSurvey = surveys.OrderByDescending(s => s.CreatedAt).FirstOrDefault();
@@ -111,7 +123,12 @@ namespace SurveyApp.WebMvc.Controllers
                         Priority = r.Priority,
                         CreatedAt = r.CreatedAt,
                         Status = r.Status
-                    }).ToList()
+                    }).ToList(),
+                    
+                    // Add user authentication and role information
+                    IsAuthenticated = User.Identity.IsAuthenticated,
+                    Username = User.Identity.IsAuthenticated ? User.Identity.Name : string.Empty,
+                    UserRole = userRole ?? string.Empty
                 };
                 
                 return View(viewModel);
@@ -119,7 +136,7 @@ namespace SurveyApp.WebMvc.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al cargar el dashboard");
-                return View("Error", new ErrorViewModel { Message = "Error al cargar el dashboard" });
+                return View("Error", new ErrorViewModel { RequestId = HttpContext.TraceIdentifier, Message = "Error al cargar el dashboard" });
             }
         }
         
