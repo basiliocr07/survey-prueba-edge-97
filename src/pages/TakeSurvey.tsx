@@ -5,19 +5,29 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import { Question } from "@/utils/sampleData";
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Survey, SurveyResponseSubmission } from '@/types/surveyTypes';
 
-interface Survey {
-  id: string;
-  title: string;
-  description?: string;
-  questions: Question[];
-  createdAt: string;
-}
+// Esquema de validación para el formulario
+const formSchema = z.object({
+  respondentName: z.string().min(1, { message: "Name is required" }),
+  respondentEmail: z.string().email({ message: "Valid email is required" }),
+  respondentPhone: z.string().optional(),
+  respondentCompany: z.string().optional(),
+  answers: z.record(z.union([
+    z.string().min(1, { message: "This field is required" }),
+    z.array(z.string()).min(1, { message: "Please select at least one option" })
+  ]))
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 export default function TakeSurvey() {
   const { surveyId } = useParams<{ surveyId: string }>();
@@ -27,11 +37,22 @@ export default function TakeSurvey() {
   const [survey, setSurvey] = useState<Survey | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [responses, setResponses] = useState<Record<string, any>>({});
   const [submitted, setSubmitted] = useState(false);
   
+  // Inicializar formulario con react-hook-form
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      respondentName: "",
+      respondentEmail: "",
+      respondentPhone: "",
+      respondentCompany: "",
+      answers: {}
+    }
+  });
+  
   useEffect(() => {
-    // Load survey from localStorage
+    // Cargar encuesta desde localStorage
     const loadSurvey = () => {
       try {
         const savedSurveys = JSON.parse(localStorage.getItem('surveys') || '[]');
@@ -40,17 +61,23 @@ export default function TakeSurvey() {
         if (foundSurvey) {
           setSurvey(foundSurvey);
           
-          // Initialize responses
-          const initialResponses: Record<string, any> = {};
+          // Inicializar respuestas
+          const initialAnswers: Record<string, any> = {};
           foundSurvey.questions.forEach(question => {
             if (question.type === 'multiple-choice') {
-              initialResponses[question.id] = [];
+              initialAnswers[question.id] = [];
             } else {
-              initialResponses[question.id] = '';
+              initialAnswers[question.id] = '';
             }
           });
           
-          setResponses(initialResponses);
+          form.reset({ 
+            respondentName: "", 
+            respondentEmail: "", 
+            respondentPhone: "", 
+            respondentCompany: "", 
+            answers: initialAnswers 
+          });
         } else {
           setError('Survey not found');
         }
@@ -63,87 +90,53 @@ export default function TakeSurvey() {
     };
     
     loadSurvey();
-  }, [surveyId]);
+  }, [surveyId, form]);
   
-  const handleTextChange = (questionId: string, value: string) => {
-    setResponses(prev => ({
-      ...prev,
-      [questionId]: value
-    }));
-  };
-  
-  const handleSingleChoiceChange = (questionId: string, value: string) => {
-    setResponses(prev => ({
-      ...prev,
-      [questionId]: value
-    }));
-  };
-  
-  const handleMultipleChoiceChange = (questionId: string, value: string) => {
-    setResponses(prev => {
-      const currentValues = prev[questionId] || [];
-      const newValues = currentValues.includes(value)
-        ? currentValues.filter((val: string) => val !== value)
-        : [...currentValues, value];
-        
-      return {
-        ...prev,
-        [questionId]: newValues
-      };
-    });
-  };
-  
-  const handleRatingChange = (questionId: string, value: number) => {
-    setResponses(prev => ({
-      ...prev,
-      [questionId]: value
-    }));
-  };
-  
-  const validateResponses = () => {
-    const requiredQuestions = survey?.questions.filter(q => q.required) || [];
-    const missingResponses = requiredQuestions.filter(question => {
-      const response = responses[question.id];
-      
-      if (Array.isArray(response)) {
-        return response.length === 0;
+  const onSubmit = (data: FormValues) => {
+    if (!survey) return;
+    
+    // Validar las respuestas requeridas
+    const requiredQuestions = survey.questions.filter(q => q.required);
+    const missingRequiredAnswers = requiredQuestions.filter(q => {
+      const answer = data.answers[q.id];
+      if (Array.isArray(answer)) {
+        return answer.length === 0;
       }
-      
-      return !response;
+      return !answer;
     });
     
-    return missingResponses.length === 0;
-  };
-  
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateResponses()) {
+    if (missingRequiredAnswers.length > 0) {
       toast({
-        title: "Missing responses",
+        title: "Missing answers",
         description: "Please answer all required questions",
         variant: "destructive"
       });
       return;
     }
     
-    // Save responses to localStorage
-    const savedResponses = JSON.parse(localStorage.getItem('surveyResponses') || '[]');
-    const newResponse = {
-      surveyId,
-      responses,
+    // Preparar datos para enviar
+    const submission: SurveyResponseSubmission = {
+      surveyId: survey.id,
+      respondentName: data.respondentName,
+      respondentEmail: data.respondentEmail,
+      respondentPhone: data.respondentPhone,
+      respondentCompany: data.respondentCompany,
+      answers: data.answers,
       submittedAt: new Date().toISOString()
     };
     
-    localStorage.setItem('surveyResponses', JSON.stringify([...savedResponses, newResponse]));
+    console.log('Saving survey response:', submission);
     
-    // Show success message
-    setSubmitted(true);
+    // Guardar en localStorage para simulación
+    const savedResponses = JSON.parse(localStorage.getItem('surveyResponses') || '[]');
+    localStorage.setItem('surveyResponses', JSON.stringify([...savedResponses, submission]));
     
     toast({
       title: "Thank you!",
-      description: "Your responses have been submitted successfully",
+      description: "Your response has been submitted successfully",
     });
+    
+    setSubmitted(true);
   };
   
   if (loading) {
@@ -230,100 +223,189 @@ export default function TakeSurvey() {
           </CardHeader>
         </Card>
         
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-8">
-            {survey.questions.map((question, index) => (
-              <Card key={question.id} className="w-full">
-                <CardHeader>
-                  <CardTitle className="text-lg font-medium flex items-start">
-                    <span className="mr-2">{index + 1}.</span>
-                    <span>
-                      {question.title}
-                      {question.required && <span className="text-red-500 ml-1">*</span>}
-                    </span>
-                  </CardTitle>
-                  {question.description && (
-                    <p className="text-sm text-muted-foreground pl-6">{question.description}</p>
-                  )}
-                </CardHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <Card className="w-full mb-6">
+              <CardHeader>
+                <CardTitle className="text-lg">Your Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="respondentName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Name <span className="text-red-500">*</span></FormLabel>
+                        <FormControl>
+                          <Input placeholder="Your name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="respondentEmail"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email <span className="text-red-500">*</span></FormLabel>
+                        <FormControl>
+                          <Input type="email" placeholder="Your email" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 
-                <CardContent>
-                  {question.type === 'text' && (
-                    <Textarea
-                      placeholder="Your answer"
-                      value={responses[question.id] || ''}
-                      onChange={(e) => handleTextChange(question.id, e.target.value)}
-                      className="min-h-[100px]"
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="respondentPhone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Your phone number" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="respondentCompany"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Company</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Your company" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <div className="space-y-6">
+              {survey.questions.map((question, index) => (
+                <Card key={question.id} className="w-full">
+                  <CardHeader>
+                    <CardTitle className="text-base font-medium flex items-start">
+                      <span className="mr-2">{index + 1}.</span>
+                      <span>
+                        {question.title}
+                        {question.required && <span className="text-red-500 ml-1">*</span>}
+                      </span>
+                    </CardTitle>
+                    {question.description && (
+                      <p className="text-sm text-muted-foreground pl-6">{question.description}</p>
+                    )}
+                  </CardHeader>
+                  
+                  <CardContent>
+                    <FormField
+                      control={form.control}
+                      name={`answers.${question.id}`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            {question.type === 'text' && (
+                              <Textarea 
+                                placeholder="Your answer"
+                                {...field}
+                                className="min-h-[100px]"
+                              />
+                            )}
+                            
+                            {question.type === 'single-choice' && question.options && (
+                              <div className="space-y-2">
+                                {question.options.map((option, i) => (
+                                  <div key={i} className="flex items-center">
+                                    <input
+                                      type="radio"
+                                      id={`q${index}-o${i}`}
+                                      name={`question-${question.id}`}
+                                      value={option}
+                                      checked={field.value === option}
+                                      onChange={() => field.onChange(option)}
+                                      className="mr-2"
+                                    />
+                                    <label htmlFor={`q${index}-o${i}`}>{option}</label>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            
+                            {question.type === 'multiple-choice' && question.options && (
+                              <div className="space-y-2">
+                                {question.options.map((option, i) => {
+                                  const values = field.value as string[] || [];
+                                  return (
+                                    <div key={i} className="flex items-center">
+                                      <input
+                                        type="checkbox"
+                                        id={`q${index}-o${i}`}
+                                        value={option}
+                                        checked={values.includes(option)}
+                                        onChange={(e) => {
+                                          const newValues = e.target.checked
+                                            ? [...values, option]
+                                            : values.filter(v => v !== option);
+                                          field.onChange(newValues);
+                                        }}
+                                        className="mr-2"
+                                      />
+                                      <label htmlFor={`q${index}-o${i}`}>{option}</label>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                            
+                            {question.type === 'rating' && (
+                              <div className="flex space-x-2">
+                                {[1, 2, 3, 4, 5].map((value) => (
+                                  <button
+                                    key={value}
+                                    type="button"
+                                    className={`w-10 h-10 rounded-full border flex items-center justify-center transition-colors ${
+                                      field.value === value.toString() 
+                                        ? 'bg-primary text-primary-foreground' 
+                                        : 'hover:bg-accent'
+                                    }`}
+                                    onClick={() => field.onChange(value.toString())}
+                                  >
+                                    {value}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  )}
-                  
-                  {question.type === 'single-choice' && question.options && (
-                    <div className="space-y-2">
-                      {question.options.map((option, i) => (
-                        <div key={i} className="flex items-center">
-                          <input
-                            type="radio"
-                            id={`q${index}-o${i}`}
-                            name={`question-${question.id}`}
-                            value={option}
-                            checked={responses[question.id] === option}
-                            onChange={() => handleSingleChoiceChange(question.id, option)}
-                            className="mr-2"
-                          />
-                          <label htmlFor={`q${index}-o${i}`}>{option}</label>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  
-                  {question.type === 'multiple-choice' && question.options && (
-                    <div className="space-y-2">
-                      {question.options.map((option, i) => (
-                        <div key={i} className="flex items-center">
-                          <input
-                            type="checkbox"
-                            id={`q${index}-o${i}`}
-                            name={`question-${question.id}`}
-                            value={option}
-                            checked={(responses[question.id] || []).includes(option)}
-                            onChange={() => handleMultipleChoiceChange(question.id, option)}
-                            className="mr-2"
-                          />
-                          <label htmlFor={`q${index}-o${i}`}>{option}</label>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  
-                  {question.type === 'rating' && (
-                    <div className="flex space-x-2">
-                      {[1, 2, 3, 4, 5].map((value) => (
-                        <button
-                          key={value}
-                          type="button"
-                          className={`w-10 h-10 rounded-full border flex items-center justify-center transition-colors ${
-                            responses[question.id] === value 
-                              ? 'bg-primary text-primary-foreground' 
-                              : 'hover:bg-accent'
-                          }`}
-                          onClick={() => handleRatingChange(question.id, value)}
-                        >
-                          {value}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          
-          <div className="mt-8 flex justify-end">
-            <Button type="submit">
-              Submit Responses
-            </Button>
-          </div>
-        </form>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            
+            <div className="mt-8 flex justify-end">
+              <Button variant="outline" type="button" className="mr-4" onClick={() => navigate('/')}>
+                Cancel
+              </Button>
+              <Button type="submit">
+                Submit Responses
+              </Button>
+            </div>
+          </form>
+        </Form>
       </main>
       
       <Footer />

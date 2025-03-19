@@ -16,6 +16,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
+import { SurveyResponseSubmission } from '@/types/surveyTypes';
 
 // Mock survey data - in a real app, this would come from an API
 const mockSurveys = {
@@ -28,23 +29,27 @@ const mockSurveys = {
         id: 'q1',
         type: 'rating',
         question: 'How would you rate your overall experience with our service?',
-        options: ['1', '2', '3', '4', '5']
+        options: ['1', '2', '3', '4', '5'],
+        required: true
       },
       {
         id: 'q2',
         type: 'text',
-        question: 'What did you like most about our service?'
+        question: 'What did you like most about our service?',
+        required: false
       },
       {
         id: 'q3',
         type: 'text',
-        question: 'What could we improve?'
+        question: 'What could we improve?',
+        required: true
       },
       {
         id: 'q4',
         type: 'multiple',
         question: 'Which features do you use most often?',
-        options: ['Dashboard', 'Reports', 'Surveys', 'Analytics', 'Other']
+        options: ['Dashboard', 'Reports', 'Surveys', 'Analytics', 'Other'],
+        required: true
       }
     ]
   }
@@ -53,6 +58,8 @@ const mockSurveys = {
 const formSchema = z.object({
   name: z.string().min(1, { message: 'Name is required' }),
   email: z.string().email({ message: 'Valid email is required' }),
+  phone: z.string().optional(),
+  company: z.string().optional(),
   answers: z.record(z.union([z.string(), z.array(z.string())]))
 });
 
@@ -71,6 +78,8 @@ export default function SurveyResponse() {
     defaultValues: {
       name: '',
       email: '',
+      phone: '',
+      company: '',
       answers: {}
     }
   });
@@ -100,12 +109,35 @@ export default function SurveyResponse() {
   }
 
   const onSubmit = (data: FormData) => {
-    console.log('Survey response submitted:', data);
-    // In a real app, this would send the data to an API
+    // Preparar los datos para enviar al servidor
+    const submission: SurveyResponseSubmission = {
+      surveyId: survey.id,
+      respondentName: data.name.trim(),
+      respondentEmail: data.email.trim(),
+      respondentPhone: data.phone?.trim(),
+      respondentCompany: data.company?.trim(),
+      answers: data.answers,
+      submittedAt: new Date().toISOString()
+    };
+    
+    console.log('Survey response submitted:', submission);
+    
+    // En una aplicación real, enviaríamos los datos a una API
+    // fetch('/api/survey-responses', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify(submission)
+    // })
+    
+    // Guardar en localStorage para simulación
+    const savedResponses = JSON.parse(localStorage.getItem('surveyResponses') || '[]');
+    localStorage.setItem('surveyResponses', JSON.stringify([...savedResponses, submission]));
+    
     toast({
       title: "Response submitted",
       description: "Thank you for completing our survey!",
     });
+    
     setSubmitted(true);
   };
 
@@ -153,18 +185,28 @@ export default function SurveyResponse() {
                   <h3 className="text-lg font-medium">Your Information</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="name">Name</Label>
+                      <Label htmlFor="name">Name <span className="text-red-500">*</span></Label>
                       <Input id="name" {...register('name')} />
                       {errors.name && (
                         <p className="text-sm text-destructive">{errors.name.message}</p>
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
+                      <Label htmlFor="email">Email <span className="text-red-500">*</span></Label>
                       <Input id="email" type="email" {...register('email')} />
                       {errors.email && (
                         <p className="text-sm text-destructive">{errors.email.message}</p>
                       )}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Phone</Label>
+                      <Input id="phone" {...register('phone')} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="company">Company</Label>
+                      <Input id="company" {...register('company')} />
                     </div>
                   </div>
                 </div>
@@ -178,14 +220,22 @@ export default function SurveyResponse() {
                     <div key={question.id} className="space-y-3">
                       <h4 className="font-medium">
                         {index + 1}. {question.question}
+                        {question.required && <span className="text-red-500 ml-1">*</span>}
                       </h4>
                       
                       {question.type === 'text' && (
                         <div>
                           <Textarea 
-                            {...register(`answers.${question.id}` as const)} 
+                            {...register(`answers.${question.id}` as const, { 
+                              required: question.required ? 'This field is required' : false 
+                            })} 
                             placeholder="Your answer"
                           />
+                          {errors.answers?.[question.id] && (
+                            <p className="text-sm text-destructive mt-1">
+                              {errors.answers[question.id]?.message as string}
+                            </p>
+                          )}
                         </div>
                       )}
                       
@@ -197,12 +247,19 @@ export default function SurveyResponse() {
                                 <RadioGroupItem
                                   id={`${question.id}-${option}`}
                                   value={option}
-                                  {...register(`answers.${question.id}` as const)}
+                                  {...register(`answers.${question.id}` as const, {
+                                    required: question.required ? 'Please select a rating' : false
+                                  })}
                                 />
                                 <Label htmlFor={`${question.id}-${option}`}>{option}</Label>
                               </div>
                             ))}
                           </div>
+                          {errors.answers?.[question.id] && (
+                            <p className="text-sm text-destructive mt-1">
+                              {errors.answers[question.id]?.message as string}
+                            </p>
+                          )}
                         </RadioGroup>
                       )}
                       
@@ -213,11 +270,21 @@ export default function SurveyResponse() {
                               <Checkbox 
                                 id={`${question.id}-${option}`}
                                 value={option}
-                                {...register(`answers.${question.id}` as const)}
+                                {...register(`answers.${question.id}` as const, {
+                                  validate: v => 
+                                    !question.required || 
+                                    (Array.isArray(v) && v.length > 0) || 
+                                    'Please select at least one option'
+                                })}
                               />
                               <Label htmlFor={`${question.id}-${option}`}>{option}</Label>
                             </div>
                           ))}
+                          {errors.answers?.[question.id] && (
+                            <p className="text-sm text-destructive col-span-2 mt-1">
+                              {errors.answers[question.id]?.message as string}
+                            </p>
+                          )}
                         </div>
                       )}
                     </div>

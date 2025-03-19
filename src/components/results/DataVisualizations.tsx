@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Survey, Question, Response, Answer } from "@/utils/sampleData";
 import { 
   BarChart, Bar, 
   PieChart, Pie, Cell, 
@@ -11,10 +10,11 @@ import {
   XAxis, YAxis, 
   Tooltip, Legend, CartesianGrid
 } from "recharts";
+import { Survey, SurveyResponse, QuestionResponse } from "@/types/surveyTypes";
 
 interface DataVisualizationsProps {
   survey: Survey;
-  responses: Response[];
+  responses: SurveyResponse[];
 }
 
 export default function DataVisualizations({ survey, responses }: DataVisualizationsProps) {
@@ -22,32 +22,33 @@ export default function DataVisualizations({ survey, responses }: DataVisualizat
     survey.questions.length > 0 ? survey.questions[0].id : ''
   );
 
-  const getAnswersForQuestion = (questionId: string): Answer[] => {
+  const getAnswersForQuestion = (questionId: string): QuestionResponse[] => {
     return responses
       .map(response => response.answers.find(answer => answer.questionId === questionId))
-      .filter(answer => answer !== undefined) as Answer[];
+      .filter((answer): answer is QuestionResponse => answer !== undefined);
   };
 
-  const getSelectedQuestion = (): Question | undefined => {
+  const getSelectedQuestion = () => {
     return survey.questions.find(q => q.id === selectedQuestionId);
   };
 
-  const formatDataForVisualization = (question: Question, answers: Answer[]) => {
-    if (question.type === 'text') {
+  const formatDataForVisualization = (questionType: string, answers: QuestionResponse[]) => {
+    if (questionType === 'text') {
       return answers.map(answer => ({
         response: answer.value as string,
       }));
     }
 
-    if (question.type === 'multiple-choice' && question.options) {
+    if (questionType === 'multiple-choice') {
       const counts: Record<string, number> = {};
-      question.options.forEach(option => { counts[option] = 0 });
       
       answers.forEach(answer => {
         const selectedOptions = Array.isArray(answer.value) ? answer.value : [answer.value];
         selectedOptions.forEach(option => {
           if (counts[option as string] !== undefined) {
             counts[option as string]++;
+          } else {
+            counts[option as string] = 1;
           }
         });
       });
@@ -55,23 +56,24 @@ export default function DataVisualizations({ survey, responses }: DataVisualizat
       return Object.entries(counts).map(([name, value]) => ({ name, value }));
     }
 
-    if (['single-choice', 'dropdown'].includes(question.type) && question.options) {
+    if (['single-choice', 'dropdown'].includes(questionType)) {
       const counts: Record<string, number> = {};
-      question.options.forEach(option => { counts[option] = 0 });
       
       answers.forEach(answer => {
         const selected = answer.value as string;
         if (counts[selected] !== undefined) {
           counts[selected]++;
+        } else {
+          counts[selected] = 1;
         }
       });
 
       return Object.entries(counts).map(([name, value]) => ({ name, value }));
     }
 
-    if (['rating', 'nps'].includes(question.type)) {
-      const min = question.type === 'nps' ? 0 : (question.settings?.min || 1);
-      const max = question.type === 'nps' ? 10 : (question.settings?.max || 5);
+    if (['rating', 'nps'].includes(questionType)) {
+      const min = questionType === 'nps' ? 0 : 1;
+      const max = questionType === 'nps' ? 10 : 5;
       const counts: Record<string, number> = {};
       
       for (let i = min; i <= max; i++) {
@@ -79,7 +81,7 @@ export default function DataVisualizations({ survey, responses }: DataVisualizat
       }
       
       answers.forEach(answer => {
-        const rating = answer.value.toString();
+        const rating = typeof answer.value === 'string' ? answer.value : answer.value[0];
         if (counts[rating] !== undefined) {
           counts[rating]++;
         }
@@ -93,10 +95,42 @@ export default function DataVisualizations({ survey, responses }: DataVisualizat
 
   const selectedQuestion = getSelectedQuestion();
   const questionAnswers = selectedQuestion ? getAnswersForQuestion(selectedQuestion.id) : [];
-  const visualizationData = selectedQuestion ? formatDataForVisualization(selectedQuestion, questionAnswers) : [];
+  const visualizationData = selectedQuestion 
+    ? formatDataForVisualization(selectedQuestion.type, questionAnswers) 
+    : [];
 
-  // Colors for charts
+  // Colores para gráficos
   const COLORS = ['#3b82f6', '#64748b', '#0ea5e9', '#84cc16', '#8b5cf6', '#f97316'];
+
+  const renderRespondentInfo = () => {
+    if (questionAnswers.length === 0) return null;
+    
+    return (
+      <div className="mb-6 border rounded-md p-4">
+        <h3 className="text-sm font-medium mb-2">Respondent Information</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <div>
+            <p className="text-xs text-muted-foreground">Total Responses</p>
+            <p className="font-medium">{responses.length}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Valid Responses</p>
+            <p className="font-medium">{questionAnswers.filter(a => a.isValid).length}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Latest Response</p>
+            <p className="font-medium">
+              {responses.length ? new Date(responses[0].submittedAt).toLocaleDateString() : 'N/A'}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Invalid Responses</p>
+            <p className="font-medium">{questionAnswers.filter(a => !a.isValid).length}</p>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const renderTextResponses = () => {
     return (
@@ -110,8 +144,13 @@ export default function DataVisualizations({ survey, responses }: DataVisualizat
           ) : (
             <div className="divide-y">
               {questionAnswers.map((answer, i) => (
-                <div key={i} className="p-3 hover:bg-muted/40 transition-colors">
-                  <p className="text-sm">{answer.value as string}</p>
+                <div key={i} className={`p-3 hover:bg-muted/40 transition-colors ${!answer.isValid ? 'bg-red-50' : ''}`}>
+                  <div className="flex justify-between items-start">
+                    <p className="text-sm">{answer.value as string}</p>
+                    {!answer.isValid && (
+                      <span className="px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-800">Invalid</span>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -266,7 +305,9 @@ export default function DataVisualizations({ survey, responses }: DataVisualizat
             </select>
           </div>
 
-          <div className="mt-4">
+          {renderRespondentInfo()}
+
+          <div>
             {renderCharts()}
           </div>
         </div>
