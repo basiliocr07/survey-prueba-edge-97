@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -366,8 +367,8 @@ export default function TakeSurvey() {
                             {question.type === 'rating' && (
                               <StarRating
                                 name={`rating-${question.id}`}
-                                value={field.value as string}
-                                onChange={field.onChange}
+                                value={typeof field.value === 'string' ? field.value : ''}
+                                onChange={(value) => field.onChange(value)}
                                 required={question.required}
                               />
                             )}
@@ -375,8 +376,8 @@ export default function TakeSurvey() {
                             {question.type === 'nps' && (
                               <NPSRating
                                 name={`nps-${question.id}`}
-                                value={field.value as string}
-                                onChange={field.onChange}
+                                value={typeof field.value === 'string' ? field.value : ''}
+                                onChange={(value) => field.onChange(value)}
                                 required={question.required}
                               />
                             )}
