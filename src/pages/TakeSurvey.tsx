@@ -122,7 +122,7 @@ export default function TakeSurvey() {
       respondentPhone: data.respondentPhone,
       respondentCompany: data.respondentCompany,
       answers: data.answers,
-      submittedAt: new Date().toISOString()
+      submittedAt: new Date().toISOString() // This is now valid as we've added it to the type definition
     };
     
     console.log('Saving survey response:', submission);

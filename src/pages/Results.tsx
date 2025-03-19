@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,12 +8,13 @@ import { Button } from "@/components/ui/button";
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { cn } from '@/lib/utils';
+import { SurveyResponse } from "@/types/surveyTypes";
 
 export default function Results() {
   const [selectedSurveyId, setSelectedSurveyId] = useState<string>(sampleSurveys[0]?.id || '');
   
   const selectedSurvey = sampleSurveys.find(survey => survey.id === selectedSurveyId) || sampleSurveys[0];
-  const surveyResponses = sampleResponses.filter(response => response.surveyId === selectedSurveyId);
+  const surveyResponses = sampleResponses.filter(response => response.surveyId === selectedSurveyId) as SurveyResponse[];
 
   const getAverageCompletionTime = () => {
     if (surveyResponses.length === 0) return 0;

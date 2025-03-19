@@ -51,4 +51,5 @@ export interface SurveyResponseSubmission {
   answers: Record<string, string | string[]>;
   isExistingClient?: boolean;
   existingClientId?: string;
+  submittedAt?: string; // Added this property to fix the errors
 }

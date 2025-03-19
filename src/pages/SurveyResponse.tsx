@@ -117,7 +117,7 @@ export default function SurveyResponse() {
       respondentPhone: data.phone?.trim(),
       respondentCompany: data.company?.trim(),
       answers: data.answers,
-      submittedAt: new Date().toISOString()
+      submittedAt: new Date().toISOString() // This is now valid as we've added it to the type definition
     };
     
     console.log('Survey response submitted:', submission);
