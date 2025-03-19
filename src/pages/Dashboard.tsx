@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -177,12 +178,16 @@ export default function Dashboard() {
       });
       
       toast.success(`Estado actualizado a ${getStatusLabel(data.status)}`);
-      setConfirmDialog({ open: false, id: "", type: "", newStatus: "", currentStatus: "" });
+      
+      // Fixed: Close the dialog without manipulating event
+      setConfirmDialog(prev => ({ ...prev, open: false }));
     },
     onError: (error) => {
       console.error("Error al actualizar el estado:", error);
       toast.error("Error al actualizar el estado");
-      setConfirmDialog({ open: false, id: "", type: "", newStatus: "", currentStatus: "" });
+      
+      // Fixed: Ensure dialog closes even on error
+      setConfirmDialog(prev => ({ ...prev, open: false }));
     }
   });
 
@@ -209,6 +214,7 @@ export default function Dashboard() {
       return;
     }
     
+    // Fixed: Simplified dialog opening
     setConfirmDialog({
       open: true,
       id,
@@ -219,22 +225,19 @@ export default function Dashboard() {
   };
 
   const confirmStatusChange = () => {
-    updateStatusMutation.mutate({
-      id: confirmDialog.id,
-      type: confirmDialog.type,
-      newStatus: confirmDialog.newStatus
-    });
+    // Fixed: Do not include unnecessary event handling
+    if (confirmDialog.id && confirmDialog.type && confirmDialog.newStatus) {
+      updateStatusMutation.mutate({
+        id: confirmDialog.id,
+        type: confirmDialog.type,
+        newStatus: confirmDialog.newStatus
+      });
+    }
   };
 
-  const getCurrentStatus = (type: string) => {
-    if (type === 'Survey' && latestSurvey) {
-      return latestSurvey.status;
-    } else if (type === 'Suggestion' && latestSuggestion) {
-      return latestSuggestion.status;
-    } else if (type === 'Requirement' && latestRequirement) {
-      return latestRequirement.status;
-    }
-    return '';
+  const closeDialog = () => {
+    // Fixed: Simplified dialog closing
+    setConfirmDialog(prev => ({ ...prev, open: false }));
   };
 
   return (
@@ -466,9 +469,11 @@ export default function Dashboard() {
         </Card>
       </div>
 
+      {/* Fixed: Properly handle Dialog open state changes */}
       <Dialog 
         open={confirmDialog.open} 
         onOpenChange={(open) => {
+          // Only update state if changing from open to closed
           if (!open) {
             setConfirmDialog(prev => ({ ...prev, open: false }));
           }
@@ -491,13 +496,15 @@ export default function Dashboard() {
           <DialogFooter>
             <Button 
               variant="outline" 
-              onClick={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
+              onClick={closeDialog}
+              type="button"
             >
               Cancelar
             </Button>
             <Button 
-              onClick={confirmStatusChange} 
+              onClick={confirmStatusChange}
               disabled={updateStatusMutation.isPending}
+              type="button"
             >
               {updateStatusMutation.isPending ? "Actualizando..." : "Confirmar"}
             </Button>
