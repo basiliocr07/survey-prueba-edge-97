@@ -1,11 +1,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using SurveyApp.Application.DTOs;
 using SurveyApp.Application.Ports;
-using SurveyApp.Application.Services;
 using SurveyApp.Domain.Entities;
 
 namespace SurveyApp.Application.Services
@@ -134,16 +134,40 @@ namespace SurveyApp.Application.Services
         {
             try
             {
-                var requirements = await _requirementRepository.GetAllAsync();
-                return requirements
-                    .OrderByDescending(r => r.CreatedAt)
-                    .Take(count)
-                    .Select(MapToDto)
-                    .ToList();
+                var requirements = await _requirementRepository.GetRecentRequirementsAsync(count);
+                return requirements.Select(MapToDto).ToList();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener los requerimientos recientes");
+                throw;
+            }
+        }
+
+        public async Task<List<RequirementDto>> GetRequirementsByStatusAsync(string status)
+        {
+            try
+            {
+                var requirements = await _requirementRepository.GetRequirementsByStatusAsync(status);
+                return requirements.Select(MapToDto).ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al obtener los requerimientos por estado {status}");
+                throw;
+            }
+        }
+
+        public async Task<List<RequirementDto>> GetRequirementsByPriorityAsync(string priority)
+        {
+            try
+            {
+                var requirements = await _requirementRepository.GetRequirementsByPriorityAsync(priority);
+                return requirements.Select(MapToDto).ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al obtener los requerimientos por prioridad {priority}");
                 throw;
             }
         }

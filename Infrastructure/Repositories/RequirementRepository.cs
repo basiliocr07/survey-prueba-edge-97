@@ -94,5 +94,51 @@ namespace SurveyApp.Infrastructure.Repositories
                 throw;
             }
         }
+        
+        public async Task<List<Requirement>> GetRecentRequirementsAsync(int count)
+        {
+            try
+            {
+                return await _context.Requirements
+                    .OrderByDescending(r => r.CreatedAt)
+                    .Take(count)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al obtener los requerimientos recientes");
+                throw;
+            }
+        }
+        
+        public async Task<List<Requirement>> GetRequirementsByStatusAsync(string status)
+        {
+            try
+            {
+                return await _context.Requirements
+                    .Where(r => r.Status.ToLower() == status.ToLower())
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al obtener los requerimientos por estado {status}");
+                throw;
+            }
+        }
+        
+        public async Task<List<Requirement>> GetRequirementsByPriorityAsync(string priority)
+        {
+            try
+            {
+                return await _context.Requirements
+                    .Where(r => r.Priority.ToLower() == priority.ToLower())
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al obtener los requerimientos por prioridad {priority}");
+                throw;
+            }
+        }
     }
 }

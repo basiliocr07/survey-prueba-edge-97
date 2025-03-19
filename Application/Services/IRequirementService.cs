@@ -15,5 +15,7 @@ namespace SurveyApp.Application.Services
         Task DeleteRequirementAsync(Guid id);
         Task UpdateRequirementStatusAsync(Guid id, string status);
         Task<List<RequirementDto>> GetRecentRequirementsAsync(int count);
+        Task<List<RequirementDto>> GetRequirementsByStatusAsync(string status);
+        Task<List<RequirementDto>> GetRequirementsByPriorityAsync(string priority);
     }
 }

@@ -1,13 +1,13 @@
 
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { v4 as uuidv4 } from 'uuid';
-import { Search } from 'lucide-react';
+import { Search, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Suggestion, KnowledgeBaseItem } from '@/types/suggestions';
 
 interface RequirementFormData {
@@ -18,16 +18,6 @@ interface RequirementFormData {
   priority: string;
   projectArea?: string;
 }
-
-const categories = [
-  'Feature Request', 
-  'Bug Fix', 
-  'Integration', 
-  'Performance', 
-  'Documentation', 
-  'Security', 
-  'Other'
-];
 
 const priorities = [
   'Alta',
@@ -45,20 +35,26 @@ const projectAreas = [
 
 export default function ClientRequirementForm() {
   const [isSearching, setIsSearching] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchResults, setSearchResults] = useState<{ requirements: Suggestion[], knowledgeItems: KnowledgeBaseItem[] }>({ requirements: [], knowledgeItems: [] });
   const { toast } = useToast();
-  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<RequirementFormData>();
+  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<RequirementFormData>({
+    defaultValues: {
+      priority: 'Media',
+      projectArea: 'General'
+    }
+  });
   
   const requirementContent = watch('description');
 
   const handleSearch = (content: string) => {
     if (!content || content.length < 10) return;
     
-    // This is a simplified version for the client interface
-    // In a real app, this would call an API endpoint to search for similar items
+    // Este es un ejemplo simplificado para la interfaz del cliente
+    // En una aplicación real, esto llamaría a un endpoint de API para buscar elementos similares
     setIsSearching(true);
     
-    // Mock search results
+    // Resultados simulados de búsqueda
     setSearchResults({
       requirements: [],
       knowledgeItems: []
@@ -67,7 +63,8 @@ export default function ClientRequirementForm() {
 
   const onSubmit = async (data: RequirementFormData) => {
     try {
-      // En una aplicación real, esto enviaría los datos a un endpoint de API
+      setIsSubmitting(true);
+      // Enviar los datos al endpoint de API
       const response = await fetch('/api/requirements', {
         method: 'POST',
         headers: {
@@ -87,24 +84,28 @@ export default function ClientRequirementForm() {
         toast({
           title: "Requerimiento enviado",
           description: "Tu requerimiento ha sido registrado correctamente.",
+          variant: "default"
         });
         reset();
         setIsSearching(false);
         setSearchResults({ requirements: [], knowledgeItems: [] });
       } else {
+        const errorData = await response.json();
         toast({
           title: "Error",
-          description: "Hubo un problema al enviar tu requerimiento. Por favor, intenta de nuevo.",
+          description: errorData.message || "Hubo un problema al enviar tu requerimiento. Por favor, intenta de nuevo.",
           variant: "destructive"
         });
       }
     } catch (error) {
       console.error("Error al enviar el requerimiento:", error);
       toast({
-        title: "Error",
+        title: "Error de conexión",
         description: "No pudimos conectar con el servidor. Verifica tu conexión e intenta de nuevo.",
         variant: "destructive"
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -147,7 +148,33 @@ export default function ClientRequirementForm() {
             Se encontraron elementos similares
           </h4>
           
-          {/* Render search results here */}
+          {searchResults.requirements.length > 0 && (
+            <div className="mb-2">
+              <p className="text-sm font-medium mb-1">Requerimientos similares:</p>
+              <ul className="text-sm space-y-1">
+                {searchResults.requirements.map((req) => (
+                  <li key={req.id.toString()} className="flex items-start gap-2">
+                    <span className="text-primary text-xs mt-0.5">•</span>
+                    <span>{req.content}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
+          {searchResults.knowledgeItems.length > 0 && (
+            <div>
+              <p className="text-sm font-medium mb-1">Artículos relacionados:</p>
+              <ul className="text-sm space-y-1">
+                {searchResults.knowledgeItems.map((item) => (
+                  <li key={item.id.toString()} className="flex items-start gap-2">
+                    <span className="text-primary text-xs mt-0.5">•</span>
+                    <span>{item.title}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
       
@@ -217,7 +244,9 @@ export default function ClientRequirementForm() {
         </div>
       </div>
       
-      <Button type="submit" className="w-full">Enviar Requerimiento</Button>
+      <Button type="submit" className="w-full" disabled={isSubmitting}>
+        {isSubmitting ? 'Enviando...' : 'Enviar Requerimiento'}
+      </Button>
     </form>
   );
 }
