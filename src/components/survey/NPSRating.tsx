@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 
 interface NPSRatingProps {
   name: string;
-  value: string;
+  value?: string;
   onChange: (value: string) => void;
   required?: boolean;
 }
