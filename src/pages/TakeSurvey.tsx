@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -18,10 +17,6 @@ import StarRating from '@/components/survey/StarRating';
 import NPSRating from '@/components/survey/NPSRating';
 
 const formSchema = z.object({
-  respondentName: z.string().min(1, { message: "Name is required" }),
-  respondentEmail: z.string().email({ message: "Valid email is required" }),
-  respondentPhone: z.string().optional(),
-  respondentCompany: z.string().optional(),
   answers: z.record(z.union([
     z.string(),
     z.array(z.string())
@@ -39,19 +34,39 @@ export default function TakeSurvey() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userData, setUserData] = useState({
+    username: '',
+    email: '',
+    phone: '',
+    company: ''
+  });
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      respondentName: "",
-      respondentEmail: "",
-      respondentPhone: "",
-      respondentCompany: "",
       answers: {}
     }
   });
   
   useEffect(() => {
+    const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    setIsLoggedIn(loggedIn);
+    
+    if (loggedIn) {
+      const username = localStorage.getItem('username') || '';
+      const email = localStorage.getItem('userEmail') || '';
+      const phone = localStorage.getItem('userPhone') || '';
+      const company = localStorage.getItem('userCompany') || '';
+      
+      setUserData({
+        username,
+        email,
+        phone,
+        company
+      });
+    }
+    
     const loadSurvey = () => {
       try {
         console.log("Loading survey with ID:", surveyId);
@@ -73,13 +88,7 @@ export default function TakeSurvey() {
             }
           });
           
-          form.reset({ 
-            respondentName: "", 
-            respondentEmail: "", 
-            respondentPhone: "", 
-            respondentCompany: "", 
-            answers: initialAnswers 
-          });
+          form.reset({ answers: initialAnswers });
         } else {
           console.error("Survey not found with ID:", surveyId);
           setError('Survey not found');
@@ -119,10 +128,10 @@ export default function TakeSurvey() {
     
     const submission: SurveyResponseSubmission = {
       surveyId: survey.id,
-      respondentName: data.respondentName,
-      respondentEmail: data.respondentEmail,
-      respondentPhone: data.respondentPhone,
-      respondentCompany: data.respondentCompany,
+      respondentName: isLoggedIn ? userData.username : 'Anonymous User',
+      respondentEmail: isLoggedIn ? userData.email : '',
+      respondentPhone: isLoggedIn ? userData.phone : '',
+      respondentCompany: isLoggedIn ? userData.company : '',
       answers: data.answers,
       submittedAt: new Date().toISOString()
     };
@@ -217,8 +226,8 @@ export default function TakeSurvey() {
       <main className="flex-1 w-full max-w-4xl mx-auto pt-24 px-6 pb-16">
         <Card className="w-full mb-8">
           <CardHeader>
-            <CardTitle className="text-2xl">{survey.title}</CardTitle>
-            {survey.description && (
+            <CardTitle className="text-2xl">{survey?.title}</CardTitle>
+            {survey?.description && (
               <p className="text-muted-foreground mt-2">{survey.description}</p>
             )}
           </CardHeader>
@@ -226,75 +235,8 @@ export default function TakeSurvey() {
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <Card className="w-full mb-6">
-              <CardHeader>
-                <CardTitle className="text-lg">Your Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="respondentName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Name <span className="text-red-500">*</span></FormLabel>
-                        <FormControl>
-                          <Input placeholder="Your name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="respondentEmail"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email <span className="text-red-500">*</span></FormLabel>
-                        <FormControl>
-                          <Input type="email" placeholder="Your email" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="respondentPhone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Phone</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Your phone number" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="respondentCompany"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Company</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Your company" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-            
             <div className="space-y-6">
-              {survey.questions.map((question, index) => (
+              {survey?.questions.map((question, index) => (
                 <Card key={question.id} className="w-full">
                   <CardHeader>
                     <CardTitle className="text-base font-medium flex items-start">
