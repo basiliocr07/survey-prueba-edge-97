@@ -136,7 +136,6 @@ const StatusBadge = ({ status }: { status: string }) => {
 
 export default function Dashboard() {
   const queryClient = useQueryClient();
-  // Changed to use a simple initial state object instead of null
   const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState>({ 
     open: false, 
     id: "", 
@@ -180,14 +179,14 @@ export default function Dashboard() {
       
       toast.success(`Estado actualizado a ${getStatusLabel(data.status)}`);
       
-      // Improved: Set only the open state to false without manipulating other properties
+      // Close dialog safely by only changing the open property
       setConfirmDialog(prev => ({ ...prev, open: false }));
     },
     onError: (error) => {
       console.error("Error al actualizar el estado:", error);
       toast.error("Error al actualizar el estado");
       
-      // Improved: Set only the open state to false
+      // Close dialog safely even on error
       setConfirmDialog(prev => ({ ...prev, open: false }));
     }
   });
@@ -215,7 +214,7 @@ export default function Dashboard() {
       return;
     }
     
-    // Improved: Set all dialog properties while opening it
+    // Set all dialog state properties at once
     setConfirmDialog({
       open: true,
       id,
@@ -226,7 +225,7 @@ export default function Dashboard() {
   };
 
   const confirmStatusChange = () => {
-    // Improved: Proper null check for dialog properties
+    // Only proceed if we have the necessary data
     if (confirmDialog.id && confirmDialog.type && confirmDialog.newStatus) {
       updateStatusMutation.mutate({
         id: confirmDialog.id,
@@ -237,7 +236,7 @@ export default function Dashboard() {
   };
 
   const closeDialog = () => {
-    // Improved: Set only the open state to false
+    // Only update the open state
     setConfirmDialog(prev => ({ ...prev, open: false }));
   };
 
@@ -475,11 +474,10 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Improved: Dialog now uses a more reliable state management approach */}
       <Dialog 
         open={confirmDialog.open} 
         onOpenChange={(open) => {
-          // Critical fix: Only update state when dialog is closing
+          // Only update state when dialog is closing to prevent freezing
           if (!open) {
             setConfirmDialog(prev => ({ ...prev, open: false }));
           }
