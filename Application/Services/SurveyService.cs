@@ -104,6 +104,31 @@ namespace SurveyApp.Application.Services
             return responses.Select(MapToSurveyResponseDto).ToList();
         }
 
+        // Nuevo método para obtener respuestas recientes
+        public async Task<List<RecentResponseDto>> GetRecentResponsesAsync(int count)
+        {
+            var recentResponses = await _surveyResponseRepository.GetRecentResponsesAsync(count);
+            var result = new List<RecentResponseDto>();
+            
+            foreach (var response in recentResponses)
+            {
+                // Obtener el título de la encuesta
+                var survey = await _surveyRepository.GetByIdAsync(response.SurveyId);
+                string surveyTitle = survey?.Title ?? "Encuesta sin título";
+                
+                result.Add(new RecentResponseDto
+                {
+                    Id = response.Id,
+                    SurveyId = response.SurveyId,
+                    SurveyTitle = surveyTitle,
+                    RespondentName = response.RespondentName,
+                    SubmittedAt = response.SubmittedAt
+                });
+            }
+            
+            return result;
+        }
+
         private SurveyResponseDto MapToSurveyResponseDto(SurveyResponse response)
         {
             return new SurveyResponseDto

@@ -9,6 +9,11 @@ namespace SurveyApp.WebMvc.Models
         public SurveyListItemViewModel LatestSurvey { get; set; }
         public SuggestionListItemViewModel LatestSuggestion { get; set; }
         public RequirementListItemViewModel LatestRequirement { get; set; }
+        
+        // Nuevas propiedades para las listas de elementos recientes
+        public List<SurveyResponseItemViewModel> RecentSurveyResponses { get; set; } = new List<SurveyResponseItemViewModel>();
+        public List<SuggestionListItemViewModel> RecentSuggestions { get; set; } = new List<SuggestionListItemViewModel>();
+        public List<RequirementListItemViewModel> RecentRequirements { get; set; } = new List<RequirementListItemViewModel>();
     }
 
     public class SuggestionListItemViewModel
@@ -28,5 +33,14 @@ namespace SurveyApp.WebMvc.Models
         public string Priority { get; set; }
         public DateTime CreatedAt { get; set; }
         public string Status { get; set; }
+    }
+    
+    public class SurveyResponseItemViewModel
+    {
+        public Guid Id { get; set; }
+        public Guid SurveyId { get; set; }
+        public string SurveyTitle { get; set; }
+        public string RespondentName { get; set; }
+        public DateTime SubmittedAt { get; set; }
     }
 }

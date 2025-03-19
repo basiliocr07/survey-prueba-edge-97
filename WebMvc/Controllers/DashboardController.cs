@@ -55,6 +55,17 @@ namespace SurveyApp.WebMvc.Controllers
                     };
                 }
 
+                // Obtener las últimas 5 respuestas de encuestas
+                var surveyResponses = await _surveyService.GetRecentResponsesAsync(5);
+                viewModel.RecentSurveyResponses = surveyResponses.Select(r => new SurveyResponseItemViewModel
+                {
+                    Id = r.Id,
+                    SurveyId = r.SurveyId,
+                    SurveyTitle = r.SurveyTitle ?? "Sin título",
+                    RespondentName = r.RespondentName ?? "Anónimo",
+                    SubmittedAt = r.SubmittedAt
+                }).ToList();
+
                 // Obtener la última sugerencia
                 var suggestions = await _suggestionService.GetAllSuggestionsAsync();
                 if (suggestions.Count > 0)
@@ -68,6 +79,16 @@ namespace SurveyApp.WebMvc.Controllers
                         Status = suggestions[0].Status
                     };
                 }
+
+                // Obtener las últimas 5 sugerencias
+                viewModel.RecentSuggestions = suggestions.Take(5).Select(s => new SuggestionListItemViewModel
+                {
+                    Id = s.Id,
+                    Content = s.Content,
+                    CustomerName = s.CustomerName ?? "Anónimo",
+                    CreatedAt = s.CreatedAt,
+                    Status = s.Status
+                }).ToList();
 
                 // Para el último requerimiento, podríamos usar algún servicio específico
                 // Como no tenemos uno directamente, usaremos una sugerencia con prioridad alta como ejemplo
@@ -84,6 +105,17 @@ namespace SurveyApp.WebMvc.Controllers
                         Status = requirements[0].Status
                     };
                 }
+
+                // Obtener los últimos 5 requerimientos (usando sugerencias con prioridad alta como ejemplo)
+                viewModel.RecentRequirements = requirements.Take(5).Select(r => new RequirementListItemViewModel
+                {
+                    Id = r.Id,
+                    Title = r.Title ?? r.Content,
+                    Description = r.Description,
+                    Priority = r.Priority ?? "medium",
+                    CreatedAt = r.CreatedAt,
+                    Status = r.Status
+                }).ToList();
             }
             catch (Exception ex)
             {
