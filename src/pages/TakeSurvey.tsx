@@ -366,7 +366,7 @@ export default function TakeSurvey() {
                             {question.type === 'rating' && (
                               <StarRating
                                 name={`rating-${question.id}`}
-                                value={field.value as string}
+                                value={typeof field.value === 'string' ? field.value : ''}
                                 onChange={field.onChange}
                                 required={question.required}
                               />
@@ -375,7 +375,7 @@ export default function TakeSurvey() {
                             {question.type === 'nps' && (
                               <NPSRating
                                 name={`nps-${question.id}`}
-                                value={field.value as string}
+                                value={typeof field.value === 'string' ? field.value : ''}
                                 onChange={field.onChange}
                                 required={question.required}
                               />
