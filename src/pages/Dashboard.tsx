@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { 
   BarChart3, 
   ArrowRight, 
-  Eye, 
   Clock, 
   LineChart, 
   CheckCircle2,
@@ -16,6 +15,7 @@ import Navbar from "@/components/layout/Navbar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { toast } from "sonner";
 
 // Data types for our dashboard items
 interface SurveyItem {
@@ -54,6 +54,9 @@ interface RequirementItem {
 
 // Mock data fetching functions - these would connect to your API
 const fetchLatestSurvey = async (): Promise<SurveyItem> => {
+  // Simulando una llamada API con un tiempo de respuesta realista
+  await new Promise(resolve => setTimeout(resolve, 300));
+  
   return {
     id: "1",
     title: "Encuesta de Satisfacción del Cliente",
@@ -65,6 +68,9 @@ const fetchLatestSurvey = async (): Promise<SurveyItem> => {
 };
 
 const fetchRecentResponses = async (): Promise<SurveyResponseItem[]> => {
+  // Simulando una llamada API con un tiempo de respuesta realista
+  await new Promise(resolve => setTimeout(resolve, 400));
+  
   return [
     {
       id: "1",
@@ -91,6 +97,9 @@ const fetchRecentResponses = async (): Promise<SurveyResponseItem[]> => {
 };
 
 const fetchLatestSuggestion = async (): Promise<SuggestionItem> => {
+  // Simulando una llamada API con un tiempo de respuesta realista
+  await new Promise(resolve => setTimeout(resolve, 350));
+  
   return {
     id: "1",
     content: "Agregar modo oscuro al portal del cliente",
@@ -101,6 +110,9 @@ const fetchLatestSuggestion = async (): Promise<SuggestionItem> => {
 };
 
 const fetchRecentSuggestions = async (): Promise<SuggestionItem[]> => {
+  // Simulando una llamada API con un tiempo de respuesta realista
+  await new Promise(resolve => setTimeout(resolve, 450));
+  
   return [
     {
       id: "1",
@@ -127,6 +139,9 @@ const fetchRecentSuggestions = async (): Promise<SuggestionItem[]> => {
 };
 
 const fetchLatestRequirement = async (): Promise<RequirementItem> => {
+  // Simulando una llamada API con un tiempo de respuesta realista
+  await new Promise(resolve => setTimeout(resolve, 320));
+  
   return {
     id: "1",
     title: "Diseño responsivo para móviles",
@@ -138,6 +153,9 @@ const fetchLatestRequirement = async (): Promise<RequirementItem> => {
 };
 
 const fetchRecentRequirements = async (): Promise<RequirementItem[]> => {
+  // Simulando una llamada API con un tiempo de respuesta realista
+  await new Promise(resolve => setTimeout(resolve, 380));
+  
   return [
     {
       id: "1",
@@ -166,6 +184,23 @@ const fetchRecentRequirements = async (): Promise<RequirementItem[]> => {
   ];
 };
 
+// Función para actualizar el estado de un elemento
+const updateItemStatus = async (itemType: string, id: string, status: string): Promise<boolean> => {
+  console.log(`Actualizando estado de ${itemType} ${id} a ${status}`);
+  // Simulando una llamada API con un tiempo de respuesta realista
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  // En un caso real, aquí se haría la llamada a la API
+  // Simulamos un éxito del 90% para ser realistas
+  const success = Math.random() < 0.9;
+  
+  if (!success) {
+    throw new Error(`Error al actualizar el estado del ${itemType}`);
+  }
+  
+  return true;
+};
+
 // Component for status badges
 const StatusBadge = ({ status }: { status: string }) => {
   switch (status) {
@@ -189,6 +224,20 @@ const StatusBadge = ({ status }: { status: string }) => {
       );
     default:
       return null;
+  }
+};
+
+// Función para traducir prioridades
+const translatePriority = (priority: string): string => {
+  switch (priority.toLowerCase()) {
+    case "high":
+      return "Alta";
+    case "medium":
+      return "Media";
+    case "low":
+      return "Baja";
+    default:
+      return priority;
   }
 };
 
@@ -245,34 +294,34 @@ export default function Dashboard() {
   };
 
   // Fetch data with React Query
-  const { data: latestSurvey } = useQuery({
+  const { data: latestSurvey, isLoading: isLoadingSurvey } = useQuery({
     queryKey: ['latestSurvey'],
     queryFn: fetchLatestSurvey
   });
 
-  const { data: recentResponses } = useQuery({
+  const { data: recentResponses, isLoading: isLoadingResponses } = useQuery({
     queryKey: ['recentResponses'],
     queryFn: fetchRecentResponses,
     enabled: expandedSections.surveys // Only fetch when section is expanded
   });
 
-  const { data: latestSuggestion } = useQuery({
+  const { data: latestSuggestion, isLoading: isLoadingSuggestion } = useQuery({
     queryKey: ['latestSuggestion'],
     queryFn: fetchLatestSuggestion
   });
 
-  const { data: recentSuggestions } = useQuery({
+  const { data: recentSuggestions, isLoading: isLoadingSuggestions } = useQuery({
     queryKey: ['recentSuggestions'],
     queryFn: fetchRecentSuggestions,
     enabled: expandedSections.suggestions // Only fetch when section is expanded
   });
 
-  const { data: latestRequirement } = useQuery({
+  const { data: latestRequirement, isLoading: isLoadingRequirement } = useQuery({
     queryKey: ['latestRequirement'],
     queryFn: fetchLatestRequirement
   });
 
-  const { data: recentRequirements } = useQuery({
+  const { data: recentRequirements, isLoading: isLoadingRequirements } = useQuery({
     queryKey: ['recentRequirements'],
     queryFn: fetchRecentRequirements,
     enabled: expandedSections.requirements // Only fetch when section is expanded
@@ -286,6 +335,30 @@ export default function Dashboard() {
       month: 'short', 
       day: 'numeric' 
     }).format(date);
+  };
+
+  // Handler para actualizar el estado de un elemento
+  const handleUpdateStatus = async (itemType: string, id: string, status: string) => {
+    try {
+      await updateItemStatus(itemType, id, status);
+      
+      // Refresh the corresponding query
+      switch (itemType) {
+        case 'survey':
+          // Invalidate queries related to surveys
+          break;
+        case 'suggestion':
+          // Invalidate queries related to suggestions
+          break;
+        case 'requirement':
+          // Invalidate queries related to requirements
+          break;
+      }
+      
+      toast.success(`Estado del ${itemType} actualizado correctamente`);
+    } catch (error) {
+      toast.error(`Error al actualizar el estado: ${(error as Error).message}`);
+    }
   };
 
   return (
@@ -307,9 +380,18 @@ export default function Dashboard() {
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="font-medium">Encuestas</h3>
-                    {latestSurvey && <StatusBadge status={latestSurvey.status} />}
+                    {isLoadingSurvey ? (
+                      <div className="w-20 h-5 bg-gray-200 animate-pulse rounded-full"></div>
+                    ) : latestSurvey ? (
+                      <StatusBadge status={latestSurvey.status} />
+                    ) : null}
                   </div>
-                  {latestSurvey ? (
+                  {isLoadingSurvey ? (
+                    <div className="space-y-2">
+                      <div className="w-3/4 h-5 bg-gray-200 animate-pulse rounded"></div>
+                      <div className="w-1/2 h-4 bg-gray-200 animate-pulse rounded"></div>
+                    </div>
+                  ) : latestSurvey ? (
                     <>
                       <p className="font-semibold">{latestSurvey.title}</p>
                       <p className="text-xs text-muted-foreground">
@@ -324,7 +406,19 @@ export default function Dashboard() {
             >
               <div className="space-y-3">
                 <h4 className="text-sm font-medium mb-2">Últimas 5 respuestas</h4>
-                {recentResponses && recentResponses.length > 0 ? (
+                {isLoadingResponses ? (
+                  <div className="space-y-2">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="bg-white p-3 rounded border">
+                        <div className="flex justify-between">
+                          <div className="w-1/3 h-4 bg-gray-200 animate-pulse rounded"></div>
+                          <div className="w-1/4 h-4 bg-gray-200 animate-pulse rounded"></div>
+                        </div>
+                        <div className="w-2/3 h-4 mt-2 bg-gray-200 animate-pulse rounded"></div>
+                      </div>
+                    ))}
+                  </div>
+                ) : recentResponses && recentResponses.length > 0 ? (
                   <div className="space-y-2">
                     {recentResponses.map(response => (
                       <div key={response.id} className="bg-white p-3 rounded border text-sm">
@@ -355,9 +449,18 @@ export default function Dashboard() {
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="font-medium">Sugerencias</h3>
-                    {latestSuggestion && <StatusBadge status={latestSuggestion.status} />}
+                    {isLoadingSuggestion ? (
+                      <div className="w-20 h-5 bg-gray-200 animate-pulse rounded-full"></div>
+                    ) : latestSuggestion ? (
+                      <StatusBadge status={latestSuggestion.status} />
+                    ) : null}
                   </div>
-                  {latestSuggestion ? (
+                  {isLoadingSuggestion ? (
+                    <div className="space-y-2">
+                      <div className="w-3/4 h-5 bg-gray-200 animate-pulse rounded"></div>
+                      <div className="w-1/2 h-4 bg-gray-200 animate-pulse rounded"></div>
+                    </div>
+                  ) : latestSuggestion ? (
                     <>
                       <p className="font-semibold">{latestSuggestion.content}</p>
                       <p className="text-xs text-muted-foreground">
@@ -372,7 +475,19 @@ export default function Dashboard() {
             >
               <div className="space-y-3">
                 <h4 className="text-sm font-medium mb-2">Últimas 5 sugerencias</h4>
-                {recentSuggestions && recentSuggestions.length > 0 ? (
+                {isLoadingSuggestions ? (
+                  <div className="space-y-2">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="bg-white p-3 rounded border">
+                        <div className="flex justify-between">
+                          <div className="w-1/3 h-4 bg-gray-200 animate-pulse rounded"></div>
+                          <div className="w-1/4 h-4 bg-gray-200 animate-pulse rounded"></div>
+                        </div>
+                        <div className="w-2/3 h-4 mt-2 bg-gray-200 animate-pulse rounded"></div>
+                      </div>
+                    ))}
+                  </div>
+                ) : recentSuggestions && recentSuggestions.length > 0 ? (
                   <div className="space-y-2">
                     {recentSuggestions.map(suggestion => (
                       <div key={suggestion.id} className="bg-white p-3 rounded border text-sm">
@@ -385,6 +500,9 @@ export default function Dashboard() {
                             ? `${suggestion.content.substring(0, 60)}...` 
                             : suggestion.content}
                         </p>
+                        <div className="flex justify-end mt-2">
+                          <StatusBadge status={suggestion.status} />
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -407,17 +525,22 @@ export default function Dashboard() {
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="font-medium">Requerimientos</h3>
-                    {latestRequirement && <StatusBadge status={latestRequirement.status} />}
+                    {isLoadingRequirement ? (
+                      <div className="w-20 h-5 bg-gray-200 animate-pulse rounded-full"></div>
+                    ) : latestRequirement ? (
+                      <StatusBadge status={latestRequirement.status} />
+                    ) : null}
                   </div>
-                  {latestRequirement ? (
+                  {isLoadingRequirement ? (
+                    <div className="space-y-2">
+                      <div className="w-3/4 h-5 bg-gray-200 animate-pulse rounded"></div>
+                      <div className="w-1/2 h-4 bg-gray-200 animate-pulse rounded"></div>
+                    </div>
+                  ) : latestRequirement ? (
                     <>
                       <p className="font-semibold">{latestRequirement.title}</p>
                       <p className="text-xs text-muted-foreground">
-                        Prioridad: {latestRequirement.priority === 'high' 
-                          ? 'Alta' 
-                          : latestRequirement.priority === 'medium' 
-                            ? 'Media' 
-                            : 'Baja'} • {formatDate(latestRequirement.createdAt)}
+                        Prioridad: {translatePriority(latestRequirement.priority)} • {formatDate(latestRequirement.createdAt)}
                       </p>
                     </>
                   ) : (
@@ -428,7 +551,19 @@ export default function Dashboard() {
             >
               <div className="space-y-3">
                 <h4 className="text-sm font-medium mb-2">Últimos 5 requerimientos</h4>
-                {recentRequirements && recentRequirements.length > 0 ? (
+                {isLoadingRequirements ? (
+                  <div className="space-y-2">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="bg-white p-3 rounded border">
+                        <div className="flex justify-between">
+                          <div className="w-1/3 h-4 bg-gray-200 animate-pulse rounded"></div>
+                          <div className="w-1/4 h-4 bg-gray-200 animate-pulse rounded"></div>
+                        </div>
+                        <div className="w-2/3 h-4 mt-2 bg-gray-200 animate-pulse rounded"></div>
+                      </div>
+                    ))}
+                  </div>
+                ) : recentRequirements && recentRequirements.length > 0 ? (
                   <div className="space-y-2">
                     {recentRequirements.map(requirement => (
                       <div key={requirement.id} className="bg-white p-3 rounded border text-sm">
@@ -442,11 +577,7 @@ export default function Dashboard() {
                                 ? "bg-amber-50 text-amber-700 border-amber-200"
                                 : "bg-green-50 text-green-700 border-green-200"
                           )}>
-                            {requirement.priority === 'high' 
-                              ? 'Alta' 
-                              : requirement.priority === 'medium' 
-                                ? 'Media' 
-                                : 'Baja'}
+                            {translatePriority(requirement.priority)}
                           </Badge>
                         </div>
                         <p className="text-gray-600">
@@ -454,6 +585,9 @@ export default function Dashboard() {
                             ? `${requirement.description.substring(0, 60)}...` 
                             : requirement.description}
                         </p>
+                        <div className="flex justify-end mt-2">
+                          <StatusBadge status={requirement.status} />
+                        </div>
                       </div>
                     ))}
                   </div>
