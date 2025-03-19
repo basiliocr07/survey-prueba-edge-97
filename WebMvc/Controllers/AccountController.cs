@@ -8,24 +8,19 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using SurveyApp.WebMvc.Models;
 using Microsoft.Extensions.Logging;
+using SurveyApp.Application.Services;
 
 namespace SurveyApp.WebMvc.Controllers
 {
     public class AccountController : Controller
     {
         private readonly ILogger<AccountController> _logger;
-        // En un sistema real, usaríamos un servicio de autenticación y base de datos
-        // Esta es una implementación simplificada para demo
-        private static readonly Dictionary<string, (string passwordHash, string email, string role)> _users = 
-            new Dictionary<string, (string, string, string)>
-            {
-                { "admin", ("adminpass", "admin@example.com", "Admin") },
-                { "client", ("clientpass", "client@example.com", "Client") }
-            };
+        private readonly IAuthenticationService _authService;
 
-        public AccountController(ILogger<AccountController> logger)
+        public AccountController(ILogger<AccountController> logger, IAuthenticationService authService)
         {
             _logger = logger;
+            _authService = authService;
         }
 
         [HttpGet]
@@ -43,20 +38,24 @@ namespace SurveyApp.WebMvc.Controllers
         {
             if (ModelState.IsValid)
             {
-                // Verificar credenciales (simplificado)
-                if (_users.TryGetValue(model.Username, out var userData) && userData.passwordHash == model.Password)
+                var isValid = await _authService.ValidateUserAsync(model.Username, model.Password);
+                
+                if (isValid)
                 {
+                    var user = await _authService.GetUserByUsernameAsync(model.Username);
+                    
                     var claims = new List<Claim>
                     {
-                        new Claim(ClaimTypes.Name, model.Username),
-                        new Claim(ClaimTypes.Email, userData.email),
-                        new Claim(ClaimTypes.Role, userData.role)
+                        new Claim(ClaimTypes.Name, user.Username),
+                        new Claim(ClaimTypes.Email, user.Email),
+                        new Claim(ClaimTypes.Role, user.Role)
                     };
 
                     var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                     var authProperties = new AuthenticationProperties
                     {
-                        IsPersistent = model.RememberMe
+                        IsPersistent = model.RememberMe,
+                        ExpiresUtc = DateTimeOffset.UtcNow.AddDays(30)
                     };
 
                     await HttpContext.SignInAsync(
@@ -90,30 +89,43 @@ namespace SurveyApp.WebMvc.Controllers
             if (ModelState.IsValid)
             {
                 // Verificar si el usuario ya existe
-                if (_users.ContainsKey(model.Username))
+                if (await _authService.UserExistsAsync(model.Username))
                 {
                     ModelState.AddModelError(string.Empty, "Este nombre de usuario ya está en uso.");
                     return View(model);
                 }
 
-                // Agregar el nuevo usuario (en una aplicación real, usaríamos hash para la contraseña)
-                _users.Add(model.Username, (model.Password, model.Email, model.Role));
+                var result = await _authService.RegisterUserAsync(
+                    model.Username,
+                    model.Email,
+                    model.Password,
+                    model.Role);
 
-                // Iniciar sesión automáticamente
-                var claims = new List<Claim>
+                if (result)
                 {
-                    new Claim(ClaimTypes.Name, model.Username),
-                    new Claim(ClaimTypes.Email, model.Email),
-                    new Claim(ClaimTypes.Role, model.Role)
-                };
+                    // Obtener el usuario registrado
+                    var user = await _authService.GetUserByUsernameAsync(model.Username);
 
-                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                await HttpContext.SignInAsync(
-                    CookieAuthenticationDefaults.AuthenticationScheme,
-                    new ClaimsPrincipal(claimsIdentity));
+                    // Iniciar sesión automáticamente
+                    var claims = new List<Claim>
+                    {
+                        new Claim(ClaimTypes.Name, user.Username),
+                        new Claim(ClaimTypes.Email, user.Email),
+                        new Claim(ClaimTypes.Role, user.Role)
+                    };
 
-                _logger.LogInformation($"Nuevo usuario {model.Username} registrado e inició sesión");
-                return RedirectToAction("Index", "Home");
+                    var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                    await HttpContext.SignInAsync(
+                        CookieAuthenticationDefaults.AuthenticationScheme,
+                        new ClaimsPrincipal(claimsIdentity));
+
+                    _logger.LogInformation($"Nuevo usuario {model.Username} registrado e inició sesión");
+                    return RedirectToAction("Index", "Home");
+                }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, "Error al registrar el usuario. Inténtelo de nuevo.");
+                }
             }
 
             return View(model);

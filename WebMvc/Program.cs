@@ -1,4 +1,3 @@
-
 using Microsoft.EntityFrameworkCore;
 using SurveyApp.Application.Ports;
 using SurveyApp.Application.Services;
@@ -23,6 +22,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.HttpOnly = true;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         options.Cookie.SameSite = SameSiteMode.Strict;
+        options.ExpireTimeSpan = TimeSpan.FromDays(30);
     });
 
 // Configurar las políticas de autorización
@@ -48,6 +48,7 @@ builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
 builder.Services.AddScoped<ISuggestionRepository, SuggestionRepository>();
 builder.Services.AddScoped<IKnowledgeBaseRepository, KnowledgeBaseRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 // Configure Email Settings
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
@@ -59,6 +60,7 @@ builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 builder.Services.AddScoped<ISuggestionService, SuggestionService>();
 builder.Services.AddScoped<IKnowledgeBaseService, KnowledgeBaseService>();
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
 // Add API controllers
 builder.Services.AddControllers();
@@ -133,21 +135,43 @@ app.MapControllerRoute(
 
 app.MapControllers(); // Map API controllers
 
-// Apply database migrations on startup
+// Create default users on application startup
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    
+    var services = scope.ServiceProvider;
     try
     {
+        var dbContext = services.GetRequiredService<AppDbContext>();
         dbContext.Database.Migrate();
-        Console.WriteLine("Database migrated successfully.");
+
+        // Seed default users if no users exist
+        if (!dbContext.Users.Any())
+        {
+            // Add default admin user
+            dbContext.Users.Add(new SurveyApp.Domain.Entities.User(
+                "admin", 
+                "admin@example.com",
+                "adminpass", // In a real app, this would be hashed
+                "Admin"
+            ));
+            
+            // Add default client user
+            dbContext.Users.Add(new SurveyApp.Domain.Entities.User(
+                "client", 
+                "client@example.com",
+                "clientpass", // In a real app, this would be hashed
+                "Client"
+            ));
+            
+            dbContext.SaveChanges();
+            Console.WriteLine("Default users created.");
+        }
     }
     catch (Exception ex)
     {
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while applying migrations.");
-        Console.WriteLine($"Error migrating database: {ex.Message}");
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while applying migrations or seeding the database.");
+        Console.WriteLine($"Error initializing database: {ex.Message}");
     }
 }
 
