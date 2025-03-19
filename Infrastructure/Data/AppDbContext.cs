@@ -21,6 +21,7 @@ namespace SurveyApp.Infrastructure.Data
         public DbSet<AnalyticsData> AnalyticsData { get; set; }
         public DbSet<SurveyResponseTrend> ResponseTrends { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<Requirement> Requirements { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -170,6 +171,17 @@ namespace SurveyApp.Infrastructure.Data
                 entity.HasKey(e => e.Date);
                 entity.Property(e => e.Date).IsRequired().HasMaxLength(20);
                 entity.Property(e => e.Responses);
+            });
+
+            // Configure Requirement entity
+            modelBuilder.Entity<Requirement>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Description).IsRequired().HasMaxLength(1000);
+                entity.Property(e => e.Priority).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.CreatedAt).IsRequired();
+                entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
             });
         }
     }
