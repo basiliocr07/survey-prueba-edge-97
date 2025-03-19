@@ -172,11 +172,13 @@ export default function Dashboard() {
       });
       
       toast.success(`Estado actualizado a ${getStatusLabel(data.status)}`);
+      // Close the dialog and reset state
       setConfirmDialog({ open: false, id: "", type: "", newStatus: "", currentStatus: "" });
     },
     onError: (error) => {
       console.error("Error al actualizar el estado:", error);
       toast.error("Error al actualizar el estado");
+      // Close the dialog and reset state
       setConfirmDialog({ open: false, id: "", type: "", newStatus: "", currentStatus: "" });
     }
   });
@@ -200,7 +202,9 @@ export default function Dashboard() {
   };
 
   const handleStatusChange = (e: React.MouseEvent, id: string, type: string, newStatus: string, currentStatus: string) => {
-    if (e) e.stopPropagation();
+    // Prevent event propagation to stop triggering parent elements
+    e.preventDefault();
+    e.stopPropagation();
     
     if (newStatus === currentStatus) {
       return;
@@ -216,7 +220,10 @@ export default function Dashboard() {
   };
 
   const confirmStatusChange = (e: React.MouseEvent) => {
-    if (e) e.stopPropagation();
+    // Prevent event propagation
+    e.preventDefault();
+    e.stopPropagation();
+    
     updateStatusMutation.mutate({
       id: confirmDialog.id,
       type: confirmDialog.type,
@@ -225,7 +232,10 @@ export default function Dashboard() {
   };
 
   const closeDialog = (e: React.MouseEvent) => {
-    if (e) e.stopPropagation();
+    // Prevent event propagation
+    e.preventDefault();
+    e.stopPropagation();
+    
     setConfirmDialog({ open: false, id: "", type: "", newStatus: "", currentStatus: "" });
   };
 
@@ -242,7 +252,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background" onClick={(e) => e.stopPropagation()}>
+    <div className="min-h-screen bg-background">
       <Navbar />
       <div className="container mx-auto pt-20 pb-10 px-4 md:px-6">
         <h1 className="text-3xl font-bold tracking-tight mb-6">Panel de Control</h1>
@@ -309,7 +319,6 @@ export default function Dashboard() {
                       variant="ghost" 
                       size="sm" 
                       className="h-8 w-8 p-0"
-                      onClick={(e) => e.stopPropagation()}
                       asChild
                     >
                       <Link to={`/survey/${latestSurvey.id}`}>
@@ -376,7 +385,6 @@ export default function Dashboard() {
                       variant="ghost" 
                       size="sm" 
                       className="h-8 w-8 p-0"
-                      onClick={(e) => e.stopPropagation()}
                       asChild
                     >
                       <Link to="/suggestions">
@@ -443,7 +451,6 @@ export default function Dashboard() {
                       variant="ghost" 
                       size="sm" 
                       className="h-8 w-8 p-0"
-                      onClick={(e) => e.stopPropagation()}
                       asChild
                     >
                       <Link to="/requirements">
@@ -457,13 +464,13 @@ export default function Dashboard() {
             
             <div className="flex justify-end space-x-2 mt-6">
               <Link to="/results">
-                <Button size="sm" onClick={(e) => e.stopPropagation()}>
+                <Button size="sm">
                   <BarChart3 className="mr-2 h-4 w-4" />
                   Ver Análisis
                 </Button>
               </Link>
               <Link to="/surveys">
-                <Button variant="outline" size="sm" onClick={(e) => e.stopPropagation()}>
+                <Button variant="outline" size="sm">
                   Ver Todas las Encuestas
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -473,11 +480,12 @@ export default function Dashboard() {
         </Card>
       </div>
 
+      {/* Removed the onClick from the Dialog component itself */}
       <Dialog 
         open={confirmDialog.open} 
         onOpenChange={(open) => !open && setConfirmDialog(prev => ({ ...prev, open: false }))}
       >
-        <DialogContent className="sm:max-w-md" onClick={(e) => e.stopPropagation()}>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Confirmar Cambio de Estado</DialogTitle>
             <DialogDescription>
