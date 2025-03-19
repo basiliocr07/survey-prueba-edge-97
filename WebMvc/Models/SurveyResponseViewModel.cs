@@ -39,6 +39,13 @@ namespace SurveyApp.WebMvc.Models
         
         // ID del cliente si ya existe
         public Guid? ExistingClientId { get; set; }
+        
+        // Fecha de envío de la respuesta
+        public DateTime SubmittedAt { get; set; } = DateTime.UtcNow;
+        
+        // Propiedades para la visualización en el dashboard
+        public string RespondentInfo => $"{RespondentName} ({RespondentEmail})";
+        public string CompanyInfo => !string.IsNullOrEmpty(RespondentCompany) ? RespondentCompany : "No especificado";
     }
 
     public class QuestionViewModel
@@ -80,5 +87,29 @@ namespace SurveyApp.WebMvc.Models
         
         // ID del cliente si ya existe
         public Guid? ExistingClientId { get; set; }
+    }
+    
+    // Nuevo modelo para las respuestas en la vista de análisis
+    public class SurveyResponseAnalyticsViewModel
+    {
+        public Guid Id { get; set; }
+        public Guid SurveyId { get; set; }
+        public string SurveyTitle { get; set; }
+        public string RespondentName { get; set; }
+        public string RespondentEmail { get; set; }
+        public string RespondentCompany { get; set; }
+        public DateTime SubmittedAt { get; set; }
+        public List<QuestionAnswerViewModel> Answers { get; set; } = new List<QuestionAnswerViewModel>();
+        public bool IsValidated { get; set; }
+    }
+    
+    public class QuestionAnswerViewModel
+    {
+        public Guid QuestionId { get; set; }
+        public string QuestionTitle { get; set; }
+        public string QuestionType { get; set; }
+        public string Answer { get; set; }
+        public List<string> MultipleAnswers { get; set; }
+        public bool IsValid { get; set; } = true;
     }
 }

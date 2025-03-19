@@ -49,8 +49,13 @@ namespace SurveyApp.Application.Services
             var surveyResponse = new SurveyResponse(
                 createResponseDto.SurveyId, 
                 createResponseDto.RespondentName, 
-                createResponseDto.RespondentEmail
+                createResponseDto.RespondentEmail,
+                createResponseDto.RespondentPhone,
+                createResponseDto.RespondentCompany
             );
+            
+            // Establecer la información del cliente
+            surveyResponse.SetClientInfo(createResponseDto.IsExistingClient, createResponseDto.ExistingClientId);
 
             // Procesar respuestas
             foreach (var answerEntry in createResponseDto.Answers)
@@ -63,13 +68,13 @@ namespace SurveyApp.Application.Services
 
                 if (question.Type == "multiple-choice" && answerEntry.Value is List<string> multipleAnswers)
                 {
-                    var questionResponse = new QuestionResponse(questionId, question.Type, multipleAnswers);
+                    var questionResponse = new QuestionResponse(questionId, question.Title, question.Type, multipleAnswers);
                     surveyResponse.AddAnswer(questionResponse);
                 }
                 else
                 {
                     var answerValue = answerEntry.Value?.ToString() ?? string.Empty;
-                    var questionResponse = new QuestionResponse(questionId, question.Type, answerValue);
+                    var questionResponse = new QuestionResponse(questionId, question.Title, question.Type, answerValue);
                     surveyResponse.AddAnswer(questionResponse);
                 }
             }
@@ -107,13 +112,19 @@ namespace SurveyApp.Application.Services
                 SurveyId = response.SurveyId,
                 RespondentName = response.RespondentName,
                 RespondentEmail = response.RespondentEmail,
+                RespondentPhone = response.RespondentPhone,
+                RespondentCompany = response.RespondentCompany,
                 SubmittedAt = response.SubmittedAt,
+                IsExistingClient = response.IsExistingClient,
+                ExistingClientId = response.ExistingClientId,
                 Answers = response.Answers.Select(a => new QuestionResponseDto
                 {
                     QuestionId = a.QuestionId,
+                    QuestionTitle = a.QuestionTitle,
                     QuestionType = a.QuestionType,
                     Answer = a.Answer,
-                    MultipleAnswers = a.MultipleAnswers
+                    MultipleAnswers = a.MultipleAnswers,
+                    IsValid = a.IsValid
                 }).ToList()
             };
         }

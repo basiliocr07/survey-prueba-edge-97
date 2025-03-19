@@ -36,6 +36,9 @@ namespace SurveyApp.Infrastructure.Repositories
 
         public async Task<SurveyResponse> CreateAsync(SurveyResponse response)
         {
+            // Validar las respuestas antes de guardar
+            ValidateResponses(response);
+            
             await _dbContext.SurveyResponses.AddAsync(response);
             await _dbContext.SaveChangesAsync();
             return response;
@@ -82,6 +85,69 @@ namespace SurveyApp.Infrastructure.Repositories
             }
 
             return results;
+        }
+        
+        public async Task<List<SurveyResponse>> GetRecentResponsesAsync(int count)
+        {
+            return await _dbContext.SurveyResponses
+                .Include(r => r.Answers)
+                .OrderByDescending(r => r.SubmittedAt)
+                .Take(count)
+                .ToListAsync();
+        }
+        
+        // Método privado para validar las respuestas antes de guardar
+        private void ValidateResponses(SurveyResponse response)
+        {
+            foreach (var answer in response.Answers)
+            {
+                bool isValid = true;
+                
+                // Validación básica según el tipo de pregunta
+                switch (answer.QuestionType)
+                {
+                    case "text":
+                    case "textarea":
+                        // Validar que respuestas de texto no estén vacías
+                        isValid = !string.IsNullOrWhiteSpace(answer.Answer);
+                        break;
+                        
+                    case "email":
+                        // Validar formato de email básico
+                        isValid = !string.IsNullOrWhiteSpace(answer.Answer) && 
+                                  answer.Answer.Contains("@") && 
+                                  answer.Answer.Contains(".");
+                        break;
+                        
+                    case "number":
+                        // Validar que sea un número
+                        isValid = !string.IsNullOrWhiteSpace(answer.Answer) && 
+                                  double.TryParse(answer.Answer, out _);
+                        break;
+                        
+                    case "single-choice":
+                    case "dropdown":
+                        // Validar que haya una respuesta seleccionada
+                        isValid = !string.IsNullOrWhiteSpace(answer.Answer);
+                        break;
+                        
+                    case "multiple-choice":
+                        // Validar que haya al menos una opción seleccionada
+                        isValid = answer.MultipleAnswers != null && answer.MultipleAnswers.Any();
+                        break;
+                        
+                    case "rating":
+                    case "nps":
+                        // Validar que sea un número dentro de un rango razonable
+                        isValid = !string.IsNullOrWhiteSpace(answer.Answer) && 
+                                  int.TryParse(answer.Answer, out int rating) &&
+                                  rating >= 0 && rating <= 10;
+                        break;
+                }
+                
+                // Establecer el estado de validación
+                answer.SetValidationStatus(isValid);
+            }
         }
     }
 }
