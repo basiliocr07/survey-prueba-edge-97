@@ -1,0 +1,8 @@
+
+@model SurveyApp.WebMvc.Models.SurveyViewModel
+@{
+    ViewData["Title"] = Model.Title;
+    Layout = "_ClientLayout";
+}
+
+<partial name="_ClientAccessPartial" model="Model" />

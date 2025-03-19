@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -105,12 +104,16 @@ namespace SurveyApp.Infrastructure.Repositories
             }
 
             // Actualizar preguntas
+            // Primero, hacemos un seguimiento de los IDs de preguntas actuales para evitar eliminar y recrear
+            var existingQuestionIds = existingSurvey.Questions.Select(q => q.Id).ToList();
+            var updatedQuestionIds = survey.Questions.Select(q => q.Id).ToList();
+            
             // Eliminar preguntas que ya no existen
             foreach (var existingQuestion in existingSurvey.Questions.ToList())
             {
-                if (!survey.Questions.Any(q => q.Id == existingQuestion.Id))
+                if (!updatedQuestionIds.Contains(existingQuestion.Id))
                 {
-                    existingSurvey.RemoveQuestion(existingQuestion);
+                    _dbContext.Questions.Remove(existingQuestion);
                 }
             }
 
@@ -122,11 +125,30 @@ namespace SurveyApp.Infrastructure.Repositories
                 if (existingQuestion != null)
                 {
                     // Actualizar pregunta existente
-                    _dbContext.Entry(existingQuestion).CurrentValues.SetValues(question);
+                    existingQuestion.UpdateTitle(question.Title);
+                    existingQuestion.UpdateDescription(question.Description);
+                    existingQuestion.SetRequired(question.Required);
+                    
+                    // Solo actualizar tipo si es diferente para evitar problemas con las opciones
+                    if (existingQuestion.Type != question.Type)
+                    {
+                        existingQuestion.ChangeType(question.Type);
+                    }
+                    
+                    // Actualizar opciones
+                    if (question.Options != null && question.Options.Any())
+                    {
+                        existingQuestion.SetOptions(question.Options);
+                    }
+                    
+                    _dbContext.Entry(existingQuestion).State = EntityState.Modified;
                 }
                 else
                 {
-                    // Agregar nueva pregunta
+                    // Agregar nueva pregunta al contexto
+                    _dbContext.Questions.Add(question);
+                    
+                    // También añadir referencia a la encuesta
                     existingSurvey.AddQuestion(question);
                 }
             }
@@ -167,6 +189,8 @@ namespace SurveyApp.Infrastructure.Repositories
                 }
             }
 
+            _dbContext.Entry(existingSurvey).State = EntityState.Modified;
+            
             await _dbContext.SaveChangesAsync();
         }
 
@@ -211,6 +235,11 @@ namespace SurveyApp.Infrastructure.Repositories
             }
 
             return categories;
+        }
+        
+        public async Task<bool> SaveChangesAsync()
+        {
+            return await _dbContext.SaveChangesAsync() > 0;
         }
     }
 }

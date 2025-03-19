@@ -22,6 +22,13 @@ namespace SurveyApp.Application.Services
         Task<List<SurveyDto>> GetAllSurveysAsync();
         
         /// <summary>
+        /// Gets paged surveys with optional filtering
+        /// </summary>
+        /// <returns>A tuple containing surveys and total count</returns>
+        Task<(List<SurveyDto> Surveys, int TotalCount)> GetPagedSurveysAsync(
+            int pageNumber, int pageSize, string searchTerm = null, string statusFilter = null, string categoryFilter = null);
+        
+        /// <summary>
         /// Creates a new survey
         /// </summary>
         /// <param name="createSurveyDto">The survey creation data</param>
@@ -83,5 +90,18 @@ namespace SurveyApp.Application.Services
         /// <param name="surveyId">The survey identifier</param>
         /// <returns>A list of survey response DTOs</returns>
         Task<List<SurveyResponseDto>> GetSurveyResponsesAsync(Guid surveyId);
+        
+        /// <summary>
+        /// Gets all categories
+        /// </summary>
+        /// <returns>A list of category names</returns>
+        Task<List<string>> GetAllCategoriesAsync();
+        
+        /// <summary>
+        /// Gets a simplified version of a survey for client access
+        /// </summary>
+        /// <param name="id">The survey identifier</param>
+        /// <returns>The client survey DTO</returns>
+        Task<SurveyDto> GetSurveyForClientAsync(Guid id);
     }
 }

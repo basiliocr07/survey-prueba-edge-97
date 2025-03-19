@@ -16,5 +16,6 @@ namespace SurveyApp.Application.Ports
         Task DeleteAsync(Guid id);
         Task<bool> ExistsAsync(Guid id);
         Task<List<string>> GetAllCategoriesAsync();
+        Task<bool> SaveChangesAsync();
     }
 }

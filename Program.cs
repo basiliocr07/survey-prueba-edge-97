@@ -96,6 +96,12 @@ app.MapControllerRoute(
     pattern: "knowledge-base/{action=Index}/{id?}",
     defaults: new { controller = "KnowledgeBase" });
 
+// Ruta para el acceso de clientes
+app.MapControllerRoute(
+    name: "client-access",
+    pattern: "client/{action=Survey}/{id?}",
+    defaults: new { controller = "ClientAccess" });
+
 app.MapControllers(); // Map API controllers
 
 // Apply database migrations

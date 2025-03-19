@@ -26,6 +26,25 @@ namespace SurveyApp.WebApi.Controllers
             var surveys = await _surveyService.GetAllSurveysAsync();
             return Ok(surveys);
         }
+        
+        // GET: api/surveys/paged?pageNumber=1&pageSize=10
+        [HttpGet("paged")]
+        public async Task<ActionResult<IEnumerable<SurveyDto>>> GetPagedSurveys(
+            [FromQuery] int pageNumber = 1, 
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string searchTerm = null,
+            [FromQuery] string statusFilter = null,
+            [FromQuery] string categoryFilter = null)
+        {
+            var result = await _surveyService.GetPagedSurveysAsync(pageNumber, pageSize, searchTerm, statusFilter, categoryFilter);
+            return Ok(new { 
+                surveys = result.Surveys, 
+                totalCount = result.TotalCount,
+                pageNumber,
+                pageSize,
+                totalPages = (int)Math.Ceiling((double)result.TotalCount / pageSize)
+            });
+        }
 
         // GET: api/surveys/{id}
         [HttpGet("{id}")]
@@ -38,7 +57,7 @@ namespace SurveyApp.WebApi.Controllers
             }
             catch (KeyNotFoundException)
             {
-                return NotFound();
+                return NotFound(new { message = $"Encuesta con ID {id} no encontrada." });
             }
         }
 
@@ -78,7 +97,7 @@ namespace SurveyApp.WebApi.Controllers
             }
             catch (KeyNotFoundException)
             {
-                return NotFound();
+                return NotFound(new { message = $"Encuesta con ID {id} no encontrada." });
             }
             catch (Exception ex)
             {
@@ -97,7 +116,7 @@ namespace SurveyApp.WebApi.Controllers
             }
             catch (KeyNotFoundException)
             {
-                return NotFound();
+                return NotFound(new { message = $"Encuesta con ID {id} no encontrada." });
             }
             catch (Exception ex)
             {
@@ -116,7 +135,7 @@ namespace SurveyApp.WebApi.Controllers
             }
             catch (KeyNotFoundException)
             {
-                return NotFound();
+                return NotFound(new { message = $"Encuesta con ID {id} no encontrada." });
             }
             catch (InvalidOperationException ex)
             {
@@ -144,7 +163,41 @@ namespace SurveyApp.WebApi.Controllers
             }
             catch (KeyNotFoundException)
             {
-                return NotFound();
+                return NotFound(new { message = $"Encuesta con ID {id} no encontrada." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+        
+        // GET: api/surveys/categories
+        [HttpGet("categories")]
+        public async Task<ActionResult<List<string>>> GetCategories()
+        {
+            try
+            {
+                var categories = await _surveyService.GetAllCategoriesAsync();
+                return Ok(categories);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+        
+        // GET: api/surveys/client/{id}
+        [HttpGet("client/{id}")]
+        public async Task<ActionResult<SurveyDto>> GetClientSurvey(Guid id)
+        {
+            try
+            {
+                var survey = await _surveyService.GetSurveyForClientAsync(id);
+                return Ok(survey);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { message = $"Encuesta con ID {id} no encontrada o no está disponible." });
             }
             catch (Exception ex)
             {
