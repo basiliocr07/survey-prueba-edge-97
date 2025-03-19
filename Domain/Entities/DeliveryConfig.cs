@@ -6,20 +6,20 @@ namespace SurveyApp.Domain.Entities
 {
     public class DeliveryConfig
     {
-        public DeliveryType Type { get; private set; }
-        public List<string> EmailAddresses { get; private set; }
-        public Schedule Schedule { get; private set; }
-        public Trigger Trigger { get; private set; }
+        public string Type { get; set; }
+        public List<string> EmailAddresses { get; set; }
+        public Schedule Schedule { get; set; }
+        public Trigger Trigger { get; set; }
 
         public DeliveryConfig()
         {
-            Type = DeliveryType.Manual;
+            Type = "Manual";
             EmailAddresses = new List<string>();
             Schedule = new Schedule();
             Trigger = new Trigger();
         }
 
-        public void SetType(DeliveryType type)
+        public void SetType(string type)
         {
             Type = type;
         }
@@ -46,13 +46,6 @@ namespace SurveyApp.Domain.Entities
         {
             Trigger = trigger ?? new Trigger();
         }
-    }
-
-    public enum DeliveryType
-    {
-        Manual,
-        Scheduled,
-        Triggered
     }
 
     public class Schedule

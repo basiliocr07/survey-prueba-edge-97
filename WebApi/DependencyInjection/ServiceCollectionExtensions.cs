@@ -18,7 +18,7 @@ namespace SurveyApp.WebApi.DependencyInjection
             services.AddScoped<ICustomerService, CustomerService>();
             services.AddScoped<IKnowledgeBaseService, KnowledgeBaseService>();
             services.AddScoped<IAnalyticsService, AnalyticsService>();
-            services.AddScoped<IAuthenticationService, AuthenticationService>();
+            services.AddScoped<Application.Ports.IAuthenticationService, AuthenticationService>();
             
             return services;
         }

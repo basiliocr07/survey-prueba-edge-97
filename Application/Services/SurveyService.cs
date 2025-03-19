@@ -271,7 +271,7 @@ namespace SurveyApp.Application.Services
                     {
                         Type = survey.DeliveryConfig.Trigger.Type,
                         DelayHours = survey.DeliveryConfig.Trigger.DelayHours,
-                        SendAutomatically = survey.DeliveyConfig.Trigger.SendAutomatically
+                        SendAutomatically = survey.DeliveryConfig.Trigger.SendAutomatically
                     } : null
                 } : null
             };

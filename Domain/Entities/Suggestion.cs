@@ -10,9 +10,9 @@ namespace SurveyApp.Domain.Entities
         public string CustomerName { get; set; }
         public string CustomerEmail { get; set; }
         public DateTime CreatedAt { get; set; }
-        public SuggestionStatus Status { get; set; }
+        public string Status { get; set; }
         public string Category { get; set; }
-        public SuggestionPriority? Priority { get; set; }
+        public string Priority { get; set; }
         public bool IsAnonymous { get; set; }
         public string Response { get; set; }
         public DateTime? ResponseDate { get; set; }
@@ -24,6 +24,15 @@ namespace SurveyApp.Domain.Entities
         public DateTime? TargetDate { get; set; }
         public string AcceptanceCriteria { get; set; }
         public Guid? CustomerId { get; set; }
+
+        public Suggestion()
+        {
+            Id = Guid.NewGuid();
+            CreatedAt = DateTime.UtcNow;
+            Status = "New";
+            SimilarSuggestions = Array.Empty<string>();
+            CompletionPercentage = 0;
+        }
     }
 
     public enum SuggestionStatus
