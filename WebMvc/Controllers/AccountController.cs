@@ -6,68 +6,92 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
-using SurveyApp.WebMvc.Models;
 using Microsoft.Extensions.Logging;
 using SurveyApp.Application.Services;
+using SurveyApp.WebMvc.Models;
 
 namespace SurveyApp.WebMvc.Controllers
 {
     public class AccountController : Controller
     {
+        private readonly IAuthenticationService _authenticationService;
         private readonly ILogger<AccountController> _logger;
-        private readonly IAuthenticationService _authService;
 
-        public AccountController(ILogger<AccountController> logger, IAuthenticationService authService)
+        public AccountController(
+            IAuthenticationService authenticationService,
+            ILogger<AccountController> logger)
         {
+            _authenticationService = authenticationService;
             _logger = logger;
-            _authService = authService;
         }
 
         [HttpGet]
-        public IActionResult Login()
+        public IActionResult Login(string returnUrl = null)
         {
-            if (User.Identity.IsAuthenticated)
-            {
-                return RedirectToAction("Index", "Home");
-            }
+            ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login(LoginViewModel model)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
         {
+            ViewData["ReturnUrl"] = returnUrl;
+            
             if (ModelState.IsValid)
             {
-                var isValid = await _authService.ValidateUserAsync(model.Username, model.Password);
-                
-                if (isValid)
+                try
                 {
-                    var user = await _authService.GetUserByUsernameAsync(model.Username);
-                    
-                    var claims = new List<Claim>
+                    var isValid = await _authenticationService.ValidateUserAsync(model.Username, model.Password);
+                    if (isValid)
                     {
-                        new Claim(ClaimTypes.Name, user.Username),
-                        new Claim(ClaimTypes.Email, user.Email),
-                        new Claim(ClaimTypes.Role, user.Role)
-                    };
+                        var user = await _authenticationService.GetUserByUsernameAsync(model.Username);
+                        
+                        var claims = new List<Claim>
+                        {
+                            new Claim(ClaimTypes.Name, user.Username),
+                            new Claim(ClaimTypes.Email, user.Email),
+                            new Claim(ClaimTypes.Role, user.Role)
+                        };
 
-                    var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                    var authProperties = new AuthenticationProperties
-                    {
-                        IsPersistent = model.RememberMe,
-                        ExpiresUtc = DateTimeOffset.UtcNow.AddDays(30)
-                    };
+                        var claimsIdentity = new ClaimsIdentity(
+                            claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
-                    await HttpContext.SignInAsync(
-                        CookieAuthenticationDefaults.AuthenticationScheme,
-                        new ClaimsPrincipal(claimsIdentity),
-                        authProperties);
+                        var authProperties = new AuthenticationProperties
+                        {
+                            IsPersistent = model.RememberMe,
+                            ExpiresUtc = DateTimeOffset.UtcNow.AddDays(14)
+                        };
 
-                    _logger.LogInformation($"Usuario {model.Username} ha iniciado sesión");
-                    return RedirectToAction("Index", "Home");
+                        await HttpContext.SignInAsync(
+                            CookieAuthenticationDefaults.AuthenticationScheme,
+                            new ClaimsPrincipal(claimsIdentity),
+                            authProperties);
+
+                        _logger.LogInformation($"User {model.Username} logged in.");
+
+                        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                        {
+                            return Redirect(returnUrl);
+                        }
+                        
+                        if (user.Role.Equals("Admin", StringComparison.OrdinalIgnoreCase))
+                        {
+                            return RedirectToAction("Index", "Dashboard");
+                        }
+                        else
+                        {
+                            return RedirectToAction("Index", "Home");
+                        }
+                    }
+
+                    ModelState.AddModelError(string.Empty, "Nombre de usuario o contraseña incorrectos.");
                 }
-
-                ModelState.AddModelError(string.Empty, "Nombre de usuario o contraseña incorrectos.");
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error en el proceso de inicio de sesión");
+                    ModelState.AddModelError(string.Empty, "Ocurrió un error al procesar su solicitud.");
+                }
             }
 
             return View(model);
@@ -76,55 +100,45 @@ namespace SurveyApp.WebMvc.Controllers
         [HttpGet]
         public IActionResult Register()
         {
-            if (User.Identity.IsAuthenticated)
-            {
-                return RedirectToAction("Index", "Home");
-            }
             return View();
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
             if (ModelState.IsValid)
             {
-                // Verificar si el usuario ya existe
-                if (await _authService.UserExistsAsync(model.Username))
+                try
                 {
-                    ModelState.AddModelError(string.Empty, "Este nombre de usuario ya está en uso.");
-                    return View(model);
-                }
-
-                var result = await _authService.RegisterUserAsync(
-                    model.Username,
-                    model.Email,
-                    model.Password,
-                    model.Role);
-
-                if (result)
-                {
-                    // Obtener el usuario registrado
-                    var user = await _authService.GetUserByUsernameAsync(model.Username);
-
-                    // Iniciar sesión automáticamente
-                    var claims = new List<Claim>
+                    var exists = await _authenticationService.UserExistsAsync(model.Username);
+                    if (exists)
                     {
-                        new Claim(ClaimTypes.Name, user.Username),
-                        new Claim(ClaimTypes.Email, user.Email),
-                        new Claim(ClaimTypes.Role, user.Role)
-                    };
+                        ModelState.AddModelError(nameof(model.Username), "Este nombre de usuario ya está registrado.");
+                        return View(model);
+                    }
 
-                    var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                    await HttpContext.SignInAsync(
-                        CookieAuthenticationDefaults.AuthenticationScheme,
-                        new ClaimsPrincipal(claimsIdentity));
+                    var result = await _authenticationService.RegisterUserAsync(
+                        model.Username, 
+                        model.Email, 
+                        model.Password, 
+                        model.Role);
 
-                    _logger.LogInformation($"Nuevo usuario {model.Username} registrado e inició sesión");
-                    return RedirectToAction("Index", "Home");
+                    if (result)
+                    {
+                        _logger.LogInformation("Usuario registrado correctamente.");
+                        TempData["SuccessMessage"] = "Usuario registrado correctamente. Ya puede iniciar sesión.";
+                        return RedirectToAction("Login");
+                    }
+                    else
+                    {
+                        ModelState.AddModelError(string.Empty, "No se pudo crear la cuenta de usuario.");
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    ModelState.AddModelError(string.Empty, "Error al registrar el usuario. Inténtelo de nuevo.");
+                    _logger.LogError(ex, "Error en el proceso de registro");
+                    ModelState.AddModelError(string.Empty, "Ocurrió un error al procesar su solicitud.");
                 }
             }
 
@@ -132,14 +146,13 @@ namespace SurveyApp.WebMvc.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            _logger.LogInformation("Usuario ha cerrado sesión");
             return RedirectToAction("Index", "Home");
         }
 
-        [HttpGet]
         public IActionResult AccessDenied()
         {
             return View();
