@@ -13,5 +13,8 @@ namespace SurveyApp.Application.Ports
         Task<Suggestion> CreateAsync(Suggestion suggestion);
         Task UpdateAsync(Suggestion suggestion);
         Task DeleteAsync(Guid id);
+        Task<List<Suggestion>> GetByStatusAsync(SuggestionStatus status);
+        Task<List<Suggestion>> GetByCategoryAsync(string category);
+        Task<List<Suggestion>> SearchAsync(string searchTerm);
     }
 }

@@ -61,7 +61,11 @@ namespace SurveyApp.Application.Services
                 CreatedAt = DateTime.UtcNow,
                 Status = SuggestionStatus.New,
                 Category = suggestionDto.Category ?? "Other",
-                IsAnonymous = suggestionDto.IsAnonymous
+                IsAnonymous = suggestionDto.IsAnonymous,
+                Title = suggestionDto.Title,
+                Description = suggestionDto.Description,
+                Source = suggestionDto.Source,
+                CustomerId = suggestionDto.CustomerId
             };
 
             await _suggestionRepository.CreateAsync(suggestion);
@@ -208,13 +212,15 @@ namespace SurveyApp.Application.Services
                 SimilarSuggestions = suggestion.SimilarSuggestions,
                 
                 // Asignar valores a las nuevas propiedades
-                Title = !string.IsNullOrEmpty(suggestion.Content) 
-                    ? (suggestion.Content.Length > 50 
-                        ? suggestion.Content.Substring(0, 47) + "..." 
-                        : suggestion.Content)
-                    : "Sin título",
-                Description = suggestion.Content,
-                Source = suggestion.IsAnonymous ? "Anonymous" : "Customer",
+                Title = !string.IsNullOrEmpty(suggestion.Title) 
+                    ? suggestion.Title 
+                    : (!string.IsNullOrEmpty(suggestion.Content) 
+                        ? (suggestion.Content.Length > 50 
+                            ? suggestion.Content.Substring(0, 47) + "..." 
+                            : suggestion.Content)
+                        : "Sin título"),
+                Description = suggestion.Description ?? suggestion.Content,
+                Source = suggestion.Source ?? (suggestion.IsAnonymous ? "Anonymous" : "Customer"),
                 CompletionPercentage = completionPercentage,
                 TargetDate = suggestion.TargetDate,
                 AcceptanceCriteria = suggestion.AcceptanceCriteria
