@@ -2,219 +2,168 @@
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import AdvancedRequirementsDashboard from '@/components/requirements/AdvancedRequirementsDashboard';
-import { useToast } from "@/hooks/use-toast";
+import RequirementsDashboard from '@/components/requirements/RequirementsDashboard';
+import { useToast } from "@/components/ui/use-toast";
 import { Requirement } from '@/types/requirements';
+import { useQuery } from '@tanstack/react-query';
 
-// Mock data for demonstration
+// Sample mock data for development purposes
 const mockRequirements: Requirement[] = [
   {
     id: '1',
-    title: 'Implement user authentication',
-    content: 'Add secure user authentication with email and social login options.',
-    description: 'Add secure user authentication with email and social login options.',
-    customerName: 'John Doe',
-    customerEmail: 'john@example.com',
-    createdAt: '2023-07-15T10:30:00Z',
-    status: 'implemented',
-    category: 'Security',
+    title: 'Implementar inicio de sesión con Google',
+    content: 'Añadir opción para que los usuarios puedan iniciar sesión usando su cuenta de Google',
+    description: 'Los usuarios necesitan poder iniciar sesión con Google para una experiencia más fluida',
+    customerName: 'María González',
+    customerEmail: 'maria@example.com',
+    createdAt: '2023-09-15T10:30:00',
+    status: 'proposed',
+    category: 'Authentication',
     priority: 'high',
-    isAnonymous: false,
-    response: 'We have implemented this feature with both email and social login options.',
-    responseDate: '2023-07-25T14:15:00Z',
-    completionPercentage: 100,
-    projectArea: 'Authentication',
-    acceptanceCriteria: 'Users should be able to log in with email and at least one social provider'
+    projectArea: 'User Management',
+    acceptanceCriteria: 'Los usuarios deben poder iniciar sesión con su cuenta de Google existente',
+    completionPercentage: 0
   },
   {
     id: '2',
-    title: 'Create responsive dashboard',
-    content: 'The dashboard should be fully responsive on all device sizes.',
-    description: 'The dashboard should be fully responsive on all device sizes.',
-    customerName: 'Jane Smith',
-    customerEmail: 'jane@example.com',
-    createdAt: '2023-07-17T15:45:00Z',
+    title: 'Crear panel de estadísticas avanzado',
+    content: 'Diseñar e implementar un panel que muestre estadísticas en tiempo real sobre el uso del sistema',
+    description: 'Necesitamos análisis detallados del uso de la plataforma',
+    customerName: 'Carlos López',
+    customerEmail: 'carlos@example.com',
+    createdAt: '2023-09-10T14:45:00',
     status: 'in-progress',
-    category: 'UI/UX',
+    category: 'Analytics',
     priority: 'medium',
-    isAnonymous: false,
-    response: 'Our team is working on implementing responsive design across all pages.',
-    responseDate: '2023-07-21T09:20:00Z',
-    completionPercentage: 50,
-    projectArea: 'Frontend',
-    acceptanceCriteria: 'Dashboard should work well on mobile, tablet and desktop'
+    projectArea: 'Dashboard',
+    acceptanceCriteria: 'El panel debe mostrar datos de usuarios activos, sesiones y tasa de conversión',
+    completionPercentage: 35
   },
   {
     id: '3',
-    title: 'Optimize database queries',
-    content: 'Improve the performance of database queries on the products listing page.',
-    description: 'Improve the performance of database queries on the products listing page.',
-    customerName: 'Robert Johnson',
-    customerEmail: 'robert@example.com',
-    createdAt: '2023-07-10T11:30:00Z',
-    status: 'proposed',
+    title: 'Optimización de consultas SQL en listados',
+    content: 'Mejorar el rendimiento de las consultas SQL en las páginas de listado de productos',
+    description: 'La página de productos tarda más de 3 segundos en cargar con más de 100 productos',
+    customerName: 'Ana Martínez',
+    customerEmail: 'ana@example.com',
+    createdAt: '2023-09-05T09:15:00',
+    status: 'implemented',
     category: 'Performance',
     priority: 'critical',
-    isAnonymous: false,
-    completionPercentage: 0,
-    projectArea: 'Backend',
-    acceptanceCriteria: 'Page load time should be reduced by at least 50%'
+    projectArea: 'Database',
+    acceptanceCriteria: 'Las páginas de listado deben cargar en menos de 1 segundo con 500 productos',
+    completionPercentage: 100
   },
   {
     id: '4',
-    title: 'Implement dark mode',
-    content: 'Add a toggle for dark mode throughout the application',
-    description: 'Add a toggle for dark mode throughout the application',
-    customerName: 'Sarah Williams',
-    customerEmail: 'sarah@example.com',
-    createdAt: '2023-07-12T13:20:00Z',
-    status: 'proposed',
-    category: 'UI/UX',
-    priority: 'medium',
-    isAnonymous: false,
-    completionPercentage: 0,
-    projectArea: 'Frontend',
-    acceptanceCriteria: 'Users should be able to toggle between light and dark mode'
+    title: 'Integración con sistema de pagos',
+    content: 'Implementar la integración con el sistema de pagos Stripe',
+    description: 'Necesitamos procesar pagos con tarjetas de crédito y métodos alternativos',
+    customerName: 'Roberto Gómez',
+    customerEmail: 'roberto@example.com',
+    createdAt: '2023-08-28T11:20:00',
+    status: 'in-progress',
+    category: 'Payments',
+    priority: 'high',
+    projectArea: 'Finance',
+    acceptanceCriteria: 'Los usuarios deben poder pagar con tarjeta, PayPal y transferencia bancaria',
+    completionPercentage: 65
   },
   {
     id: '5',
-    title: 'Add export to PDF feature',
-    content: 'Implement exporting reports to PDF format',
-    description: 'Implement exporting reports to PDF format',
-    customerName: 'Michael Brown',
-    customerEmail: 'michael@example.com',
-    createdAt: '2023-07-18T09:15:00Z',
-    status: 'in-progress',
-    category: 'Feature',
-    priority: 'high',
-    isAnonymous: false,
-    completionPercentage: 35,
-    projectArea: 'Reports',
-    acceptanceCriteria: 'Users should be able to export any report to PDF format'
-  },
-  {
-    id: '6',
-    title: 'Improve API documentation',
-    content: 'Update and expand API documentation for developers',
-    description: 'Update and expand API documentation for developers',
-    customerName: 'Emily Davis',
-    customerEmail: 'emily@example.com',
-    createdAt: '2023-08-05T14:20:00Z',
-    status: 'proposed',
-    category: 'Documentation',
-    priority: 'medium',
-    isAnonymous: false,
-    completionPercentage: 0,
-    projectArea: 'Developer Experience',
-    acceptanceCriteria: 'All API endpoints should be documented with examples'
-  },
-  {
-    id: '7',
-    title: 'Implement multi-language support',
-    content: 'Add support for multiple languages across the application',
-    description: 'Add support for multiple languages across the application',
-    customerName: 'David Wilson',
-    customerEmail: 'david@example.com',
-    createdAt: '2023-08-10T09:30:00Z',
-    status: 'in-progress',
-    category: 'Internationalization',
-    priority: 'high',
-    isAnonymous: false,
-    response: 'Currently implementing translation infrastructure',
-    responseDate: '2023-08-15T11:45:00Z',
-    completionPercentage: 30,
-    projectArea: 'Frontend',
-    acceptanceCriteria: 'UI should support at least English, Spanish and French'
+    title: 'Exportación de reportes a PDF',
+    content: 'Añadir funcionalidad para exportar reportes en formato PDF',
+    description: 'Los usuarios necesitan descargar reportes para compartirlos externamente',
+    customerName: 'Laura Sánchez',
+    customerEmail: 'laura@example.com',
+    createdAt: '2023-08-20T15:30:00',
+    status: 'rejected',
+    category: 'Reports',
+    priority: 'low',
+    projectArea: 'Analytics',
+    acceptanceCriteria: 'Los reportes PDF deben incluir gráficos, tablas y datos completos del informe',
+    completionPercentage: 0
   }
 ];
 
 export default function AdvancedRequirements() {
-  // Force admin mode and logged in for testing
-  const [userRole, setUserRole] = useState('admin');
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-  const [requirements, setRequirements] = useState<Requirement[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const { toast } = useToast();
   
+  // Simulate loading user data from localStorage
   useEffect(() => {
-    // For debugging
-    console.log("Starting requirements page load");
+    const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const role = localStorage.getItem('userRole') || '';
     
-    // Force to true for testing
-    setIsLoggedIn(true);
-    setUserRole('admin');
-    
-    // Fetch requirements data from API in a real application
-    const fetchRequirements = async () => {
-      try {
-        setLoading(true);
-        console.log("Fetching requirements data...");
-        
-        // Use mock data for now and ensure it's properly initialized
-        console.log("Setting requirements to:", mockRequirements);
-        // Add a short delay to simulate API call (helps debugging)
-        setTimeout(() => {
-          setRequirements(mockRequirements);
-          setLoading(false);
-        }, 500);
-      } catch (error) {
-        console.error('Error fetching requirements:', error);
-        setLoading(false);
-        toast({
-          title: "Error",
-          description: "Failed to load requirements data",
-          variant: "destructive"
-        });
-      }
-    };
-    
-    fetchRequirements();
-  }, [toast]);
+    setIsLoggedIn(loggedIn);
+    setUserRole(role);
+  }, []);
+
+  // In a real application, replace this with actual API call
+  const { data: requirements, isLoading, isError } = useQuery({
+    queryKey: ['requirements'],
+    queryFn: async () => {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // In production, this would be a real API call to your backend
+      console.log('Fetching requirements data from API');
+      return mockRequirements;
+    }
+  });
+
+  // For demo purposes, we'll force admin mode
+  const isAdmin = true; // userRole.toLowerCase() === 'admin';
   
-  // Calculate counts for admin dashboard
+  // Calculate counts based on requirements data
   const totalCount = requirements?.length || 0;
-  const proposedCount = requirements?.filter(r => r.status === 'proposed')?.length || 0;
-  const inProgressCount = requirements?.filter(r => r.status === 'in-progress')?.length || 0;
-  const implementedCount = requirements?.filter(r => r.status === 'implemented')?.length || 0;
-  
-  // Force admin mode for testing
-  const isAdmin = true;
-  
-  console.log("Requirements data before passing to dashboard:", requirements);
-  console.log("Requirements length:", requirements?.length || 0);
-  console.log("Counts:", { total: totalCount, proposed: proposedCount, inProgress: inProgressCount, implemented: implementedCount });
-  console.log("isAdmin:", isAdmin);
-  
+  const proposedCount = requirements?.filter(req => req.status === 'proposed').length || 0;
+  const inProgressCount = requirements?.filter(req => req.status === 'in-progress').length || 0;
+  const implementedCount = requirements?.filter(req => req.status === 'implemented').length || 0;
+  const rejectedCount = requirements?.filter(req => req.status === 'rejected').length || 0;
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
       
       <main className="flex-1 w-full px-4 sm:px-6 lg:px-8 pt-24 pb-20 flex justify-center">
-        <div className="w-full max-w-[1000px]">
-          <div className="mb-8">
+        <div className="w-[900px] max-w-[900px] h-full bg-white p-6">
+          <div className="text-center mb-8">
             <h1 className="text-3xl font-bold tracking-tight sm:text-4xl mb-2">Advanced Requirements</h1>
-            <p className="text-muted-foreground max-w-2xl">
-              {isAdmin 
-                ? "Advanced management and analysis of project requirements."
-                : "We value your input! Submit your project requirements and track their progress."}
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Comprehensive management of project requirements with advanced analytics
             </p>
           </div>
           
-          {loading ? (
-            <div className="w-full p-12 flex justify-center">
-              <div className="flex flex-col items-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-                <p className="mt-4 text-muted-foreground">Loading requirements data...</p>
-              </div>
+          {isLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+          ) : isError ? (
+            <div className="text-center py-12">
+              <p className="text-red-500 mb-2">Error loading requirements data</p>
+              <button 
+                className="text-blue-500 underline"
+                onClick={() => {
+                  toast({
+                    title: "Trying to reconnect...",
+                    description: "Attempting to load requirements data again.",
+                  });
+                }}
+              >
+                Try again
+              </button>
             </div>
           ) : (
-            <AdvancedRequirementsDashboard 
+            <RequirementsDashboard
               isAdmin={isAdmin}
-              requirements={requirements}
+              requirements={requirements || []}
               totalCount={totalCount}
               proposedCount={proposedCount}
-              inProgressCount={inProgressCount}
+              inProgressCount={inProgressCount} 
               implementedCount={implementedCount}
+              rejectedCount={rejectedCount}
             />
           )}
         </div>

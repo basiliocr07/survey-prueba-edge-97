@@ -13,6 +13,7 @@ import Suggestions from "./pages/Suggestions";
 import SurveyResponse from "./pages/SurveyResponse";
 import CustomerGrowth from "./pages/CustomerGrowth";
 import Requirements from "./pages/Requirements";
+import AdvancedRequirements from "./pages/AdvancedRequirements";
 import Surveys from "./pages/Surveys";
 import Dashboard from "./pages/Dashboard";
 import About from "./pages/About";
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/suggestions" element={<Suggestions />} />
               <Route path="/customers" element={<CustomerGrowth />} />
               <Route path="/requirements" element={<Requirements />} />
+              <Route path="/advanced-requirements" element={<AdvancedRequirements />} />
               <Route path="/about" element={<About />} />
               <Route path="/client" element={<ClientAccess />} />
               <Route path="/login" element={<ClientLogin />} />

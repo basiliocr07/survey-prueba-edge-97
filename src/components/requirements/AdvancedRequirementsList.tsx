@@ -32,7 +32,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Requirement } from '@/types/requirements';
 import { format } from 'date-fns';
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 
 interface AdvancedRequirementsListProps {
   requirements: Requirement[];
@@ -52,14 +52,14 @@ export default function AdvancedRequirementsList({ requirements = [], isAdmin = 
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
   
-  console.log("AdvancedRequirementsList - Requirements received:", requirements);
-  console.log("AdvancedRequirementsList - Requirements length:", requirements?.length || 0);
+  console.log("Requirements received in AdvancedRequirementsList:", requirements);
+  console.log("Requirements length:", requirements?.length || 0);
 
   useEffect(() => {
     if (requirements?.length > 0) {
-      console.log("Requirements loaded successfully in list component:", requirements.length);
+      console.log("Requirements loaded successfully:", requirements.length);
     } else {
-      console.log("No requirements data available in list component or empty array received");
+      console.log("No requirements data available or empty array received");
     }
   }, [requirements]);
 
@@ -145,6 +145,13 @@ export default function AdvancedRequirementsList({ requirements = [], isAdmin = 
         completionPercentage
       });
       
+      // In a real app, you would make an API call here
+      // await updateRequirementStatus(selectedRequirement.id, {
+      //   status: selectedStatus,
+      //   response: responseText,
+      //   completionPercentage
+      // });
+      
       toast({
         title: "Status updated",
         description: "The requirement status has been updated successfully.",
@@ -153,6 +160,7 @@ export default function AdvancedRequirementsList({ requirements = [], isAdmin = 
       setDialogOpen(false);
       setSelectedRequirement(null);
     } catch (error) {
+      console.error("Error updating requirement status:", error);
       toast({
         title: "Error updating status",
         description: "There was a problem updating the requirement status.",
@@ -231,7 +239,7 @@ export default function AdvancedRequirementsList({ requirements = [], isAdmin = 
               <SelectContent>
                 <SelectItem value="">All categories</SelectItem>
                 {categories.map((category) => (
-                  <SelectItem key={category} value={category as string}>
+                  <SelectItem key={category as string} value={category as string}>
                     {category}
                   </SelectItem>
                 ))}
@@ -250,7 +258,7 @@ export default function AdvancedRequirementsList({ requirements = [], isAdmin = 
               <SelectContent>
                 <SelectItem value="">All areas</SelectItem>
                 {projectAreas.map((area) => (
-                  <SelectItem key={area} value={area as string}>
+                  <SelectItem key={area as string} value={area as string}>
                     {area}
                   </SelectItem>
                 ))}
@@ -261,14 +269,14 @@ export default function AdvancedRequirementsList({ requirements = [], isAdmin = 
       </CardHeader>
       
       <CardContent>
-        {!safeRequirements || safeRequirements.length === 0 ? (
+        {safeRequirements.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <div className="rounded-full bg-muted p-3 mb-3">
               <Search className="h-6 w-6 text-muted-foreground" />
             </div>
             <h3 className="text-lg font-semibold">No requirements data available</h3>
             <p className="text-sm text-muted-foreground">
-              There are no requirements to display. Please check your data source.
+              There are no requirements to display. Please add some requirements.
             </p>
           </div>
         ) : filteredRequirements.length === 0 ? (
