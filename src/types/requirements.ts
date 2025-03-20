@@ -27,6 +27,8 @@ export interface RequirementFormData {
   priority?: string;
   isAnonymous: boolean;
   projectArea?: string;
+  acceptanceCriteria?: string;
+  targetDate?: string;
 }
 
 export interface RequirementAnalytics {
@@ -39,4 +41,10 @@ export interface RequirementAnalytics {
     count: number;
   }[];
   requirements: Requirement[];
+}
+
+export interface RequirementStatusUpdateDto {
+  status: string;
+  response?: string;
+  completionPercentage?: number;
 }

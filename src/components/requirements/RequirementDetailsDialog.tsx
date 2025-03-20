@@ -12,18 +12,29 @@ import { Badge } from "@/components/ui/badge";
 import { Requirement } from "@/types/requirements";
 import { CalendarIcon, ClockIcon, UserIcon, ArrowRightIcon, FileText } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { useState } from "react";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 
 interface RequirementDetailsDialogProps {
   requirement: Requirement | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onStatusUpdate?: (id: string, status: string, response: string) => void;
+  isAdmin?: boolean;
 }
 
 export default function RequirementDetailsDialog({
   requirement,
   open,
   onOpenChange,
+  onStatusUpdate,
+  isAdmin = false,
 }: RequirementDetailsDialogProps) {
+  const [newResponse, setNewResponse] = useState("");
+  const [newStatus, setNewStatus] = useState("");
+  const { toast } = useToast();
+
   if (!requirement) {
     return null;
   }
@@ -75,6 +86,29 @@ export default function RequirementDetailsDialog({
         {priority.charAt(0).toUpperCase() + priority.slice(1)}
       </span>
     );
+  };
+
+  const handleStatusUpdate = () => {
+    if (!newStatus) {
+      toast({
+        title: "Error",
+        description: "Please select a status",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (onStatusUpdate && requirement) {
+      onStatusUpdate(requirement.id, newStatus, newResponse);
+      onOpenChange(false);
+      setNewResponse("");
+      setNewStatus("");
+      
+      toast({
+        title: "Status updated",
+        description: `Requirement status has been updated to ${newStatus}`,
+      });
+    }
   };
 
   return (
@@ -176,11 +210,42 @@ export default function RequirementDetailsDialog({
               </div>
             </div>
           )}
+          
+          {isAdmin && (
+            <>
+              <Separator />
+              <div className="space-y-3">
+                <h3 className="font-medium text-sm">Update Status</h3>
+                <div className="flex gap-2">
+                  <select 
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={newStatus}
+                    onChange={(e) => setNewStatus(e.target.value)}
+                  >
+                    <option value="">Select a status</option>
+                    <option value="proposed">Proposed</option>
+                    <option value="in-progress">In Progress</option>
+                    <option value="implemented">Implemented</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </div>
+                
+                <Textarea
+                  placeholder="Add a response or comment..."
+                  value={newResponse}
+                  onChange={(e) => setNewResponse(e.target.value)}
+                  className="resize-none"
+                />
+              </div>
+            </>
+          )}
         </div>
         
         <DialogFooter>
+          {isAdmin && (
+            <Button variant="default" onClick={handleStatusUpdate}>Update Status</Button>
+          )}
           <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
-          {/* Additional action buttons could go here */}
         </DialogFooter>
       </DialogContent>
     </Dialog>
