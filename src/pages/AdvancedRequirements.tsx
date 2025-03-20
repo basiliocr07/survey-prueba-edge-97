@@ -65,12 +65,12 @@ const mockRequirements: Requirement[] = [
 export default function AdvancedRequirements() {
   const [userRole, setUserRole] = useState('admin'); // Default to admin for testing
   const [isLoggedIn, setIsLoggedIn] = useState(true); // Default to logged in for testing
-  const [requirements, setRequirements] = useState<Requirement[]>(mockRequirements);
+  const [requirements, setRequirements] = useState<Requirement[]>([]);
   const { toast } = useToast();
   
   useEffect(() => {
     // For debugging
-    console.log("Requirements data:", requirements);
+    console.log("Starting requirements page load");
     
     const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
     const role = localStorage.getItem('userRole') || 'admin'; // Default to admin for testing
@@ -104,6 +104,10 @@ export default function AdvancedRequirements() {
   const implementedCount = requirements.filter(r => r.status === 'implemented').length;
   
   const isAdmin = isLoggedIn && userRole.toLowerCase() === 'admin';
+  
+  console.log("Requirements data before passing to dashboard:", requirements);
+  console.log("Counts:", { total: totalCount, proposed: proposedCount, inProgress: inProgressCount, implemented: implementedCount });
+  console.log("isAdmin:", isAdmin);
   
   return (
     <div className="min-h-screen flex flex-col bg-background">

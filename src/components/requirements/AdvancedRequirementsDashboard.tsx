@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Tabs, 
@@ -39,6 +39,23 @@ export default function AdvancedRequirementsDashboard({
   implementedCount = 0
 }: AdvancedRequirementsDashboardProps) {
   const [activeTab, setActiveTab] = useState<string>(isAdmin ? 'view' : 'submit');
+
+  console.log("AdvancedRequirementsDashboard - Props received:", { 
+    isAdmin, 
+    requirementsCount: requirements.length,
+    requirements,
+    totalCount,
+    proposedCount,
+    inProgressCount,
+    implementedCount
+  });
+
+  useEffect(() => {
+    console.log("Dashboard component mounted or updated");
+    if (requirements.length === 0) {
+      console.log("Warning: No requirements data received in dashboard");
+    }
+  }, [requirements]);
 
   return (
     <div className="space-y-6">
