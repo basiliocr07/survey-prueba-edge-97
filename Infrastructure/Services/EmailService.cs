@@ -77,5 +77,29 @@ namespace SurveyApp.Infrastructure.Services
 
             await SendEmailAsync(to, subject, htmlMessage);
         }
+        
+        public async Task<bool> TestEmailServiceAsync(string toEmail)
+        {
+            try
+            {
+                string subject = "Prueba del servicio de correo - Sistema de Encuestas";
+                string htmlMessage = @"
+                    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+                        <h2>Prueba de envío de correo</h2>
+                        <p>Este es un correo de prueba del sistema de encuestas.</p>
+                        <p>Si has recibido este correo, la configuración de envío de correos está funcionando correctamente.</p>
+                        <hr />
+                        <p style='color: #888; font-size: 12px;'>Este es un correo automático, por favor no responda a este mensaje.</p>
+                    </div>";
+                
+                await SendEmailAsync(toEmail, subject, htmlMessage);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en prueba de envío de email: {ex.Message}");
+                return false;
+            }
+        }
     }
 }
