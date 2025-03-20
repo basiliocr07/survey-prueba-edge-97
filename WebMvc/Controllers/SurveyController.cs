@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using SurveyApp.Application.DTOs;
@@ -162,6 +161,8 @@ namespace SurveyApp.WebMvc.Controllers
                     return RedirectToAction("Index");
                 }
         
+                _logger.LogInformation($"Enviando encuesta '{survey.Title}' a {email} con enlace {surveyLink}");
+                
                 // Enviar la encuesta al email proporcionado
                 await _surveyService.SendSurveyEmailAsync(email, survey.Title, surveyLink);
         
@@ -253,7 +254,7 @@ namespace SurveyApp.WebMvc.Controllers
         [HttpPost]
         public async Task<IActionResult> SendTestEmail(string email)
         {
-            // Si no se proporciona email, usamos el configurado por defecto o ubcruz2@gmail.com
+            // Si no se proporciona email, usamos ubcruz2@gmail.com
             if (string.IsNullOrEmpty(email))
             {
                 email = "ubcruz2@gmail.com"; // Email específico para pruebas

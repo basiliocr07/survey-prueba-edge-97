@@ -70,11 +70,9 @@ namespace SurveyApp.Infrastructure.Services
 
                 mailMessage.To.Add(to);
 
-                using (var client = new SmtpClient())
+                using (var client = new SmtpClient(_emailSettings.SmtpServer, _emailSettings.SmtpPort))
                 {
                     // Configuración explícita del cliente SMTP
-                    client.Host = _emailSettings.SmtpServer;
-                    client.Port = _emailSettings.SmtpPort;
                     client.EnableSsl = true;
                     client.DeliveryMethod = SmtpDeliveryMethod.Network;
                     client.UseDefaultCredentials = false;

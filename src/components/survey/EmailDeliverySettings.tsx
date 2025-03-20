@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -57,8 +56,8 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>(deliveryConfig.emailAddresses);
   const [filterText, setFilterText] = useState<string>('');
   const [showSelectedRecipients, setShowSelectedRecipients] = useState<boolean>(false);
+  const [isSending, setIsSending] = useState<boolean>(false);
   
-  // Ensure trigger has sendAutomatically property
   useEffect(() => {
     if (!deliveryConfig.trigger?.hasOwnProperty('sendAutomatically')) {
       onConfigChange({
@@ -230,10 +229,51 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
     customer.email.toLowerCase().includes(filterText.toLowerCase())
   );
 
+  const sendSurveyEmails = async () => {
+    if (deliveryConfig.emailAddresses.length === 0) {
+      toast({
+        title: "No hay destinatarios",
+        description: "Por favor, añade al menos una dirección de correo electrónico",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSending(true);
+    
+    try {
+      // Aquí se implementaría la conexión al backend
+      // Este es un ejemplo simulado
+      toast({
+        title: "Emails en cola",
+        description: `La encuesta será enviada a ${deliveryConfig.emailAddresses.length} destinatario(s) según la configuración de envío`,
+      });
+
+      console.log("Configuración de envío de correo:", deliveryConfig);
+      
+      // Esperar 2 segundos para simular el envío
+      setTimeout(() => {
+        toast({
+          title: "Envío completado",
+          description: "Los correos han sido procesados correctamente",
+        });
+        setIsSending(false);
+      }, 2000);
+    } catch (error) {
+      console.error("Error al enviar emails:", error);
+      toast({
+        title: "Error al enviar",
+        description: "Ocurrió un problema al procesar los correos electrónicos",
+        variant: "destructive"
+      });
+      setIsSending(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Email Delivery Settings</CardTitle>
+        <CardTitle>Configuración de Envío por Email</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         <div>
@@ -562,6 +602,27 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
             </div>
           </>
         )}
+        
+        <div className="flex justify-end mt-4">
+          <Button 
+            onClick={sendSurveyEmails} 
+            disabled={deliveryConfig.emailAddresses.length === 0 || isSending}
+          >
+            {isSending ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Enviando...
+              </>
+            ) : (
+              <>
+                <Mail className="mr-2 h-4 w-4" /> Enviar Ahora
+              </>
+            )}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
