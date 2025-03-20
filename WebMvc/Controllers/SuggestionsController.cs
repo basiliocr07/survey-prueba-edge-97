@@ -31,7 +31,7 @@ namespace SurveyApp.WebMvc.Controllers
 
         public async Task<IActionResult> Index()
         {
-            // Solo administradores pueden ver el listado completo
+            // Only admins can view the complete listing
             if (!User.IsInRole("Admin"))
             {
                 return RedirectToAction("Create");
@@ -40,15 +40,59 @@ namespace SurveyApp.WebMvc.Controllers
             try
             {
                 var suggestions = await _suggestionService.GetAllSuggestionsAsync();
-                var viewModel = new SuggestionListViewModel
+                
+                // Calculate counts for dashboard
+                var newSuggestions = suggestions.Count(s => s.Status.ToLower() == "new");
+                var inProgressSuggestions = suggestions.Count(s => s.Status.ToLower() == "reviewed");
+                var completedSuggestions = suggestions.Count(s => s.Status.ToLower() == "implemented");
+                var rejectedSuggestions = suggestions.Count(s => s.Status.ToLower() == "rejected");
+                
+                // Get unique categories
+                var categories = suggestions
+                    .Select(s => s.Category)
+                    .Where(c => !string.IsNullOrEmpty(c))
+                    .Distinct()
+                    .ToArray();
+                
+                // Category distribution
+                var categoryCounts = new Dictionary<string, int>();
+                foreach (var suggestion in suggestions.Where(s => !string.IsNullOrEmpty(s.Category)))
                 {
-                    Suggestions = suggestions
+                    if (categoryCounts.ContainsKey(suggestion.Category))
+                        categoryCounts[suggestion.Category]++;
+                    else
+                        categoryCounts[suggestion.Category] = 1;
+                }
+                
+                // Monthly counts (last 6 months)
+                var monthlyCounts = new Dictionary<string, int>();
+                var now = DateTime.UtcNow;
+                for (int i = 0; i < 6; i++)
+                {
+                    var month = now.AddMonths(-i);
+                    var monthName = month.ToString("MMM yyyy");
+                    var count = suggestions.Count(s => s.CreatedAt.Year == month.Year && s.CreatedAt.Month == month.Month);
+                    monthlyCounts[monthName] = count;
+                }
+                
+                var viewModel = new SuggestionIndexViewModel
+                {
+                    Suggestions = suggestions,
+                    TotalSuggestions = suggestions.Count,
+                    NewSuggestions = newSuggestions,
+                    InProgressSuggestions = inProgressSuggestions,
+                    CompletedSuggestions = completedSuggestions,
+                    RejectedSuggestions = rejectedSuggestions,
+                    Categories = categories,
+                    CategoryCounts = categoryCounts,
+                    MonthlyCounts = monthlyCounts
                 };
+                
                 return View(viewModel);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener las sugerencias");
+                _logger.LogError(ex, "Error getting suggestions");
                 return View("Error");
             }
         }
@@ -57,7 +101,7 @@ namespace SurveyApp.WebMvc.Controllers
         public IActionResult Create()
         {
             ViewData["PageTitle"] = User.IsInRole("Admin") ? 
-                "Gestión de Sugerencias" : "Enviar Sugerencia";
+                "Suggestion Management" : "Submit Suggestion";
             return View(new CreateSuggestionViewModel());
         }
 
@@ -173,7 +217,12 @@ namespace SurveyApp.WebMvc.Controllers
                     CreatedAt = suggestion.CreatedAt,
                     Status = suggestion.Status,
                     Category = suggestion.Category,
-                    Response = suggestion.Response
+                    Response = suggestion.Response,
+                    Title = suggestion.Title,
+                    Description = suggestion.Description,
+                    CompletionPercentage = suggestion.CompletionPercentage,
+                    ResponseDate = suggestion.ResponseDate,
+                    IsAnonymous = suggestion.IsAnonymous
                 };
 
                 return View(viewModel);
@@ -213,20 +262,111 @@ namespace SurveyApp.WebMvc.Controllers
 
         [HttpGet]
         [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> Reports()
+        public async Task<IActionResult> Reports(int months = 3)
         {
             try
             {
+                var report = await _suggestionService.GenerateMonthlyReportAsync(months);
                 var suggestions = await _suggestionService.GetAllSuggestionsAsync();
+                
+                // Category distribution
+                var categoryDistribution = new Dictionary<string, int>();
+                foreach (var suggestion in suggestions.Where(s => !string.IsNullOrEmpty(s.Category)))
+                {
+                    if (categoryDistribution.ContainsKey(suggestion.Category))
+                        categoryDistribution[suggestion.Category]++;
+                    else
+                        categoryDistribution[suggestion.Category] = 1;
+                }
+                
+                // Status distribution
+                var statusDistribution = new Dictionary<string, int>();
+                foreach (var suggestion in suggestions)
+                {
+                    if (statusDistribution.ContainsKey(suggestion.Status))
+                        statusDistribution[suggestion.Status]++;
+                    else
+                        statusDistribution[suggestion.Status] = 1;
+                }
+                
+                // Monthly implementation rates
+                var implementationRates = new Dictionary<string, double>();
+                foreach (var monthData in report.MonthlyData)
+                {
+                    var rate = monthData.TotalSuggestions > 0 
+                        ? (double)monthData.ImplementedSuggestions / monthData.TotalSuggestions 
+                        : 0;
+                    implementationRates[$"{monthData.Month} {monthData.Year}"] = Math.Round(rate * 100, 1);
+                }
+                
                 var viewModel = new SuggestionReportsViewModel
                 {
-                    Suggestions = suggestions
+                    Suggestions = suggestions,
+                    MonthlyReport = report,
+                    MonthsRange = months,
+                    CategoryDistribution = categoryDistribution,
+                    StatusDistribution = statusDistribution,
+                    ImplementationRates = implementationRates
                 };
+                
                 return View(viewModel);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener los reportes de sugerencias");
+                return View("Error");
+            }
+        }
+        
+        [HttpGet]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> List(string status = "", string category = "", string search = "")
+        {
+            try
+            {
+                var suggestions = await _suggestionService.GetAllSuggestionsAsync();
+                
+                // Apply filters
+                if (!string.IsNullOrEmpty(status))
+                {
+                    suggestions = suggestions.Where(s => s.Status.ToLower() == status.ToLower()).ToList();
+                }
+                
+                if (!string.IsNullOrEmpty(category))
+                {
+                    suggestions = suggestions.Where(s => s.Category == category).ToList();
+                }
+                
+                if (!string.IsNullOrEmpty(search))
+                {
+                    suggestions = suggestions.Where(s => 
+                        s.Content.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                        s.CustomerName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                        (s.Title != null && s.Title.Contains(search, StringComparison.OrdinalIgnoreCase))
+                    ).ToList();
+                }
+                
+                // Get unique categories
+                var categories = suggestions
+                    .Select(s => s.Category)
+                    .Where(c => !string.IsNullOrEmpty(c))
+                    .Distinct()
+                    .ToArray();
+                
+                var viewModel = new SuggestionListViewModel
+                {
+                    Suggestions = suggestions,
+                    Categories = categories,
+                    StatusFilter = status,
+                    CategoryFilter = category,
+                    SearchTerm = search
+                };
+                
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener el listado de sugerencias");
                 return View("Error");
             }
         }

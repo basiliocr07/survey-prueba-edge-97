@@ -166,5 +166,50 @@ namespace SurveyApp.WebApi.Controllers
             var report = await _suggestionService.GenerateMonthlyReportAsync(months);
             return Ok(report);
         }
+        
+        [HttpGet("metrics/summary")]
+        public async Task<IActionResult> GetMetricsSummary()
+        {
+            var suggestions = await _suggestionService.GetAllSuggestionsAsync();
+            
+            var summary = new
+            {
+                TotalCount = suggestions.Count,
+                NewCount = suggestions.Count(s => s.Status.ToLower() == "new"),
+                ReviewedCount = suggestions.Count(s => s.Status.ToLower() == "reviewed"),
+                ImplementedCount = suggestions.Count(s => s.Status.ToLower() == "implemented"),
+                RejectedCount = suggestions.Count(s => s.Status.ToLower() == "rejected"),
+                ImplementationRate = suggestions.Count > 0 
+                    ? (double)suggestions.Count(s => s.Status.ToLower() == "implemented") / suggestions.Count 
+                    : 0
+            };
+            
+            return Ok(summary);
+        }
+        
+        [HttpGet("metrics/categories")]
+        public async Task<IActionResult> GetCategoryMetrics()
+        {
+            var suggestions = await _suggestionService.GetAllSuggestionsAsync();
+            
+            var categoryCounts = suggestions
+                .Where(s => !string.IsNullOrEmpty(s.Category))
+                .GroupBy(s => s.Category)
+                .Select(g => new { Category = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .ToList();
+            
+            return Ok(categoryCounts);
+        }
+        
+        [HttpGet("metrics/trends")]
+        public async Task<IActionResult> GetTrends(int months = 6)
+        {
+            var report = await _suggestionService.GenerateMonthlyReportAsync(months);
+            
+            // Add additional trend calculations if needed
+            
+            return Ok(report.MonthlyData);
+        }
     }
 }
