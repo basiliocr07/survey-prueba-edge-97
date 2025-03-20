@@ -4,9 +4,10 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import SuggestionsDashboard from '@/components/suggestions/SuggestionsDashboard';
 import { useToast } from "@/hooks/use-toast";
+import { Suggestion } from '@/types/suggestions';
 
 // Datos mockeados para demostración
-const mockSuggestions = [
+const mockSuggestions: Suggestion[] = [
   {
     id: '1',
     title: 'Add dark mode to the dashboard',

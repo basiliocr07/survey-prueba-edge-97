@@ -1,6 +1,6 @@
-
 export interface Suggestion {
   id: string;
+  title?: string; // Adding title as an optional property
   content: string;
   customerName: string;
   customerEmail: string;
@@ -12,6 +12,7 @@ export interface Suggestion {
   response?: string;
   responseDate?: string;
   similarSuggestions?: string[];
+  completionPercentage?: number; // Added this property to match usage
 }
 
 export interface SuggestionFormData {

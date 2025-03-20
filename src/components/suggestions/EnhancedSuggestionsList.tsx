@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { 
@@ -94,21 +93,17 @@ export default function EnhancedSuggestionsList({ suggestions, isAdmin = false }
   };
 
   const filteredSuggestions = suggestions.filter((suggestion) => {
-    // Apply search filter
     const matchesSearch = searchTerm === '' || 
       suggestion.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (suggestion.customerName && suggestion.customerName.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    // Apply status filter
     const matchesStatus = statusFilter === '' || suggestion.status === statusFilter;
     
-    // Apply category filter
     const matchesCategory = categoryFilter === '' || suggestion.category === categoryFilter;
     
     return matchesSearch && matchesStatus && matchesCategory;
   });
 
-  // Get unique categories and statuses
   const categories = Array.from(new Set(suggestions.map(s => s.category).filter(Boolean))) as string[];
   const statuses = Array.from(new Set(suggestions.map(s => s.status)));
 
@@ -122,7 +117,6 @@ export default function EnhancedSuggestionsList({ suggestions, isAdmin = false }
     if (!selectedSuggestion) return;
     
     try {
-      // In a real application, you would make an API call here
       console.log('Updating suggestion status:', {
         id: selectedSuggestion.id,
         status: selectedStatus,
@@ -134,7 +128,6 @@ export default function EnhancedSuggestionsList({ suggestions, isAdmin = false }
         description: "The suggestion status has been updated successfully.",
       });
       
-      // Close the dialog and reset state
       setSelectedSuggestion(null);
       setResponseText('');
       setSelectedStatus('');
@@ -225,7 +218,7 @@ export default function EnhancedSuggestionsList({ suggestions, isAdmin = false }
                 {filteredSuggestions.map((suggestion) => (
                   <TableRow key={suggestion.id}>
                     <TableCell className="max-w-md">
-                      <div className="font-medium">{suggestion.title || suggestion.content}</div>
+                      <div className="font-medium">{suggestion.title || suggestion.content.substring(0, 50)}</div>
                       <div className="text-sm text-muted-foreground line-clamp-2">
                         {suggestion.content}
                       </div>
