@@ -1,0 +1,52 @@
+
+@model Guid
+
+<div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+    <h3 class="text-lg font-semibold mb-4">Compartir encuesta</h3>
+    <p class="text-gray-600 mb-4">Utilice este enlace para compartir la encuesta con sus clientes:</p>
+    
+    @{
+        var surveyLink = $"{Context.Request.Scheme}://{Context.Request.Host}/survey/{Model}";
+    }
+    
+    <div class="flex items-center">
+        <input id="survey-link" type="text" value="@surveyLink" readonly 
+               class="block w-full px-4 py-2 border border-gray-300 rounded-md mr-2 bg-gray-50 focus:outline-none" />
+        <button onclick="copySurveyLink()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+            </svg>
+        </button>
+    </div>
+    
+    <div id="copy-success" class="hidden mt-2 text-green-600 text-sm">
+        ¡Enlace copiado al portapapeles!
+    </div>
+    
+    <div class="mt-4">
+        <h4 class="text-sm font-medium mb-2">Enviar por email</h4>
+        <form asp-controller="Survey" asp-action="SendSurveyEmail" asp-route-id="@Model" method="post" class="flex">
+            <input type="email" name="email" placeholder="Email del destinatario" required
+                   class="block flex-grow px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-r-md transition-colors">
+                Enviar
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function copySurveyLink() {
+        var copyText = document.getElementById("survey-link");
+        copyText.select();
+        copyText.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(copyText.value);
+        
+        var copySuccess = document.getElementById("copy-success");
+        copySuccess.classList.remove("hidden");
+        
+        setTimeout(function() {
+            copySuccess.classList.add("hidden");
+        }, 3000);
+    }
+</script>

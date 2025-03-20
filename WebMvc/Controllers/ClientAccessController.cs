@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Application.Services;
 using SurveyApp.WebMvc.Models;
+using System.Linq;
 
 namespace SurveyApp.WebMvc.Controllers
 {
@@ -57,6 +58,18 @@ namespace SurveyApp.WebMvc.Controllers
         [HttpGet("thank-you")]
         public IActionResult ThankYou()
         {
+            if (TempData["SurveyTitle"] != null)
+            {
+                ViewBag.SurveyTitle = TempData["SurveyTitle"];
+                ViewBag.ThankYouMessage = TempData["ThankYouMessage"] ?? "Gracias por completar nuestra encuesta.";
+            }
+            else
+            {
+                // Valores predeterminados si no hay datos en TempData
+                ViewBag.SurveyTitle = "Encuesta";
+                ViewBag.ThankYouMessage = "Gracias por completar nuestra encuesta.";
+            }
+            
             return View();
         }
     }

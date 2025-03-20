@@ -1,4 +1,3 @@
-
 @model SurveyApp.WebMvc.Models.SurveyViewModel
 @{
     ViewData["Title"] = "Survey Details";
@@ -145,6 +144,15 @@ else if (Model.UserRole == "Admin")
                     
                     <div class="card">
                         <div class="card-header">
+                            <h2 class="card-title">Compartir Encuesta</h2>
+                        </div>
+                        <div class="p-0">
+                            @await Html.PartialAsync("_SurveyLinkGeneratorPartial", Model.Id)
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
                             <h2 class="card-title">Configuración de Entrega</h2>
                         </div>
                         <div class="p-6">
@@ -186,7 +194,7 @@ else if (Model.UserRole == "Admin")
                             <i class="fas fa-list-alt mr-2"></i>
                             Ver Respuestas
                         </a>
-                        <a asp-controller="ClientAccess" asp-action="Survey" asp-route-id="@Model.Id" class="btn btn-outline">
+                        <a href="/survey/@Model.Id" target="_blank" class="btn btn-outline">
                             <i class="fas fa-external-link-alt mr-2"></i>
                             Ver Encuesta Pública
                         </a>

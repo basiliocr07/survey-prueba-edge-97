@@ -22,8 +22,12 @@ namespace SurveyApp.Application.Services
         Task<SurveyResponseDto> SubmitSurveyResponseAsync(CreateSurveyResponseDto responseDto);
         Task<List<SurveyResponseDto>> GetSurveyResponsesAsync(Guid surveyId);
         Task<List<RecentResponseDto>> GetRecentResponsesAsync(int count);
-        
-        // Nuevo método para obtener una respuesta por su ID
         Task<SurveyResponseAnalyticsDto> GetResponseByIdAsync(Guid id);
+        
+        // Método para obtener encuestas para clientes (versión pública)
+        Task<SurveyDto> GetSurveyForClientAsync(Guid id);
+        
+        // Método para enviar encuestas por email
+        Task SendSurveyEmailsAsync(Guid id);
     }
 }
