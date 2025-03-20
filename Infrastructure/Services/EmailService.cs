@@ -25,12 +25,20 @@ namespace SurveyApp.Infrastructure.Services
         public EmailService(IOptions<EmailSettings> emailSettings)
         {
             _emailSettings = emailSettings.Value;
+            
+            // Log email configuration at initialization (without password)
+            Console.WriteLine($"Inicializando servicio de email con: Server={_emailSettings.SmtpServer}, " +
+                              $"Port={_emailSettings.SmtpPort}, User={_emailSettings.SmtpUsername}, " +
+                              $"Sender={_emailSettings.SenderEmail}");
         }
 
         public async Task SendEmailAsync(string to, string subject, string htmlMessage)
         {
             try
             {
+                Console.WriteLine($"Intentando enviar email a {to} con asunto: {subject}");
+                Console.WriteLine($"Configuración SMTP: {_emailSettings.SmtpServer}:{_emailSettings.SmtpPort}, Usuario: {_emailSettings.SmtpUsername}");
+                
                 var mailMessage = new MailMessage
                 {
                     From = new MailAddress(_emailSettings.SenderEmail, _emailSettings.SenderName),
@@ -44,21 +52,48 @@ namespace SurveyApp.Infrastructure.Services
                 using (var client = new SmtpClient(_emailSettings.SmtpServer, _emailSettings.SmtpPort))
                 {
                     client.EnableSsl = true;
+                    client.DeliveryMethod = SmtpDeliveryMethod.Network;
+                    client.UseDefaultCredentials = false;
                     client.Credentials = new NetworkCredential(_emailSettings.SmtpUsername, _emailSettings.SmtpPassword);
+                    client.Timeout = 30000; // 30 segundos de timeout
                     
+                    Console.WriteLine("Enviando email...");
                     await client.SendMailAsync(mailMessage);
                     Console.WriteLine($"Email enviado exitosamente a {to}");
                 }
             }
+            catch (SmtpException smtpEx)
+            {
+                Console.WriteLine($"Error SMTP al enviar email: {smtpEx.Message}");
+                Console.WriteLine($"Código de estado: {smtpEx.StatusCode}");
+                Console.WriteLine($"Stack trace: {smtpEx.StackTrace}");
+                
+                if (smtpEx.InnerException != null)
+                {
+                    Console.WriteLine($"Error interno: {smtpEx.InnerException.Message}");
+                }
+                
+                throw;
+            }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error al enviar email: {ex.Message}");
+                Console.WriteLine($"Error general al enviar email: {ex.Message}");
+                Console.WriteLine($"Tipo de error: {ex.GetType().Name}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Error interno: {ex.InnerException.Message}");
+                }
+                
                 throw;
             }
         }
 
         public async Task SendSurveyInvitationAsync(string to, string surveyTitle, string surveyLink)
         {
+            Console.WriteLine($"Preparando invitación para encuesta '{surveyTitle}' a {to}");
+            
             string subject = $"Invitación para completar encuesta: {surveyTitle}";
             string htmlMessage = $@"
                 <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
@@ -82,6 +117,8 @@ namespace SurveyApp.Infrastructure.Services
         {
             try
             {
+                Console.WriteLine($"Iniciando prueba de servicio de email a {toEmail}");
+                
                 string subject = "Prueba del servicio de correo - Sistema de Encuestas";
                 string htmlMessage = @"
                     <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
@@ -93,6 +130,7 @@ namespace SurveyApp.Infrastructure.Services
                     </div>";
                 
                 await SendEmailAsync(toEmail, subject, htmlMessage);
+                Console.WriteLine($"Prueba de email completada exitosamente");
                 return true;
             }
             catch (Exception ex)

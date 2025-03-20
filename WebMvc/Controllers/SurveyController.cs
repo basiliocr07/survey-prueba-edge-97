@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using SurveyApp.Application.DTOs;
+using SurveyApp.Application.Ports;
 using SurveyApp.Application.Services;
 using SurveyApp.WebMvc.Models;
 using System;
@@ -12,11 +13,16 @@ namespace SurveyApp.WebMvc.Controllers
     public class SurveyController : Controller
     {
         private readonly ISurveyService _surveyService;
+        private readonly IEmailService _emailService;
         private readonly ILogger<SurveyController> _logger;
 
-        public SurveyController(ISurveyService surveyService, ILogger<SurveyController> logger)
+        public SurveyController(
+            ISurveyService surveyService, 
+            IEmailService emailService,
+            ILogger<SurveyController> logger)
         {
             _surveyService = surveyService;
+            _emailService = emailService;
             _logger = logger;
         }
 
@@ -242,38 +248,63 @@ namespace SurveyApp.WebMvc.Controllers
             }
         }
 
-        // Nuevo método para enviar prueba de email específico
+        // Método para enviar prueba de email específico
         [HttpPost]
         public async Task<IActionResult> SendTestEmail(string email)
         {
             if (string.IsNullOrEmpty(email))
             {
+                _logger.LogError("Error en prueba de email: Email no proporcionado");
                 TempData["ErrorMessage"] = "El email de prueba es requerido.";
                 return RedirectToAction("Index");
             }
     
             try
             {
-                // Enviamos un email de prueba a ubcruz2@gmail.com usando una encuesta existente
+                _logger.LogInformation($"Iniciando prueba de envío de email a {email}");
+                
+                // Primero hacemos una prueba directa del servicio de email
+                var testResult = await _emailService.TestEmailServiceAsync(email);
+                
+                if (!testResult)
+                {
+                    _logger.LogError($"La prueba directa del servicio de email falló para {email}");
+                    TempData["ErrorMessage"] = $"Prueba directa del servicio de email falló para {email}.";
+                    return RedirectToAction("Index");
+                }
+                
+                // Si la prueba directa es exitosa, enviamos una encuesta de prueba
                 var surveys = await _surveyService.GetAllSurveysAsync();
                 var survey = surveys.FirstOrDefault();
         
                 if (survey == null)
                 {
+                    _logger.LogError("No se encontró ninguna encuesta para la prueba");
                     TempData["ErrorMessage"] = "No se encontró ninguna encuesta para la prueba.";
                     return RedirectToAction("Index");
                 }
         
                 var surveyLink = $"{Request.Scheme}://{Request.Host}/survey/{survey.Id}";
+                _logger.LogInformation($"Enviando encuesta de prueba '{survey.Title}' a {email} con enlace {surveyLink}");
+                
                 await _surveyService.SendSurveyEmailAsync(email, survey.Title, surveyLink);
         
+                _logger.LogInformation($"Correo de prueba enviado exitosamente a {email}");
                 TempData["SuccessMessage"] = $"Se ha enviado un correo de prueba a {email} exitosamente.";
+                
                 return RedirectToAction("Index");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al enviar el email de prueba: {Message}", ex.Message);
-                TempData["ErrorMessage"] = "Error al enviar el email de prueba: " + ex.Message;
+                _logger.LogError(ex, $"Error al enviar el email de prueba a {email}: {ex.Message}");
+                TempData["ErrorMessage"] = $"Error al enviar el email de prueba: {ex.Message}";
+                
+                if (ex.InnerException != null)
+                {
+                    _logger.LogError($"Excepción interna: {ex.InnerException.Message}");
+                    TempData["ErrorMessage"] += $" Detalle: {ex.InnerException.Message}";
+                }
+                
                 return RedirectToAction("Index");
             }
         }
