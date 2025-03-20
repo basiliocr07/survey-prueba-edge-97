@@ -116,7 +116,9 @@ namespace SurveyApp.WebMvc.Controllers
                         CustomerName = model.CustomerName,
                         CustomerEmail = model.CustomerEmail,
                         IsAnonymous = model.IsAnonymous,
-                        Category = model.Category
+                        Category = model.Category,
+                        AcceptanceCriteria = model.AcceptanceCriteria,
+                        TargetDate = model.TargetDate
                     };
 
                     await _requirementService.CreateRequirementAsync(dto);
