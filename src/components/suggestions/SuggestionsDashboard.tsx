@@ -88,17 +88,15 @@ export default function SuggestionsDashboard({
       )}
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className={`grid grid-cols-${isAdmin ? '3' : '1'} mb-6`}>
-          {isAdmin && <TabsTrigger value="view">View Suggestions</TabsTrigger>}
+        <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsTrigger value="view">View Suggestions</TabsTrigger>
           <TabsTrigger value="submit">Submit Suggestion</TabsTrigger>
-          {isAdmin && <TabsTrigger value="reports">Reports</TabsTrigger>}
+          <TabsTrigger value="reports">Reports</TabsTrigger>
         </TabsList>
         
-        {isAdmin && (
-          <TabsContent value="view" className="space-y-6">
-            <EnhancedSuggestionsList suggestions={suggestions} isAdmin={true} />
-          </TabsContent>
-        )}
+        <TabsContent value="view" className="space-y-6">
+          <EnhancedSuggestionsList suggestions={suggestions} isAdmin={isAdmin} />
+        </TabsContent>
         
         <TabsContent value="submit">
           <Card>
@@ -114,11 +112,9 @@ export default function SuggestionsDashboard({
           </Card>
         </TabsContent>
         
-        {isAdmin && (
-          <TabsContent value="reports">
-            <SuggestionReports suggestions={suggestions} />
-          </TabsContent>
-        )}
+        <TabsContent value="reports">
+          <SuggestionReports suggestions={suggestions} />
+        </TabsContent>
       </Tabs>
     </div>
   );
