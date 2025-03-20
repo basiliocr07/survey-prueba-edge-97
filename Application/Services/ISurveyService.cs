@@ -27,7 +27,11 @@ namespace SurveyApp.Application.Services
         // Método para obtener encuestas para clientes (versión pública)
         Task<SurveyDto> GetSurveyForClientAsync(Guid id);
         
-        // Método para enviar encuestas por email
+        // Métodos para enviar encuestas por email
         Task SendSurveyEmailsAsync(Guid id);
+        Task SendSurveyEmailAsync(string email, string surveyTitle, string surveyLink);
+        
+        // Nuevo método para procesar envíos automáticos según configuración
+        Task ProcessAutomaticSurveyDeliveryAsync();
     }
 }

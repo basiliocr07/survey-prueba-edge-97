@@ -23,7 +23,7 @@
         ¡Enlace copiado al portapapeles!
     </div>
     
-    <div class="mt-4">
+    <div class="mt-4 space-y-4">
         <h4 class="text-sm font-medium mb-2">Enviar por email</h4>
         <form asp-controller="Survey" asp-action="SendSurveyEmail" asp-route-id="@Model" method="post" class="flex">
             <input type="email" name="email" placeholder="Email del destinatario" required
@@ -32,6 +32,62 @@
                 Enviar
             </button>
         </form>
+        
+        <div class="flex justify-between">
+            <form asp-controller="Survey" asp-action="SendSurveyToAllRecipients" asp-route-id="@Model" method="post">
+                <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    Enviar a todos los destinatarios
+                </button>
+            </form>
+        </div>
+        
+        <div class="border-t pt-4 mt-4">
+            <h4 class="text-sm font-medium mb-2">Estado de entrega automática</h4>
+            <div class="bg-gray-50 p-3 rounded-md">
+                <p class="text-sm" id="delivery-status">
+                    @{
+                        var survey = ViewData["Survey"] as SurveyApp.Application.DTOs.SurveyDto;
+                        var deliveryType = survey?.DeliveryConfig?.Type ?? "Manual";
+                        var autoSend = survey?.DeliveryConfig?.Trigger?.SendAutomatically ?? false;
+                        
+                        if (deliveryType == "manual")
+                        {
+                            <span>Envío manual solamente</span>
+                        }
+                        else if (deliveryType == "scheduled")
+                        {
+                            var frequency = survey?.DeliveryConfig?.Schedule?.Frequency ?? "mensual";
+                            <span>Programado: Envío @frequency</span>
+                        }
+                        else if (deliveryType == "triggered")
+                        {
+                            var triggerType = survey?.DeliveryConfig?.Trigger?.Type ?? "ticket-closed";
+                            var triggerText = triggerType == "ticket-closed" ? "cierre de ticket" : "compra completada";
+                            <span>Por evento: Al @triggerText</span>
+                        }
+                        
+                        if (autoSend)
+                        {
+                            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Automático
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                Manual
+                            </span>
+                        }
+                    }
+                </p>
+                <a href="#delivery-config" class="text-blue-500 text-xs hover:underline mt-1 block">
+                    Editar configuración de envío
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
