@@ -24,6 +24,29 @@ namespace SurveyApp.WebMvc.Models
         public string OperatingSystem { get; set; }
         public string Location { get; set; }
         public string IpAddress { get; set; }
+        
+        // Propiedades ampliadas para análisis detallado
+        public int QuestionCount { get; set; }
+        public int ValidAnswersCount { get; set; }
+        public double ValidationRate => QuestionCount > 0 ? (ValidAnswersCount / (double)QuestionCount) * 100 : 0;
+        public string FormattedCompletionTime => FormatTimeSpan(TimeSpan.FromSeconds(CompletionTime));
+        public List<string> Tags { get; set; } = new List<string>();
+        public string Source { get; set; }
+        public string UserAgent { get; set; }
+        public bool WasAbandoned { get; set; }
+        public int PageViews { get; set; }
+        public double AverageTimePerQuestion => Answers.Count > 0 ? CompletionTime / Answers.Count : 0;
+        
+        // Método para formatear el tiempo de manera legible
+        private string FormatTimeSpan(TimeSpan timeSpan)
+        {
+            if (timeSpan.TotalMinutes < 1)
+                return $"{timeSpan.Seconds}s";
+            if (timeSpan.TotalHours < 1)
+                return $"{timeSpan.Minutes}m {timeSpan.Seconds}s";
+            
+            return $"{(int)timeSpan.TotalHours}h {timeSpan.Minutes}m";
+        }
     }
 
     public class QuestionAnswerViewModel
@@ -39,5 +62,25 @@ namespace SurveyApp.WebMvc.Models
         public double ScoreValue { get; set; }
         public int CompletionTimeSeconds { get; set; }
         public string Category { get; set; }
+        
+        // Propiedades ampliadas para visualizaciones
+        public bool IsSkipped => string.IsNullOrEmpty(Answer) && (MultipleAnswers == null || MultipleAnswers.Count == 0);
+        public string FormattedCompletionTime => FormatTimeSpan(TimeSpan.FromSeconds(CompletionTimeSeconds));
+        public int CharacterCount => Answer?.Length ?? 0;
+        public bool HasFreeformInput => QuestionType == "text" || QuestionType == "textarea";
+        public bool HasSingleChoice => QuestionType == "single-choice" || QuestionType == "dropdown";
+        public bool HasMultipleChoice => QuestionType == "multiple-choice";
+        public bool IsRating => QuestionType == "rating" || QuestionType == "nps";
+        
+        // Método para formatear el tiempo de manera legible
+        private string FormatTimeSpan(TimeSpan timeSpan)
+        {
+            if (timeSpan.TotalMinutes < 1)
+                return $"{timeSpan.Seconds}s";
+            if (timeSpan.TotalHours < 1)
+                return $"{timeSpan.Minutes}m {timeSpan.Seconds}s";
+            
+            return $"{(int)timeSpan.TotalHours}h {timeSpan.Minutes}m";
+        }
     }
 }

@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 
@@ -34,6 +35,17 @@ namespace SurveyApp.WebMvc.Models
         // Response time breakdown
         public List<TimeOfDayResponseViewModel> TimeOfDayResponses { get; set; } = new List<TimeOfDayResponseViewModel>();
         public List<DayOfWeekResponseViewModel> DayOfWeekResponses { get; set; } = new List<DayOfWeekResponseViewModel>();
+        
+        // Nuevas propiedades para mayor análisis
+        public int TotalQuestions { get; set; }
+        public double AverageQuestionsPerSurvey => TotalSurveys > 0 ? (double)TotalQuestions / TotalSurveys : 0;
+        public int SkippedQuestionsCount { get; set; }
+        public double SkipRate => TotalQuestions > 0 ? (double)SkippedQuestionsCount / TotalQuestions : 0;
+        public Dictionary<string, double> CategoryCompletionRates { get; set; } = new Dictionary<string, double>();
+        public List<QuestionPerformanceViewModel> TopPerformingQuestions { get; set; } = new List<QuestionPerformanceViewModel>();
+        public List<QuestionPerformanceViewModel> LowPerformingQuestions { get; set; } = new List<QuestionPerformanceViewModel>();
+        public Dictionary<string, int> FeedbackSentimentDistribution { get; set; } = new Dictionary<string, int>();
+        public List<ResponseTimeRangeViewModel> ResponseTimeRanges { get; set; } = new List<ResponseTimeRangeViewModel>();
     }
 
     public class ResponseTrendViewModel
@@ -99,5 +111,24 @@ namespace SurveyApp.WebMvc.Models
         // For rating and NPS questions
         public double AverageScore { get; set; }
         public Dictionary<int, int> ScoreDistribution { get; set; } = new Dictionary<int, int>();
+    }
+    
+    // Nuevas clases para análisis extendido
+    public class QuestionPerformanceViewModel
+    {
+        public Guid Id { get; set; }
+        public string Title { get; set; }
+        public string Type { get; set; }
+        public int ResponseCount { get; set; }
+        public double CompletionRate { get; set; }
+        public double AverageTimeSeconds { get; set; }
+        public int SkipCount { get; set; }
+    }
+    
+    public class ResponseTimeRangeViewModel
+    {
+        public string Range { get; set; }
+        public int Count { get; set; }
+        public double Percentage { get; set; }
     }
 }
