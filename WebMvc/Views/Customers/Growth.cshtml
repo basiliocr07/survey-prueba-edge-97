@@ -4,108 +4,110 @@
     ViewData["Title"] = "Customer Growth Tracking";
 }
 
-<div class="w-full px-4 sm:px-6 lg:px-8 pt-24 pb-20">
-    <div class="w-full max-w-[900px] mx-auto bg-white p-6">
-        <div class="flex justify-between items-center mb-8">
-            <div>
-                <h1 class="text-3xl font-bold tracking-tight sm:text-4xl mb-2">Customer Growth Tracking</h1>
-                <p class="text-muted-foreground">
-                    Track and manage your customers and their growth metrics
-                </p>
-            </div>
-            
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createCustomerModal">
-                <i class="fas fa-plus mr-2"></i>Add Customer
-            </button>
-        </div>
-        
-        <div class="grid grid-cols-1 gap-8">
-            <!-- Service Usage Chart -->
-            <div class="card p-6">
-                <h2 class="text-xl font-bold mb-4">Service Usage</h2>
-                <div class="w-full h-[300px]" id="serviceUsageChart">
-                    <!-- Chart will be rendered here -->
+<div class="min-h-screen flex flex-col bg-background">
+    <main class="flex-1 w-full px-4 sm:px-6 lg:px-8 pt-24 pb-20 flex justify-center">
+        <div class="w-[900px] max-w-[900px] h-full bg-white p-6">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold tracking-tight sm:text-4xl mb-2">Customer Growth Tracking</h1>
+                    <p class="text-muted-foreground">
+                        Track and manage your customers and their growth metrics
+                    </p>
                 </div>
+                
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createCustomerModal">
+                    <i class="fas fa-plus mr-2"></i>Add Customer
+                </button>
             </div>
             
-            <!-- Customers Table -->
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-border">
-                    <thead class="bg-accent/50">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Brand</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Contact</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Services</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Growth</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @if (Model.Customers != null && Model.Customers.Any())
-                        {
-                            @foreach (var customer in Model.Customers)
+            <div class="grid grid-cols-1 gap-8">
+                <!-- Service Usage Chart -->
+                <div class="card p-6">
+                    <h2 class="text-xl font-bold mb-4">Service Usage</h2>
+                    <div class="w-full h-[300px]" id="serviceUsageChart">
+                        <!-- Chart will be rendered here -->
+                    </div>
+                </div>
+                
+                <!-- Customers Table -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-accent/50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Brand</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Contact</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Services</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Growth</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @if (Model.Customers != null && Model.Customers.Any())
                             {
-                                <tr class="hover:bg-accent/10 transition-colors">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-medium">@customer.BrandName</div>
-                                        <div class="text-xs text-muted-foreground">Since @customer.CreatedAt.ToShortDateString()</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm">@customer.ContactEmail</div>
-                                        <div class="text-xs text-muted-foreground">@customer.ContactPhone</div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="flex flex-wrap gap-1">
-                                            @foreach (var service in customer.AcquiredServices)
-                                            {
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                                                    @service
-                                                </span>
-                                            }
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="flex items-center">
-                                            @if (customer.GrowthMetrics != null && customer.GrowthMetrics.Any())
-                                            {
-                                                var lastMetric = customer.GrowthMetrics.OrderByDescending(m => m.Period).FirstOrDefault();
-                                                if (lastMetric != null)
+                                @foreach (var customer in Model.Customers)
+                                {
+                                    <tr class="hover:bg-accent/10 transition-colors">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium">@customer.BrandName</div>
+                                            <div class="text-xs text-muted-foreground">Since @customer.CreatedAt.ToShortDateString()</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm">@customer.ContactEmail</div>
+                                            <div class="text-xs text-muted-foreground">@customer.ContactPhone</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex flex-wrap gap-1">
+                                                @foreach (var service in customer.AcquiredServices)
                                                 {
-                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                        <i class="fas fa-arrow-up mr-1"></i>@lastMetric.Revenue.ToString("C0")
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                                                        @service
                                                     </span>
                                                 }
-                                            }
-                                            else
-                                            {
-                                                <span class="text-xs text-muted-foreground">No data</span>
-                                            }
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <a href="@Url.Action("Edit", new { id = customer.Id })" class="text-primary hover:text-primary/80 mr-3">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <a href="#" data-customer-id="@customer.Id" class="view-details text-primary hover:text-primary/80">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center">
+                                                @if (customer.GrowthMetrics != null && customer.GrowthMetrics.Any())
+                                                {
+                                                    var lastMetric = customer.GrowthMetrics.OrderByDescending(m => m.Period).FirstOrDefault();
+                                                    if (lastMetric != null)
+                                                    {
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                            <i class="fas fa-arrow-up mr-1"></i>@lastMetric.Revenue.ToString("C0")
+                                                        </span>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-xs text-muted-foreground">No data</span>
+                                                }
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <a href="@Url.Action("Edit", new { id = customer.Id })" class="text-primary hover:text-primary/80 mr-3">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="#" data-customer-id="@customer.Id" class="view-details text-primary hover:text-primary/80">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="px-6 py-10 text-center text-sm text-muted-foreground">
+                                        <p>No customers found. Add your first customer to get started.</p>
                                     </td>
                                 </tr>
                             }
-                        }
-                        else
-                        {
-                            <tr>
-                                <td colspan="5" class="px-6 py-10 text-center text-sm text-muted-foreground">
-                                    <p>No customers found. Add your first customer to get started.</p>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-    </div>
+    </main>
 </div>
 
 <!-- Create Customer Modal -->
