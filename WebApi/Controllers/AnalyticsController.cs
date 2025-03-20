@@ -72,5 +72,116 @@ namespace SurveyApp.WebApi.Controllers
                 return NotFound(ex.Message);
             }
         }
+
+        // GET: api/analytics/dashboard
+        [HttpGet("dashboard")]
+        public async Task<ActionResult<Dictionary<string, object>>> GetGlobalAnalyticsDashboard()
+        {
+            try
+            {
+                var dashboard = await _analyticsService.GetGlobalAnalyticsDashboardAsync();
+                return Ok(dashboard);
+            }
+            catch (ApplicationException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
+        // GET: api/analytics/engagement
+        [HttpGet("engagement")]
+        public async Task<ActionResult<Dictionary<string, object>>> GetUserEngagementMetrics([FromQuery] Guid? surveyId = null)
+        {
+            try
+            {
+                var metrics = await _analyticsService.GetUserEngagementMetricsAsync(surveyId);
+                return Ok(metrics);
+            }
+            catch (ApplicationException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
+        // GET: api/analytics/devices
+        [HttpGet("devices")]
+        public async Task<ActionResult<Dictionary<string, object>>> GetDeviceAnalytics([FromQuery] Guid? surveyId = null)
+        {
+            try
+            {
+                var deviceAnalytics = await _analyticsService.GetDeviceAnalyticsAsync(surveyId);
+                return Ok(deviceAnalytics);
+            }
+            catch (ApplicationException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
+        // GET: api/analytics/trends?surveyId={surveyId}&timeRange={timeRange}
+        [HttpGet("trends")]
+        public async Task<ActionResult<Dictionary<DateTime, int>>> GetResponseTrends(
+            [FromQuery] Guid? surveyId = null, 
+            [FromQuery] string timeRange = "last30days")
+        {
+            try
+            {
+                var trends = await _analyticsService.GetResponseTrendsAsync(surveyId, timeRange);
+                return Ok(trends);
+            }
+            catch (ApplicationException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
+        // GET: api/analytics/surveys/{surveyId}/completion
+        [HttpGet("surveys/{surveyId}/completion")]
+        public async Task<ActionResult<Dictionary<string, object>>> GetCompletionAnalytics(Guid surveyId)
+        {
+            try
+            {
+                var completionAnalytics = await _analyticsService.GetCompletionAnalyticsAsync(surveyId);
+                return Ok(completionAnalytics);
+            }
+            catch (ApplicationException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
+        // GET: api/analytics/surveys/{surveyId}/questions
+        [HttpGet("surveys/{surveyId}/questions")]
+        public async Task<ActionResult<Dictionary<string, object>>> GetQuestionPerformanceAnalytics(Guid surveyId)
+        {
+            try
+            {
+                var questionAnalytics = await _analyticsService.GetQuestionPerformanceAnalyticsAsync(surveyId);
+                return Ok(questionAnalytics);
+            }
+            catch (ApplicationException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
+        // POST: api/analytics/export?surveyId={surveyId}&format={format}&includeRawData={includeRawData}&timeRange={timeRange}
+        [HttpPost("export")]
+        public async Task<IActionResult> ExportAnalyticsData(
+            [FromQuery] Guid? surveyId, 
+            [FromQuery] string format = "csv", 
+            [FromQuery] bool includeRawData = true, 
+            [FromQuery] string timeRange = "all")
+        {
+            try
+            {
+                await _analyticsService.ExportAnalyticsDataAsync(surveyId, format, includeRawData, timeRange);
+                return Ok(new { message = "Export initiated. File will be emailed when ready." });
+            }
+            catch (ApplicationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }
