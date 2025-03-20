@@ -14,7 +14,8 @@ import {
   CheckCircle, 
   Clock,
   FileText,
-  Lightbulb
+  Lightbulb,
+  ClipboardCheck
 } from 'lucide-react';
 import { Requirement } from '@/types/requirements';
 import AdvancedRequirementsList from './AdvancedRequirementsList';

@@ -17,7 +17,8 @@ import {
   Flag, 
   CalendarClock, 
   Layers, 
-  ArrowUpRight 
+  ArrowUpRight,
+  ListChecks
 } from 'lucide-react';
 import {
   Dialog,
@@ -25,7 +26,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -39,7 +39,7 @@ interface AdvancedRequirementsListProps {
   isAdmin: boolean;
 }
 
-export default function AdvancedRequirementsList({ requirements, isAdmin }: AdvancedRequirementsListProps) {
+export default function AdvancedRequirementsList({ requirements = [], isAdmin = false }: AdvancedRequirementsListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
@@ -52,19 +52,19 @@ export default function AdvancedRequirementsList({ requirements, isAdmin }: Adva
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
   
-  console.log("AdvancedRequirementsList - Requirements:", requirements);
+  console.log("AdvancedRequirementsList - Requirements received:", requirements);
   console.log("AdvancedRequirementsList - Requirements length:", requirements?.length || 0);
 
   useEffect(() => {
     if (requirements?.length > 0) {
-      console.log("Requirements loaded successfully:", requirements.length);
+      console.log("Requirements loaded successfully in list component:", requirements.length);
     } else {
-      console.log("No requirements data available or empty array received");
+      console.log("No requirements data available in list component or empty array received");
     }
   }, [requirements]);
 
-  // Si requirements es undefined, establecerlo como un array vacío
-  const safeRequirements = requirements || [];
+  // Ensure we have a valid array, even if requirements is undefined
+  const safeRequirements = Array.isArray(requirements) ? requirements : [];
   
   // Get unique categories from requirements
   const categories = [...new Set(safeRequirements.map(req => req.category).filter(Boolean))];
@@ -165,7 +165,10 @@ export default function AdvancedRequirementsList({ requirements, isAdmin }: Adva
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span>Requirements List</span>
+          <div className="flex items-center gap-2">
+            <ListChecks className="h-5 w-5" />
+            <span>Requirements List</span>
+          </div>
           <div className="flex items-center space-x-2">
             <span className="text-sm text-muted-foreground">
               {filteredRequirements.length} requirement(s)
@@ -258,7 +261,7 @@ export default function AdvancedRequirementsList({ requirements, isAdmin }: Adva
       </CardHeader>
       
       <CardContent>
-        {safeRequirements.length === 0 ? (
+        {!safeRequirements || safeRequirements.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <div className="rounded-full bg-muted p-3 mb-3">
               <Search className="h-6 w-6 text-muted-foreground" />
@@ -347,7 +350,6 @@ export default function AdvancedRequirementsList({ requirements, isAdmin }: Adva
         )}
       </CardContent>
 
-      {/* Fixed Dialog implementation */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-3xl">
           {selectedRequirement && (

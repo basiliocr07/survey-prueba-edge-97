@@ -91,6 +91,40 @@ const mockRequirements: Requirement[] = [
     completionPercentage: 35,
     projectArea: 'Reports',
     acceptanceCriteria: 'Users should be able to export any report to PDF format'
+  },
+  {
+    id: '6',
+    title: 'Improve API documentation',
+    content: 'Update and expand API documentation for developers',
+    description: 'Update and expand API documentation for developers',
+    customerName: 'Emily Davis',
+    customerEmail: 'emily@example.com',
+    createdAt: '2023-08-05T14:20:00Z',
+    status: 'proposed',
+    category: 'Documentation',
+    priority: 'medium',
+    isAnonymous: false,
+    completionPercentage: 0,
+    projectArea: 'Developer Experience',
+    acceptanceCriteria: 'All API endpoints should be documented with examples'
+  },
+  {
+    id: '7',
+    title: 'Implement multi-language support',
+    content: 'Add support for multiple languages across the application',
+    description: 'Add support for multiple languages across the application',
+    customerName: 'David Wilson',
+    customerEmail: 'david@example.com',
+    createdAt: '2023-08-10T09:30:00Z',
+    status: 'in-progress',
+    category: 'Internationalization',
+    priority: 'high',
+    isAnonymous: false,
+    response: 'Currently implementing translation infrastructure',
+    responseDate: '2023-08-15T11:45:00Z',
+    completionPercentage: 30,
+    projectArea: 'Frontend',
+    acceptanceCriteria: 'UI should support at least English, Spanish and French'
   }
 ];
 
@@ -99,6 +133,7 @@ export default function AdvancedRequirements() {
   const [userRole, setUserRole] = useState('admin');
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [requirements, setRequirements] = useState<Requirement[]>([]);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   
   useEffect(() => {
@@ -112,14 +147,19 @@ export default function AdvancedRequirements() {
     // Fetch requirements data from API in a real application
     const fetchRequirements = async () => {
       try {
+        setLoading(true);
+        console.log("Fetching requirements data...");
+        
         // Use mock data for now and ensure it's properly initialized
         console.log("Setting requirements to:", mockRequirements);
         // Add a short delay to simulate API call (helps debugging)
         setTimeout(() => {
           setRequirements(mockRequirements);
-        }, 300);
+          setLoading(false);
+        }, 500);
       } catch (error) {
         console.error('Error fetching requirements:', error);
+        setLoading(false);
         toast({
           title: "Error",
           description: "Failed to load requirements data",
@@ -160,14 +200,23 @@ export default function AdvancedRequirements() {
             </p>
           </div>
           
-          <AdvancedRequirementsDashboard 
-            isAdmin={isAdmin}
-            requirements={requirements}
-            totalCount={totalCount}
-            proposedCount={proposedCount}
-            inProgressCount={inProgressCount}
-            implementedCount={implementedCount}
-          />
+          {loading ? (
+            <div className="w-full p-12 flex justify-center">
+              <div className="flex flex-col items-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+                <p className="mt-4 text-muted-foreground">Loading requirements data...</p>
+              </div>
+            </div>
+          ) : (
+            <AdvancedRequirementsDashboard 
+              isAdmin={isAdmin}
+              requirements={requirements}
+              totalCount={totalCount}
+              proposedCount={proposedCount}
+              inProgressCount={inProgressCount}
+              implementedCount={implementedCount}
+            />
+          )}
         </div>
       </main>
       
