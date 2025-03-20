@@ -1,0 +1,574 @@
+
+@model SurveyApp.WebMvc.Models.RequirementsViewModel
+@{
+    ViewData["Title"] = "Advanced Requirements";
+    var isAdmin = User.IsInRole("Admin");
+}
+
+<div class="w-full px-4 sm:px-6 lg:px-8 pb-10">
+    <div class="w-full max-w-[1000px] mx-auto bg-white p-6">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold tracking-tight sm:text-4xl mb-2">Advanced Requirements</h1>
+            <p class="text-muted-foreground max-w-2xl">
+                @(isAdmin 
+                    ? "Advanced management and analysis of project requirements."
+                    : "We value your input! Submit your project requirements and track their progress.")
+            </p>
+        </div>
+
+        @if (isAdmin)
+        {
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="card p-6 border rounded-lg">
+                    <div class="flex flex-col items-center justify-center">
+                        <div class="rounded-full bg-primary/10 p-3 mb-3">
+                            <i class="fas fa-clipboard-list text-primary"></i>
+                        </div>
+                        <div class="text-2xl font-bold">@Model.TotalCount</div>
+                        <p class="text-sm text-muted-foreground">Total Requirements</p>
+                    </div>
+                </div>
+                
+                <div class="card p-6 border rounded-lg">
+                    <div class="flex flex-col items-center justify-center">
+                        <div class="rounded-full bg-blue-100 p-3 mb-3">
+                            <i class="fas fa-lightbulb text-blue-500"></i>
+                        </div>
+                        <div class="text-2xl font-bold">@Model.ProposedCount</div>
+                        <p class="text-sm text-muted-foreground">Proposed</p>
+                    </div>
+                </div>
+                
+                <div class="card p-6 border rounded-lg">
+                    <div class="flex flex-col items-center justify-center">
+                        <div class="rounded-full bg-yellow-100 p-3 mb-3">
+                            <i class="fas fa-clock text-yellow-500"></i>
+                        </div>
+                        <div class="text-2xl font-bold">@Model.InProgressCount</div>
+                        <p class="text-sm text-muted-foreground">In Progress</p>
+                    </div>
+                </div>
+                
+                <div class="card p-6 border rounded-lg">
+                    <div class="flex flex-col items-center justify-center">
+                        <div class="rounded-full bg-green-100 p-3 mb-3">
+                            <i class="fas fa-check-circle text-green-500"></i>
+                        </div>
+                        <div class="text-2xl font-bold">@Model.CompletedCount</div>
+                        <p class="text-sm text-muted-foreground">Implemented</p>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="tabs-container">
+            <ul class="tabs-list grid grid-cols-3 gap-2 mb-6">
+                <li><a href="#view-tab" class="tab active btn btn-primary w-full">View Requirements</a></li>
+                <li><a href="#submit-tab" class="tab btn btn-outline w-full">Submit Requirement</a></li>
+                <li><a href="#reports-tab" class="tab btn btn-outline w-full">Reports</a></li>
+            </ul>
+            
+            <div id="view-tab" class="tab-content active">
+                <div class="card border rounded-lg overflow-hidden">
+                    <div class="card-header p-4 border-b">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold">Requirements List</h3>
+                            <div class="text-sm text-muted-foreground">
+                                @Model.Requirements.Count requirement(s)
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4">
+                            <div class="relative flex-1">
+                                <i class="fas fa-search absolute left-2.5 top-2.5 text-muted-foreground"></i>
+                                <input 
+                                    type="search" 
+                                    id="searchInput"
+                                    placeholder="Search requirements..." 
+                                    class="form-input pl-8 w-full rounded-md border"
+                                />
+                            </div>
+                            
+                            <select id="statusFilter" class="form-select w-[160px] rounded-md border">
+                                <option value="">All statuses</option>
+                                <option value="proposed">Proposed</option>
+                                <option value="in-progress">In Progress</option>
+                                <option value="implemented">Implemented</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                            
+                            <select id="priorityFilter" class="form-select w-[160px] rounded-md border">
+                                <option value="">All priorities</option>
+                                <option value="critical">Critical</option>
+                                <option value="high">High</option>
+                                <option value="medium">Medium</option>
+                                <option value="low">Low</option>
+                            </select>
+                            
+                            @if (Model.Categories != null && Model.Categories.Length > 0)
+                            {
+                                <select id="categoryFilter" class="form-select w-[160px] rounded-md border">
+                                    <option value="">All categories</option>
+                                    @foreach (var category in Model.Categories)
+                                    {
+                                        <option value="@category.ToLower()">@category</option>
+                                    }
+                                </select>
+                            }
+                        </div>
+                    </div>
+                    
+                    <div class="card-content p-4">
+                        @if (Model.Requirements != null && Model.Requirements.Any())
+                        {
+                            <div class="requirements-list space-y-4">
+                                @foreach (var req in Model.Requirements)
+                                {
+                                    <div class="requirement-item border rounded-lg p-4 hover:bg-accent/10 transition-colors" 
+                                         data-status="@req.Status.ToLower()" 
+                                         data-priority="@(req.Priority?.ToLower() ?? "")" 
+                                         data-category="@(req.Category?.ToLower() ?? "")">
+                                        <div class="flex justify-between items-start">
+                                            <div class="flex-1">
+                                                <h3 class="font-medium text-lg mb-1">@req.Title</h3>
+                                                <p class="text-muted-foreground text-sm mb-3">@req.Description</p>
+                                                
+                                                <div class="flex items-center space-x-2 text-xs text-muted-foreground mb-2">
+                                                    @if (!string.IsNullOrEmpty(req.ProjectArea))
+                                                    {
+                                                        <span>Area: @req.ProjectArea</span>
+                                                        <span>•</span>
+                                                    }
+                                                    <span>By: @(req.IsAnonymous ? "Anonymous" : req.CustomerName)</span>
+                                                    <span>•</span>
+                                                    <span>Created: @req.CreatedAt.ToShortDateString()</span>
+                                                </div>
+                                                
+                                                <div class="flex flex-wrap gap-2">
+                                                    @{ 
+                                                        string statusClass = "bg-gray-100 text-gray-800";
+                                                        switch (req.Status.ToLower())
+                                                        {
+                                                            case "proposed":
+                                                                statusClass = "bg-blue-100 text-blue-800";
+                                                                break;
+                                                            case "in-progress":
+                                                            case "in progress":
+                                                                statusClass = "bg-yellow-100 text-yellow-800";
+                                                                break;
+                                                            case "implemented":
+                                                                statusClass = "bg-green-100 text-green-800";
+                                                                break;
+                                                            case "rejected":
+                                                                statusClass = "bg-red-100 text-red-800";
+                                                                break;
+                                                        }
+                                                        
+                                                        string priorityClass = "bg-gray-100 text-gray-800";
+                                                        if (!string.IsNullOrEmpty(req.Priority))
+                                                        {
+                                                            switch (req.Priority.ToLower())
+                                                            {
+                                                                case "critical":
+                                                                    priorityClass = "bg-red-100 text-red-800";
+                                                                    break;
+                                                                case "high":
+                                                                    priorityClass = "bg-orange-100 text-orange-800";
+                                                                    break;
+                                                                case "medium":
+                                                                    priorityClass = "bg-blue-100 text-blue-800";
+                                                                    break;
+                                                                case "low":
+                                                                    priorityClass = "bg-green-100 text-green-800";
+                                                                    break;
+                                                            }
+                                                        }
+                                                    }
+                                                    
+                                                    <span class="px-2 py-1 rounded-full text-xs font-medium @statusClass">
+                                                        @(req.Status == "in-progress" ? "In Progress" : req.Status.FirstCharToUpper())
+                                                    </span>
+                                                    
+                                                    @if (!string.IsNullOrEmpty(req.Priority))
+                                                    {
+                                                        <span class="px-2 py-1 rounded-full text-xs font-medium @priorityClass">
+                                                            @req.Priority.FirstCharToUpper()
+                                                        </span>
+                                                    }
+                                                    
+                                                    @if (!string.IsNullOrEmpty(req.Category))
+                                                    {
+                                                        <span class="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                                            @req.Category
+                                                        </span>
+                                                    }
+                                                </div>
+                                            </div>
+                                            
+                                            @if (req.CompletionPercentage > 0)
+                                            {
+                                                <div class="flex flex-col items-end">
+                                                    <div class="text-xs text-muted-foreground mb-1">
+                                                        Progress: @req.CompletionPercentage%
+                                                    </div>
+                                                    <div class="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+                                                        <div class="h-full bg-primary rounded-full" style="width: @(req.CompletionPercentage)%"></div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                        
+                                        @if (isAdmin)
+                                        {
+                                            <div class="mt-4 flex justify-end space-x-2">
+                                                <a href="@Url.Action("Details", new { id = req.Id })" class="btn btn-outline btn-sm">View Details</a>
+                                                <button type="button" 
+                                                        class="btn btn-primary btn-sm"
+                                                        data-toggle="modal" 
+                                                        data-target="#updateStatusModal" 
+                                                        data-id="@req.Id" 
+                                                        data-title="@req.Title"
+                                                        data-status="@req.Status">
+                                                    Update Status
+                                                </button>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="flex flex-col items-center justify-center py-8 text-center">
+                                <div class="rounded-full bg-muted p-3 mb-3">
+                                    <i class="fas fa-search text-muted-foreground"></i>
+                                </div>
+                                <h3 class="text-lg font-semibold">No requirements found</h3>
+                                <p class="text-sm text-muted-foreground">
+                                    Try adjusting your search or filter criteria.
+                                </p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            
+            <div id="submit-tab" class="tab-content hidden">
+                <div class="card border rounded-lg">
+                    <div class="card-header p-4 border-b">
+                        <h3 class="text-lg font-semibold flex items-center gap-2">
+                            <i class="fas fa-file-alt"></i>
+                            New Requirement
+                        </h3>
+                    </div>
+                    <div class="card-content p-4">
+                        <form asp-action="Create" method="post">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div class="space-y-2">
+                                    <label for="Title" class="text-sm font-medium">Title</label>
+                                    <input type="text" id="Title" name="Title" class="form-input w-full rounded-md border" required />
+                                    <span asp-validation-for="Title" class="text-red-500 text-xs"></span>
+                                </div>
+                                
+                                <div class="space-y-2">
+                                    <label for="Category" class="text-sm font-medium">Category</label>
+                                    <select id="Category" name="Category" class="form-select w-full rounded-md border">
+                                        @foreach (var category in Model.Categories)
+                                        {
+                                            <option value="@category">@category</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-2 mb-4">
+                                <label for="Description" class="text-sm font-medium">Description</label>
+                                <textarea id="Description" name="Description" rows="4" class="form-textarea w-full rounded-md border" required></textarea>
+                                <span asp-validation-for="Description" class="text-red-500 text-xs"></span>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div class="space-y-2">
+                                    <label for="Priority" class="text-sm font-medium">Priority</label>
+                                    <select id="Priority" name="Priority" class="form-select w-full rounded-md border">
+                                        <option value="Critical">Critical</option>
+                                        <option value="High">High</option>
+                                        <option value="Medium" selected>Medium</option>
+                                        <option value="Low">Low</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="space-y-2">
+                                    <label for="ProjectArea" class="text-sm font-medium">Project Area</label>
+                                    <input type="text" id="ProjectArea" name="ProjectArea" class="form-input w-full rounded-md border" />
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div class="space-y-2">
+                                    <label for="CustomerName" class="text-sm font-medium">Your Name</label>
+                                    <input type="text" id="CustomerName" name="CustomerName" class="form-input w-full rounded-md border" required />
+                                    <span asp-validation-for="CustomerName" class="text-red-500 text-xs"></span>
+                                </div>
+                                
+                                <div class="space-y-2">
+                                    <label for="CustomerEmail" class="text-sm font-medium">Your Email</label>
+                                    <input type="email" id="CustomerEmail" name="CustomerEmail" class="form-input w-full rounded-md border" required />
+                                    <span asp-validation-for="CustomerEmail" class="text-red-500 text-xs"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-2 mb-4">
+                                <label for="AcceptanceCriteria" class="text-sm font-medium">Acceptance Criteria</label>
+                                <textarea id="AcceptanceCriteria" name="AcceptanceCriteria" rows="3" class="form-textarea w-full rounded-md border"></textarea>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div class="space-y-2">
+                                    <label for="TargetDate" class="text-sm font-medium">Target Date</label>
+                                    <input type="date" id="TargetDate" name="TargetDate" class="form-input w-full rounded-md border" />
+                                </div>
+                                
+                                <div class="flex items-center space-x-2 h-full pt-8">
+                                    <input type="checkbox" id="IsAnonymous" name="IsAnonymous" class="form-checkbox" />
+                                    <label for="IsAnonymous" class="text-sm">Submit anonymously</label>
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-end space-x-2 mt-4">
+                                <button type="reset" class="btn btn-outline">Reset</button>
+                                <button type="submit" class="btn btn-primary">Submit Requirement</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="reports-tab" class="tab-content hidden">
+                <div class="card border rounded-lg">
+                    <div class="card-header p-4 border-b">
+                        <h3 class="text-lg font-semibold flex items-center gap-2">
+                            <i class="fas fa-chart-bar"></i>
+                            Requirements Reports
+                        </h3>
+                    </div>
+                    <div class="card-content p-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="card p-4 border rounded-lg">
+                                <h4 class="text-md font-semibold mb-4">Requirements by Status</h4>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center">
+                                        <span>Proposed</span>
+                                        <span class="text-sm font-medium">@Model.ProposedCount</span>
+                                    </div>
+                                    <div class="h-2 bg-muted rounded-full overflow-hidden">
+                                        <div class="h-full bg-blue-500 rounded-full" style="width: @(Model.TotalCount > 0 ? (Model.ProposedCount * 100 / Model.TotalCount) : 0)%"></div>
+                                    </div>
+                                    
+                                    <div class="flex justify-between items-center">
+                                        <span>In Progress</span>
+                                        <span class="text-sm font-medium">@Model.InProgressCount</span>
+                                    </div>
+                                    <div class="h-2 bg-muted rounded-full overflow-hidden">
+                                        <div class="h-full bg-yellow-500 rounded-full" style="width: @(Model.TotalCount > 0 ? (Model.InProgressCount * 100 / Model.TotalCount) : 0)%"></div>
+                                    </div>
+                                    
+                                    <div class="flex justify-between items-center">
+                                        <span>Implemented</span>
+                                        <span class="text-sm font-medium">@Model.CompletedCount</span>
+                                    </div>
+                                    <div class="h-2 bg-muted rounded-full overflow-hidden">
+                                        <div class="h-full bg-green-500 rounded-full" style="width: @(Model.TotalCount > 0 ? (Model.CompletedCount * 100 / Model.TotalCount) : 0)%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card p-4 border rounded-lg">
+                                <h4 class="text-md font-semibold mb-4">Requirements by Priority</h4>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex items-center">
+                                            <span class="w-2 h-2 rounded-full bg-red-500 mr-2"></span>
+                                            <span>Critical</span>
+                                        </div>
+                                        <span class="text-sm font-medium">@Model.CriticalCount</span>
+                                    </div>
+                                    <div class="h-2 bg-muted rounded-full overflow-hidden">
+                                        <div class="h-full bg-red-500 rounded-full" style="width: @(Model.TotalCount > 0 ? (Model.CriticalCount * 100 / Model.TotalCount) : 0)%"></div>
+                                    </div>
+                                    
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex items-center">
+                                            <span class="w-2 h-2 rounded-full bg-orange-500 mr-2"></span>
+                                            <span>High</span>
+                                        </div>
+                                        <span class="text-sm font-medium">@Model.HighCount</span>
+                                    </div>
+                                    <div class="h-2 bg-muted rounded-full overflow-hidden">
+                                        <div class="h-full bg-orange-500 rounded-full" style="width: @(Model.TotalCount > 0 ? (Model.HighCount * 100 / Model.TotalCount) : 0)%"></div>
+                                    </div>
+                                    
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex items-center">
+                                            <span class="w-2 h-2 rounded-full bg-yellow-500 mr-2"></span>
+                                            <span>Medium</span>
+                                        </div>
+                                        <span class="text-sm font-medium">@Model.MediumCount</span>
+                                    </div>
+                                    <div class="h-2 bg-muted rounded-full overflow-hidden">
+                                        <div class="h-full bg-yellow-500 rounded-full" style="width: @(Model.TotalCount > 0 ? (Model.MediumCount * 100 / Model.TotalCount) : 0)%"></div>
+                                    </div>
+                                    
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex items-center">
+                                            <span class="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
+                                            <span>Low</span>
+                                        </div>
+                                        <span class="text-sm font-medium">@Model.LowCount</span>
+                                    </div>
+                                    <div class="h-2 bg-muted rounded-full overflow-hidden">
+                                        <div class="h-full bg-green-500 rounded-full" style="width: @(Model.TotalCount > 0 ? (Model.LowCount * 100 / Model.TotalCount) : 0)%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6">
+                            <a href="@Url.Action("Reports")" class="btn btn-primary">View Detailed Reports</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Status Modal -->
+<div class="modal fade" id="updateStatusModal" tabindex="-1" role="dialog" aria-labelledby="updateStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="updateStatusModalLabel">Update Requirement Status</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form asp-action="UpdateStatus" method="post">
+                <div class="modal-body">
+                    <input type="hidden" id="requirementId" name="id" />
+                    
+                    <div class="mb-4">
+                        <h4 id="requirementTitle" class="text-lg font-medium"></h4>
+                    </div>
+                    
+                    <div class="space-y-2 mb-4">
+                        <label for="status" class="text-sm font-medium">Status</label>
+                        <select id="status" name="status" class="form-select w-full rounded-md border" required>
+                            <option value="proposed">Proposed</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="implemented">Implemented</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                    
+                    <div class="space-y-2 mb-4">
+                        <label for="completionPercentage" class="text-sm font-medium">Completion Percentage</label>
+                        <input type="number" id="completionPercentage" name="completionPercentage" min="0" max="100" class="form-input w-full rounded-md border" />
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <label for="response" class="text-sm font-medium">Response</label>
+                        <textarea id="response" name="response" rows="4" class="form-textarea w-full rounded-md border"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Status</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Tab switching
+            $('.tabs-list .tab').click(function(e) {
+                e.preventDefault();
+                var targetTab = $(this).attr('href');
+                
+                // Update active tab button
+                $('.tabs-list .tab').removeClass('active btn-primary').addClass('btn-outline');
+                $(this).addClass('active btn-primary').removeClass('btn-outline');
+                
+                // Show target tab content
+                $('.tab-content').removeClass('active').addClass('hidden');
+                $(targetTab).addClass('active').removeClass('hidden');
+            });
+            
+            // Requirement filtering
+            $('#searchInput, #statusFilter, #priorityFilter, #categoryFilter').on('input change', function() {
+                var searchTerm = $('#searchInput').val().toLowerCase();
+                var statusFilter = $('#statusFilter').val().toLowerCase();
+                var priorityFilter = $('#priorityFilter').val().toLowerCase();
+                var categoryFilter = $('#categoryFilter').val().toLowerCase();
+                
+                $('.requirement-item').each(function() {
+                    var $item = $(this);
+                    var title = $item.find('h3').text().toLowerCase();
+                    var description = $item.find('p').first().text().toLowerCase();
+                    var status = $item.data('status');
+                    var priority = $item.data('priority');
+                    var category = $item.data('category');
+                    
+                    var matchesSearch = title.includes(searchTerm) || description.includes(searchTerm);
+                    var matchesStatus = !statusFilter || status === statusFilter;
+                    var matchesPriority = !priorityFilter || priority === priorityFilter;
+                    var matchesCategory = !categoryFilter || category === categoryFilter;
+                    
+                    if (matchesSearch && matchesStatus && matchesPriority && matchesCategory) {
+                        $item.show();
+                    } else {
+                        $item.hide();
+                    }
+                });
+                
+                // Check if no items are visible
+                var visibleItems = $('.requirement-item:visible').length;
+                if (visibleItems === 0) {
+                    // Show "no results" message if it doesn't exist yet
+                    if ($('.no-results-message').length === 0) {
+                        $('.requirements-list').append(
+                            '<div class="no-results-message flex flex-col items-center justify-center py-8 text-center">' +
+                            '<div class="rounded-full bg-muted p-3 mb-3">' +
+                            '<i class="fas fa-search text-muted-foreground"></i>' +
+                            '</div>' +
+                            '<h3 class="text-lg font-semibold">No requirements found</h3>' +
+                            '<p class="text-sm text-muted-foreground">' +
+                            'Try adjusting your search or filter criteria.' +
+                            '</p>' +
+                            '</div>'
+                        );
+                    }
+                } else {
+                    // Remove "no results" message if it exists
+                    $('.no-results-message').remove();
+                }
+            });
+            
+            // Update Status Modal
+            $('#updateStatusModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var id = button.data('id');
+                var title = button.data('title');
+                var status = button.data('status');
+                
+                var modal = $(this);
+                modal.find('#requirementId').val(id);
+                modal.find('#requirementTitle').text(title);
+                modal.find('#status').val(status);
+            });
+        });
+    </script>
+}
