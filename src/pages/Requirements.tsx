@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { FileText, Filter, Search, ClipboardList, BarChart, CheckCircle, Clock, Lightbulb } from 'lucide-react';
+import { FileText, Filter, Search, ClipboardList, BarChart, CheckCircle, Clock, Lightbulb, PieChart, FileBarChart } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -17,8 +17,9 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { useToast } from "@/hooks/use-toast";
-import { Requirement } from '@/types/requirements';
+import { Requirement, RequirementAnalytics } from '@/types/requirements';
 import ClientRequirementForm from '@/components/client/ClientRequirementForm';
+import AdvancedRequirementReports from '@/components/requirements/AdvancedRequirementReports';
 
 // Mock data for demonstration
 const mockRequirements: Requirement[] = [
@@ -128,11 +129,11 @@ export default function Requirements() {
       // Simulate filtering
       let filtered = [...requirements];
       
-      if (statusFilter) {
+      if (statusFilter && statusFilter !== 'all') {
         filtered = filtered.filter(req => req.status.toLowerCase() === statusFilter.toLowerCase());
       }
       
-      if (priorityFilter) {
+      if (priorityFilter && priorityFilter !== 'all') {
         filtered = filtered.filter(req => req.priority?.toLowerCase() === priorityFilter.toLowerCase());
       }
       
@@ -147,6 +148,32 @@ export default function Requirements() {
     },
     enabled: isAdmin
   });
+  
+  // Analytics data for reports tab
+  const analyticsData: RequirementAnalytics = {
+    month: new Date().toLocaleString('default', { month: 'long' }),
+    year: new Date().getFullYear(),
+    totalRequirements: requirements.length,
+    implementedRequirements: requirements.filter(r => r.status === 'implemented').length,
+    topCategories: getCategoryDistribution(),
+    requirements: requirements
+  };
+  
+  // Function to get category distribution
+  function getCategoryDistribution() {
+    const categories: Record<string, number> = {};
+    
+    requirements.forEach(req => {
+      if (req.category) {
+        categories[req.category] = (categories[req.category] || 0) + 1;
+      }
+    });
+    
+    return Object.entries(categories)
+      .map(([category, count]) => ({ category, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+  }
   
   const filteredRequirements = data || requirements;
   
@@ -371,20 +398,18 @@ export default function Requirements() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <BarChart className="h-5 w-5" />
+                    <FileBarChart className="h-5 w-5" />
                     Requirements Analytics
                   </CardTitle>
                   <CardDescription>
                     View analytics and reports for all requirements
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="flex justify-center py-10">
+                <CardContent>
                   {isAdmin ? (
-                    <div className="text-center text-muted-foreground">
-                      Requirements analytics will be implemented soon.
-                    </div>
+                    <AdvancedRequirementReports requirements={requirements} />
                   ) : (
-                    <div className="text-center text-muted-foreground">
+                    <div className="text-center py-10 text-muted-foreground">
                       You need admin privileges to view analytics.
                     </div>
                   )}
