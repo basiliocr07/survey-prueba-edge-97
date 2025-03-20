@@ -2,15 +2,20 @@
 <div class="bg-white p-6 rounded-lg shadow-md animate-fade-in">
     <div class="flex justify-between items-center mb-4">
         <h3 class="text-lg font-bold">Datos Actualizados</h3>
-        <button class="text-gray-500 hover:text-gray-700" onclick="closeAnimatedPartial()">
-            <i class="fas fa-times"></i>
-        </button>
+        <div class="flex gap-2">
+            <button id="exportButton" class="text-blue-500 hover:text-blue-700" title="Exportar datos">
+                <i class="fas fa-download"></i>
+            </button>
+            <button class="text-gray-500 hover:text-gray-700" onclick="closeAnimatedPartial()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
     </div>
     
     <p>Este contenido se ha cargado de forma dinámica y con una animación de entrada.</p>
     
     <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div class="border rounded-md p-3">
+        <div class="border rounded-md p-3 hover:shadow-md transition-all duration-200 cursor-pointer" onclick="showDetailedMetric('nuevas-respuestas')">
             <div class="text-sm font-medium">Nuevas Respuestas</div>
             <div class="text-2xl font-bold mt-1">+28</div>
             <div class="text-xs text-green-600 mt-1">
@@ -18,7 +23,7 @@
             </div>
         </div>
         
-        <div class="border rounded-md p-3">
+        <div class="border rounded-md p-3 hover:shadow-md transition-all duration-200 cursor-pointer" onclick="showDetailedMetric('tasa-finalizacion')">
             <div class="text-sm font-medium">Tasa de Finalización</div>
             <div class="text-2xl font-bold mt-1">94%</div>
             <div class="text-xs text-green-600 mt-1">
@@ -27,18 +32,276 @@
         </div>
     </div>
     
+    <div class="mt-4">
+        <div class="text-sm font-medium mb-2">Dispositivos Utilizados</div>
+        <div class="w-full bg-gray-200 h-6 rounded-full overflow-hidden">
+            <div class="flex h-full">
+                <div class="bg-blue-500 h-full flex items-center justify-center text-xs text-white" style="width: 45%;">Desktop 45%</div>
+                <div class="bg-green-500 h-full flex items-center justify-center text-xs text-white" style="width: 40%;">Mobile 40%</div>
+                <div class="bg-purple-500 h-full flex items-center justify-center text-xs text-white" style="width: 15%;">Tablet 15%</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-4" id="responseTimesChart" style="height: 200px;"></div>
+    
     <div class="mt-4 flex justify-end">
-        <button class="btn btn-sm btn-outline" onclick="closeAnimatedPartial()">Cerrar</button>
+        <button class="px-3 py-1.5 bg-gray-200 text-gray-800 rounded mr-2 hover:bg-gray-300 text-sm" onclick="refreshData()">
+            <i class="fas fa-sync-alt mr-1"></i> Actualizar
+        </button>
+        <button class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700" onclick="viewAllAnalytics()">
+            Ver Análisis Completo
+        </button>
+        <button class="px-3 py-1.5 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50 ml-2" onclick="closeAnimatedPartial()">
+            Cerrar
+        </button>
     </div>
 </div>
 
+<div id="detailedMetricModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full animate-scale-in">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold" id="detailedMetricTitle">Detalle de Métrica</h3>
+            <button class="text-gray-500 hover:text-gray-700" onclick="closeDetailedMetric()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="detailedMetricContent" class="space-y-4">
+            <!-- Contenido dinámico -->
+        </div>
+        <div class="mt-4 text-right">
+            <button class="px-3 py-1.5 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50" onclick="closeDetailedMetric()">
+                Cerrar
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="toastContainer" class="fixed bottom-4 right-4 z-50"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 <script>
+    // Inicializar gráfico de tiempos de respuesta
+    let responseTimesChart;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        initResponseTimesChart();
+        
+        // Configurar botón de exportación
+        document.getElementById('exportButton').addEventListener('click', function() {
+            exportData();
+        });
+    });
+    
+    function initResponseTimesChart() {
+        const ctx = document.getElementById('responseTimesChart').getContext('2d');
+        
+        responseTimesChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+                datasets: [{
+                    label: 'Tiempo Promedio de Respuesta (min)',
+                    data: [4.2, 3.8, 5.1, 4.5, 3.2, 2.9, 3.5],
+                    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Minutos'
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
     function closeAnimatedPartial() {
         const element = document.querySelector('.animate-fade-in');
         element.classList.add('animate-fade-out');
         setTimeout(() => {
             element.remove();
         }, 300);
+    }
+    
+    function showDetailedMetric(metricType) {
+        const modal = document.getElementById('detailedMetricModal');
+        const title = document.getElementById('detailedMetricTitle');
+        const content = document.getElementById('detailedMetricContent');
+        
+        // Configurar el contenido según la métrica seleccionada
+        if (metricType === 'nuevas-respuestas') {
+            title.textContent = 'Detalle de Nuevas Respuestas';
+            content.innerHTML = `
+                <div class="bg-blue-50 p-3 rounded-md">
+                    <div class="text-3xl font-bold text-blue-700">+28</div>
+                    <div class="text-sm text-blue-600">Nuevas respuestas en las últimas 24 horas</div>
+                </div>
+                <div class="space-y-2 mt-3">
+                    <div class="text-sm font-medium">Desglose por hora:</div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="border rounded p-2 text-center">
+                            <div class="text-sm text-gray-500">Mañana (6-12h)</div>
+                            <div class="font-bold">12</div>
+                        </div>
+                        <div class="border rounded p-2 text-center">
+                            <div class="text-sm text-gray-500">Tarde (12-18h)</div>
+                            <div class="font-bold">9</div>
+                        </div>
+                        <div class="border rounded p-2 text-center">
+                            <div class="text-sm text-gray-500">Noche (18-24h)</div>
+                            <div class="font-bold">5</div>
+                        </div>
+                        <div class="border rounded p-2 text-center">
+                            <div class="text-sm text-gray-500">Madrugada (0-6h)</div>
+                            <div class="font-bold">2</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button class="w-full px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
+                        Ver todas las respuestas
+                    </button>
+                </div>
+            `;
+        } else if (metricType === 'tasa-finalizacion') {
+            title.textContent = 'Detalle de Tasa de Finalización';
+            content.innerHTML = `
+                <div class="bg-green-50 p-3 rounded-md">
+                    <div class="text-3xl font-bold text-green-700">94%</div>
+                    <div class="text-sm text-green-600">Tasa de finalización actual</div>
+                </div>
+                <div class="space-y-2 mt-3">
+                    <div class="text-sm font-medium">Evolución semanal:</div>
+                    <div class="w-full bg-gray-200 h-4 rounded-full overflow-hidden">
+                        <div class="bg-green-500 h-full" style="width: 89%"></div>
+                    </div>
+                    <div class="text-xs text-gray-500">Semana anterior: 89%</div>
+                    
+                    <div class="w-full bg-gray-200 h-4 rounded-full overflow-hidden mt-2">
+                        <div class="bg-green-500 h-full" style="width: 91%"></div>
+                    </div>
+                    <div class="text-xs text-gray-500">Hace dos semanas: 91%</div>
+                    
+                    <div class="w-full bg-gray-200 h-4 rounded-full overflow-hidden mt-2">
+                        <div class="bg-green-500 h-full" style="width: 94%"></div>
+                    </div>
+                    <div class="text-xs text-gray-500">Esta semana: 94%</div>
+                </div>
+                <div class="mt-3 text-sm text-gray-600">
+                    <p>Principales razones de abandono:</p>
+                    <ul class="list-disc list-inside mt-1">
+                        <li>Preguntas demasiado largas (45%)</li>
+                        <li>Problemas técnicos (30%)</li>
+                        <li>Falta de interés (25%)</li>
+                    </ul>
+                </div>
+            `;
+        }
+        
+        // Mostrar el modal
+        modal.classList.remove('hidden');
+    }
+    
+    function closeDetailedMetric() {
+        const modal = document.getElementById('detailedMetricModal');
+        modal.classList.add('hidden');
+    }
+    
+    function refreshData() {
+        // Simular actualización de datos
+        const responseValues = [3.9, 4.2, 4.8, 3.6, 3.0, 3.5, 4.1];
+        
+        // Actualizar el gráfico con nuevos datos
+        responseTimesChart.data.datasets[0].data = responseValues;
+        responseTimesChart.update();
+        
+        // Mostrar notificación toast
+        showToast('Datos actualizados correctamente', 'success');
+    }
+    
+    function exportData() {
+        // Simular exportación de datos
+        showToast('Datos exportados correctamente', 'success');
+    }
+    
+    function viewAllAnalytics() {
+        // Redirigir a la página completa de análisis
+        window.location.href = '@Url.Action("Index", "Analytics")';
+    }
+    
+    function showToast(message, type = 'info') {
+        const toastContainer = document.getElementById('toastContainer');
+        
+        // Crear el elemento toast
+        const toast = document.createElement('div');
+        toast.className = `flex items-center p-3 mb-3 rounded-md shadow-lg animate-fade-in ${
+            type === 'success' ? 'bg-green-50 border-l-4 border-green-500 text-green-700' :
+            type === 'error' ? 'bg-red-50 border-l-4 border-red-500 text-red-700' :
+            'bg-blue-50 border-l-4 border-blue-500 text-blue-700'
+        }`;
+        
+        // Añadir icono
+        const icon = document.createElement('span');
+        icon.className = 'mr-2';
+        icon.innerHTML = type === 'success' ? '<i class="fas fa-check-circle"></i>' :
+                         type === 'error' ? '<i class="fas fa-exclamation-circle"></i>' :
+                         '<i class="fas fa-info-circle"></i>';
+        
+        // Añadir mensaje
+        const text = document.createElement('span');
+        text.textContent = message;
+        
+        // Añadir botón de cierre
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'ml-auto text-gray-400 hover:text-gray-600';
+        closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+        closeBtn.onclick = function() {
+            toast.classList.add('animate-fade-out');
+            setTimeout(() => {
+                toastContainer.removeChild(toast);
+            }, 300);
+        };
+        
+        // Ensamblar el toast
+        toast.appendChild(icon);
+        toast.appendChild(text);
+        toast.appendChild(closeBtn);
+        
+        // Añadir al contenedor
+        toastContainer.appendChild(toast);
+        
+        // Auto-ocultar después de 5 segundos
+        setTimeout(() => {
+            if (toastContainer.contains(toast)) {
+                toast.classList.add('animate-fade-out');
+                setTimeout(() => {
+                    if (toastContainer.contains(toast)) {
+                        toastContainer.removeChild(toast);
+                    }
+                }, 300);
+            }
+        }, 5000);
     }
 </script>
 
@@ -68,5 +331,9 @@
     @keyframes scaleIn {
         from { transform: scale(0.95); opacity: 0; }
         to { transform: scale(1); opacity: 1; }
+    }
+    
+    #detailedMetricModal {
+        backdrop-filter: blur(3px);
     }
 </style>
