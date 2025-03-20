@@ -268,6 +268,219 @@ namespace SurveyApp.Infrastructure.Repositories
             return responses;
         }
         
+        public async Task<Dictionary<string, int>> GetBrowserDistributionAsync(Guid? surveyId = null)
+        {
+            var query = _dbContext.SurveyResponses.AsQueryable();
+            
+            if (surveyId.HasValue)
+            {
+                query = query.Where(r => r.SurveyId == surveyId.Value);
+            }
+            
+            var responses = await query.ToListAsync();
+            
+            var distribution = responses
+                .GroupBy(r => string.IsNullOrEmpty(r.Browser) ? "Unknown" : r.Browser)
+                .ToDictionary(g => g.Key, g => g.Count());
+                
+            return distribution;
+        }
+        
+        public async Task<Dictionary<string, int>> GetOperatingSystemDistributionAsync(Guid? surveyId = null)
+        {
+            var query = _dbContext.SurveyResponses.AsQueryable();
+            
+            if (surveyId.HasValue)
+            {
+                query = query.Where(r => r.SurveyId == surveyId.Value);
+            }
+            
+            var responses = await query.ToListAsync();
+            
+            var distribution = responses
+                .GroupBy(r => string.IsNullOrEmpty(r.OperatingSystem) ? "Unknown" : r.OperatingSystem)
+                .ToDictionary(g => g.Key, g => g.Count());
+                
+            return distribution;
+        }
+        
+        public async Task<Dictionary<string, int>> GetLocationDistributionAsync(Guid? surveyId = null)
+        {
+            var query = _dbContext.SurveyResponses.AsQueryable();
+            
+            if (surveyId.HasValue)
+            {
+                query = query.Where(r => r.SurveyId == surveyId.Value);
+            }
+            
+            var responses = await query.ToListAsync();
+            
+            var distribution = responses
+                .GroupBy(r => string.IsNullOrEmpty(r.Location) ? "Unknown" : r.Location)
+                .ToDictionary(g => g.Key, g => g.Count());
+                
+            return distribution;
+        }
+        
+        public async Task<Dictionary<DateTime, int>> GetResponsesOverTimeAsync(Guid surveyId, DateTime startDate, DateTime endDate)
+        {
+            var results = new Dictionary<DateTime, int>();
+            
+            for (var date = startDate; date <= endDate; date = date.AddDays(1))
+            {
+                results[date] = 0;
+            }
+            
+            var query = _dbContext.SurveyResponses.AsQueryable();
+            
+            if (surveyId != Guid.Empty)
+            {
+                query = query.Where(r => r.SurveyId == surveyId);
+            }
+            
+            var responses = await query
+                .Where(r => r.SubmittedAt >= startDate && r.SubmittedAt <= endDate)
+                .ToListAsync();
+                
+            foreach (var response in responses)
+            {
+                var responseDate = response.SubmittedAt.Date;
+                if (results.ContainsKey(responseDate))
+                {
+                    results[responseDate]++;
+                }
+            }
+            
+            return results;
+        }
+        
+        public async Task<double> GetAverageCompletionTimeAsync(Guid surveyId)
+        {
+            var query = _dbContext.SurveyResponses.AsQueryable();
+            
+            if (surveyId != Guid.Empty)
+            {
+                query = query.Where(r => r.SurveyId == surveyId);
+            }
+            
+            var responses = await query.ToListAsync();
+            
+            if (!responses.Any())
+            {
+                return 0;
+            }
+            
+            return responses.Average(r => r.CompletionTime);
+        }
+        
+        public async Task<Dictionary<string, double>> GetAverageTimePerQuestionTypeAsync(Guid surveyId)
+        {
+            var results = new Dictionary<string, double>();
+            
+            var query = _dbContext.SurveyResponses.AsQueryable();
+            
+            if (surveyId != Guid.Empty)
+            {
+                query = query.Where(r => r.SurveyId == surveyId);
+            }
+            
+            var responses = await query.ToListAsync();
+            
+            var questionTypeGroups = responses
+                .SelectMany(r => r.Answers)
+                .GroupBy(a => a.QuestionType);
+                
+            foreach (var group in questionTypeGroups)
+            {
+                if (group.Any(a => a.CompletionTimeSeconds > 0))
+                {
+                    results[group.Key] = group.Where(a => a.CompletionTimeSeconds > 0)
+                                              .Average(a => a.CompletionTimeSeconds);
+                }
+                else
+                {
+                    results[group.Key] = 0;
+                }
+            }
+            
+            return results;
+        }
+        
+        public async Task<int> GetAbandonmentCountAsync(Guid surveyId)
+        {
+            var query = _dbContext.SurveyResponses.AsQueryable();
+            
+            if (surveyId != Guid.Empty)
+            {
+                query = query.Where(r => r.SurveyId == surveyId);
+            }
+            
+            return await query.CountAsync(r => r.WasAbandoned);
+        }
+        
+        public async Task<double> GetAbandonmentRateAsync(Guid surveyId)
+        {
+            var query = _dbContext.SurveyResponses.AsQueryable();
+            
+            if (surveyId != Guid.Empty)
+            {
+                query = query.Where(r => r.SurveyId == surveyId);
+            }
+            
+            var totalResponses = await query.CountAsync();
+            var abandonedResponses = await query.CountAsync(r => r.WasAbandoned);
+            
+            if (totalResponses == 0)
+            {
+                return 0;
+            }
+            
+            return (double)abandonedResponses / totalResponses * 100;
+        }
+        
+        public async Task<Dictionary<int, int>> GetPageViewsDistributionAsync(Guid surveyId)
+        {
+            var results = new Dictionary<int, int>();
+            
+            var query = _dbContext.SurveyResponses.AsQueryable();
+            
+            if (surveyId != Guid.Empty)
+            {
+                query = query.Where(r => r.SurveyId == surveyId);
+            }
+            
+            var responses = await query.ToListAsync();
+            
+            var pageViewGroups = responses
+                .GroupBy(r => r.PageViews)
+                .OrderBy(g => g.Key);
+                
+            foreach (var group in pageViewGroups)
+            {
+                results[group.Key] = group.Count();
+            }
+            
+            return results;
+        }
+        
+        public async Task<Dictionary<string, int>> GetSourceDistributionAsync(Guid? surveyId = null)
+        {
+            var query = _dbContext.SurveyResponses.AsQueryable();
+            
+            if (surveyId.HasValue)
+            {
+                query = query.Where(r => r.SurveyId == surveyId.Value);
+            }
+            
+            var responses = await query.ToListAsync();
+            
+            var distribution = responses
+                .GroupBy(r => string.IsNullOrEmpty(r.Source) ? "Direct" : r.Source)
+                .ToDictionary(g => g.Key, g => g.Count());
+                
+            return distribution;
+        }
+        
         private void ValidateResponses(SurveyResponse response)
         {
             foreach (var answer in response.Answers)
