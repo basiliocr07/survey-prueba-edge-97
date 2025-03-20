@@ -16,6 +16,7 @@ export interface Requirement {
   projectArea?: string;
   acceptanceCriteria?: string;
   targetDate?: string;
+  description?: string; // Added for compatibility with C# model
 }
 
 export interface RequirementFormData {
@@ -27,6 +28,8 @@ export interface RequirementFormData {
   priority?: string;
   isAnonymous: boolean;
   projectArea?: string;
+  acceptanceCriteria?: string;
+  targetDate?: string;
 }
 
 export interface RequirementAnalytics {

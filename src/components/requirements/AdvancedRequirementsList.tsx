@@ -1,18 +1,38 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from "@/components/ui/select";
-import { Search, Filter, Flag, CalendarClock } from 'lucide-react';
+import { 
+  Search, 
+  Filter, 
+  Flag, 
+  CalendarClock, 
+  Layers, 
+  ArrowUpRight 
+} from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Requirement } from '@/types/requirements';
+import { format } from 'date-fns';
+import { useToast } from "@/hooks/use-toast";
 
 interface AdvancedRequirementsListProps {
   requirements: Requirement[];
@@ -24,22 +44,33 @@ export default function AdvancedRequirementsList({ requirements, isAdmin }: Adva
   const [statusFilter, setStatusFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [projectAreaFilter, setProjectAreaFilter] = useState('');
+  const [selectedRequirement, setSelectedRequirement] = useState<Requirement | null>(null);
+  const [responseText, setResponseText] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('');
+  const [completionPercentage, setCompletionPercentage] = useState(0);
+  const { toast } = useToast();
   
   // Get unique categories from requirements
   const categories = [...new Set(requirements.map(req => req.category).filter(Boolean))];
   
+  // Get unique project areas from requirements
+  const projectAreas = [...new Set(requirements.map(req => req.projectArea).filter(Boolean))];
+  
   // Filter requirements based on search term and selected filters
   const filteredRequirements = requirements.filter(req => {
     const matchesSearch = 
+      searchTerm === '' ||
       req.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       req.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      req.customerName.toLowerCase().includes(searchTerm.toLowerCase());
+      (req.customerName && req.customerName.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesStatus = statusFilter ? req.status === statusFilter : true;
     const matchesPriority = priorityFilter ? req.priority === priorityFilter : true;
     const matchesCategory = categoryFilter ? req.category === categoryFilter : true;
+    const matchesProjectArea = projectAreaFilter ? req.projectArea === projectAreaFilter : true;
     
-    return matchesSearch && matchesStatus && matchesPriority && matchesCategory;
+    return matchesSearch && matchesStatus && matchesPriority && matchesCategory && matchesProjectArea;
   });
   
   // Function to determine badge color based on status
@@ -73,6 +104,42 @@ export default function AdvancedRequirementsList({ requirements, isAdmin }: Adva
         return <Badge variant="outline" className="bg-green-100 text-green-800 hover:bg-green-100">{priority}</Badge>;
       default:
         return <Badge variant="outline">{priority}</Badge>;
+    }
+  };
+
+  const handleViewRequirement = (requirement: Requirement) => {
+    setSelectedRequirement(requirement);
+    setResponseText(requirement.response || '');
+    setSelectedStatus(requirement.status);
+    setCompletionPercentage(requirement.completionPercentage || 0);
+  };
+
+  const handleUpdateStatus = async () => {
+    if (!selectedRequirement) return;
+    
+    try {
+      console.log('Updating requirement status:', {
+        id: selectedRequirement.id,
+        status: selectedStatus,
+        response: responseText,
+        completionPercentage
+      });
+      
+      toast({
+        title: "Status updated",
+        description: "The requirement status has been updated successfully.",
+      });
+      
+      setSelectedRequirement(null);
+      setResponseText('');
+      setSelectedStatus('');
+      setCompletionPercentage(0);
+    } catch (error) {
+      toast({
+        title: "Error updating status",
+        description: "There was a problem updating the requirement status.",
+        variant: "destructive"
+      });
     }
   };
   
@@ -150,6 +217,25 @@ export default function AdvancedRequirementsList({ requirements, isAdmin }: Adva
               </SelectContent>
             </Select>
           )}
+
+          {projectAreas.length > 0 && (
+            <Select value={projectAreaFilter} onValueChange={setProjectAreaFilter}>
+              <SelectTrigger className="w-[160px]">
+                <div className="flex items-center">
+                  <Layers className="mr-2 h-4 w-4" />
+                  <SelectValue placeholder="Project Area" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All areas</SelectItem>
+                {projectAreas.map((area) => (
+                  <SelectItem key={area} value={area as string}>
+                    {area}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
       </CardHeader>
       
@@ -212,7 +298,144 @@ export default function AdvancedRequirementsList({ requirements, isAdmin }: Adva
                 
                 {isAdmin && (
                   <div className="mt-4 flex justify-end space-x-2">
-                    <Button variant="outline" size="sm">View Details</Button>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleViewRequirement(req)}
+                        >
+                          View Details
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-3xl">
+                        <DialogHeader>
+                          <DialogTitle className="flex items-center gap-2">
+                            <ArrowUpRight className="h-5 w-5" />
+                            Requirement Details
+                          </DialogTitle>
+                          <DialogDescription>
+                            View and manage this requirement
+                          </DialogDescription>
+                        </DialogHeader>
+                        
+                        {selectedRequirement && (
+                          <Tabs defaultValue="details" className="mt-4">
+                            <TabsList className="grid w-full grid-cols-2">
+                              <TabsTrigger value="details">Details</TabsTrigger>
+                              <TabsTrigger value="response">Update Status</TabsTrigger>
+                            </TabsList>
+                            
+                            <TabsContent value="details" className="space-y-4">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <h4 className="text-sm font-medium mb-1">Submitted by</h4>
+                                  <p>{selectedRequirement.isAnonymous ? 'Anonymous' : selectedRequirement.customerName}</p>
+                                  {!selectedRequirement.isAnonymous && (
+                                    <p className="text-sm text-muted-foreground">{selectedRequirement.customerEmail}</p>
+                                  )}
+                                </div>
+                                
+                                <div>
+                                  <h4 className="text-sm font-medium mb-1">Date</h4>
+                                  <p>{selectedRequirement.createdAt && format(new Date(selectedRequirement.createdAt), 'PPP')}</p>
+                                </div>
+                                
+                                <div>
+                                  <h4 className="text-sm font-medium mb-1">Category</h4>
+                                  <p>{selectedRequirement.category || 'Not categorized'}</p>
+                                </div>
+                                
+                                <div>
+                                  <h4 className="text-sm font-medium mb-1">Status</h4>
+                                  {getStatusBadge(selectedRequirement.status)}
+                                </div>
+
+                                <div>
+                                  <h4 className="text-sm font-medium mb-1">Priority</h4>
+                                  {selectedRequirement.priority ? getPriorityBadge(selectedRequirement.priority) : 'Not set'}
+                                </div>
+
+                                <div>
+                                  <h4 className="text-sm font-medium mb-1">Project Area</h4>
+                                  <p>{selectedRequirement.projectArea || 'Not specified'}</p>
+                                </div>
+                              </div>
+                              
+                              <div>
+                                <h4 className="text-sm font-medium mb-1">Description</h4>
+                                <div className="p-4 bg-muted rounded-md">
+                                  {selectedRequirement.content}
+                                </div>
+                              </div>
+
+                              {selectedRequirement.acceptanceCriteria && (
+                                <div>
+                                  <h4 className="text-sm font-medium mb-1">Acceptance Criteria</h4>
+                                  <div className="p-4 bg-muted rounded-md">
+                                    {selectedRequirement.acceptanceCriteria}
+                                  </div>
+                                </div>
+                              )}
+
+                              {selectedRequirement.response && (
+                                <div>
+                                  <h4 className="text-sm font-medium mb-1">Response</h4>
+                                  <div className="p-4 bg-muted rounded-md">
+                                    {selectedRequirement.response}
+                                  </div>
+                                </div>
+                              )}
+                            </TabsContent>
+                            
+                            <TabsContent value="response" className="space-y-4">
+                              <div className="space-y-2">
+                                <h4 className="text-sm font-medium">Status</h4>
+                                <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select status" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="proposed">Proposed</SelectItem>
+                                    <SelectItem value="in-progress">In Progress</SelectItem>
+                                    <SelectItem value="implemented">Implemented</SelectItem>
+                                    <SelectItem value="rejected">Rejected</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <h4 className="text-sm font-medium">Completion Percentage</h4>
+                                <div className="flex items-center gap-4">
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    value={completionPercentage}
+                                    onChange={(e) => setCompletionPercentage(parseInt(e.target.value) || 0)}
+                                  />
+                                  <span>%</span>
+                                </div>
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <h4 className="text-sm font-medium">Response</h4>
+                                <Textarea 
+                                  placeholder="Enter response..."
+                                  value={responseText}
+                                  onChange={(e) => setResponseText(e.target.value)}
+                                  rows={5}
+                                />
+                              </div>
+                              
+                              <Button onClick={handleUpdateStatus} className="w-full">
+                                Update Status
+                              </Button>
+                            </TabsContent>
+                          </Tabs>
+                        )}
+                      </DialogContent>
+                    </Dialog>
                     <Button size="sm">Update Status</Button>
                   </div>
                 )}
