@@ -253,10 +253,10 @@ namespace SurveyApp.WebMvc.Controllers
         [HttpPost]
         public async Task<IActionResult> SendTestEmail(string email)
         {
-            // Si no se proporciona email, usamos el configurado por defecto
+            // Si no se proporciona email, usamos el configurado por defecto o ubcruz2@gmail.com
             if (string.IsNullOrEmpty(email))
             {
-                email = "crisant231@gmail.com"; // Email predeterminado para pruebas
+                email = "ubcruz2@gmail.com"; // Email específico para pruebas
                 _logger.LogInformation($"No se proporcionó email, usando el predeterminado: {email}");
             }
     

@@ -132,7 +132,7 @@ namespace SurveyApp.Infrastructure.Services
                     <p>Si el botón no funciona, puedes copiar y pegar el siguiente enlace en tu navegador:</p>
                     <p style='word-break: break-all;'>{surveyLink}</p>
                     <p>Gracias por tu tiempo y colaboración.</p>
-                    <p>Enviado desde crisant231@gmail.com</p>
+                    <p>Enviado desde {_emailSettings.SenderEmail}</p>
                 </div>";
 
             await SendEmailAsync(to, subject, htmlMessage);
@@ -152,7 +152,7 @@ namespace SurveyApp.Infrastructure.Services
                         <p>Si has recibido este correo, la configuración de envío de correos está funcionando correctamente.</p>
                         <hr />
                         <p style='color: #888; font-size: 12px;'>Este es un correo automático, por favor no responda a este mensaje.</p>
-                        <p>Enviado desde crisant231@gmail.com</p>
+                        <p>Enviado desde " + _emailSettings.SenderEmail + @"</p>
                     </div>";
                 
                 await SendEmailAsync(toEmail, subject, htmlMessage);

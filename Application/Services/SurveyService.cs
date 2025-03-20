@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -176,6 +177,7 @@ namespace SurveyApp.Application.Services
 
         public async Task SendSurveyEmailAsync(string email, string surveyTitle, string surveyLink)
         {
+            Console.WriteLine($"Enviando encuesta '{surveyTitle}' a {email} con link {surveyLink}");
             await _emailService.SendSurveyInvitationAsync(email, surveyTitle, surveyLink);
         }
 
@@ -188,10 +190,11 @@ namespace SurveyApp.Application.Services
             if (survey.DeliveryConfig == null || survey.DeliveryConfig.EmailAddresses == null || !survey.DeliveryConfig.EmailAddresses.Any())
                 throw new InvalidOperationException("La encuesta no tiene configuraciones de email válidas.");
                 
-            string surveyBaseLink = "https://yourdomain.com/survey/";
+            string surveyBaseLink = "https://localhost:7200/survey/";
             
             foreach (var email in survey.DeliveryConfig.EmailAddresses)
             {
+                Console.WriteLine($"Enviando encuesta '{survey.Title}' a {email}...");
                 await _emailService.SendSurveyInvitationAsync(
                     email,
                     survey.Title,
