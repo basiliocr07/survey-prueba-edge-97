@@ -52,27 +52,33 @@ export default function AdvancedRequirementsList({ requirements, isAdmin }: Adva
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
   
-  console.log("AdvancedRequirementsList - Props received:", { requirements, isAdmin });
+  console.log("AdvancedRequirementsList - Requirements:", requirements);
+  console.log("AdvancedRequirementsList - Requirements length:", requirements?.length || 0);
 
   useEffect(() => {
-    console.log("Requirements list component mounted or updated");
-    if (requirements.length === 0) {
-      console.log("Warning: No requirements data received");
+    if (requirements?.length > 0) {
+      console.log("Requirements loaded successfully:", requirements.length);
+    } else {
+      console.log("No requirements data available or empty array received");
     }
   }, [requirements]);
 
+  // Si requirements es undefined, establecerlo como un array vacío
+  const safeRequirements = requirements || [];
+  
   // Get unique categories from requirements
-  const categories = [...new Set(requirements.map(req => req.category).filter(Boolean))];
+  const categories = [...new Set(safeRequirements.map(req => req.category).filter(Boolean))];
   
   // Get unique project areas from requirements
-  const projectAreas = [...new Set(requirements.map(req => req.projectArea).filter(Boolean))];
+  const projectAreas = [...new Set(safeRequirements.map(req => req.projectArea).filter(Boolean))];
   
   // Filter requirements based on search term and selected filters
-  const filteredRequirements = requirements.filter(req => {
+  const filteredRequirements = safeRequirements.filter(req => {
     const matchesSearch = 
       searchTerm === '' ||
       req.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      req.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (req.content && req.content.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (req.description && req.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (req.customerName && req.customerName.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesStatus = statusFilter ? req.status === statusFilter : true;
@@ -252,7 +258,7 @@ export default function AdvancedRequirementsList({ requirements, isAdmin }: Adva
       </CardHeader>
       
       <CardContent>
-        {requirements.length === 0 ? (
+        {safeRequirements.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <div className="rounded-full bg-muted p-3 mb-3">
               <Search className="h-6 w-6 text-muted-foreground" />
@@ -282,7 +288,7 @@ export default function AdvancedRequirementsList({ requirements, isAdmin }: Adva
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <h3 className="font-medium text-lg mb-1">{req.title}</h3>
-                    <p className="text-muted-foreground text-sm mb-3">{req.content}</p>
+                    <p className="text-muted-foreground text-sm mb-3">{req.content || req.description}</p>
                     
                     <div className="flex items-center space-x-2 text-xs text-muted-foreground mb-2">
                       {req.projectArea && <span>Area: {req.projectArea}</span>}
@@ -399,7 +405,7 @@ export default function AdvancedRequirementsList({ requirements, isAdmin }: Adva
                 <div>
                   <h4 className="text-sm font-medium mb-1">Description</h4>
                   <div className="p-4 bg-muted rounded-md">
-                    {selectedRequirement.content}
+                    {selectedRequirement.content || selectedRequirement.description}
                   </div>
                 </div>
 

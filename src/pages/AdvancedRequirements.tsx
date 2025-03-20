@@ -83,7 +83,13 @@ export default function AdvancedRequirements() {
       try {
         // Use mock data for now
         console.log("Setting requirements to:", mockRequirements);
-        setRequirements(mockRequirements);
+        // Asegúrate de que mockRequirements es un array y no es undefined
+        if (Array.isArray(mockRequirements)) {
+          setRequirements(mockRequirements);
+        } else {
+          console.error("mockRequirements no es un array:", mockRequirements);
+          setRequirements([]);
+        }
       } catch (error) {
         console.error('Error fetching requirements:', error);
         toast({
@@ -98,14 +104,15 @@ export default function AdvancedRequirements() {
   }, [toast]);
   
   // Calculate counts for admin dashboard
-  const totalCount = requirements.length;
-  const proposedCount = requirements.filter(r => r.status === 'proposed').length;
-  const inProgressCount = requirements.filter(r => r.status === 'in-progress').length;
-  const implementedCount = requirements.filter(r => r.status === 'implemented').length;
+  const totalCount = requirements?.length || 0;
+  const proposedCount = requirements?.filter(r => r.status === 'proposed')?.length || 0;
+  const inProgressCount = requirements?.filter(r => r.status === 'in-progress')?.length || 0;
+  const implementedCount = requirements?.filter(r => r.status === 'implemented')?.length || 0;
   
   const isAdmin = isLoggedIn && userRole.toLowerCase() === 'admin';
   
   console.log("Requirements data before passing to dashboard:", requirements);
+  console.log("Requirements length:", requirements?.length || 0);
   console.log("Counts:", { total: totalCount, proposed: proposedCount, inProgress: inProgressCount, implemented: implementedCount });
   console.log("isAdmin:", isAdmin);
   
