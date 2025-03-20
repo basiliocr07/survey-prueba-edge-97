@@ -30,6 +30,27 @@ namespace SurveyApp.Infrastructure.Services
             Console.WriteLine($"Inicializando servicio de email con: Server={_emailSettings.SmtpServer}, " +
                               $"Port={_emailSettings.SmtpPort}, User={_emailSettings.SmtpUsername}, " +
                               $"Sender={_emailSettings.SenderEmail}");
+            
+            // Verificar la configuración al inicio
+            ValidateConfiguration();
+        }
+
+        private void ValidateConfiguration()
+        {
+            if (string.IsNullOrEmpty(_emailSettings.SmtpServer))
+                Console.WriteLine("ADVERTENCIA: SmtpServer no está configurado");
+            
+            if (_emailSettings.SmtpPort <= 0)
+                Console.WriteLine("ADVERTENCIA: SmtpPort no es válido");
+            
+            if (string.IsNullOrEmpty(_emailSettings.SmtpUsername))
+                Console.WriteLine("ADVERTENCIA: SmtpUsername no está configurado");
+            
+            if (string.IsNullOrEmpty(_emailSettings.SmtpPassword))
+                Console.WriteLine("ADVERTENCIA: SmtpPassword no está configurado");
+            
+            if (string.IsNullOrEmpty(_emailSettings.SenderEmail))
+                Console.WriteLine("ADVERTENCIA: SenderEmail no está configurado");
         }
 
         public async Task SendEmailAsync(string to, string subject, string htmlMessage)
@@ -49,8 +70,11 @@ namespace SurveyApp.Infrastructure.Services
 
                 mailMessage.To.Add(to);
 
-                using (var client = new SmtpClient(_emailSettings.SmtpServer, _emailSettings.SmtpPort))
+                using (var client = new SmtpClient())
                 {
+                    // Configuración explícita del cliente SMTP
+                    client.Host = _emailSettings.SmtpServer;
+                    client.Port = _emailSettings.SmtpPort;
                     client.EnableSsl = true;
                     client.DeliveryMethod = SmtpDeliveryMethod.Network;
                     client.UseDefaultCredentials = false;
@@ -108,6 +132,7 @@ namespace SurveyApp.Infrastructure.Services
                     <p>Si el botón no funciona, puedes copiar y pegar el siguiente enlace en tu navegador:</p>
                     <p style='word-break: break-all;'>{surveyLink}</p>
                     <p>Gracias por tu tiempo y colaboración.</p>
+                    <p>Enviado desde crisant231@gmail.com</p>
                 </div>";
 
             await SendEmailAsync(to, subject, htmlMessage);
@@ -127,6 +152,7 @@ namespace SurveyApp.Infrastructure.Services
                         <p>Si has recibido este correo, la configuración de envío de correos está funcionando correctamente.</p>
                         <hr />
                         <p style='color: #888; font-size: 12px;'>Este es un correo automático, por favor no responda a este mensaje.</p>
+                        <p>Enviado desde crisant231@gmail.com</p>
                     </div>";
                 
                 await SendEmailAsync(toEmail, subject, htmlMessage);

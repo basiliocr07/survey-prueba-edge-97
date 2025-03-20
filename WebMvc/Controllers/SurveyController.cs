@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using SurveyApp.Application.DTOs;
@@ -252,11 +253,11 @@ namespace SurveyApp.WebMvc.Controllers
         [HttpPost]
         public async Task<IActionResult> SendTestEmail(string email)
         {
+            // Si no se proporciona email, usamos el configurado por defecto
             if (string.IsNullOrEmpty(email))
             {
-                _logger.LogError("Error en prueba de email: Email no proporcionado");
-                TempData["ErrorMessage"] = "El email de prueba es requerido.";
-                return RedirectToAction("Index");
+                email = "crisant231@gmail.com"; // Email predeterminado para pruebas
+                _logger.LogInformation($"No se proporcionó email, usando el predeterminado: {email}");
             }
     
             try
