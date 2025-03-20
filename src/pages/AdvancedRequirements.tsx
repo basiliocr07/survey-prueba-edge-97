@@ -59,6 +59,38 @@ const mockRequirements: Requirement[] = [
     completionPercentage: 0,
     projectArea: 'Backend',
     acceptanceCriteria: 'Page load time should be reduced by at least 50%'
+  },
+  {
+    id: '4',
+    title: 'Implement dark mode',
+    content: 'Add a toggle for dark mode throughout the application',
+    description: 'Add a toggle for dark mode throughout the application',
+    customerName: 'Sarah Williams',
+    customerEmail: 'sarah@example.com',
+    createdAt: '2023-07-12T13:20:00Z',
+    status: 'proposed',
+    category: 'UI/UX',
+    priority: 'medium',
+    isAnonymous: false,
+    completionPercentage: 0,
+    projectArea: 'Frontend',
+    acceptanceCriteria: 'Users should be able to toggle between light and dark mode'
+  },
+  {
+    id: '5',
+    title: 'Add export to PDF feature',
+    content: 'Implement exporting reports to PDF format',
+    description: 'Implement exporting reports to PDF format',
+    customerName: 'Michael Brown',
+    customerEmail: 'michael@example.com',
+    createdAt: '2023-07-18T09:15:00Z',
+    status: 'in-progress',
+    category: 'Feature',
+    priority: 'high',
+    isAnonymous: false,
+    completionPercentage: 35,
+    projectArea: 'Reports',
+    acceptanceCriteria: 'Users should be able to export any report to PDF format'
   }
 ];
 
@@ -82,7 +114,10 @@ export default function AdvancedRequirements() {
       try {
         // Use mock data for now and ensure it's properly initialized
         console.log("Setting requirements to:", mockRequirements);
-        setRequirements(mockRequirements);
+        // Add a short delay to simulate API call (helps debugging)
+        setTimeout(() => {
+          setRequirements(mockRequirements);
+        }, 300);
       } catch (error) {
         console.error('Error fetching requirements:', error);
         toast({

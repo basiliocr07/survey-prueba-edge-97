@@ -43,7 +43,6 @@ export default function AdvancedRequirementsDashboard({
   console.log("AdvancedRequirementsDashboard - Props received:", { 
     isAdmin, 
     requirementsCount: requirements?.length || 0,
-    requirements,
     totalCount,
     proposedCount,
     inProgressCount,
@@ -59,6 +58,19 @@ export default function AdvancedRequirementsDashboard({
 
   // Ensure we always have a valid array, even if requirements is undefined
   const safeRequirements = requirements || [];
+  
+  // Use either provided counts or calculate them from the requirements array
+  const displayTotalCount = totalCount || safeRequirements.length;
+  const displayProposedCount = proposedCount || safeRequirements.filter(r => r.status === 'proposed').length;
+  const displayInProgressCount = inProgressCount || safeRequirements.filter(r => r.status === 'in-progress').length;
+  const displayImplementedCount = implementedCount || safeRequirements.filter(r => r.status === 'implemented').length;
+
+  console.log("Calculated display counts:", {
+    displayTotalCount,
+    displayProposedCount,
+    displayInProgressCount,
+    displayImplementedCount
+  });
 
   return (
     <div className="space-y-6">
@@ -69,7 +81,7 @@ export default function AdvancedRequirementsDashboard({
               <div className="rounded-full bg-primary/10 p-3 mb-3">
                 <ClipboardList className="h-6 w-6 text-primary" />
               </div>
-              <div className="text-2xl font-bold">{totalCount || safeRequirements.length}</div>
+              <div className="text-2xl font-bold">{displayTotalCount}</div>
               <p className="text-sm text-muted-foreground">Total Requirements</p>
             </CardContent>
           </Card>
@@ -79,7 +91,7 @@ export default function AdvancedRequirementsDashboard({
               <div className="rounded-full bg-blue-100 p-3 mb-3">
                 <Lightbulb className="h-6 w-6 text-blue-500" />
               </div>
-              <div className="text-2xl font-bold">{proposedCount || safeRequirements.filter(r => r.status === 'proposed').length}</div>
+              <div className="text-2xl font-bold">{displayProposedCount}</div>
               <p className="text-sm text-muted-foreground">Proposed</p>
             </CardContent>
           </Card>
@@ -89,7 +101,7 @@ export default function AdvancedRequirementsDashboard({
               <div className="rounded-full bg-yellow-100 p-3 mb-3">
                 <Clock className="h-6 w-6 text-yellow-500" />
               </div>
-              <div className="text-2xl font-bold">{inProgressCount || safeRequirements.filter(r => r.status === 'in-progress').length}</div>
+              <div className="text-2xl font-bold">{displayInProgressCount}</div>
               <p className="text-sm text-muted-foreground">In Progress</p>
             </CardContent>
           </Card>
@@ -99,7 +111,7 @@ export default function AdvancedRequirementsDashboard({
               <div className="rounded-full bg-green-100 p-3 mb-3">
                 <CheckCircle className="h-6 w-6 text-green-500" />
               </div>
-              <div className="text-2xl font-bold">{implementedCount || safeRequirements.filter(r => r.status === 'implemented').length}</div>
+              <div className="text-2xl font-bold">{displayImplementedCount}</div>
               <p className="text-sm text-muted-foreground">Implemented</p>
             </CardContent>
           </Card>
