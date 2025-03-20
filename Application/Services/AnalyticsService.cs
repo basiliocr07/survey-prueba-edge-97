@@ -12,11 +12,16 @@ namespace SurveyApp.Application.Services
     {
         private readonly IAnalyticsRepository _analyticsRepository;
         private readonly ISurveyRepository _surveyRepository;
+        private readonly ISurveyResponseRepository _surveyResponseRepository;
 
-        public AnalyticsService(IAnalyticsRepository analyticsRepository, ISurveyRepository surveyRepository)
+        public AnalyticsService(
+            IAnalyticsRepository analyticsRepository, 
+            ISurveyRepository surveyRepository,
+            ISurveyResponseRepository surveyResponseRepository)
         {
             _analyticsRepository = analyticsRepository;
             _surveyRepository = surveyRepository;
+            _surveyResponseRepository = surveyResponseRepository;
         }
 
         public async Task<AnalyticsDto> GetAnalyticsDataAsync()
@@ -126,6 +131,175 @@ namespace SurveyApp.Application.Services
             }
             
             await _analyticsRepository.UpdateAnalyticsDataAsync(analyticsData);
+        }
+
+        public async Task<SurveyResponseAnalyticsDto> GetResponseAnalyticsAsync(Guid responseId)
+        {
+            var response = await _surveyResponseRepository.GetByIdAsync(responseId);
+            if (response == null)
+            {
+                throw new ApplicationException($"Response with ID {responseId} not found");
+            }
+            
+            var survey = await _surveyRepository.GetByIdAsync(response.SurveyId);
+            
+            // Mapear la respuesta a DTO
+            var dto = MapResponseToAnalyticsDto(response, survey?.Title);
+            
+            // Calcular métricas adicionales
+            CalculateResponseMetrics(dto);
+            
+            return dto;
+        }
+        
+        public async Task<List<SurveyResponseAnalyticsDto>> GetResponsesAnalyticsAsync(Guid? surveyId = null)
+        {
+            var responses = await _surveyResponseRepository.GetResponsesWithFullDataAsync(surveyId);
+            var result = new List<SurveyResponseAnalyticsDto>();
+            
+            var surveys = await _surveyRepository.GetAllAsync();
+            var surveyDict = surveys.ToDictionary(s => s.Id, s => s.Title);
+            
+            foreach (var response in responses)
+            {
+                string surveyTitle = surveyDict.ContainsKey(response.SurveyId) ? 
+                                  surveyDict[response.SurveyId] : 
+                                  "Unknown Survey";
+                                  
+                var dto = MapResponseToAnalyticsDto(response, surveyTitle);
+                CalculateResponseMetrics(dto);
+                result.Add(dto);
+            }
+            
+            return result;
+        }
+        
+        public async Task<Dictionary<string, object>> GetSurveyAnalyticsDashboardAsync(Guid surveyId)
+        {
+            var dashboard = new Dictionary<string, object>();
+            
+            // Obtener toda la información necesaria para un dashboard completo
+            var survey = await _surveyRepository.GetByIdAsync(surveyId);
+            if (survey == null)
+            {
+                throw new ApplicationException($"Survey with ID {surveyId} not found");
+            }
+            
+            var responses = await _surveyResponseRepository.GetBySurveyIdAsync(surveyId);
+            var questionTypeDistribution = await _surveyResponseRepository.GetQuestionTypeDistributionAsync(surveyId);
+            var completionRateByType = await _surveyResponseRepository.GetCompletionRateByQuestionTypeAsync(surveyId);
+            var averageScoreByCategory = await _surveyResponseRepository.GetAverageScoreByCategoryAsync(surveyId);
+            var npsDistribution = await _surveyResponseRepository.GetNPSDistributionAsync(surveyId);
+            var ratingDistribution = await _surveyResponseRepository.GetRatingDistributionAsync(surveyId);
+            
+            // Calcular métricas clave
+            double avgCompletionTime = responses.Any() ? 
+                                   responses.Average(r => r.CompletionTime) : 0;
+                                   
+            int totalAnswers = responses.Sum(r => r.Answers.Count);
+            int validAnswers = responses.Sum(r => r.Answers.Count(a => a.IsValid));
+            double validationRate = totalAnswers > 0 ? 
+                                (double)validAnswers / totalAnswers * 100 : 0;
+                                
+            // Organizar los datos para el dashboard
+            dashboard["surveyTitle"] = survey.Title;
+            dashboard["responseCount"] = responses.Count;
+            dashboard["averageCompletionTime"] = avgCompletionTime;
+            dashboard["validationRate"] = validationRate;
+            dashboard["questionTypeDistribution"] = questionTypeDistribution;
+            dashboard["completionRateByQuestionType"] = completionRateByType;
+            dashboard["averageScoreByCategory"] = averageScoreByCategory;
+            dashboard["npsDistribution"] = npsDistribution;
+            dashboard["ratingDistribution"] = ratingDistribution;
+            
+            // Datos para gráficos de tendencias
+            var responseTrends = responses
+                .GroupBy(r => r.SubmittedAt.Date)
+                .OrderBy(g => g.Key)
+                .Select(g => new { Date = g.Key.ToString("yyyy-MM-dd"), Count = g.Count() })
+                .ToList();
+                
+            dashboard["responseTrends"] = responseTrends;
+            
+            return dashboard;
+        }
+        
+        private SurveyResponseAnalyticsDto MapResponseToAnalyticsDto(SurveyResponse response, string surveyTitle)
+        {
+            var dto = new SurveyResponseAnalyticsDto
+            {
+                Id = response.Id,
+                SurveyId = response.SurveyId,
+                SurveyTitle = surveyTitle ?? "Unknown Survey",
+                RespondentName = response.RespondentName,
+                RespondentEmail = response.RespondentEmail,
+                RespondentPhone = response.RespondentPhone,
+                RespondentCompany = response.RespondentCompany,
+                SubmittedAt = response.SubmittedAt,
+                CompletionTime = response.CompletionTime,
+                DeviceType = response.DeviceType,
+                Browser = response.Browser,
+                OperatingSystem = response.OperatingSystem,
+                Location = response.Location,
+                IpAddress = response.IpAddress,
+                Source = response.Source,
+                UserAgent = response.UserAgent,
+                WasAbandoned = response.WasAbandoned,
+                PageViews = response.PageViews,
+                Answers = response.Answers.Select(a => new QuestionAnswerDto
+                {
+                    QuestionId = a.QuestionId,
+                    QuestionTitle = a.QuestionTitle,
+                    QuestionType = a.QuestionType,
+                    Answer = a.Answer,
+                    MultipleAnswers = a.MultipleAnswers,
+                    IsValid = a.IsValid,
+                    ScoreValue = a.ScoreValue,
+                    CompletionTimeSeconds = a.CompletionTimeSeconds,
+                    Category = a.Category,
+                    IsSkipped = string.IsNullOrEmpty(a.Answer) && (a.MultipleAnswers == null || !a.MultipleAnswers.Any()),
+                    CharacterCount = a.Answer?.Length ?? 0,
+                    FormattedCompletionTime = FormatTimeSpan(TimeSpan.FromSeconds(a.CompletionTimeSeconds))
+                }).ToList()
+            };
+            
+            return dto;
+        }
+        
+        private void CalculateResponseMetrics(SurveyResponseAnalyticsDto dto)
+        {
+            // Calcular métricas básicas
+            dto.QuestionCount = dto.Answers.Count;
+            dto.ValidAnswersCount = dto.Answers.Count(a => a.IsValid);
+            dto.ValidationRate = dto.QuestionCount > 0 ? 
+                            (double)dto.ValidAnswersCount / dto.QuestionCount * 100 : 0;
+            dto.FormattedCompletionTime = FormatTimeSpan(TimeSpan.FromSeconds(dto.CompletionTime));
+            dto.IsValidated = dto.ValidationRate > 95; // Consideramos validado si más del 95% de respuestas son válidas
+            dto.AverageTimePerQuestion = dto.Answers.Any() ? dto.CompletionTime / dto.Answers.Count : 0;
+            
+            // Calcular distribuciones
+            dto.QuestionTypeDistribution = dto.Answers
+                .GroupBy(a => a.QuestionType)
+                .ToDictionary(g => g.Key, g => g.Count());
+                
+            dto.CompletionRateByQuestionType = dto.Answers
+                .GroupBy(a => a.QuestionType)
+                .ToDictionary(g => g.Key, g => g.Count(a => !a.IsSkipped) / (double)g.Count() * 100);
+                
+            dto.AverageScoreByCategory = dto.Answers
+                .Where(a => !string.IsNullOrEmpty(a.Category) && a.ScoreValue > 0)
+                .GroupBy(a => a.Category)
+                .ToDictionary(g => g.Key, g => g.Average(a => a.ScoreValue));
+        }
+        
+        private string FormatTimeSpan(TimeSpan timeSpan)
+        {
+            if (timeSpan.TotalMinutes < 1)
+                return $"{timeSpan.Seconds}s";
+            if (timeSpan.TotalHours < 1)
+                return $"{timeSpan.Minutes}m {timeSpan.Seconds}s";
+            
+            return $"{(int)timeSpan.TotalHours}h {timeSpan.Minutes}m";
         }
     }
 }

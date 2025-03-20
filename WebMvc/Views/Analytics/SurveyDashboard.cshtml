@@ -1,0 +1,369 @@
+
+@model SurveyApp.WebMvc.Controllers.SurveyDashboardViewModel
+@{
+    ViewData["Title"] = "Survey Dashboard - " + Model.Title;
+}
+
+<div class="w-full px-4 sm:px-6 lg:px-8 pb-10">
+    <div class="w-full max-w-[1200px] mx-auto bg-white p-6">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight sm:text-4xl mb-2">@Model.Title</h1>
+                <p class="text-muted-foreground">
+                    @Model.Description
+                </p>
+            </div>
+            
+            <div class="flex space-x-2">
+                <a href="@Url.Action("Responses", new { surveyId = Model.Id })" class="btn btn-outline btn-sm">
+                    <i class="fas fa-list-alt mr-2"></i>Ver Respuestas
+                </a>
+                <button type="button" class="btn btn-primary btn-sm" onclick="window.print();">
+                    <i class="fas fa-download mr-2"></i>Exportar
+                </button>
+            </div>
+        </div>
+        
+        <!-- Key Metrics -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="card p-4 border">
+                <div class="text-muted-foreground text-sm mb-1">Total de Respuestas</div>
+                <div class="text-2xl font-bold">@Model.ResponseCount</div>
+            </div>
+            
+            <div class="card p-4 border">
+                <div class="text-muted-foreground text-sm mb-1">Tiempo Promedio</div>
+                <div class="text-2xl font-bold">@Model.FormattedAverageCompletionTime</div>
+            </div>
+            
+            <div class="card p-4 border">
+                <div class="text-muted-foreground text-sm mb-1">Tasa de Validación</div>
+                <div class="text-2xl font-bold">@Model.ValidationRate.ToString("F1")%</div>
+            </div>
+            
+            <div class="card p-4 border">
+                <div class="text-muted-foreground text-sm mb-1">Puntuación NPS</div>
+                <div class="text-2xl font-bold">@Model.NPSScore.ToString("F1")</div>
+            </div>
+        </div>
+        
+        <!-- Response Trends Chart -->
+        <div class="card p-6 mb-8 border">
+            <h2 class="text-xl font-bold mb-4">Tendencia de Respuestas</h2>
+            <div class="w-full h-[300px]" id="responseTrendsChart">
+                <!-- Chart will be rendered here -->
+                <div class="flex items-center justify-center h-full">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Question Type and Completion Rate by Type -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div class="card p-6 border">
+                <h2 class="text-xl font-bold mb-4">Distribución por Tipo de Pregunta</h2>
+                <div class="w-full h-[250px]" id="questionTypeChart">
+                    <!-- Chart will be rendered here -->
+                    <div class="flex items-center justify-center h-full">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card p-6 border">
+                <h2 class="text-xl font-bold mb-4">Tasa de Completitud por Tipo</h2>
+                <div class="w-full h-[250px]" id="completionRateChart">
+                    <!-- Chart will be rendered here -->
+                    <div class="flex items-center justify-center h-full">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Category Averages and NPS Distribution -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div class="card p-6 border">
+                <h2 class="text-xl font-bold mb-4">Puntuación Promedio por Categoría</h2>
+                <div class="w-full h-[250px]" id="categoryScoreChart">
+                    <!-- Chart will be rendered here -->
+                    @if (!Model.AverageScoreByCategory.Any())
+                    {
+                        <div class="flex items-center justify-center h-full">
+                            <p class="text-muted-foreground">No hay datos de categorías disponibles</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="flex items-center justify-center h-full">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                        </div>
+                    }
+                </div>
+            </div>
+            
+            <div class="card p-6 border">
+                <h2 class="text-xl font-bold mb-4">Distribución NPS</h2>
+                <div class="w-full h-[250px]" id="npsDistributionChart">
+                    <!-- Chart will be rendered here -->
+                    @if (!Model.NPSDistribution.Any(kv => kv.Value > 0))
+                    {
+                        <div class="flex items-center justify-center h-full">
+                            <p class="text-muted-foreground">No hay datos NPS disponibles</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="flex items-center justify-center h-full">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        
+        <!-- Rating Distribution -->
+        <div class="card p-6 border mb-8">
+            <h2 class="text-xl font-bold mb-4">Distribución de Calificaciones (Rating)</h2>
+            <div class="w-full h-[250px]" id="ratingDistributionChart">
+                <!-- Chart will be rendered here -->
+                @if (!Model.RatingDistribution.Any(kv => kv.Value > 0))
+                {
+                    <div class="flex items-center justify-center h-full">
+                        <p class="text-muted-foreground">No hay datos de calificación disponibles</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="flex items-center justify-center h-full">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Datos para los gráficos
+            const questionTypes = @Html.Raw(Json.Serialize(Model.QuestionTypeDistribution.Keys));
+            const questionTypeCounts = @Html.Raw(Json.Serialize(Model.QuestionTypeDistribution.Values));
+            
+            const completionRateTypes = @Html.Raw(Json.Serialize(Model.CompletionRateByQuestionType.Keys));
+            const completionRateValues = @Html.Raw(Json.Serialize(Model.CompletionRateByQuestionType.Values));
+            
+            const categoryLabels = @Html.Raw(Json.Serialize(Model.AverageScoreByCategory.Keys));
+            const categoryScores = @Html.Raw(Json.Serialize(Model.AverageScoreByCategory.Values));
+            
+            const npsLabels = @Html.Raw(Json.Serialize(Model.NPSDistribution.Keys));
+            const npsValues = @Html.Raw(Json.Serialize(Model.NPSDistribution.Values));
+            
+            const ratingLabels = @Html.Raw(Json.Serialize(Model.RatingDistribution.Keys));
+            const ratingValues = @Html.Raw(Json.Serialize(Model.RatingDistribution.Values));
+            
+            const trendDates = @Html.Raw(Json.Serialize(Model.ResponseTrends.Select(t => t.Date)));
+            const trendCounts = @Html.Raw(Json.Serialize(Model.ResponseTrends.Select(t => t.ResponseCount)));
+            
+            // Colors for charts
+            const chartColors = [
+                '#3b82f6',
+                '#10b981',
+                '#f59e0b',
+                '#ef4444',
+                '#8b5cf6',
+                '#ec4899',
+                '#06b6d4',
+                '#14b8a6',
+                '#84cc16',
+                '#22c55e'
+            ];
+            
+            // Response Trends Chart
+            if (document.getElementById('responseTrendsChart')) {
+                const responseTrendsCtx = document.getElementById('responseTrendsChart').getContext('2d');
+                document.getElementById('responseTrendsChart').innerHTML = '';
+                
+                new Chart(responseTrendsCtx, {
+                    type: 'line',
+                    data: {
+                        labels: trendDates,
+                        datasets: [{
+                            label: 'Respuestas',
+                            data: trendCounts,
+                            fill: true,
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderColor: '#3b82f6',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Question Type Distribution Chart
+            if (document.getElementById('questionTypeChart') && questionTypes.length > 0) {
+                const questionTypeCtx = document.getElementById('questionTypeChart').getContext('2d');
+                document.getElementById('questionTypeChart').innerHTML = '';
+                
+                new Chart(questionTypeCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: questionTypes,
+                        datasets: [{
+                            data: questionTypeCounts,
+                            backgroundColor: chartColors.slice(0, questionTypes.length)
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right'
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Completion Rate Chart
+            if (document.getElementById('completionRateChart') && completionRateTypes.length > 0) {
+                const completionRateCtx = document.getElementById('completionRateChart').getContext('2d');
+                document.getElementById('completionRateChart').innerHTML = '';
+                
+                new Chart(completionRateCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: completionRateTypes,
+                        datasets: [{
+                            label: 'Tasa de Completitud (%)',
+                            data: completionRateValues,
+                            backgroundColor: chartColors[1]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Category Score Chart
+            if (document.getElementById('categoryScoreChart') && categoryLabels.length > 0) {
+                const categoryScoreCtx = document.getElementById('categoryScoreChart').getContext('2d');
+                document.getElementById('categoryScoreChart').innerHTML = '';
+                
+                new Chart(categoryScoreCtx, {
+                    type: 'radar',
+                    data: {
+                        labels: categoryLabels,
+                        datasets: [{
+                            label: 'Puntuación Promedio',
+                            data: categoryScores,
+                            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                            borderColor: '#3b82f6',
+                            pointBackgroundColor: '#3b82f6'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                beginAtZero: true,
+                                max: 10
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // NPS Distribution Chart
+            if (document.getElementById('npsDistributionChart') && npsLabels.length > 0) {
+                const npsCtx = document.getElementById('npsDistributionChart').getContext('2d');
+                document.getElementById('npsDistributionChart').innerHTML = '';
+                
+                const backgroundColors = npsLabels.map(label => {
+                    const value = parseInt(label);
+                    if (value <= 6) return '#ef4444'; // Detractores en rojo
+                    if (value <= 8) return '#f59e0b'; // Pasivos en amarillo
+                    return '#10b981'; // Promotores en verde
+                });
+                
+                new Chart(npsCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: npsLabels,
+                        datasets: [{
+                            label: 'Respuestas',
+                            data: npsValues,
+                            backgroundColor: backgroundColors
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Rating Distribution Chart
+            if (document.getElementById('ratingDistributionChart') && ratingLabels.length > 0) {
+                const ratingCtx = document.getElementById('ratingDistributionChart').getContext('2d');
+                document.getElementById('ratingDistributionChart').innerHTML = '';
+                
+                new Chart(ratingCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ratingLabels,
+                        datasets: [{
+                            label: 'Respuestas',
+                            data: ratingValues,
+                            backgroundColor: '#8b5cf6'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+}

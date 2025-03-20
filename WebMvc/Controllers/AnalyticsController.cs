@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -115,78 +114,42 @@ namespace SurveyApp.WebMvc.Controllers
             try
             {
                 var surveys = await _surveyService.GetAllSurveysAsync();
+                var responsesDto = await _analyticsService.GetResponsesAnalyticsAsync(surveyId);
                 
-                var responses = new List<SurveyResponseAnalyticsViewModel>();
-                
-                if (surveyId.HasValue)
+                var responses = responsesDto.Select(r => new SurveyResponseAnalyticsViewModel
                 {
-                    // Get responses for specific survey
-                    var surveyResponses = await _surveyService.GetSurveyResponsesAsync(surveyId.Value);
-                    var survey = surveys.FirstOrDefault(s => s.Id == surveyId.Value);
-                    
-                    if (survey != null)
+                    Id = r.Id,
+                    SurveyId = r.SurveyId,
+                    SurveyTitle = r.SurveyTitle,
+                    RespondentName = r.RespondentName,
+                    RespondentEmail = r.RespondentEmail,
+                    RespondentCompany = r.RespondentCompany,
+                    SubmittedAt = r.SubmittedAt,
+                    IsValidated = r.IsValidated,
+                    CompletionTime = r.CompletionTime,
+                    FormattedCompletionTime = r.FormattedCompletionTime,
+                    QuestionCount = r.QuestionCount,
+                    ValidAnswersCount = r.ValidAnswersCount,
+                    ValidationRate = r.ValidationRate,
+                    DeviceType = r.DeviceType,
+                    Browser = r.Browser,
+                    OperatingSystem = r.OperatingSystem,
+                    Location = r.Location,
+                    AverageTimePerQuestion = r.AverageTimePerQuestion,
+                    Answers = r.Answers.Select(a => new QuestionAnswerViewModel
                     {
-                        responses = surveyResponses.Select(r => new SurveyResponseAnalyticsViewModel
-                        {
-                            Id = r.Id,
-                            SurveyId = r.SurveyId,
-                            SurveyTitle = survey.Title,
-                            RespondentName = r.RespondentName,
-                            RespondentEmail = r.RespondentEmail,
-                            RespondentCompany = r.RespondentCompany,
-                            SubmittedAt = r.SubmittedAt,
-                            IsValidated = r.Answers.All(a => a.IsValid),
-                            Answers = r.Answers.Select(a => new QuestionAnswerViewModel
-                            {
-                                QuestionId = a.QuestionId,
-                                QuestionTitle = a.QuestionTitle,
-                                QuestionType = a.QuestionType,
-                                Answer = a.Answer,
-                                MultipleAnswers = a.MultipleAnswers,
-                                IsValid = a.IsValid
-                            }).ToList()
-                        }).ToList();
-                    }
-                }
-                else
-                {
-                    // Get responses for all surveys, but limit to most recent ones
-                    foreach (var survey in surveys)
-                    {
-                        try
-                        {
-                            var surveyResponses = await _surveyService.GetSurveyResponsesAsync(survey.Id);
-                            
-                            responses.AddRange(surveyResponses.Select(r => new SurveyResponseAnalyticsViewModel
-                            {
-                                Id = r.Id,
-                                SurveyId = r.SurveyId,
-                                SurveyTitle = survey.Title,
-                                RespondentName = r.RespondentName,
-                                RespondentEmail = r.RespondentEmail,
-                                RespondentCompany = r.RespondentCompany,
-                                SubmittedAt = r.SubmittedAt,
-                                IsValidated = r.Answers.All(a => a.IsValid),
-                                Answers = r.Answers.Select(a => new QuestionAnswerViewModel
-                                {
-                                    QuestionId = a.QuestionId,
-                                    QuestionTitle = a.QuestionTitle,
-                                    QuestionType = a.QuestionType,
-                                    Answer = a.Answer,
-                                    MultipleAnswers = a.MultipleAnswers,
-                                    IsValid = a.IsValid
-                                }).ToList()
-                            }));
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, "Error al obtener respuestas para la encuesta {SurveyId}", survey.Id);
-                        }
-                    }
-                    
-                    // Limit to most recent 50 responses
-                    responses = responses.OrderByDescending(r => r.SubmittedAt).Take(50).ToList();
-                }
+                        QuestionId = a.QuestionId,
+                        QuestionTitle = a.QuestionTitle,
+                        QuestionType = a.QuestionType,
+                        Answer = a.Answer,
+                        MultipleAnswers = a.MultipleAnswers,
+                        IsValid = a.IsValid,
+                        ScoreValue = a.ScoreValue,
+                        CompletionTimeSeconds = a.CompletionTimeSeconds,
+                        Category = a.Category,
+                        FormattedCompletionTime = a.FormattedCompletionTime
+                    }).ToList()
+                }).ToList();
                 
                 var viewModel = new ResponsesAnalyticsViewModel
                 {
@@ -215,62 +178,100 @@ namespace SurveyApp.WebMvc.Controllers
         {
             try
             {
-                var surveys = await _surveyService.GetAllSurveysAsync();
+                var responseDto = await _analyticsService.GetResponseAnalyticsAsync(id);
                 
-                // Find the survey that contains this response
-                SurveyResponseAnalyticsViewModel responseViewModel = null;
-                
-                foreach (var survey in surveys)
+                var viewModel = new SurveyResponseAnalyticsViewModel
                 {
-                    try
+                    Id = responseDto.Id,
+                    SurveyId = responseDto.SurveyId,
+                    SurveyTitle = responseDto.SurveyTitle,
+                    RespondentName = responseDto.RespondentName,
+                    RespondentEmail = responseDto.RespondentEmail,
+                    RespondentPhone = responseDto.RespondentPhone,
+                    RespondentCompany = responseDto.RespondentCompany,
+                    SubmittedAt = responseDto.SubmittedAt,
+                    IsValidated = responseDto.IsValidated,
+                    CompletionTime = responseDto.CompletionTime,
+                    FormattedCompletionTime = responseDto.FormattedCompletionTime,
+                    QuestionCount = responseDto.QuestionCount,
+                    ValidAnswersCount = responseDto.ValidAnswersCount,
+                    ValidationRate = responseDto.ValidationRate,
+                    DeviceType = responseDto.DeviceType,
+                    Browser = responseDto.Browser,
+                    OperatingSystem = responseDto.OperatingSystem,
+                    Location = responseDto.Location,
+                    AverageTimePerQuestion = responseDto.AverageTimePerQuestion,
+                    QuestionTypeDistribution = responseDto.QuestionTypeDistribution,
+                    CompletionRateByQuestionType = responseDto.CompletionRateByQuestionType,
+                    AverageScoreByCategory = responseDto.AverageScoreByCategory,
+                    Answers = responseDto.Answers.Select(a => new QuestionAnswerViewModel
                     {
-                        var surveyResponses = await _surveyService.GetSurveyResponsesAsync(survey.Id);
-                        var response = surveyResponses.FirstOrDefault(r => r.Id == id);
-                        
-                        if (response != null)
-                        {
-                            responseViewModel = new SurveyResponseAnalyticsViewModel
-                            {
-                                Id = response.Id,
-                                SurveyId = response.SurveyId,
-                                SurveyTitle = survey.Title,
-                                RespondentName = response.RespondentName,
-                                RespondentEmail = response.RespondentEmail,
-                                RespondentCompany = response.RespondentCompany,
-                                SubmittedAt = response.SubmittedAt,
-                                IsValidated = response.Answers.All(a => a.IsValid),
-                                Answers = response.Answers.Select(a => new QuestionAnswerViewModel
-                                {
-                                    QuestionId = a.QuestionId,
-                                    QuestionTitle = a.QuestionTitle,
-                                    QuestionType = a.QuestionType,
-                                    Answer = a.Answer,
-                                    MultipleAnswers = a.MultipleAnswers,
-                                    IsValid = a.IsValid
-                                }).ToList()
-                            };
-                            break;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Error al obtener respuesta {ResponseId} para la encuesta {SurveyId}", id, survey.Id);
-                    }
-                }
+                        QuestionId = a.QuestionId,
+                        QuestionTitle = a.QuestionTitle,
+                        QuestionType = a.QuestionType,
+                        Answer = a.Answer,
+                        MultipleAnswers = a.MultipleAnswers,
+                        IsValid = a.IsValid,
+                        ScoreValue = a.ScoreValue,
+                        CompletionTimeSeconds = a.CompletionTimeSeconds,
+                        Category = a.Category,
+                        FormattedCompletionTime = a.FormattedCompletionTime
+                    }).ToList()
+                };
                 
-                if (responseViewModel == null)
-                {
-                    TempData["ErrorMessage"] = "No se encontró la respuesta solicitada.";
-                    return RedirectToAction(nameof(Responses));
-                }
-                
-                return View(responseViewModel);
+                return View(viewModel);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener detalle de respuesta {ResponseId}", id);
                 TempData["ErrorMessage"] = "Ocurrió un error al obtener el detalle de la respuesta.";
                 return RedirectToAction(nameof(Responses));
+            }
+        }
+        
+        [HttpGet]
+        public async Task<IActionResult> SurveyDashboard(Guid id)
+        {
+            try
+            {
+                var dashboardData = await _analyticsService.GetSurveyAnalyticsDashboardAsync(id);
+                var survey = await _surveyService.GetSurveyByIdAsync(id);
+                
+                if (survey == null)
+                {
+                    TempData["ErrorMessage"] = "No se encontró la encuesta solicitada.";
+                    return RedirectToAction(nameof(Index));
+                }
+                
+                var viewModel = new SurveyDashboardViewModel
+                {
+                    Id = survey.Id,
+                    Title = survey.Title,
+                    Description = survey.Description,
+                    ResponseCount = (int)dashboardData["responseCount"],
+                    AverageCompletionTime = (double)dashboardData["averageCompletionTime"],
+                    ValidationRate = (double)dashboardData["validationRate"],
+                    QuestionTypeDistribution = (Dictionary<string, int>)dashboardData["questionTypeDistribution"],
+                    CompletionRateByQuestionType = (Dictionary<string, double>)dashboardData["completionRateByQuestionType"],
+                    AverageScoreByCategory = (Dictionary<string, double>)dashboardData["averageScoreByCategory"],
+                    NPSDistribution = (Dictionary<int, int>)dashboardData["npsDistribution"],
+                    RatingDistribution = (Dictionary<int, int>)dashboardData["ratingDistribution"],
+                    ResponseTrends = ((List<dynamic>)dashboardData["responseTrends"]).Select(rt => new ResponseTrendViewModel
+                    {
+                        Date = rt.Date,
+                        Responses = rt.Count,
+                        Period = rt.Date,
+                        ResponseCount = rt.Count
+                    }).ToList()
+                };
+                
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener dashboard para la encuesta {SurveyId}", id);
+                TempData["ErrorMessage"] = "Ocurrió un error al obtener el dashboard de la encuesta.";
+                return RedirectToAction(nameof(Index));
             }
         }
     }
@@ -280,5 +281,77 @@ namespace SurveyApp.WebMvc.Controllers
         public List<SurveyListItemViewModel> Surveys { get; set; } = new List<SurveyListItemViewModel>();
         public Guid? SelectedSurveyId { get; set; }
         public List<SurveyResponseAnalyticsViewModel> Responses { get; set; } = new List<SurveyResponseAnalyticsViewModel>();
+    }
+    
+    public class SurveyDashboardViewModel
+    {
+        public Guid Id { get; set; }
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public int ResponseCount { get; set; }
+        public double AverageCompletionTime { get; set; }
+        public double ValidationRate { get; set; }
+        public Dictionary<string, int> QuestionTypeDistribution { get; set; } = new Dictionary<string, int>();
+        public Dictionary<string, double> CompletionRateByQuestionType { get; set; } = new Dictionary<string, double>();
+        public Dictionary<string, double> AverageScoreByCategory { get; set; } = new Dictionary<string, double>();
+        public Dictionary<int, int> NPSDistribution { get; set; } = new Dictionary<int, int>();
+        public Dictionary<int, int> RatingDistribution { get; set; } = new Dictionary<int, int>();
+        public List<ResponseTrendViewModel> ResponseTrends { get; set; } = new List<ResponseTrendViewModel>();
+        
+        public string FormattedAverageCompletionTime
+        {
+            get
+            {
+                var timeSpan = TimeSpan.FromSeconds(AverageCompletionTime);
+                if (timeSpan.TotalMinutes < 1)
+                    return $"{timeSpan.Seconds}s";
+                if (timeSpan.TotalHours < 1)
+                    return $"{timeSpan.Minutes}m {timeSpan.Seconds}s";
+                
+                return $"{(int)timeSpan.TotalHours}h {timeSpan.Minutes}m";
+            }
+        }
+        
+        public double NPSScore
+        {
+            get
+            {
+                if (!NPSDistribution.Any())
+                    return 0;
+                
+                int promoters = NPSDistribution.Where(kv => kv.Key >= 9).Sum(kv => kv.Value);
+                int detractors = NPSDistribution.Where(kv => kv.Key <= 6).Sum(kv => kv.Value);
+                int total = NPSDistribution.Sum(kv => kv.Value);
+                
+                if (total == 0)
+                    return 0;
+                    
+                return ((double)promoters / total * 100) - ((double)detractors / total * 100);
+            }
+        }
+        
+        public double AverageRating
+        {
+            get
+            {
+                if (!RatingDistribution.Any())
+                    return 0;
+                
+                int sum = RatingDistribution.Sum(kv => kv.Key * kv.Value);
+                int count = RatingDistribution.Sum(kv => kv.Value);
+                
+                if (count == 0)
+                    return 0;
+                    
+                return (double)sum / count;
+            }
+        }
+    }
+    
+    public class SurveyListItemViewModel
+    {
+        public Guid Id { get; set; }
+        public string Title { get; set; }
+        public int ResponseCount { get; set; }
     }
 }
