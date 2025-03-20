@@ -40,16 +40,20 @@ namespace SurveyApp.WebMvc.Controllers
                     Categories = new[] { "Feature", "Bug", "UI/UX", "Performance", "Security", "Other" },
                     ProjectAreas = new[] { "Web", "Mobile", "Backend", "Frontend", "API", "Database", "Infrastructure", "Other" },
                     TotalCount = requirements.Count,
-                    ProposedCount = requirements.Count(r => r.Status.ToLower() == "proposed"),
-                    InProgressCount = requirements.Count(r => r.Status.ToLower() == "in-progress"),
-                    ImplementedCount = requirements.Count(r => r.Status.ToLower() == "implemented"),
-                    RejectedCount = requirements.Count(r => r.Status.ToLower() == "rejected"),
+                    ProposedCount = requirements.Count(r => r.Status?.ToLower() == "proposed"),
+                    InProgressCount = requirements.Count(r => r.Status?.ToLower() == "in-progress"),
+                    ImplementedCount = requirements.Count(r => r.Status?.ToLower() == "implemented"),
+                    RejectedCount = requirements.Count(r => r.Status?.ToLower() == "rejected"),
+                    CriticalCount = requirements.Count(r => r.Priority?.ToLower() == "critical"),
+                    HighCount = requirements.Count(r => r.Priority?.ToLower() == "high"),
+                    MediumCount = requirements.Count(r => r.Priority?.ToLower() == "medium"),
+                    LowCount = requirements.Count(r => r.Priority?.ToLower() == "low"),
                     CategoryDistribution = requirements
                         .GroupBy(r => r.Category)
-                        .ToDictionary(g => g.Key, g => g.Count()),
+                        .ToDictionary(g => g.Key ?? "Uncategorized", g => g.Count()),
                     ProjectAreaDistribution = requirements
                         .GroupBy(r => r.ProjectArea)
-                        .ToDictionary(g => g.Key, g => g.Count()),
+                        .ToDictionary(g => g.Key ?? "General", g => g.Count()),
                     MonthlyRequirements = requirements
                         .GroupBy(r => $"{r.CreatedAt.Year}-{r.CreatedAt.Month:D2}")
                         .OrderBy(g => g.Key)
