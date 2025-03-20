@@ -12,6 +12,7 @@ const mockRequirements: Requirement[] = [
     id: '1',
     title: 'Implement user authentication',
     content: 'Add secure user authentication with email and social login options.',
+    description: 'Add secure user authentication with email and social login options.',
     customerName: 'John Doe',
     customerEmail: 'john@example.com',
     createdAt: '2023-07-15T10:30:00Z',
@@ -22,12 +23,14 @@ const mockRequirements: Requirement[] = [
     response: 'We have implemented this feature with both email and social login options.',
     responseDate: '2023-07-25T14:15:00Z',
     completionPercentage: 100,
-    projectArea: 'Authentication'
+    projectArea: 'Authentication',
+    acceptanceCriteria: 'Users should be able to log in with email and at least one social provider'
   },
   {
     id: '2',
     title: 'Create responsive dashboard',
     content: 'The dashboard should be fully responsive on all device sizes.',
+    description: 'The dashboard should be fully responsive on all device sizes.',
     customerName: 'Jane Smith',
     customerEmail: 'jane@example.com',
     createdAt: '2023-07-17T15:45:00Z',
@@ -38,12 +41,14 @@ const mockRequirements: Requirement[] = [
     response: 'Our team is working on implementing responsive design across all pages.',
     responseDate: '2023-07-21T09:20:00Z',
     completionPercentage: 50,
-    projectArea: 'Frontend'
+    projectArea: 'Frontend',
+    acceptanceCriteria: 'Dashboard should work well on mobile, tablet and desktop'
   },
   {
     id: '3',
     title: 'Optimize database queries',
     content: 'Improve the performance of database queries on the products listing page.',
+    description: 'Improve the performance of database queries on the products listing page.',
     customerName: 'Robert Johnson',
     customerEmail: 'robert@example.com',
     createdAt: '2023-07-10T11:30:00Z',
@@ -52,27 +57,32 @@ const mockRequirements: Requirement[] = [
     priority: 'critical',
     isAnonymous: false,
     completionPercentage: 0,
-    projectArea: 'Backend'
+    projectArea: 'Backend',
+    acceptanceCriteria: 'Page load time should be reduced by at least 50%'
   }
 ];
 
 export default function AdvancedRequirements() {
-  const [userRole, setUserRole] = useState('');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState('admin'); // Default to admin for testing
+  const [isLoggedIn, setIsLoggedIn] = useState(true); // Default to logged in for testing
   const [requirements, setRequirements] = useState<Requirement[]>(mockRequirements);
   const { toast } = useToast();
   
   useEffect(() => {
-    const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    const role = localStorage.getItem('userRole') || '';
+    // For debugging
+    console.log("Requirements data:", requirements);
     
-    setIsLoggedIn(loggedIn);
+    const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const role = localStorage.getItem('userRole') || 'admin'; // Default to admin for testing
+    
+    setIsLoggedIn(true); // Force to true for testing
     setUserRole(role);
     
     // Fetch requirements data from API in a real application
     const fetchRequirements = async () => {
       try {
-        // Mock data for now
+        // Use mock data for now
+        console.log("Setting requirements to:", mockRequirements);
         setRequirements(mockRequirements);
       } catch (error) {
         console.error('Error fetching requirements:', error);

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -51,6 +51,8 @@ export default function AdvancedRequirementsList({ requirements, isAdmin }: Adva
   const [completionPercentage, setCompletionPercentage] = useState(0);
   const { toast } = useToast();
   
+  console.log("Requirements in list component:", requirements);
+
   // Get unique categories from requirements
   const categories = [...new Set(requirements.map(req => req.category).filter(Boolean))];
   
@@ -108,6 +110,7 @@ export default function AdvancedRequirementsList({ requirements, isAdmin }: Adva
   };
 
   const handleViewRequirement = (requirement: Requirement) => {
+    console.log("Selected requirement:", requirement);
     setSelectedRequirement(requirement);
     setResponseText(requirement.response || '');
     setSelectedStatus(requirement.status);
@@ -131,9 +134,6 @@ export default function AdvancedRequirementsList({ requirements, isAdmin }: Adva
       });
       
       setSelectedRequirement(null);
-      setResponseText('');
-      setSelectedStatus('');
-      setCompletionPercentage(0);
     } catch (error) {
       toast({
         title: "Error updating status",
@@ -436,7 +436,17 @@ export default function AdvancedRequirementsList({ requirements, isAdmin }: Adva
                         )}
                       </DialogContent>
                     </Dialog>
-                    <Button size="sm">Update Status</Button>
+                    <Button 
+                      size="sm"
+                      onClick={() => {
+                        handleViewRequirement(req);
+                        document.querySelector('[data-state="closed"][role="dialog"]')?.dispatchEvent(
+                          new MouseEvent('click', { bubbles: true })
+                        );
+                      }}
+                    >
+                      Update Status
+                    </Button>
                   </div>
                 )}
               </div>

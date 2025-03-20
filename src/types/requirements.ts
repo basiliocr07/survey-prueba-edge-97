@@ -3,6 +3,7 @@ export interface Requirement {
   id: string;
   title: string;
   content: string;
+  description?: string; // Added for compatibility with C# model
   customerName: string;
   customerEmail: string;
   createdAt: string;
@@ -16,7 +17,6 @@ export interface Requirement {
   projectArea?: string;
   acceptanceCriteria?: string;
   targetDate?: string;
-  description?: string; // Added for compatibility with C# model
 }
 
 export interface RequirementFormData {
