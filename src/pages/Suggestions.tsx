@@ -17,7 +17,7 @@ const mockSuggestions = [
     status: 'implemented',
     category: 'UI/UX',
     isAnonymous: false,
-    response: 'Great suggestion! We've implemented dark mode and it will be available in the next release.',
+    response: 'Great suggestion! We\'ve implemented dark mode and it will be available in the next release.',
     responseDate: '2023-06-20T14:15:00Z',
     completionPercentage: 100
   },
@@ -31,7 +31,7 @@ const mockSuggestions = [
     status: 'reviewed',
     category: 'Mobile App',
     isAnonymous: false,
-    response: 'We're currently working on improving mobile responsiveness. Thank you for your feedback!',
+    response: 'We\'re currently working on improving mobile responsiveness. Thank you for your feedback!',
     responseDate: '2023-06-21T09:20:00Z',
     completionPercentage: 50
   },
@@ -50,7 +50,7 @@ const mockSuggestions = [
   {
     id: '4',
     title: 'Fix login issues on Firefox',
-    content: 'There are some login issues when using the Firefox browser. The login button sometimes doesn't respond.',
+    content: 'There are some login issues when using the Firefox browser. The login button sometimes doesn\'t respond.',
     customerName: 'Carlos Rodriguez',
     customerEmail: 'carlos@example.com',
     createdAt: '2023-06-20T08:30:00Z',
