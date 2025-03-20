@@ -63,8 +63,9 @@ const mockRequirements: Requirement[] = [
 ];
 
 export default function AdvancedRequirements() {
-  const [userRole, setUserRole] = useState('admin'); // Default to admin for testing
-  const [isLoggedIn, setIsLoggedIn] = useState(true); // Default to logged in for testing
+  // Force admin mode and logged in for testing
+  const [userRole, setUserRole] = useState('admin');
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [requirements, setRequirements] = useState<Requirement[]>([]);
   const { toast } = useToast();
   
@@ -72,24 +73,16 @@ export default function AdvancedRequirements() {
     // For debugging
     console.log("Starting requirements page load");
     
-    const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    const role = localStorage.getItem('userRole') || 'admin'; // Default to admin for testing
-    
-    setIsLoggedIn(true); // Force to true for testing
-    setUserRole(role);
+    // Force to true for testing
+    setIsLoggedIn(true);
+    setUserRole('admin');
     
     // Fetch requirements data from API in a real application
     const fetchRequirements = async () => {
       try {
-        // Use mock data for now
+        // Use mock data for now and ensure it's properly initialized
         console.log("Setting requirements to:", mockRequirements);
-        // Asegúrate de que mockRequirements es un array y no es undefined
-        if (Array.isArray(mockRequirements)) {
-          setRequirements(mockRequirements);
-        } else {
-          console.error("mockRequirements no es un array:", mockRequirements);
-          setRequirements([]);
-        }
+        setRequirements(mockRequirements);
       } catch (error) {
         console.error('Error fetching requirements:', error);
         toast({
@@ -109,7 +102,8 @@ export default function AdvancedRequirements() {
   const inProgressCount = requirements?.filter(r => r.status === 'in-progress')?.length || 0;
   const implementedCount = requirements?.filter(r => r.status === 'implemented')?.length || 0;
   
-  const isAdmin = isLoggedIn && userRole.toLowerCase() === 'admin';
+  // Force admin mode for testing
+  const isAdmin = true;
   
   console.log("Requirements data before passing to dashboard:", requirements);
   console.log("Requirements length:", requirements?.length || 0);

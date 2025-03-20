@@ -57,6 +57,7 @@ export default function AdvancedRequirementsDashboard({
     }
   }, [requirements]);
 
+  // Ensure we always have a valid array, even if requirements is undefined
   const safeRequirements = requirements || [];
 
   return (

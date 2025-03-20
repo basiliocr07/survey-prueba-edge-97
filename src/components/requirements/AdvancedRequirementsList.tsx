@@ -347,132 +347,135 @@ export default function AdvancedRequirementsList({ requirements, isAdmin }: Adva
         )}
       </CardContent>
 
+      {/* Fixed Dialog implementation */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <ArrowUpRight className="h-5 w-5" />
-              Requirement Details
-            </DialogTitle>
-            <DialogDescription>
-              View and manage this requirement
-            </DialogDescription>
-          </DialogHeader>
-          
           {selectedRequirement && (
-            <Tabs defaultValue="details" className="mt-4">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="details">Details</TabsTrigger>
-                <TabsTrigger value="response">Update Status</TabsTrigger>
-              </TabsList>
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <ArrowUpRight className="h-5 w-5" />
+                  Requirement Details
+                </DialogTitle>
+                <DialogDescription>
+                  View and manage this requirement
+                </DialogDescription>
+              </DialogHeader>
               
-              <TabsContent value="details" className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <h4 className="text-sm font-medium mb-1">Submitted by</h4>
-                    <p>{selectedRequirement.isAnonymous ? 'Anonymous' : selectedRequirement.customerName}</p>
-                    {!selectedRequirement.isAnonymous && (
-                      <p className="text-sm text-muted-foreground">{selectedRequirement.customerEmail}</p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <h4 className="text-sm font-medium mb-1">Date</h4>
-                    <p>{selectedRequirement.createdAt && format(new Date(selectedRequirement.createdAt), 'PPP')}</p>
-                  </div>
-                  
-                  <div>
-                    <h4 className="text-sm font-medium mb-1">Category</h4>
-                    <p>{selectedRequirement.category || 'Not categorized'}</p>
-                  </div>
-                  
-                  <div>
-                    <h4 className="text-sm font-medium mb-1">Status</h4>
-                    {getStatusBadge(selectedRequirement.status)}
-                  </div>
-
-                  <div>
-                    <h4 className="text-sm font-medium mb-1">Priority</h4>
-                    {selectedRequirement.priority ? getPriorityBadge(selectedRequirement.priority) : 'Not set'}
-                  </div>
-
-                  <div>
-                    <h4 className="text-sm font-medium mb-1">Project Area</h4>
-                    <p>{selectedRequirement.projectArea || 'Not specified'}</p>
-                  </div>
-                </div>
+              <Tabs defaultValue="details" className="mt-4">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="details">Details</TabsTrigger>
+                  <TabsTrigger value="response">Update Status</TabsTrigger>
+                </TabsList>
                 
-                <div>
-                  <h4 className="text-sm font-medium mb-1">Description</h4>
-                  <div className="p-4 bg-muted rounded-md">
-                    {selectedRequirement.content || selectedRequirement.description}
-                  </div>
-                </div>
+                <TabsContent value="details" className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">Submitted by</h4>
+                      <p>{selectedRequirement.isAnonymous ? 'Anonymous' : selectedRequirement.customerName}</p>
+                      {!selectedRequirement.isAnonymous && (
+                        <p className="text-sm text-muted-foreground">{selectedRequirement.customerEmail}</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">Date</h4>
+                      <p>{selectedRequirement.createdAt && format(new Date(selectedRequirement.createdAt), 'PPP')}</p>
+                    </div>
+                    
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">Category</h4>
+                      <p>{selectedRequirement.category || 'Not categorized'}</p>
+                    </div>
+                    
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">Status</h4>
+                      <div>{getStatusBadge(selectedRequirement.status)}</div>
+                    </div>
 
-                {selectedRequirement.acceptanceCriteria && (
-                  <div>
-                    <h4 className="text-sm font-medium mb-1">Acceptance Criteria</h4>
-                    <div className="p-4 bg-muted rounded-md">
-                      {selectedRequirement.acceptanceCriteria}
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">Priority</h4>
+                      <div>{selectedRequirement.priority ? getPriorityBadge(selectedRequirement.priority) : 'Not set'}</div>
+                    </div>
+
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">Project Area</h4>
+                      <p>{selectedRequirement.projectArea || 'Not specified'}</p>
                     </div>
                   </div>
-                )}
-
-                {selectedRequirement.response && (
+                  
                   <div>
-                    <h4 className="text-sm font-medium mb-1">Response</h4>
+                    <h4 className="text-sm font-medium mb-1">Description</h4>
                     <div className="p-4 bg-muted rounded-md">
-                      {selectedRequirement.response}
+                      {selectedRequirement.content || selectedRequirement.description}
                     </div>
                   </div>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="response" className="space-y-4">
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium">Status</h4>
-                  <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="proposed">Proposed</SelectItem>
-                      <SelectItem value="in-progress">In Progress</SelectItem>
-                      <SelectItem value="implemented">Implemented</SelectItem>
-                      <SelectItem value="rejected">Rejected</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+
+                  {selectedRequirement.acceptanceCriteria && (
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">Acceptance Criteria</h4>
+                      <div className="p-4 bg-muted rounded-md">
+                        {selectedRequirement.acceptanceCriteria}
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedRequirement.response && (
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">Response</h4>
+                      <div className="p-4 bg-muted rounded-md">
+                        {selectedRequirement.response}
+                      </div>
+                    </div>
+                  )}
+                </TabsContent>
                 
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium">Completion Percentage</h4>
-                  <div className="flex items-center gap-4">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={completionPercentage}
-                      onChange={(e) => setCompletionPercentage(parseInt(e.target.value) || 0)}
+                <TabsContent value="response" className="space-y-4">
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium">Status</h4>
+                    <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="proposed">Proposed</SelectItem>
+                        <SelectItem value="in-progress">In Progress</SelectItem>
+                        <SelectItem value="implemented">Implemented</SelectItem>
+                        <SelectItem value="rejected">Rejected</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium">Completion Percentage</h4>
+                    <div className="flex items-center gap-4">
+                      <Input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={completionPercentage}
+                        onChange={(e) => setCompletionPercentage(parseInt(e.target.value) || 0)}
+                      />
+                      <span>%</span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium">Response</h4>
+                    <Textarea 
+                      placeholder="Enter response..."
+                      value={responseText}
+                      onChange={(e) => setResponseText(e.target.value)}
+                      rows={5}
                     />
-                    <span>%</span>
                   </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium">Response</h4>
-                  <Textarea 
-                    placeholder="Enter response..."
-                    value={responseText}
-                    onChange={(e) => setResponseText(e.target.value)}
-                    rows={5}
-                  />
-                </div>
-                
-                <Button onClick={handleUpdateStatus} className="w-full">
-                  Update Status
-                </Button>
-              </TabsContent>
-            </Tabs>
+                  
+                  <Button onClick={handleUpdateStatus} className="w-full">
+                    Update Status
+                  </Button>
+                </TabsContent>
+              </Tabs>
+            </>
           )}
         </DialogContent>
       </Dialog>
