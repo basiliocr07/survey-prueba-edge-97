@@ -13,9 +13,14 @@ namespace SurveyApp.Application.Services
         Task<RequirementDto> CreateRequirementAsync(CreateRequirementDto requirementDto);
         Task UpdateRequirementAsync(Guid id, UpdateRequirementDto requirementDto);
         Task DeleteRequirementAsync(Guid id);
-        Task UpdateRequirementStatusAsync(Guid id, string status);
+        Task UpdateRequirementStatusAsync(Guid id, RequirementStatusUpdateDto statusUpdateDto);
         Task<List<RequirementDto>> GetRecentRequirementsAsync(int count);
         Task<List<RequirementDto>> GetRequirementsByStatusAsync(string status);
         Task<List<RequirementDto>> GetRequirementsByPriorityAsync(string priority);
+        Task<List<RequirementDto>> GetRequirementsByCategoryAsync(string category);
+        Task<List<RequirementDto>> GetRequirementsByProjectAreaAsync(string projectArea);
+        Task<List<RequirementDto>> SearchRequirementsAsync(string searchTerm);
+        Task<RequirementReportsViewModel> GetRequirementReportsAsync();
+        Task AddResponseToRequirementAsync(Guid id, string response);
     }
 }

@@ -42,24 +42,18 @@ namespace SurveyApp.WebMvc.Controllers
                 
                 var viewModel = new RequirementsViewModel
                 {
-                    Requirements = requirements.Select(r => new SuggestionDto 
-                    { 
-                        Id = r.Id, 
-                        Content = r.Title, 
-                        CustomerName = "Sistema", 
-                        Status = r.Status 
-                    }).ToList(),
+                    Requirements = requirements,
                     KnowledgeBase = new List<KnowledgeBaseItemDto>(),
-                    Categories = new[] { "Frontend", "Backend", "UI/UX", "Base de datos", "General" },
+                    Categories = new[] { "Feature", "Bug", "UI/UX", "Performance", "Security", "Other" },
                     TotalCount = requirements.Count,
-                    ProposedCount = requirements.Count(r => r.Status.ToLower() == "pending" || r.Status.ToLower() == "proposed"),
-                    InProgressCount = requirements.Count(r => r.Status.ToLower() == "in progress"),
+                    ProposedCount = requirements.Count(r => r.Status.ToLower() == "proposed"),
+                    InProgressCount = requirements.Count(r => r.Status.ToLower() == "in-progress"),
                     TestingCount = requirements.Count(r => r.Status.ToLower() == "testing"),
-                    CompletedCount = requirements.Count(r => r.Status.ToLower() == "completed"),
-                    CriticalCount = requirements.Count(r => r.Priority.ToLower() == "alta" || r.Priority.ToLower() == "critical"),
+                    CompletedCount = requirements.Count(r => r.Status.ToLower() == "implemented"),
+                    CriticalCount = requirements.Count(r => r.Priority.ToLower() == "critical"),
                     HighCount = requirements.Count(r => r.Priority.ToLower() == "high"),
-                    MediumCount = requirements.Count(r => r.Priority.ToLower() == "media" || r.Priority.ToLower() == "medium"),
-                    LowCount = requirements.Count(r => r.Priority.ToLower() == "baja" || r.Priority.ToLower() == "low")
+                    MediumCount = requirements.Count(r => r.Priority.ToLower() == "medium"),
+                    LowCount = requirements.Count(r => r.Priority.ToLower() == "low")
                 };
                 
                 return View(viewModel);
@@ -93,7 +87,12 @@ namespace SurveyApp.WebMvc.Controllers
                     {
                         Title = model.Title,
                         Description = model.Description,
-                        Priority = model.Priority
+                        Priority = model.Priority,
+                        ProjectArea = model.ProjectArea,
+                        CustomerName = model.CustomerName,
+                        CustomerEmail = model.CustomerEmail,
+                        IsAnonymous = model.IsAnonymous,
+                        Category = model.Category
                     };
 
                     await _requirementService.CreateRequirementAsync(dto);
@@ -103,8 +102,8 @@ namespace SurveyApp.WebMvc.Controllers
                     {
                         Title = model.Title,
                         Content = model.Description,
-                        Category = "Requerimiento",
-                        Tags = new[] { model.Priority, model.ProjectArea }
+                        Category = "Requirement",
+                        Tags = new[] { model.Priority, model.ProjectArea, model.Category }
                     };
 
                     await _knowledgeBaseService.CreateKnowledgeBaseItemAsync(kbDto);
@@ -126,27 +125,48 @@ namespace SurveyApp.WebMvc.Controllers
 
         [HttpGet]
         [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> ViewRequirements()
+        public async Task<IActionResult> ViewRequirements(string status = "", string priority = "", string category = "", string search = "", string projectArea = "")
         {
             try
             {
-                var requirements = await _requirementService.GetAllRequirementsAsync();
+                List<RequirementDto> requirements;
+                
+                if (!string.IsNullOrEmpty(status))
+                {
+                    requirements = await _requirementService.GetRequirementsByStatusAsync(status);
+                }
+                else if (!string.IsNullOrEmpty(priority))
+                {
+                    requirements = await _requirementService.GetRequirementsByPriorityAsync(priority);
+                }
+                else if (!string.IsNullOrEmpty(category))
+                {
+                    requirements = await _requirementService.GetRequirementsByCategoryAsync(category);
+                }
+                else if (!string.IsNullOrEmpty(projectArea))
+                {
+                    requirements = await _requirementService.GetRequirementsByProjectAreaAsync(projectArea);
+                }
+                else if (!string.IsNullOrEmpty(search))
+                {
+                    requirements = await _requirementService.SearchRequirementsAsync(search);
+                }
+                else
+                {
+                    requirements = await _requirementService.GetAllRequirementsAsync();
+                }
+                
                 var viewModel = new RequirementsListViewModel
                 {
-                    Requirements = requirements.Select(r => new SuggestionDto
-                    {
-                        Id = r.Id,
-                        Content = r.Title + " - " + r.Description,
-                        CustomerName = "Sistema",
-                        CustomerEmail = "sistema@example.com",
-                        CreatedAt = r.CreatedAt,
-                        Status = r.Status,
-                        Category = r.Priority
-                    }).ToList(),
-                    Categories = new[] { "Alta", "Media", "Baja" },
-                    CategoryFilter = "",
-                    SearchTerm = ""
+                    Requirements = requirements,
+                    Categories = new[] { "Feature", "Bug", "UI/UX", "Performance", "Security", "Other" },
+                    StatusFilter = status,
+                    PriorityFilter = priority,
+                    CategoryFilter = category,
+                    ProjectAreaFilter = projectArea,
+                    SearchTerm = search
                 };
+                
                 return View(viewModel);
             }
             catch (Exception ex)
@@ -158,15 +178,68 @@ namespace SurveyApp.WebMvc.Controllers
 
         [HttpGet]
         [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> KnowledgeBase()
+        public async Task<IActionResult> Details(Guid id)
         {
             try
             {
-                var items = await _knowledgeBaseService.GetAllKnowledgeBaseItemsAsync();
+                var requirement = await _requirementService.GetRequirementByIdAsync(id);
+                if (requirement == null)
+                {
+                    return NotFound();
+                }
+                
+                // Obtener elementos relacionados de la base de conocimientos
+                var relatedItems = await _knowledgeBaseService.GetItemsByTagsAsync(
+                    new[] { requirement.Priority, requirement.ProjectArea, requirement.Category }.Where(t => !string.IsNullOrEmpty(t)).ToArray()
+                );
+                
+                var viewModel = new RequirementDetailViewModel
+                {
+                    Requirement = requirement,
+                    RelatedItems = relatedItems
+                };
+                
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al obtener los detalles del requerimiento con ID {id}");
+                return View("Error");
+            }
+        }
+
+        [HttpGet]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> Reports()
+        {
+            try
+            {
+                var reportsData = await _requirementService.GetRequirementReportsAsync();
+                return View(reportsData);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener los informes de requerimientos");
+                return View("Error");
+            }
+        }
+
+        [HttpGet]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> KnowledgeBase(string search = "")
+        {
+            try
+            {
+                var items = string.IsNullOrEmpty(search)
+                    ? await _knowledgeBaseService.GetAllKnowledgeBaseItemsAsync()
+                    : await _knowledgeBaseService.SearchKnowledgeBaseItemsAsync(search);
+                
                 var viewModel = new KnowledgeBaseViewModel
                 {
-                    KnowledgeBaseItems = items
+                    KnowledgeBaseItems = items,
+                    SearchTerm = search
                 };
+                
                 return View(viewModel);
             }
             catch (Exception ex)
@@ -193,7 +266,14 @@ namespace SurveyApp.WebMvc.Controllers
                     Title = requirement.Title,
                     Description = requirement.Description,
                     Priority = requirement.Priority,
-                    ProjectArea = "General"  // Por defecto si no existe
+                    ProjectArea = requirement.ProjectArea ?? "General",
+                    Status = requirement.Status,
+                    CustomerName = requirement.CustomerName,
+                    CustomerEmail = requirement.CustomerEmail,
+                    IsAnonymous = requirement.IsAnonymous,
+                    Category = requirement.Category ?? "Feature",
+                    AcceptanceCriteria = requirement.AcceptanceCriteria,
+                    TargetDate = requirement.TargetDate
                 };
 
                 return View(viewModel);
@@ -219,7 +299,11 @@ namespace SurveyApp.WebMvc.Controllers
                         Title = model.Title,
                         Description = model.Description,
                         Priority = model.Priority,
-                        Status = "pending"  // Por defecto
+                        Status = model.Status,
+                        ProjectArea = model.ProjectArea,
+                        Category = model.Category,
+                        AcceptanceCriteria = model.AcceptanceCriteria,
+                        TargetDate = model.TargetDate
                     };
 
                     await _requirementService.UpdateRequirementAsync(id, dto);
@@ -235,6 +319,32 @@ namespace SurveyApp.WebMvc.Controllers
             }
 
             return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> UpdateStatus(Guid id, string status, string response)
+        {
+            try
+            {
+                var statusUpdate = new RequirementStatusUpdateDto
+                {
+                    Status = status,
+                    Response = response
+                };
+                
+                await _requirementService.UpdateRequirementStatusAsync(id, statusUpdate);
+                
+                TempData["SuccessMessage"] = "Estado del requerimiento actualizado correctamente.";
+                return RedirectToAction("Details", new { id });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al actualizar el estado del requerimiento con ID {id}");
+                TempData["ErrorMessage"] = "Ocurrió un error al actualizar el estado del requerimiento.";
+                return RedirectToAction("Details", new { id });
+            }
         }
 
         [HttpPost]

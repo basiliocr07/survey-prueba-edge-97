@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using SurveyApp.Application.DTOs;
 using SurveyApp.Application.Ports;
 using SurveyApp.Domain.Entities;
+using SurveyApp.WebMvc.Models;
 
 namespace SurveyApp.Application.Services
 {
@@ -49,15 +50,20 @@ namespace SurveyApp.Application.Services
             }
         }
 
-        public async Task<RequirementDto> CreateRequirementAsync(CreateRequirementDto requirementDto)
+        public async Task<RequirementDto> CreateRequirementAsync(CreateRequirementDto dto)
         {
             try
             {
                 var requirement = new Requirement(
-                    requirementDto.Title,
-                    requirementDto.Description,
-                    requirementDto.Priority
+                    dto.Title,
+                    dto.Description,
+                    dto.Priority
                 );
+
+                // Set additional properties
+                requirement.SetProjectArea(dto.ProjectArea);
+                requirement.SetCategory(dto.Category);
+                requirement.SetCustomerInfo(dto.CustomerName, dto.CustomerEmail, dto.IsAnonymous);
 
                 var createdRequirement = await _requirementRepository.CreateAsync(requirement);
                 return MapToDto(createdRequirement);
@@ -69,7 +75,7 @@ namespace SurveyApp.Application.Services
             }
         }
 
-        public async Task UpdateRequirementAsync(Guid id, UpdateRequirementDto requirementDto)
+        public async Task UpdateRequirementAsync(Guid id, UpdateRequirementDto dto)
         {
             try
             {
@@ -79,14 +85,35 @@ namespace SurveyApp.Application.Services
                     throw new KeyNotFoundException($"No se encontró el requerimiento con ID {id}");
                 }
 
-                requirement.UpdateTitle(requirementDto.Title);
-                requirement.UpdateDescription(requirementDto.Description);
-                requirement.UpdatePriority(requirementDto.Priority);
+                if (!string.IsNullOrEmpty(dto.Title))
+                    requirement.UpdateTitle(dto.Title);
                 
-                if (!string.IsNullOrEmpty(requirementDto.Status))
-                {
-                    requirement.SetStatus(requirementDto.Status);
-                }
+                if (!string.IsNullOrEmpty(dto.Description))
+                    requirement.UpdateDescription(dto.Description);
+                
+                if (!string.IsNullOrEmpty(dto.Priority))
+                    requirement.UpdatePriority(dto.Priority);
+                
+                if (!string.IsNullOrEmpty(dto.Status))
+                    requirement.SetStatus(dto.Status);
+                
+                if (!string.IsNullOrEmpty(dto.ProjectArea))
+                    requirement.SetProjectArea(dto.ProjectArea);
+                
+                if (!string.IsNullOrEmpty(dto.Category))
+                    requirement.SetCategory(dto.Category);
+                
+                if (!string.IsNullOrEmpty(dto.Response))
+                    requirement.AddResponse(dto.Response);
+                
+                if (dto.CompletionPercentage.HasValue)
+                    requirement.SetCompletionPercentage(dto.CompletionPercentage.Value);
+                
+                if (!string.IsNullOrEmpty(dto.AcceptanceCriteria))
+                    requirement.SetAcceptanceCriteria(dto.AcceptanceCriteria);
+                
+                if (dto.TargetDate.HasValue)
+                    requirement.SetTargetDate(dto.TargetDate);
 
                 await _requirementRepository.UpdateAsync(requirement);
             }
@@ -110,7 +137,7 @@ namespace SurveyApp.Application.Services
             }
         }
 
-        public async Task UpdateRequirementStatusAsync(Guid id, string status)
+        public async Task UpdateRequirementStatusAsync(Guid id, RequirementStatusUpdateDto statusUpdateDto)
         {
             try
             {
@@ -120,7 +147,15 @@ namespace SurveyApp.Application.Services
                     throw new KeyNotFoundException($"No se encontró el requerimiento con ID {id}");
                 }
 
-                requirement.SetStatus(status);
+                if (!string.IsNullOrEmpty(statusUpdateDto.Status))
+                    requirement.SetStatus(statusUpdateDto.Status);
+                
+                if (!string.IsNullOrEmpty(statusUpdateDto.Response))
+                    requirement.AddResponse(statusUpdateDto.Response);
+                
+                if (statusUpdateDto.CompletionPercentage.HasValue)
+                    requirement.SetCompletionPercentage(statusUpdateDto.CompletionPercentage.Value);
+
                 await _requirementRepository.UpdateAsync(requirement);
             }
             catch (Exception ex)
@@ -172,6 +207,99 @@ namespace SurveyApp.Application.Services
             }
         }
 
+        public async Task<List<RequirementDto>> GetRequirementsByCategoryAsync(string category)
+        {
+            try
+            {
+                var requirements = await _requirementRepository.GetRequirementsByCategoryAsync(category);
+                return requirements.Select(MapToDto).ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al obtener los requerimientos por categoría {category}");
+                throw;
+            }
+        }
+
+        public async Task<List<RequirementDto>> GetRequirementsByProjectAreaAsync(string projectArea)
+        {
+            try
+            {
+                var requirements = await _requirementRepository.GetRequirementsByProjectAreaAsync(projectArea);
+                return requirements.Select(MapToDto).ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al obtener los requerimientos por área de proyecto {projectArea}");
+                throw;
+            }
+        }
+
+        public async Task<List<RequirementDto>> SearchRequirementsAsync(string searchTerm)
+        {
+            try
+            {
+                var requirements = await _requirementRepository.SearchRequirementsAsync(searchTerm);
+                return requirements.Select(MapToDto).ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al buscar requerimientos con término '{searchTerm}'");
+                throw;
+            }
+        }
+
+        public async Task<RequirementReportsViewModel> GetRequirementReportsAsync()
+        {
+            try
+            {
+                var allRequirements = await _requirementRepository.GetAllAsync();
+                var statusDistribution = await _requirementRepository.GetStatusDistributionAsync();
+                var priorityDistribution = await _requirementRepository.GetPriorityDistributionAsync();
+                var categoryDistribution = await _requirementRepository.GetCategoryDistributionAsync();
+                var areaDistribution = await _requirementRepository.GetProjectAreaDistributionAsync();
+                var monthlyRequirements = await _requirementRepository.GetMonthlyRequirementsCountAsync(6);
+
+                return new RequirementReportsViewModel
+                {
+                    TotalRequirements = allRequirements.Count,
+                    ProposedRequirements = allRequirements.Count(r => r.Status.ToLower() == "proposed"),
+                    InProgressRequirements = allRequirements.Count(r => r.Status.ToLower() == "in-progress"),
+                    ImplementedRequirements = allRequirements.Count(r => r.Status.ToLower() == "implemented"),
+                    RejectedRequirements = allRequirements.Count(r => r.Status.ToLower() == "rejected"),
+                    CategoryDistribution = categoryDistribution,
+                    PriorityDistribution = priorityDistribution,
+                    ProjectAreaDistribution = areaDistribution,
+                    MonthlyRequirements = monthlyRequirements
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener los informes de requerimientos");
+                throw;
+            }
+        }
+
+        public async Task AddResponseToRequirementAsync(Guid id, string response)
+        {
+            try
+            {
+                var requirement = await _requirementRepository.GetByIdAsync(id);
+                if (requirement == null)
+                {
+                    throw new KeyNotFoundException($"No se encontró el requerimiento con ID {id}");
+                }
+
+                requirement.AddResponse(response);
+                await _requirementRepository.UpdateAsync(requirement);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al añadir respuesta al requerimiento con ID {id}");
+                throw;
+            }
+        }
+
         private RequirementDto MapToDto(Requirement requirement)
         {
             return new RequirementDto
@@ -181,7 +309,18 @@ namespace SurveyApp.Application.Services
                 Description = requirement.Description,
                 Priority = requirement.Priority,
                 CreatedAt = requirement.CreatedAt,
-                Status = requirement.Status
+                UpdatedAt = requirement.UpdatedAt,
+                Status = requirement.Status,
+                ProjectArea = requirement.ProjectArea,
+                CustomerName = requirement.CustomerName,
+                CustomerEmail = requirement.CustomerEmail,
+                IsAnonymous = requirement.IsAnonymous,
+                Response = requirement.Response,
+                ResponseDate = requirement.ResponseDate,
+                CompletionPercentage = requirement.CompletionPercentage,
+                Category = requirement.Category,
+                AcceptanceCriteria = requirement.AcceptanceCriteria,
+                TargetDate = requirement.TargetDate
             };
         }
     }

@@ -34,11 +34,40 @@ namespace SurveyApp.WebMvc.Models
         public string PriorityFilter { get; set; }
         public string CategoryFilter { get; set; }
         public string SearchTerm { get; set; }
+        public string ProjectAreaFilter { get; set; }
     }
 
-    public class KnowledgeBaseViewModel
+    public class RequirementDetailViewModel
     {
-        public List<KnowledgeBaseItemDto> KnowledgeBaseItems { get; set; } = new List<KnowledgeBaseItemDto>();
-        public string SearchTerm { get; set; }
+        public RequirementDto Requirement { get; set; }
+        public List<KnowledgeBaseItemDto> RelatedItems { get; set; } = new List<KnowledgeBaseItemDto>();
+    }
+
+    public class RequirementReportsViewModel
+    {
+        public int TotalRequirements { get; set; }
+        public int ProposedRequirements { get; set; }
+        public int InProgressRequirements { get; set; }
+        public int ImplementedRequirements { get; set; }
+        public int RejectedRequirements { get; set; }
+        public Dictionary<string, int> CategoryDistribution { get; set; } = new Dictionary<string, int>();
+        public Dictionary<string, int> PriorityDistribution { get; set; } = new Dictionary<string, int>();
+        public Dictionary<string, int> ProjectAreaDistribution { get; set; } = new Dictionary<string, int>();
+        public Dictionary<string, int> MonthlyRequirements { get; set; } = new Dictionary<string, int>();
+    }
+
+    public class NewRequirementViewModel
+    {
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public string Priority { get; set; } = "Medium";
+        public string ProjectArea { get; set; } = "General";
+        public string Status { get; set; } = "Proposed";
+        public string CustomerName { get; set; }
+        public string CustomerEmail { get; set; }
+        public bool IsAnonymous { get; set; }
+        public string Category { get; set; } = "Feature";
+        public string AcceptanceCriteria { get; set; }
+        public DateTime? TargetDate { get; set; }
     }
 }

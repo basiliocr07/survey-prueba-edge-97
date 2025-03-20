@@ -54,8 +54,6 @@ namespace SurveyApp.Infrastructure.Repositories
         {
             try
             {
-                // Using direct property assignment instead of private setter
-                requirement.CreatedAt = DateTime.UtcNow;
                 _context.Requirements.Add(requirement);
                 await _context.SaveChangesAsync();
                 return requirement;
@@ -71,8 +69,6 @@ namespace SurveyApp.Infrastructure.Repositories
         {
             try
             {
-                // Using direct property assignment instead of private setter
-                requirement.UpdatedAt = DateTime.UtcNow;
                 _context.Entry(requirement).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
             }
@@ -149,6 +145,22 @@ namespace SurveyApp.Infrastructure.Repositories
             }
         }
         
+        public async Task<List<Requirement>> GetRequirementsByCategoryAsync(string category)
+        {
+            try
+            {
+                return await _context.Requirements
+                    .Where(r => r.Category.ToLower() == category.ToLower())
+                    .OrderByDescending(r => r.CreatedAt)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al obtener los requerimientos por categoría {category}");
+                throw;
+            }
+        }
+        
         public async Task<List<Requirement>> SearchRequirementsAsync(string searchTerm)
         {
             try
@@ -156,7 +168,8 @@ namespace SurveyApp.Infrastructure.Repositories
                 return await _context.Requirements
                     .Where(r => r.Title.Contains(searchTerm) || 
                                r.Description.Contains(searchTerm) ||
-                               r.ProjectArea.Contains(searchTerm))
+                               r.ProjectArea.Contains(searchTerm) ||
+                               r.CustomerName.Contains(searchTerm))
                     .OrderByDescending(r => r.CreatedAt)
                     .ToListAsync();
             }
@@ -179,6 +192,103 @@ namespace SurveyApp.Infrastructure.Repositories
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error al obtener los requerimientos por área de proyecto {projectArea}");
+                throw;
+            }
+        }
+
+        public async Task<Dictionary<string, int>> GetStatusDistributionAsync()
+        {
+            try
+            {
+                return await _context.Requirements
+                    .GroupBy(r => r.Status)
+                    .Select(g => new { Status = g.Key, Count = g.Count() })
+                    .ToDictionaryAsync(x => x.Status, x => x.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener la distribución por estado");
+                throw;
+            }
+        }
+
+        public async Task<Dictionary<string, int>> GetPriorityDistributionAsync()
+        {
+            try
+            {
+                return await _context.Requirements
+                    .GroupBy(r => r.Priority)
+                    .Select(g => new { Priority = g.Key, Count = g.Count() })
+                    .ToDictionaryAsync(x => x.Priority, x => x.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener la distribución por prioridad");
+                throw;
+            }
+        }
+
+        public async Task<Dictionary<string, int>> GetCategoryDistributionAsync()
+        {
+            try
+            {
+                return await _context.Requirements
+                    .Where(r => !string.IsNullOrEmpty(r.Category))
+                    .GroupBy(r => r.Category)
+                    .Select(g => new { Category = g.Key, Count = g.Count() })
+                    .ToDictionaryAsync(x => x.Category, x => x.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener la distribución por categoría");
+                throw;
+            }
+        }
+
+        public async Task<Dictionary<string, int>> GetProjectAreaDistributionAsync()
+        {
+            try
+            {
+                return await _context.Requirements
+                    .GroupBy(r => r.ProjectArea)
+                    .Select(g => new { Area = g.Key, Count = g.Count() })
+                    .ToDictionaryAsync(x => x.Area, x => x.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener la distribución por área de proyecto");
+                throw;
+            }
+        }
+
+        public async Task<Dictionary<string, int>> GetMonthlyRequirementsCountAsync(int months)
+        {
+            try
+            {
+                var startDate = DateTime.UtcNow.AddMonths(-months);
+                
+                var requirements = await _context.Requirements
+                    .Where(r => r.CreatedAt >= startDate)
+                    .ToListAsync();
+
+                var monthlyData = new Dictionary<string, int>();
+                
+                for (int i = 0; i < months; i++)
+                {
+                    var month = DateTime.UtcNow.AddMonths(-i);
+                    var key = month.ToString("MMM yyyy");
+                    var count = requirements.Count(r => 
+                        r.CreatedAt.Month == month.Month && 
+                        r.CreatedAt.Year == month.Year);
+                    
+                    monthlyData.Add(key, count);
+                }
+
+                return monthlyData;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener el conteo mensual de requerimientos");
                 throw;
             }
         }
