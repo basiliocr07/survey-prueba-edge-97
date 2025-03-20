@@ -22,5 +22,6 @@ namespace SurveyApp.Application.Services
         Task<Dictionary<string, object>> GetCompletionAnalyticsAsync(Guid surveyId);
         Task<Dictionary<string, object>> GetQuestionPerformanceAnalyticsAsync(Guid surveyId);
         Task ExportAnalyticsDataAsync(Guid? surveyId, string format, bool includeRawData, string timeRange);
+        Task<Dictionary<string, int>> GetBrowserStatisticsAsync(Guid? surveyId = null);
     }
 }

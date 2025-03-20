@@ -301,5 +301,186 @@ namespace SurveyApp.Application.Services
             
             return $"{(int)timeSpan.TotalHours}h {timeSpan.Minutes}m";
         }
+
+        public async Task<Dictionary<string, object>> GetGlobalAnalyticsDashboardAsync()
+        {
+            var dashboard = new Dictionary<string, object>();
+
+            // Obtener datos globales necesarios para el dashboard
+            var totalSurveys = await _surveyRepository.GetTotalSurveyCountAsync();
+            var totalResponses = await _surveyResponseRepository.GetTotalResponseCountAsync();
+            var deviceDistribution = await _surveyResponseRepository.GetDeviceDistributionAsync();
+            var browserDistribution = await _surveyResponseRepository.GetBrowserDistributionAsync();
+            var osDistribution = await _surveyResponseRepository.GetOperatingSystemDistributionAsync();
+            var locationDistribution = await _surveyResponseRepository.GetLocationDistributionAsync();
+            var sourceDistribution = await _surveyResponseRepository.GetSourceDistributionAsync();
+
+            // Calcular métricas clave
+            double avgCompletionTime = await _surveyResponseRepository.GetAverageCompletionTimeAsync(Guid.Empty); // No se usa surveyId para global
+            double abandonmentRate = await _surveyResponseRepository.GetAbandonmentRateAsync(Guid.Empty); // No se usa surveyId para global
+
+            // Organizar los datos para el dashboard
+            dashboard["totalSurveys"] = totalSurveys;
+            dashboard["totalResponses"] = totalResponses;
+            dashboard["averageCompletionTime"] = FormatTimeSpan(TimeSpan.FromSeconds(avgCompletionTime));
+            dashboard["abandonmentRate"] = abandonmentRate;
+            dashboard["deviceDistribution"] = deviceDistribution;
+            dashboard["browserDistribution"] = browserDistribution;
+            dashboard["osDistribution"] = osDistribution;
+            dashboard["locationDistribution"] = locationDistribution;
+            dashboard["sourceDistribution"] = sourceDistribution;
+
+            // Datos para gráficos de tendencias (ejemplo simplificado)
+            var responseTrends = await _surveyResponseRepository.GetRecentResponsesAsync(30);
+            var trendsData = responseTrends
+                .GroupBy(r => r.SubmittedAt.Date)
+                .OrderBy(g => g.Key)
+                .Select(g => new { Date = g.Key.ToString("yyyy-MM-dd"), Count = g.Count() })
+                .ToList();
+
+            dashboard["responseTrends"] = trendsData;
+
+            return dashboard;
+        }
+
+        public async Task<Dictionary<string, object>> GetUserEngagementMetricsAsync(Guid? surveyId = null)
+        {
+            var metrics = new Dictionary<string, object>();
+
+            // Obtener datos de engagement
+            var averageCompletionTime = await _surveyResponseRepository.GetAverageCompletionTimeAsync(surveyId ?? Guid.Empty);
+            var averageTimePerQuestionType = await _surveyResponseRepository.GetAverageTimePerQuestionTypeAsync(surveyId ?? Guid.Empty);
+            var abandonmentCount = await _surveyResponseRepository.GetAbandonmentCountAsync(surveyId ?? Guid.Empty);
+            var abandonmentRate = await _surveyResponseRepository.GetAbandonmentRateAsync(surveyId ?? Guid.Empty);
+            var pageViewsDistribution = await _surveyResponseRepository.GetPageViewsDistributionAsync(surveyId ?? Guid.Empty);
+            var sourceDistribution = await _surveyResponseRepository.GetSourceDistributionAsync(surveyId);
+
+            // Organizar los datos
+            metrics["averageCompletionTime"] = FormatTimeSpan(TimeSpan.FromSeconds(averageCompletionTime));
+            metrics["averageTimePerQuestionType"] = averageTimePerQuestionType;
+            metrics["abandonmentCount"] = abandonmentCount;
+            metrics["abandonmentRate"] = abandonmentRate;
+            metrics["pageViewsDistribution"] = pageViewsDistribution;
+            metrics["sourceDistribution"] = sourceDistribution;
+
+            return metrics;
+        }
+
+        public async Task<Dictionary<string, object>> GetDeviceAnalyticsAsync(Guid? surveyId = null)
+        {
+            var deviceAnalytics = new Dictionary<string, object>();
+
+            // Obtener distribuciones de dispositivos
+            var deviceDistribution = await _surveyResponseRepository.GetDeviceDistributionAsync();
+            var browserDistribution = await _surveyResponseRepository.GetBrowserDistributionAsync(surveyId);
+            var osDistribution = await _surveyResponseRepository.GetOperatingSystemDistributionAsync(surveyId);
+            var locationDistribution = await _surveyResponseRepository.GetLocationDistributionAsync(surveyId);
+
+            // Organizar los datos
+            deviceAnalytics["deviceDistribution"] = deviceDistribution;
+            deviceAnalytics["browserDistribution"] = browserDistribution;
+            deviceAnalytics["osDistribution"] = osDistribution;
+            deviceAnalytics["locationDistribution"] = locationDistribution;
+
+            return deviceAnalytics;
+        }
+
+        public async Task<Dictionary<DateTime, int>> GetResponseTrendsAsync(Guid? surveyId = null, string timeRange = "last30days")
+        {
+            // Calcular fechas de inicio y fin basadas en el rango de tiempo
+            DateTime endDate = DateTime.UtcNow.Date;
+            DateTime startDate = timeRange.ToLower() switch
+            {
+                "last7days" => endDate.AddDays(-7),
+                "last90days" => endDate.AddDays(-90),
+                _ => endDate.AddDays(-30), // Default to last 30 days
+            };
+
+            // Obtener tendencias de respuesta
+            return await _surveyResponseRepository.GetResponsesOverTimeAsync(surveyId ?? Guid.Empty, startDate, endDate);
+        }
+
+        public async Task<Dictionary<string, object>> GetCompletionAnalyticsAsync(Guid surveyId)
+        {
+            var completionAnalytics = new Dictionary<string, object>();
+
+            // Obtener datos de finalización
+            var responses = await _surveyResponseRepository.GetBySurveyIdAsync(surveyId);
+            var totalResponses = responses.Count;
+            var abandonmentCount = await _surveyResponseRepository.GetAbandonmentCountAsync(surveyId);
+            var abandonmentRate = await _surveyResponseRepository.GetAbandonmentRateAsync(surveyId);
+
+            // Calcular métricas de finalización
+            double completionRate = totalResponses > 0 ? (double)(totalResponses - abandonmentCount) / totalResponses * 100 : 0;
+
+            // Organizar los datos
+            completionAnalytics["totalResponses"] = totalResponses;
+            completionAnalytics["completionRate"] = completionRate;
+            completionAnalytics["abandonmentCount"] = abandonmentCount;
+            completionAnalytics["abandonmentRate"] = abandonmentRate;
+
+            return completionAnalytics;
+        }
+
+        public async Task<Dictionary<string, object>> GetQuestionPerformanceAnalyticsAsync(Guid surveyId)
+        {
+            var questionPerformance = new Dictionary<string, object>();
+
+            // Obtener datos de rendimiento de preguntas
+            var survey = await _surveyRepository.GetByIdAsync(surveyId);
+            if (survey == null)
+            {
+                throw new ApplicationException($"Survey with ID {surveyId} not found");
+            }
+
+            var responses = await _surveyResponseRepository.GetBySurveyIdAsync(surveyId);
+            var totalResponses = responses.Count;
+
+            // Calcular métricas por pregunta
+            var questionMetrics = new List<object>();
+            foreach (var question in survey.Questions)
+            {
+                var questionResponses = responses.SelectMany(r => r.Answers).Where(a => a.QuestionId == question.Id).ToList();
+                var responseCount = questionResponses.Count;
+                var skipCount = questionResponses.Count(qr => string.IsNullOrEmpty(qr.Answer) && (qr.MultipleAnswers == null || !qr.MultipleAnswers.Any()));
+                double skipRate = responseCount > 0 ? (double)skipCount / responseCount * 100 : 0;
+
+                questionMetrics.Add(new
+                {
+                    QuestionId = question.Id,
+                    QuestionTitle = question.Title,
+                    ResponseCount = responseCount,
+                    SkipCount = skipCount,
+                    SkipRate = skipRate
+                });
+            }
+
+            // Organizar los datos
+            questionPerformance["totalResponses"] = totalResponses;
+            questionPerformance["questionMetrics"] = questionMetrics;
+
+            return questionPerformance;
+        }
+
+        public async Task ExportAnalyticsDataAsync(Guid? surveyId, string format, bool includeRawData, string timeRange)
+        {
+            // Simulación de exportación de datos
+            await Task.Delay(1000); // Simular tiempo de procesamiento
+
+            // Aquí iría la lógica real para exportar los datos
+            Console.WriteLine($"Exporting analytics data for survey ID: {surveyId}, format: {format}, includeRawData: {includeRawData}, timeRange: {timeRange}");
+        }
+
+        public async Task<Dictionary<string, int>> GetBrowserStatisticsAsync(Guid? surveyId = null)
+        {
+            try
+            {
+                return await _surveyResponseRepository.GetBrowserDistributionAsync(surveyId);
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException($"Error al obtener estadísticas de navegador: {ex.Message}", ex);
+            }
+        }
     }
 }

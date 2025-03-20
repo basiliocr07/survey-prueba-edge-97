@@ -183,5 +183,20 @@ namespace SurveyApp.WebApi.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+        // GET: api/analytics/browser-stats?surveyId={surveyId}
+        [HttpGet("browser-stats")]
+        public async Task<ActionResult<Dictionary<string, int>>> GetBrowserStatistics([FromQuery] Guid? surveyId = null)
+        {
+            try
+            {
+                var browserStats = await _analyticsService.GetBrowserStatisticsAsync(surveyId);
+                return Ok(browserStats);
+            }
+            catch (ApplicationException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
     }
 }
