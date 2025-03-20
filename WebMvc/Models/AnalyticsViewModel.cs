@@ -46,6 +46,12 @@ namespace SurveyApp.WebMvc.Models
         public List<QuestionPerformanceViewModel> LowPerformingQuestions { get; set; } = new List<QuestionPerformanceViewModel>();
         public Dictionary<string, int> FeedbackSentimentDistribution { get; set; } = new Dictionary<string, int>();
         public List<ResponseTimeRangeViewModel> ResponseTimeRanges { get; set; } = new List<ResponseTimeRangeViewModel>();
+        
+        // Propiedad para exportar datos a Excel
+        public bool IncludeRawData { get; set; }
+        public string TimeRange { get; set; } = "last30days";
+        public Dictionary<string, double> MonthlyGrowthTrend { get; set; } = new Dictionary<string, double>();
+        public Dictionary<string, double> DeviceTypePerformance { get; set; } = new Dictionary<string, double>();
     }
 
     public class ResponseTrendViewModel
@@ -130,5 +136,25 @@ namespace SurveyApp.WebMvc.Models
         public string Range { get; set; }
         public int Count { get; set; }
         public double Percentage { get; set; }
+    }
+    
+    // Clases adicionales para exportación de datos
+    public class ExportSettingsViewModel
+    {
+        public bool IncludeRawResponses { get; set; }
+        public bool IncludeMetrics { get; set; }
+        public bool IncludeCharts { get; set; }
+        public string DateRangeStart { get; set; }
+        public string DateRangeEnd { get; set; }
+    }
+    
+    public class FilterOptionsViewModel
+    {
+        public List<string> TimeRanges { get; set; } = new List<string> { "last7days", "last30days", "last90days", "custom" };
+        public List<string> DeviceTypes { get; set; } = new List<string> { "All", "Desktop", "Mobile", "Tablet" };
+        public List<string> QuestionTypes { get; set; } = new List<string>();
+        public string SelectedTimeRange { get; set; } = "last30days";
+        public string SelectedDeviceType { get; set; } = "All";
+        public string SelectedQuestionType { get; set; } = "All";
     }
 }

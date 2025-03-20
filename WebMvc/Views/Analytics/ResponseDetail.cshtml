@@ -5,7 +5,7 @@
 }
 
 <div class="w-full px-4 sm:px-6 lg:px-8 pb-10">
-    <div class="w-full max-w-[900px] mx-auto bg-white p-6">
+    <div class="w-full max-w-[1200px] mx-auto bg-white">
         <div class="flex justify-between items-center mb-8">
             <div>
                 <h1 class="text-3xl font-bold tracking-tight sm:text-4xl mb-2">Response Details</h1>
@@ -18,113 +18,396 @@
                 <a href="@Url.Action("Responses", new { surveyId = Model.SurveyId })" class="btn btn-outline btn-sm">
                     <i class="fas fa-arrow-left mr-2"></i>Back to Responses
                 </a>
+                <a href="#" class="btn btn-sm" onclick="window.print();">
+                    <i class="fas fa-print mr-2"></i>Print
+                </a>
+                <div class="dropdown dropdown-end">
+                    <button class="btn btn-sm btn-ghost">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <ul class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52">
+                        <li><a href="#"><i class="fas fa-download mr-2"></i>Export as PDF</a></li>
+                        <li><a href="#"><i class="fas fa-envelope mr-2"></i>Send by Email</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs para navegación -->
+        <div class="tabs tabs-boxed mb-6">
+            <a class="tab tab-active" href="#summary">Summary</a>
+            <a class="tab" href="#responses">Responses</a>
+            <a class="tab" href="#analytics">Analytics</a>
+        </div>
+        
+        <div id="summary" class="mt-6">
+            <!-- Response Summary Card -->
+            <div class="card p-6 mb-6 border">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h2 class="text-xl font-bold mb-4">@Model.SurveyTitle</h2>
+                        <div class="text-sm space-y-2">
+                            <p><span class="font-medium">Response ID:</span> @Model.Id</p>
+                            <p><span class="font-medium">Submitted:</span> @Model.SubmittedAt.ToString("yyyy-MM-dd HH:mm")</p>
+                            <p><span class="font-medium">Status:</span> 
+                                @if (Model.IsValidated)
+                                {
+                                    <span class="badge badge-success">Valid</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-warning">Partially Valid</span>
+                                }
+                            </p>
+                            <p><span class="font-medium">Completion Time:</span> @Model.FormattedCompletionTime</p>
+                            <p><span class="font-medium">Validation Rate:</span> @Model.ValidationRate.ToString("F1")%</p>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-lg font-medium mb-2">Respondent Information</h3>
+                        <div class="text-sm space-y-2">
+                            <p><span class="font-medium">Name:</span> @Model.RespondentName</p>
+                            <p><span class="font-medium">Email:</span> @Model.RespondentEmail</p>
+                            @if (!string.IsNullOrEmpty(Model.RespondentPhone))
+                            {
+                                <p><span class="font-medium">Phone:</span> @Model.RespondentPhone</p>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.RespondentCompany))
+                            {
+                                <p><span class="font-medium">Company:</span> @Model.RespondentCompany</p>
+                            }
+                            
+                            <!-- Información técnica -->
+                            <div class="mt-4 pt-4 border-t">
+                                <h4 class="text-sm font-medium mb-2">Technical Information</h4>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <p><span class="font-medium">Device:</span> @Model.DeviceType</p>
+                                    <p><span class="font-medium">Browser:</span> @Model.Browser</p>
+                                    <p><span class="font-medium">OS:</span> @Model.OperatingSystem</p>
+                                    <p><span class="font-medium">Location:</span> @Model.Location</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Metrics Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="card border p-4">
+                    <div class="text-sm text-muted-foreground">Questions</div>
+                    <div class="text-2xl font-bold">@Model.QuestionCount</div>
+                </div>
+                <div class="card border p-4">
+                    <div class="text-sm text-muted-foreground">Valid Answers</div>
+                    <div class="text-2xl font-bold">@Model.ValidAnswersCount</div>
+                </div>
+                <div class="card border p-4">
+                    <div class="text-sm text-muted-foreground">Average Time per Question</div>
+                    <div class="text-2xl font-bold">@TimeSpan.FromSeconds(Model.AverageTimePerQuestion).ToString(@"mm\:ss")</div>
+                </div>
+                <div class="card border p-4">
+                    <div class="text-sm text-muted-foreground">Completion Rate</div>
+                    <div class="text-2xl font-bold">@(Model.QuestionCount > 0 ? ((double)Model.Answers.Count(a => !a.IsSkipped) / Model.QuestionCount * 100).ToString("F1") : "0")%</div>
+                </div>
+            </div>
+            
+            <!-- Question Type Distribution -->
+            <div class="card border p-6 mb-6">
+                <h3 class="text-lg font-medium mb-4">Question Type Distribution</h3>
+                <div id="questionTypeChart" style="height: 300px;"></div>
             </div>
         </div>
         
-        <!-- Response Summary Card -->
-        <div class="card p-6 mb-6 border">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <h2 class="text-xl font-bold mb-4">@Model.SurveyTitle</h2>
-                    <div class="text-sm">
-                        <p><span class="font-medium">Response ID:</span> @Model.Id</p>
-                        <p><span class="font-medium">Submitted:</span> @Model.SubmittedAt.ToString("yyyy-MM-dd HH:mm")</p>
-                        <p><span class="font-medium">Status:</span> 
-                            @if (Model.IsValidated)
-                            {
-                                <span class="text-green-600">Valid</span>
-                            }
-                            else
-                            {
-                                <span class="text-yellow-600">Partially Valid</span>
-                            }
-                        </p>
+        <div id="responses" class="mt-6" style="display: none;">
+            <!-- Response Answers Card -->
+            <div class="card border">
+                <div class="px-6 py-4 border-b">
+                    <h2 class="text-xl font-bold">Survey Answers</h2>
+                </div>
+                
+                <div class="p-6">
+                    <div class="space-y-6">
+                        @foreach (var answer in Model.Answers)
+                        {
+                            <div class="border rounded-md p-4 @(!answer.IsValid ? "bg-red-50" : "")">
+                                <div class="flex justify-between">
+                                    <h3 class="font-medium mb-2">@answer.QuestionTitle</h3>
+                                    <div>
+                                        @if (answer.IsValid)
+                                        {
+                                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                                                Valid
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+                                                Invalid
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+                                
+                                <div class="flex flex-wrap gap-4 text-sm text-muted-foreground mt-1 mb-3">
+                                    <span>Type: @answer.QuestionType</span>
+                                    <span>Time: @answer.FormattedCompletionTime</span>
+                                    @if (answer.HasFreeformInput)
+                                    {
+                                        <span>Characters: @answer.CharacterCount</span>
+                                    }
+                                </div>
+                                
+                                @if (answer.HasMultipleChoice && answer.MultipleAnswers != null && answer.MultipleAnswers.Any())
+                                {
+                                    <div class="mt-2">
+                                        <p class="font-medium text-sm">Selected Options:</p>
+                                        <ul class="list-disc list-inside text-sm mt-1">
+                                            @foreach (var option in answer.MultipleAnswers)
+                                            {
+                                                <li>@option</li>
+                                            }
+                                        </ul>
+                                    </div>
+                                }
+                                else if (answer.IsRating)
+                                {
+                                    <div class="mt-2">
+                                        <p class="font-medium text-sm">Rating:</p>
+                                        <div class="flex items-center mt-1">
+                                            @{
+                                                var rating = !string.IsNullOrEmpty(answer.Answer) && int.TryParse(answer.Answer, out var r) ? r : 0;
+                                                var maxRating = answer.QuestionType.Equals("nps", StringComparison.OrdinalIgnoreCase) ? 10 : 5;
+                                                
+                                                for (int i = 1; i <= maxRating; i++)
+                                                {
+                                                    var active = i <= rating;
+                                                    <span class="text-lg @(active ? "text-yellow-500" : "text-gray-300")">★</span>
+                                                }
+                                            }
+                                            <span class="ml-2">@answer.Answer / @maxRating</span>
+                                        </div>
+                                    </div>
+                                }
+                                else if (answer.IsSkipped)
+                                {
+                                    <div class="mt-2">
+                                        <p class="italic text-muted-foreground">Question was skipped</p>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="mt-2">
+                                        <p class="font-medium text-sm">Answer:</p>
+                                        <div class="text-sm mt-1 p-2 border rounded bg-gray-50">
+                                            @answer.Answer
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="analytics" class="mt-6" style="display: none;">
+            <!-- Visualization de datos -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Completion Analysis -->
+                <div class="card border p-6">
+                    <h3 class="text-lg font-medium mb-4">Completion Analysis</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-sm font-medium">Question Completion Rate</label>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5 mt-1">
+                                <div class="bg-blue-600 h-2.5 rounded-full" style="width: @Model.ValidationRate%"></div>
+                            </div>
+                            <div class="flex justify-between text-xs mt-1">
+                                <span>@Model.ValidAnswersCount answered</span>
+                                <span>@(Model.QuestionCount - Model.ValidAnswersCount) skipped</span>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="text-sm font-medium mb-2">Time Distribution</h4>
+                            <div id="timeDistributionChart" style="height: 200px;"></div>
+                        </div>
                     </div>
                 </div>
                 
-                <div>
-                    <h3 class="text-lg font-medium mb-2">Respondent Information</h3>
-                    <div class="text-sm">
-                        <p><span class="font-medium">Name:</span> @Model.RespondentName</p>
-                        <p><span class="font-medium">Email:</span> @Model.RespondentEmail</p>
-                        @if (!string.IsNullOrEmpty(Model.RespondentPhone))
-                        {
-                            <p><span class="font-medium">Phone:</span> @Model.RespondentPhone</p>
-                        }
-                        @if (!string.IsNullOrEmpty(Model.RespondentCompany))
-                        {
-                            <p><span class="font-medium">Company:</span> @Model.RespondentCompany</p>
-                        }
-                    </div>
+                <!-- Question Type Performance -->
+                <div class="card border p-6">
+                    <h3 class="text-lg font-medium mb-4">Question Type Performance</h3>
+                    <div id="questionPerformanceChart" style="height: 300px;"></div>
                 </div>
-            </div>
-        </div>
-        
-        <!-- Response Answers Card -->
-        <div class="card">
-            <div class="px-6 py-4 border-b">
-                <h2 class="text-xl font-bold">Survey Answers</h2>
-            </div>
-            
-            <div class="p-6">
-                <div class="space-y-6">
-                    @foreach (var answer in Model.Answers)
-                    {
-                        <div class="border rounded-md p-4 @(!answer.IsValid ? "bg-red-50" : "")">
-                            <div class="flex justify-between">
-                                <h3 class="font-medium mb-2">@answer.QuestionTitle</h3>
-                                <div>
-                                    @if (answer.IsValid)
-                                    {
-                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                                            Valid
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
-                                            Invalid
-                                        </span>
-                                    }
-                                </div>
-                            </div>
-                            
-                            <p class="text-xs text-muted-foreground mb-2">Question Type: @answer.QuestionType</p>
-                            
-                            @if (answer.QuestionType == "MultipleChoice" && answer.MultipleAnswers != null)
+                
+                <!-- Individual Question Analysis (for scores/ratings) -->
+                @if (Model.Answers.Any(a => a.IsRating))
+                {
+                    <div class="card border p-6 md:col-span-2">
+                        <h3 class="text-lg font-medium mb-4">Rating Questions Analysis</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            @foreach (var answer in Model.Answers.Where(a => a.IsRating))
                             {
-                                <div class="mt-2">
-                                    <p class="font-medium text-sm">Selected Options:</p>
-                                    <ul class="list-disc list-inside text-sm">
-                                        @foreach (var option in answer.MultipleAnswers)
-                                        {
-                                            <li>@option</li>
+                                <div class="border rounded-md p-4">
+                                    <h4 class="font-medium mb-2">@answer.QuestionTitle</h4>
+                                    <div class="flex items-center">
+                                        @{
+                                            var rating = !string.IsNullOrEmpty(answer.Answer) && int.TryParse(answer.Answer, out var r) ? r : 0;
+                                            var maxRating = answer.QuestionType.Equals("nps", StringComparison.OrdinalIgnoreCase) ? 10 : 5;
+                                            
+                                            for (int i = 1; i <= maxRating; i++)
+                                            {
+                                                var active = i <= rating;
+                                                <span class="text-lg @(active ? "text-yellow-500" : "text-gray-300")">★</span>
+                                            }
                                         }
-                                    </ul>
-                                </div>
-                            }
-                            else if (answer.QuestionType == "Rating" || answer.QuestionType == "NPS")
-                            {
-                                <div class="mt-2">
-                                    <p class="font-medium text-sm">Rating:</p>
-                                    <div class="text-sm">
-                                        @answer.Answer
-                                    </div>
-                                </div>
-                            }
-                            else
-                            {
-                                <div class="mt-2">
-                                    <p class="font-medium text-sm">Answer:</p>
-                                    <div class="text-sm">
-                                        @answer.Answer
+                                        <span class="ml-2 text-2xl font-bold">@answer.Answer</span>
+                                        <span class="ml-1 text-gray-500">/ @maxRating</span>
                                     </div>
                                 </div>
                             }
                         </div>
-                    }
-                </div>
+                    </div>
+                }
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab navigation
+            const tabs = document.querySelectorAll('.tabs .tab');
+            const tabContents = document.querySelectorAll('#summary, #responses, #analytics');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remove active class from all tabs
+                    tabs.forEach(t => t.classList.remove('tab-active'));
+                    
+                    // Add active class to clicked tab
+                    this.classList.add('tab-active');
+                    
+                    // Hide all tab contents
+                    tabContents.forEach(content => {
+                        content.style.display = 'none';
+                    });
+                    
+                    // Show selected tab content
+                    const targetId = this.getAttribute('href').substring(1);
+                    document.getElementById(targetId).style.display = 'block';
+                });
+            });
+            
+            // Question Type Distribution Chart
+            const questionTypes = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.QuestionTypeDistribution.Keys));
+            const questionTypeCounts = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.QuestionTypeDistribution.Values));
+            
+            new Chart(document.getElementById('questionTypeChart'), {
+                type: 'bar',
+                data: {
+                    labels: questionTypes,
+                    datasets: [{
+                        label: 'Number of Questions',
+                        data: questionTypeCounts,
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.5)',
+                            'rgba(75, 192, 192, 0.5)',
+                            'rgba(255, 159, 64, 0.5)',
+                            'rgba(153, 102, 255, 0.5)',
+                            'rgba(255, 99, 132, 0.5)'
+                        ],
+                        borderColor: [
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(255, 159, 64, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 99, 132, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Time Distribution Chart
+            const timePerQuestion = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
+                Model.Answers.Select(a => new { title = a.QuestionTitle, time = a.CompletionTimeSeconds }).OrderByDescending(x => x.time)
+            ));
+            
+            new Chart(document.getElementById('timeDistributionChart'), {
+                type: 'horizontalBar',
+                data: {
+                    labels: timePerQuestion.map(t => t.title.length > 20 ? t.title.substring(0, 20) + '...' : t.title),
+                    datasets: [{
+                        label: 'Time (seconds)',
+                        data: timePerQuestion.map(t => t.time),
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    scales: {
+                        x: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // Question Performance Chart
+            const questionTypePerformance = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
+                Model.CompletionRateByQuestionType.Select(kv => new { type = kv.Key, rate = kv.Value })
+            ));
+            
+            new Chart(document.getElementById('questionPerformanceChart'), {
+                type: 'pie',
+                data: {
+                    labels: questionTypePerformance.map(q => q.type),
+                    datasets: [{
+                        label: 'Completion Rate (%)',
+                        data: questionTypePerformance.map(q => q.rate),
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.5)',
+                            'rgba(75, 192, 192, 0.5)',
+                            'rgba(255, 159, 64, 0.5)',
+                            'rgba(153, 102, 255, 0.5)',
+                            'rgba(255, 99, 132, 0.5)'
+                        ],
+                        borderColor: [
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(255, 159, 64, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 99, 132, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true
+                }
+            });
+        });
+    </script>
+}
