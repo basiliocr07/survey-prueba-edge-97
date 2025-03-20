@@ -110,7 +110,7 @@ export default function Suggestions() {
     };
     
     fetchSuggestions();
-  }, []);
+  }, [toast]);
   
   // Calculate counts for admin dashboard
   const totalCount = suggestions.length;
