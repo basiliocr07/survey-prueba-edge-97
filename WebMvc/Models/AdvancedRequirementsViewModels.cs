@@ -19,4 +19,23 @@ namespace SurveyApp.WebMvc.Models
         public Dictionary<string, int> ProjectAreaDistribution { get; set; } = new Dictionary<string, int>();
         public Dictionary<string, int> MonthlyRequirements { get; set; } = new Dictionary<string, int>();
     }
+
+    public class RequirementDetailViewModel
+    {
+        public RequirementDto Requirement { get; set; }
+        public string[] StatusOptions { get; set; } = new[] { "Proposed", "In-Progress", "Testing", "Implemented", "Rejected" };
+        public string[] PriorityOptions { get; set; } = new[] { "Low", "Medium", "High", "Critical" };
+    }
+
+    public class NewRequirementViewModel
+    {
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public string Priority { get; set; } = "Medium";
+        public string ProjectArea { get; set; }
+        public string Category { get; set; }
+        public string CustomerName { get; set; }
+        public string CustomerEmail { get; set; }
+        public bool IsAnonymous { get; set; }
+    }
 }
