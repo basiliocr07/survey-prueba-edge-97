@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -64,6 +63,14 @@ namespace SurveyApp.Application.Services
                 requirement.SetProjectArea(dto.ProjectArea);
                 requirement.SetCategory(dto.Category);
                 requirement.SetCustomerInfo(dto.CustomerName, dto.CustomerEmail, dto.IsAnonymous);
+                
+                // Set acceptance criteria if provided
+                if (!string.IsNullOrEmpty(dto.AcceptanceCriteria))
+                    requirement.SetAcceptanceCriteria(dto.AcceptanceCriteria);
+                
+                // Set target date if provided
+                if (dto.TargetDate.HasValue)
+                    requirement.SetTargetDate(dto.TargetDate);
 
                 var createdRequirement = await _requirementRepository.CreateAsync(requirement);
                 return MapToDto(createdRequirement);

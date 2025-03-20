@@ -1,5 +1,4 @@
-
-@model SurveyApp.WebMvc.Models.RequirementsViewModel
+@model SurveyApp.WebMvc.Models.AdvancedRequirementsViewModel
 @{
     ViewData["Title"] = "Advanced Requirements";
     var isAdmin = User.IsInRole("Admin");
@@ -54,7 +53,7 @@
                         <div class="rounded-full bg-green-100 p-3 mb-3">
                             <i class="fas fa-check-circle text-green-500"></i>
                         </div>
-                        <div class="text-2xl font-bold">@Model.CompletedCount</div>
+                        <div class="text-2xl font-bold">@Model.ImplementedCount</div>
                         <p class="text-sm text-muted-foreground">Implemented</p>
                     </div>
                 </div>
@@ -375,10 +374,10 @@
                                     
                                     <div class="flex justify-between items-center">
                                         <span>Implemented</span>
-                                        <span class="text-sm font-medium">@Model.CompletedCount</span>
+                                        <span class="text-sm font-medium">@Model.ImplementedCount</span>
                                     </div>
                                     <div class="h-2 bg-muted rounded-full overflow-hidden">
-                                        <div class="h-full bg-green-500 rounded-full" style="width: @(Model.TotalCount > 0 ? (Model.CompletedCount * 100 / Model.TotalCount) : 0)%"></div>
+                                        <div class="h-full bg-green-500 rounded-full" style="width: @(Model.TotalCount > 0 ? (Model.ImplementedCount * 100 / Model.TotalCount) : 0)%"></div>
                                     </div>
                                 </div>
                             </div>
