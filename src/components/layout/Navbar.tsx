@@ -95,7 +95,6 @@ export default function Navbar() {
       { path: '/suggestions', label: 'Suggestions', icon: <MessageSquare className="w-4 h-4 mr-2" />, roles: ['admin', 'client'] },
       { path: '/customers', label: 'Customer Growth', icon: <Users className="w-4 h-4 mr-2" />, roles: ['admin'] },
       { path: '/requirements', label: 'Requirements', icon: <FileText className="w-4 h-4 mr-2" />, roles: ['admin', 'client'] },
-      { path: '/advanced-requirements', label: 'Advanced Requirements', icon: <FileText className="w-4 h-4 mr-2" />, roles: ['admin'] },
     ];
 
     if (!isLoggedIn) {
@@ -217,7 +216,6 @@ export default function Navbar() {
         features: [
           { name: 'All Requirements', description: 'View project requirements', href: '/requirements', roles: ['admin'] },
           { name: 'New Requirement', description: 'Submit a new requirement', href: '/requirements#new', roles: ['admin', 'client'] },
-          { name: 'Advanced Requirements', description: 'Advanced requirements management', href: '/advanced-requirements', roles: ['admin'] },
           { name: 'Documentation', description: 'Project documentation', href: '/requirements#docs', roles: ['admin'] },
         ]
       },

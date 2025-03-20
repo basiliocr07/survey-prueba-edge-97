@@ -1,95 +1,108 @@
 
 import { useState } from 'react';
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from 'react-hook-form';
-import * as z from 'zod';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
-import { RequirementFormData } from '@/types/requirements';
+import { Search, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Suggestion, KnowledgeBaseItem } from '@/types/suggestions';
 
-// Define the form validation schema using zod
-const formSchema = z.object({
-  title: z.string().min(5, {
-    message: "Title must be at least 5 characters.",
-  }),
-  content: z.string().min(10, {
-    message: "Description must be at least 10 characters.",
-  }),
-  customerName: z.string().min(3, {
-    message: "Name must be at least 3 characters.",
-  }).or(z.literal("")),
-  customerEmail: z.string().email({
-    message: "Please enter a valid email address.",
-  }).or(z.literal("")),
-  category: z.string().optional(),
-  priority: z.string().optional(),
-  isAnonymous: z.boolean().default(false),
-  projectArea: z.string().optional(),
-  acceptanceCriteria: z.string().optional(),
-  targetDate: z.string().optional()
-});
+interface RequirementFormData {
+  title: string;
+  description: string;
+  customerName: string;
+  customerEmail: string;
+  priority: string;
+  projectArea?: string;
+}
+
+const priorities = [
+  'Alta',
+  'Media',
+  'Baja'
+];
+
+const projectAreas = [
+  'Frontend',
+  'Backend',
+  'UI/UX',
+  'Base de datos',
+  'General'
+];
 
 export default function ClientRequirementForm() {
+  const [isSearching, setIsSearching] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchResults, setSearchResults] = useState<{ requirements: Suggestion[], knowledgeItems: KnowledgeBaseItem[] }>({ requirements: [], knowledgeItems: [] });
   const { toast } = useToast();
-
-  // Initialize the form with react-hook-form
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<RequirementFormData>({
     defaultValues: {
-      title: "",
-      content: "",
-      customerName: "",
-      customerEmail: "",
-      category: "Feature",
-      priority: "medium",
-      isAnonymous: false,
-      projectArea: "General",
-      acceptanceCriteria: "",
-      targetDate: ""
-    },
+      priority: 'Media',
+      projectArea: 'General'
+    }
   });
+  
+  const requirementContent = watch('description');
 
-  // Define the form submit handler
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    setIsSubmitting(true);
+  const handleSearch = (content: string) => {
+    if (!content || content.length < 10) return;
+    
+    // Este es un ejemplo simplificado para la interfaz del cliente
+    // En una aplicación real, esto llamaría a un endpoint de API para buscar elementos similares
+    setIsSearching(true);
+    
+    // Resultados simulados de búsqueda
+    setSearchResults({
+      requirements: [],
+      knowledgeItems: []
+    });
+  };
 
+  const onSubmit = async (data: RequirementFormData) => {
     try {
-      console.log("Submitting requirement:", values);
-      
-      // In a real application, this would be an API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: "Requirement submitted",
-        description: "Your requirement has been successfully submitted.",
+      setIsSubmitting(true);
+      // Enviar los datos al endpoint de API
+      const response = await fetch('/api/requirements', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: data.title,
+          description: data.description,
+          priority: data.priority,
+          projectArea: data.projectArea || 'General',
+          customerName: data.customerName,
+          customerEmail: data.customerEmail
+        })
       });
       
-      form.reset();
+      if (response.ok) {
+        toast({
+          title: "Requerimiento enviado",
+          description: "Tu requerimiento ha sido registrado correctamente.",
+          variant: "default"
+        });
+        reset();
+        setIsSearching(false);
+        setSearchResults({ requirements: [], knowledgeItems: [] });
+      } else {
+        const errorData = await response.json();
+        toast({
+          title: "Error",
+          description: errorData.message || "Hubo un problema al enviar tu requerimiento. Por favor, intenta de nuevo.",
+          variant: "destructive"
+        });
+      }
     } catch (error) {
-      console.error("Error submitting requirement:", error);
+      console.error("Error al enviar el requerimiento:", error);
       toast({
-        title: "Error",
-        description: "There was a problem submitting your requirement. Please try again.",
-        variant: "destructive",
+        title: "Error de conexión",
+        description: "No pudimos conectar con el servidor. Verifica tu conexión e intenta de nuevo.",
+        variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
@@ -97,214 +110,143 @@ export default function ClientRequirementForm() {
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Title</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter a concise title for your requirement" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <div className="space-y-2">
+        <Label htmlFor="title">Título del Requerimiento</Label>
+        <Input 
+          id="title" 
+          placeholder="Resume tu requerimiento en un título breve" 
+          {...register('title', { required: "El título es obligatorio" })}
         />
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField
-            control={form.control}
-            name="category"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Category</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a category" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Feature">Feature</SelectItem>
-                    <SelectItem value="Enhancement">Enhancement</SelectItem>
-                    <SelectItem value="Bug">Bug</SelectItem>
-                    <SelectItem value="UI/UX">UI/UX</SelectItem>
-                    <SelectItem value="Performance">Performance</SelectItem>
-                    <SelectItem value="Security">Security</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="priority"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Priority</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a priority" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="critical">Critical</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="low">Low</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        
-        <FormField
-          control={form.control}
-          name="content"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="Describe your requirement in detail" 
-                  className="min-h-[120px]" 
-                  {...field} 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField
-            control={form.control}
-            name="projectArea"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Project Area</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select project area" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="General">General</SelectItem>
-                    <SelectItem value="User Management">User Management</SelectItem>
-                    <SelectItem value="Dashboard">Dashboard</SelectItem>
-                    <SelectItem value="Reports">Reports</SelectItem>
-                    <SelectItem value="Analytics">Analytics</SelectItem>
-                    <SelectItem value="Finance">Finance</SelectItem>
-                    <SelectItem value="Database">Database</SelectItem>
-                    <SelectItem value="API">API</SelectItem>
-                    <SelectItem value="Mobile App">Mobile App</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="targetDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Target Date (Optional)</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        
-        <FormField
-          control={form.control}
-          name="acceptanceCriteria"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Acceptance Criteria (Optional)</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="Define what will make this requirement complete" 
-                  className="min-h-[80px]" 
-                  {...field} 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="isAnonymous"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel>Submit anonymously</FormLabel>
-                <p className="text-sm text-muted-foreground">
-                  Your name and email will not be displayed with this requirement.
-                </p>
-              </div>
-            </FormItem>
-          )}
-        />
-        
-        {!form.watch("isAnonymous") && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField
-              control={form.control}
-              name="customerName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Your Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter your name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="customerEmail"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Your Email</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter your email" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+        {errors.title && (
+          <p className="text-sm text-destructive">{errors.title.message}</p>
         )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="description">Descripción del Requerimiento</Label>
+        <Textarea 
+          id="description" 
+          placeholder="Describe tu requerimiento en detalle..." 
+          className="min-h-[120px]"
+          {...register('description', { required: "La descripción es obligatoria" })}
+          onChange={(e) => {
+            if (e.target.value.length > 15) {
+              handleSearch(e.target.value);
+            }
+          }}
+        />
+        {errors.description && (
+          <p className="text-sm text-destructive">{errors.description.message}</p>
+        )}
+      </div>
+      
+      {isSearching && (searchResults.requirements.length > 0 || searchResults.knowledgeItems.length > 0) && (
+        <div className="bg-muted p-4 rounded-md border border-border">
+          <h4 className="font-medium flex items-center gap-2 mb-2">
+            <Search className="h-4 w-4" />
+            Se encontraron elementos similares
+          </h4>
+          
+          {searchResults.requirements.length > 0 && (
+            <div className="mb-2">
+              <p className="text-sm font-medium mb-1">Requerimientos similares:</p>
+              <ul className="text-sm space-y-1">
+                {searchResults.requirements.map((req) => (
+                  <li key={req.id.toString()} className="flex items-start gap-2">
+                    <span className="text-primary text-xs mt-0.5">•</span>
+                    <span>{req.content}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
+          {searchResults.knowledgeItems.length > 0 && (
+            <div>
+              <p className="text-sm font-medium mb-1">Artículos relacionados:</p>
+              <ul className="text-sm space-y-1">
+                {searchResults.knowledgeItems.map((item) => (
+                  <li key={item.id.toString()} className="flex items-start gap-2">
+                    <span className="text-primary text-xs mt-0.5">•</span>
+                    <span>{item.title}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <Label htmlFor="customerName">Tu Nombre</Label>
+          <Input 
+            id="customerName" 
+            placeholder="John Doe" 
+            {...register('customerName', { required: "El nombre es obligatorio" })}
+          />
+          {errors.customerName && (
+            <p className="text-sm text-destructive">{errors.customerName.message}</p>
+          )}
+        </div>
         
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? "Submitting..." : "Submit Requirement"}
-        </Button>
-      </form>
-    </Form>
+        <div className="space-y-2">
+          <Label htmlFor="customerEmail">Correo Electrónico</Label>
+          <Input 
+            id="customerEmail" 
+            type="email" 
+            placeholder="john@example.com" 
+            {...register('customerEmail', { 
+              required: "El correo es obligatorio",
+              pattern: {
+                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                message: "Correo electrónico inválido"
+              }
+            })}
+          />
+          {errors.customerEmail && (
+            <p className="text-sm text-destructive">{errors.customerEmail.message}</p>
+          )}
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <Label htmlFor="priority">Prioridad</Label>
+          <select 
+            id="priority"
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+            {...register('priority', { required: "La prioridad es obligatoria" })}
+          >
+            <option value="">Selecciona la prioridad</option>
+            {priorities.map((priority) => (
+              <option key={priority} value={priority}>{priority}</option>
+            ))}
+          </select>
+          {errors.priority && (
+            <p className="text-sm text-destructive">{errors.priority.message}</p>
+          )}
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="projectArea">Área del Proyecto</Label>
+          <select 
+            id="projectArea"
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+            {...register('projectArea')}
+          >
+            <option value="">Selecciona un área</option>
+            {projectAreas.map((area) => (
+              <option key={area} value={area}>{area}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+      
+      <Button type="submit" className="w-full" disabled={isSubmitting}>
+        {isSubmitting ? 'Enviando...' : 'Enviar Requerimiento'}
+      </Button>
+    </form>
   );
 }
