@@ -38,7 +38,7 @@ namespace SurveyApp.WebApi.Controllers
             }
             catch (KeyNotFoundException)
             {
-                return NotFound();
+                return NotFound(new { message = $"Customer with ID {id} not found." });
             }
         }
 
@@ -78,7 +78,7 @@ namespace SurveyApp.WebApi.Controllers
             }
             catch (KeyNotFoundException)
             {
-                return NotFound();
+                return NotFound(new { message = $"Customer with ID {id} not found." });
             }
             catch (Exception ex)
             {
@@ -97,7 +97,7 @@ namespace SurveyApp.WebApi.Controllers
             }
             catch (KeyNotFoundException)
             {
-                return NotFound();
+                return NotFound(new { message = $"Customer with ID {id} not found." });
             }
             catch (Exception ex)
             {
@@ -105,12 +105,19 @@ namespace SurveyApp.WebApi.Controllers
             }
         }
 
-        // GET: api/customers/analytics/service-usage
-        [HttpGet("analytics/service-usage")]
-        public async Task<ActionResult<Dictionary<string, int>>> GetServiceUsageAnalytics()
+        // GET: api/customers/service-usage
+        [HttpGet("service-usage")]
+        public async Task<ActionResult<Dictionary<string, int>>> GetServiceUsage()
         {
-            var serviceUsage = await _customerService.GetServiceUsageAnalyticsAsync();
-            return Ok(serviceUsage);
+            try
+            {
+                var serviceUsage = await _customerService.GetServiceUsageAnalyticsAsync();
+                return Ok(serviceUsage);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
     }
 }

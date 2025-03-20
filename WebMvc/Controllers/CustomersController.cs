@@ -1,4 +1,3 @@
-
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -33,6 +32,39 @@ namespace SurveyApp.WebMvc.Controllers
         }
 
         public async Task<IActionResult> Index()
+        {
+            var customers = await _customerService.GetAllCustomersAsync();
+            var serviceUsage = await _customerService.GetServiceUsageAnalyticsAsync();
+
+            var viewModel = new CustomerGrowthViewModel
+            {
+                Customers = customers.Select(c => new CustomerViewModel
+                {
+                    Id = c.Id,
+                    BrandName = c.BrandName,
+                    ContactEmail = c.ContactEmail,
+                    ContactPhone = c.ContactPhone,
+                    AcquiredServices = c.AcquiredServices,
+                    CreatedAt = c.CreatedAt,
+                    GrowthMetrics = c.GrowthMetrics?.Select(m => new GrowthMetricViewModel
+                    {
+                        Period = m.Period,
+                        Revenue = m.Revenue,
+                        UserCount = m.UserCount
+                    }).ToList() ?? new List<GrowthMetricViewModel>()
+                }).ToList(),
+                ServiceUsageData = serviceUsage.Select(kv => new ServiceUsageViewModel
+                {
+                    Name = kv.Key,
+                    Count = kv.Value
+                }).OrderByDescending(s => s.Count).ToList(),
+                AvailableServices = _availableServices
+            };
+
+            return View(viewModel);
+        }
+
+        public async Task<IActionResult> Growth()
         {
             var customers = await _customerService.GetAllCustomersAsync();
             var serviceUsage = await _customerService.GetServiceUsageAnalyticsAsync();
