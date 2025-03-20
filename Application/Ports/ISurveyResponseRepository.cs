@@ -35,5 +35,8 @@ namespace SurveyApp.Application.Ports
         Task<double> GetAbandonmentRateAsync(Guid surveyId);
         Task<Dictionary<int, int>> GetPageViewsDistributionAsync(Guid surveyId);
         Task<Dictionary<string, int>> GetSourceDistributionAsync(Guid? surveyId = null);
+        
+        // Método faltante que se usa en GetGlobalAnalyticsDashboardAsync
+        Task<int> GetTotalResponseCountAsync();
     }
 }

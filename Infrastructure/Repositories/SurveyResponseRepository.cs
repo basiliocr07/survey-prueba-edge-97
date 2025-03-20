@@ -312,5 +312,10 @@ namespace SurveyApp.Infrastructure.Repositories
                 answer.SetValidationStatus(isValid);
             }
         }
+        
+        public async Task<int> GetTotalResponseCountAsync()
+        {
+            return await _dbContext.SurveyResponses.CountAsync();
+        }
     }
 }
