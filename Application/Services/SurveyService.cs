@@ -174,6 +174,11 @@ namespace SurveyApp.Application.Services
             return (surveyDtos, totalCount);
         }
 
+        public async Task SendSurveyEmailAsync(string email, string surveyTitle, string surveyLink)
+        {
+            await _emailService.SendSurveyInvitationAsync(email, surveyTitle, surveyLink);
+        }
+
         public async Task SendSurveyEmailsAsync(Guid id)
         {
             var survey = await _surveyRepository.GetByIdAsync(id);
@@ -183,16 +188,98 @@ namespace SurveyApp.Application.Services
             if (survey.DeliveryConfig == null || survey.DeliveryConfig.EmailAddresses == null || !survey.DeliveryConfig.EmailAddresses.Any())
                 throw new InvalidOperationException("La encuesta no tiene configuraciones de email válidas.");
                 
+            string surveyBaseLink = "https://yourdomain.com/survey/";
+            
             foreach (var email in survey.DeliveryConfig.EmailAddresses)
             {
-                await _emailService.SendEmailAsync(
+                await _emailService.SendSurveyInvitationAsync(
                     email,
-                    $"Por favor, complete nuestra encuesta: {survey.Title}",
-                    $"Hola,\n\nLe invitamos a participar en nuestra encuesta: {survey.Title}.\n\n" +
-                    $"Puede acceder a la encuesta a través del siguiente enlace: [ENLACE_AQUÍ]\n\n" +
-                    $"Gracias por su tiempo."
+                    survey.Title,
+                    $"{surveyBaseLink}{survey.Id}"
                 );
             }
+        }
+
+        public async Task ProcessAutomaticSurveyDeliveryAsync()
+        {
+            var surveys = await _surveyRepository.GetAllAsync();
+            
+            foreach (var survey in surveys)
+            {
+                if (survey.DeliveryConfig?.Trigger?.SendAutomatically == true)
+                {
+                    try
+                    {
+                        string surveyBaseLink = "https://yourdomain.com/survey/";
+                        
+                        if (survey.DeliveryConfig.Type == "scheduled")
+                        {
+                            if (ShouldSendBasedOnSchedule(survey.DeliveryConfig.Schedule))
+                            {
+                                foreach (var email in survey.DeliveryConfig.EmailAddresses)
+                                {
+                                    await _emailService.SendSurveyInvitationAsync(
+                                        email,
+                                        survey.Title,
+                                        $"{surveyBaseLink}{survey.Id}"
+                                    );
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error procesando encuesta {survey.Id}: {ex.Message}");
+                    }
+                }
+            }
+        }
+
+        private bool ShouldSendBasedOnSchedule(Schedule schedule)
+        {
+            if (schedule == null)
+                return false;
+
+            var now = DateTime.UtcNow;
+            
+            if (schedule.StartDate.HasValue && now < schedule.StartDate.Value)
+                return false;
+                
+            if (schedule.EndDate.HasValue && now > schedule.EndDate.Value)
+                return false;
+                
+            if (schedule.Frequency == "monthly" && now.Day == schedule.DayOfMonth)
+            {
+                return IsTimeMatch(now, schedule.Time);
+            }
+            
+            if (schedule.Frequency == "weekly" && schedule.DayOfWeek.HasValue && 
+                (int)now.DayOfWeek == schedule.DayOfWeek.Value)
+            {
+                return IsTimeMatch(now, schedule.Time);
+            }
+            
+            if (schedule.Frequency == "daily")
+            {
+                return IsTimeMatch(now, schedule.Time);
+            }
+            
+            return false;
+        }
+        
+        private bool IsTimeMatch(DateTime now, string scheduledTime)
+        {
+            if (string.IsNullOrEmpty(scheduledTime))
+                return false;
+                
+            if (TimeSpan.TryParse(scheduledTime, out TimeSpan scheduledTimeSpan))
+            {
+                var currentTime = new TimeSpan(now.Hour, now.Minute, 0);
+                var diff = (currentTime - scheduledTimeSpan).Duration();
+                return diff.TotalMinutes <= 5;
+            }
+            
+            return false;
         }
 
         public async Task<SurveyDto> GetSurveyForClientAsync(Guid id)

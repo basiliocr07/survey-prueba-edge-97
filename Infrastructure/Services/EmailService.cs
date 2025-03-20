@@ -1,5 +1,7 @@
 
 using System;
+using System.Net;
+using System.Net.Mail;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using SurveyApp.Application.Ports;
@@ -27,16 +29,32 @@ namespace SurveyApp.Infrastructure.Services
 
         public async Task SendEmailAsync(string to, string subject, string htmlMessage)
         {
-            // En un entorno de producción, aquí se implementaría el código
-            // para enviar correos electrónicos utilizando la información
-            // de configuración proporcionada en _emailSettings.
-            
-            // Por ahora, solo registramos la información en consola
-            Console.WriteLine($"Email enviado a {to}");
-            Console.WriteLine($"Asunto: {subject}");
-            Console.WriteLine($"Contenido: {htmlMessage}");
-            
-            await Task.CompletedTask;
+            try
+            {
+                var mailMessage = new MailMessage
+                {
+                    From = new MailAddress(_emailSettings.SenderEmail, _emailSettings.SenderName),
+                    Subject = subject,
+                    Body = htmlMessage,
+                    IsBodyHtml = true
+                };
+
+                mailMessage.To.Add(to);
+
+                using (var client = new SmtpClient(_emailSettings.SmtpServer, _emailSettings.SmtpPort))
+                {
+                    client.EnableSsl = true;
+                    client.Credentials = new NetworkCredential(_emailSettings.SmtpUsername, _emailSettings.SmtpPassword);
+                    
+                    await client.SendMailAsync(mailMessage);
+                    Console.WriteLine($"Email enviado exitosamente a {to}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al enviar email: {ex.Message}");
+                throw;
+            }
         }
 
         public async Task SendSurveyInvitationAsync(string to, string surveyTitle, string surveyLink)

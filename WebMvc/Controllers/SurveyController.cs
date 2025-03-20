@@ -22,7 +22,7 @@ public async Task<IActionResult> SendSurveyEmail(Guid id, string email)
     catch (Exception ex)
     {
         _logger.LogError(ex, "Error al enviar la encuesta por email: {Message}", ex.Message);
-        TempData["ErrorMessage"] = "Ocurrió un error al enviar la encuesta por email.";
+        TempData["ErrorMessage"] = "Ocurrió un error al enviar la encuesta por email: " + ex.Message;
         return RedirectToAction("Details", new { id });
     }
 }
@@ -41,7 +41,7 @@ public async Task<IActionResult> SendSurveyToAllRecipients(Guid id)
     catch (Exception ex)
     {
         _logger.LogError(ex, "Error al enviar la encuesta a todos los destinatarios: {Message}", ex.Message);
-        TempData["ErrorMessage"] = "Ocurrió un error al enviar la encuesta a los destinatarios.";
+        TempData["ErrorMessage"] = "Ocurrió un error al enviar la encuesta a los destinatarios: " + ex.Message;
         return RedirectToAction("Details", new { id });
     }
 }
@@ -95,7 +95,7 @@ public async Task<IActionResult> ConfigureAutomaticDelivery(Guid id, DeliveryCon
     catch (Exception ex)
     {
         _logger.LogError(ex, "Error al configurar el envío automático: {Message}", ex.Message);
-        TempData["ErrorMessage"] = "Ocurrió un error al configurar el envío automático.";
+        TempData["ErrorMessage"] = "Ocurrió un error al configurar el envío automático: " + ex.Message;
         return RedirectToAction("Details", new { id });
     }
 }

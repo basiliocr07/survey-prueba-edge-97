@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -130,6 +129,9 @@ namespace SurveyApp.WebApi.Controllers
         {
             try
             {
+                var baseUrl = $"{Request.Scheme}://{Request.Host}";
+                var surveyLink = $"{baseUrl}/survey/{id}";
+                
                 await _surveyService.SendSurveyEmailsAsync(id);
                 return NoContent();
             }
