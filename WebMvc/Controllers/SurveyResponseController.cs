@@ -1,13 +1,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using SurveyApp.Application.DTOs;
 using SurveyApp.Application.Services;
 using SurveyApp.WebMvc.Models;
-using System.Linq;
 
 namespace SurveyApp.WebMvc.Controllers
 {
@@ -174,6 +174,51 @@ namespace SurveyApp.WebMvc.Controllers
                 _logger.LogError(ex, "Error al listar respuestas");
                 TempData["ErrorMessage"] = "Error al cargar las respuestas.";
                 return RedirectToAction("Index", "Dashboard");
+            }
+        }
+        
+        [HttpGet("responses/{id}")]
+        public async Task<IActionResult> Details(Guid id)
+        {
+            try
+            {
+                var response = await _surveyService.GetResponseByIdAsync(id);
+                
+                if (response == null)
+                {
+                    TempData["ErrorMessage"] = "La respuesta solicitada no existe.";
+                    return RedirectToAction(nameof(List));
+                }
+                
+                var viewModel = new SurveyResponseAnalyticsViewModel
+                {
+                    Id = response.Id,
+                    SurveyId = response.SurveyId,
+                    SurveyTitle = response.SurveyTitle,
+                    RespondentName = response.RespondentName,
+                    RespondentEmail = response.RespondentEmail,
+                    RespondentPhone = response.RespondentPhone,
+                    RespondentCompany = response.RespondentCompany,
+                    SubmittedAt = response.SubmittedAt,
+                    IsValidated = response.Answers.All(a => a.IsValid),
+                    Answers = response.Answers.Select(a => new QuestionAnswerViewModel
+                    {
+                        QuestionId = a.QuestionId,
+                        QuestionTitle = a.QuestionTitle,
+                        QuestionType = a.QuestionType,
+                        Answer = a.Answer,
+                        MultipleAnswers = a.MultipleAnswers,
+                        IsValid = a.IsValid
+                    }).ToList()
+                };
+                
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener detalles de respuesta: {Message}", ex.Message);
+                TempData["ErrorMessage"] = "Ocurrió un error al cargar los detalles de la respuesta.";
+                return RedirectToAction(nameof(List));
             }
         }
     }

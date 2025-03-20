@@ -1,0 +1,96 @@
+
+@model SurveyApp.WebMvc.Models.SurveyResponseAnalyticsViewModel
+@{
+    ViewData["Title"] = "Detalles de Respuesta";
+}
+
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Detalles de Respuesta</h1>
+        <div>
+            <a href="@Url.Action("List")" class="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
+                <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                </svg>
+                Volver a la lista
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg overflow-hidden mb-6">
+        <div class="p-6 bg-gray-50 border-b">
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-semibold">Información de la Respuesta</h2>
+                <span class="px-3 py-1 text-sm font-medium rounded-full @(Model.IsValidated ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800")">
+                    @(Model.IsValidated ? "Válida" : "Parcial")
+                </span>
+            </div>
+        </div>
+        
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-md font-medium mb-3">Encuesta</h3>
+                    <p class="text-gray-700 mb-1"><span class="font-medium">Título:</span> @Model.SurveyTitle</p>
+                    <p class="text-gray-700 mb-1"><span class="font-medium">ID de respuesta:</span> @Model.Id</p>
+                    <p class="text-gray-700 mb-1"><span class="font-medium">Fecha de envío:</span> @Model.SubmittedAt.ToString("dd/MM/yyyy HH:mm")</p>
+                </div>
+                
+                <div>
+                    <h3 class="text-md font-medium mb-3">Respondente</h3>
+                    <p class="text-gray-700 mb-1"><span class="font-medium">Nombre:</span> @Model.RespondentName</p>
+                    <p class="text-gray-700 mb-1"><span class="font-medium">Email:</span> @Model.RespondentEmail</p>
+                    @if (!string.IsNullOrEmpty(Model.RespondentPhone))
+                    {
+                        <p class="text-gray-700 mb-1"><span class="font-medium">Teléfono:</span> @Model.RespondentPhone</p>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.RespondentCompany))
+                    {
+                        <p class="text-gray-700 mb-1"><span class="font-medium">Empresa:</span> @Model.RespondentCompany</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <div class="p-6 bg-gray-50 border-b">
+            <h2 class="text-lg font-semibold">Respuestas</h2>
+        </div>
+        
+        <div class="p-6">
+            <div class="space-y-6">
+                @foreach (var answer in Model.Answers)
+                {
+                    <div class="border rounded-md p-4 @(!answer.IsValid ? "bg-red-50" : "")">
+                        <h3 class="font-medium mb-2">@answer.QuestionTitle</h3>
+                        
+                        @if (answer.MultipleAnswers != null && answer.MultipleAnswers.Any())
+                        {
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-600 mb-1">Opciones seleccionadas:</p>
+                                <ul class="list-disc list-inside text-gray-700">
+                                    @foreach (var option in answer.MultipleAnswers)
+                                    {
+                                        <li>@option</li>
+                                    }
+                                </ul>
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-gray-700">@(string.IsNullOrEmpty(answer.Answer) ? "(Sin respuesta)" : answer.Answer)</p>
+                        }
+                        
+                        @if (!answer.IsValid)
+                        {
+                            <div class="mt-2 text-sm text-red-600">
+                                Esta respuesta no cumple con los criterios de validación.
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

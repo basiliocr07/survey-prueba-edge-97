@@ -21,8 +21,9 @@ namespace SurveyApp.Application.Services
         // Métodos para respuestas
         Task<SurveyResponseDto> SubmitSurveyResponseAsync(CreateSurveyResponseDto responseDto);
         Task<List<SurveyResponseDto>> GetSurveyResponsesAsync(Guid surveyId);
-        
-        // Nuevo método para obtener respuestas recientes
         Task<List<RecentResponseDto>> GetRecentResponsesAsync(int count);
+        
+        // Nuevo método para obtener una respuesta por su ID
+        Task<SurveyResponseAnalyticsDto> GetResponseByIdAsync(Guid id);
     }
 }
