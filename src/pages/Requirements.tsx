@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { FileText, Filter, Search, ClipboardList, BarChart, CheckCircle, Clock, Lightbulb, PieChart, FileBarChart } from 'lucide-react';
+import { FileText, Filter, Search, ClipboardList, BarChart, CheckCircle, Clock, Lightbulb, PieChart, FileBarChart, Eye } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -20,8 +19,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Requirement, RequirementAnalytics } from '@/types/requirements';
 import ClientRequirementForm from '@/components/client/ClientRequirementForm';
 import AdvancedRequirementReports from '@/components/requirements/AdvancedRequirementReports';
+import RequirementDetailsDialog from '@/components/requirements/RequirementDetailsDialog';
 
-// Mock data for demonstration
 const mockRequirements: Requirement[] = [
   {
     id: '1',
@@ -80,6 +79,8 @@ export default function Requirements() {
   const [statusFilter, setStatusFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
   const { toast } = useToast();
+  const [selectedRequirement, setSelectedRequirement] = useState<Requirement | null>(null);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   
   useEffect(() => {
     const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
@@ -88,15 +89,12 @@ export default function Requirements() {
     setIsLoggedIn(loggedIn);
     setUserRole(role);
     
-    // If user is not admin, default to submit tab
     if (!loggedIn || role.toLowerCase() !== 'admin') {
       setActiveTab('submit');
     }
     
-    // Fetch requirements data from API in a real application
     const fetchRequirements = async () => {
       try {
-        // Mock data for now
         setRequirements(mockRequirements);
       } catch (error) {
         console.error('Error fetching requirements:', error);
@@ -111,7 +109,6 @@ export default function Requirements() {
     fetchRequirements();
   }, [toast]);
   
-  // Calculate counts for dashboard
   const totalCount = requirements.length;
   const proposedCount = requirements.filter(r => r.status === 'proposed').length;
   const inProgressCount = requirements.filter(r => r.status === 'in-progress').length;
@@ -119,14 +116,11 @@ export default function Requirements() {
   
   const isAdmin = isLoggedIn && userRole.toLowerCase() === 'admin';
   
-  // Simulate loading requirements with React Query
   const { data, isLoading } = useQuery({
     queryKey: ['requirements', statusFilter, priorityFilter, searchTerm],
     queryFn: async () => {
-      // In production, this function would make a real API request
       console.log('Fetching requirements with filters:', { statusFilter, priorityFilter, searchTerm });
       
-      // Simulate filtering
       let filtered = [...requirements];
       
       if (statusFilter && statusFilter !== 'all') {
@@ -149,7 +143,6 @@ export default function Requirements() {
     enabled: isAdmin
   });
   
-  // Analytics data for reports tab
   const analyticsData: RequirementAnalytics = {
     month: new Date().toLocaleString('default', { month: 'long' }),
     year: new Date().getFullYear(),
@@ -159,7 +152,6 @@ export default function Requirements() {
     requirements: requirements
   };
   
-  // Function to get category distribution
   function getCategoryDistribution() {
     const categories: Record<string, number> = {};
     
@@ -177,7 +169,6 @@ export default function Requirements() {
   
   const filteredRequirements = data || requirements;
   
-  // Function to display status with appropriate styling
   const getStatusBadge = (status: string) => {
     const statusColors: Record<string, string> = {
       'proposed': 'bg-blue-100 text-blue-800',
@@ -196,7 +187,6 @@ export default function Requirements() {
     );
   };
   
-  // Function to display priority with appropriate styling
   const getPriorityBadge = (priority: string | undefined) => {
     if (!priority) return null;
     
@@ -215,6 +205,11 @@ export default function Requirements() {
         {priority.charAt(0).toUpperCase() + priority.slice(1)}
       </span>
     );
+  };
+  
+  const handleViewDetails = (requirement: Requirement) => {
+    setSelectedRequirement(requirement);
+    setDetailsDialogOpen(true);
   };
   
   return (
@@ -358,16 +353,22 @@ export default function Requirements() {
                               <span>Created: {new Date(req.createdAt).toLocaleDateString()}</span>
                               <span>By: {req.isAnonymous ? 'Anonymous' : req.customerName}</span>
                             </div>
-                            {isAdmin && (
-                              <div className="mt-3 flex justify-end">
-                                <Button variant="outline" size="sm" className="mr-2">
-                                  View details
-                                </Button>
+                            <div className="mt-3 flex justify-end">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="mr-2"
+                                onClick={() => handleViewDetails(req)}
+                              >
+                                <Eye className="mr-1 h-4 w-4" />
+                                View details
+                              </Button>
+                              {isAdmin && (
                                 <Button size="sm">
                                   Edit
                                 </Button>
-                              </div>
-                            )}
+                              )}
+                            </div>
                           </CardContent>
                         </Card>
                       ))}
@@ -421,6 +422,12 @@ export default function Requirements() {
       </main>
       
       <Footer />
+      
+      <RequirementDetailsDialog
+        requirement={selectedRequirement}
+        open={detailsDialogOpen}
+        onOpenChange={setDetailsDialogOpen}
+      />
     </div>
   );
 }
