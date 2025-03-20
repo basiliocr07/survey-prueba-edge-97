@@ -118,14 +118,14 @@ export default function Requirements() {
   
   const isAdmin = isLoggedIn && userRole.toLowerCase() === 'admin';
   
-  // Simular carga de requerimientos con React Query
+  // Simulate loading requirements with React Query
   const { data, isLoading } = useQuery({
     queryKey: ['requirements', statusFilter, priorityFilter, searchTerm],
     queryFn: async () => {
-      // En producción, esta función haría una petición API real
+      // In production, this function would make a real API request
       console.log('Fetching requirements with filters:', { statusFilter, priorityFilter, searchTerm });
       
-      // Simular filtrado
+      // Simulate filtering
       let filtered = [...requirements];
       
       if (statusFilter) {
@@ -283,7 +283,7 @@ export default function Requirements() {
                         <SelectValue placeholder="Status" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All</SelectItem>
+                        <SelectItem value="all">All Statuses</SelectItem>
                         <SelectItem value="proposed">Proposed</SelectItem>
                         <SelectItem value="in-progress">In Progress</SelectItem>
                         <SelectItem value="implemented">Implemented</SelectItem>
@@ -295,7 +295,7 @@ export default function Requirements() {
                         <SelectValue placeholder="Priority" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All</SelectItem>
+                        <SelectItem value="all">All Priorities</SelectItem>
                         <SelectItem value="critical">Critical</SelectItem>
                         <SelectItem value="high">High</SelectItem>
                         <SelectItem value="medium">Medium</SelectItem>
