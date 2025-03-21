@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -155,8 +154,14 @@ namespace SurveyApp.WebMvc.Controllers
                         break;
                     case "suggestion":
                         // Convert the string status to SuggestionStatus enum
-                        var suggestionStatus = SuggestionStatusHelper.ParseStatus(status);
-                        await _suggestionService.UpdateSuggestionStatusAsync(id, suggestionStatus);
+                        if (Enum.TryParse<SuggestionStatus>(status, true, out var suggestionStatus))
+                        {
+                            await _suggestionService.UpdateSuggestionStatusAsync(id, suggestionStatus);
+                        }
+                        else
+                        {
+                            return BadRequest($"Estado de sugerencia no válido: {status}");
+                        }
                         break;
                     case "requirement":
                         // Create a new RequirementStatusUpdateDto to pass to the service
