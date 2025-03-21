@@ -239,3 +239,44 @@
     from { opacity: 0; }
     to { opacity: 1; }
 }
+
+/* Customer-specific styles */
+.customer-card {
+    @apply bg-white rounded-md border shadow p-6 mb-4;
+}
+
+.service-badge {
+    @apply inline-block px-2 py-1 text-xs bg-primary/10 text-primary rounded-full mr-1 mb-1;
+}
+
+.growth-metric-value {
+    @apply font-semibold text-lg;
+}
+
+.growth-metric-label {
+    @apply text-xs text-muted-foreground;
+}
+
+.metric-trend-up {
+    @apply text-green-500;
+}
+
+.metric-trend-down {
+    @apply text-red-500;
+}
+
+.service-chart-container {
+    @apply h-[300px] w-full;
+}
+
+.customer-detail-section {
+    @apply border-t pt-4 mt-4;
+}
+
+.customer-name {
+    @apply font-bold text-xl;
+}
+
+.customer-since {
+    @apply text-sm text-muted-foreground;
+}

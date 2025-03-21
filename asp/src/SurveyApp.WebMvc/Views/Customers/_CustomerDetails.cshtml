@@ -1,0 +1,62 @@
+
+@model CustomerViewModel
+
+<div class="mb-4">
+    <h3 class="text-xl font-bold">@Model.BrandName</h3>
+    <p class="text-muted-foreground">Customer since @Model.CreatedAt.ToShortDateString()</p>
+</div>
+
+<div class="grid md:grid-cols-2 gap-4 mb-4">
+    <div>
+        <h4 class="font-semibold mb-2">Contact Information</h4>
+        <p><strong>Email:</strong> @Model.ContactEmail</p>
+        <p><strong>Phone:</strong> @Model.ContactPhone</p>
+        @if (!string.IsNullOrEmpty(Model.ContactName))
+        {
+            <p><strong>Contact:</strong> @Model.ContactName</p>
+        }
+    </div>
+    <div>
+        <h4 class="font-semibold mb-2">Services</h4>
+        <div class="flex flex-wrap gap-1">
+            @foreach (var service in Model.AcquiredServices)
+            {
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                    @service
+                </span>
+            }
+        </div>
+    </div>
+</div>
+
+@if (Model.GrowthMetrics != null && Model.GrowthMetrics.Any())
+{
+    <div>
+        <h4 class="font-semibold mb-2">Growth Metrics</h4>
+        <div class="overflow-x-auto">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Period</th>
+                        <th>Revenue</th>
+                        <th>User Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var metric in Model.GrowthMetrics.OrderByDescending(m => m.Period))
+                    {
+                        <tr>
+                            <td>@metric.Period</td>
+                            <td>@metric.Revenue.ToString("C0")</td>
+                            <td>@metric.UserCount</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+else
+{
+    <p class="text-muted-foreground">No growth metrics available for this customer.</p>
+}

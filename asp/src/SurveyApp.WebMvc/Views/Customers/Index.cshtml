@@ -1,0 +1,190 @@
+
+@model CustomerGrowthViewModel
+@{
+    ViewData["Title"] = "Customer Growth Tracking";
+}
+
+<div class="min-h-screen flex flex-col bg-background">
+    <main class="flex-1 w-full px-4 sm:px-6 lg:px-8 pt-24 pb-20 flex justify-center">
+        <div class="w-[900px] max-w-[900px] h-full bg-white p-6">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold tracking-tight sm:text-4xl mb-2">Customer Growth Tracking</h1>
+                    <p class="text-muted-foreground">
+                        Track and manage your customers and their growth metrics
+                    </p>
+                </div>
+                
+                <a asp-controller="Customers" asp-action="Create" class="btn btn-primary">
+                    <i class="fas fa-plus mr-2"></i>Add Customer
+                </a>
+            </div>
+            
+            <div class="grid grid-cols-1 gap-8">
+                <!-- Service Usage Chart -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title flex items-center gap-2">
+                            <i class="fas fa-chart-bar h-5 w-5"></i>
+                            Service Usage Analytics
+                        </h2>
+                        <p class="card-description">
+                            Breakdown of services used by customers
+                        </p>
+                    </div>
+                    <div class="card-content">
+                        <div class="h-[300px] w-full" id="serviceUsageChart">
+                            <!-- Chart will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Customers Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title flex items-center gap-2">
+                            <i class="fas fa-users h-5 w-5"></i>
+                            Customer Directory
+                        </h2>
+                        <p class="card-description">
+                            List of all customers and their information
+                        </p>
+                    </div>
+                    <div class="card-content">
+                        <div class="overflow-x-auto">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Brand Name</th>
+                                        <th>Contact</th>
+                                        <th>Services</th>
+                                        <th>Since</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (Model.Customers != null && Model.Customers.Any())
+                                    {
+                                        @foreach (var customer in Model.Customers)
+                                        {
+                                            <tr>
+                                                <td class="font-medium">@customer.BrandName</td>
+                                                <td>
+                                                    <div>@customer.ContactEmail</div>
+                                                    <div class="text-muted-foreground text-sm">@customer.ContactPhone</div>
+                                                </td>
+                                                <td>
+                                                    <div class="flex flex-wrap gap-1">
+                                                        @foreach (var service in customer.AcquiredServices)
+                                                        {
+                                                            <span class="inline-block px-2 py-1 text-xs bg-primary/10 text-primary rounded-full">
+                                                                @service
+                                                            </span>
+                                                        }
+                                                    </div>
+                                                </td>
+                                                <td>@customer.CreatedAt.ToString("MMM yyyy")</td>
+                                                <td>
+                                                    <a asp-controller="Customers" asp-action="Edit" asp-route-id="@customer.Id" class="text-primary hover:text-primary/80 mr-3">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <a href="#" class="text-primary hover:text-primary/80 view-details" data-customer-id="@customer.Id">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="5" class="text-center py-8 text-muted-foreground">
+                                                No customers found. Add your first customer to get started.
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Customer Details Modal -->
+<div class="modal fade" id="customerDetailsModal" tabindex="-1" aria-labelledby="customerDetailsModal" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="customerDetailsModalTitle">Customer Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="customerDetailsContent">
+                <!-- Will be filled dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Prepare service usage data for chart
+            const serviceUsageData = @Html.Raw(Json.Serialize(Model.ServiceUsageData));
+            
+            // Create the chart
+            const ctx = document.getElementById('serviceUsageChart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: serviceUsageData.map(item => item.name),
+                    datasets: [{
+                        label: 'Number of Customers',
+                        data: serviceUsageData.map(item => item.count),
+                        backgroundColor: '#8884d8',
+                        borderColor: '#7c6bc4',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Setup modal event listeners
+            document.querySelectorAll('.view-details').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const customerId = this.getAttribute('data-customer-id');
+                    
+                    // Fetch customer details and display in modal
+                    fetch(`/Customers/Details/${customerId}`)
+                        .then(response => response.text())
+                        .then(html => {
+                            document.getElementById('customerDetailsContent').innerHTML = html;
+                            new bootstrap.Modal(document.getElementById('customerDetailsModal')).show();
+                        })
+                        .catch(error => {
+                            console.error('Error fetching customer details:', error);
+                        });
+                });
+            });
+        });
+    </script>
+}
