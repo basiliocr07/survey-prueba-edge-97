@@ -1,4 +1,6 @@
 
+using System;
+
 namespace SurveyApp.WebMvc.Models
 {
     public class UserProfileViewModel
