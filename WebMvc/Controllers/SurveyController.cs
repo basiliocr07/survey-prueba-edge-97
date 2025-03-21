@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using SurveyApp.Application.DTOs;
@@ -134,11 +135,11 @@ namespace SurveyApp.WebMvc.Controllers
                                 HighLabel = q.Settings.HighLabel
                             } : null
                         }).ToList() ?? new List<CreateQuestionDto>(),
-                        DeliveryConfig = viewModel.DeliveryConfig != null ? new DeliveryConfigDto
+                        DeliveryConfig = new DeliveryConfigDto
                         {
-                            Type = viewModel.DeliveryConfig.Type,
-                            EmailAddresses = viewModel.DeliveryConfig.EmailAddresses,
-                            Schedule = viewModel.DeliveryConfig.Schedule != null ? new ScheduleDto
+                            Type = viewModel.EnableEmailDelivery ? "Email" : "Manual",
+                            EmailAddresses = viewModel.DeliveryConfig?.EmailAddresses ?? new List<string>(),
+                            Schedule = viewModel.DeliveryConfig?.Schedule != null ? new ScheduleDto
                             {
                                 Frequency = viewModel.DeliveryConfig.Schedule.Frequency,
                                 DayOfMonth = viewModel.DeliveryConfig.Schedule.DayOfMonth,
@@ -146,13 +147,13 @@ namespace SurveyApp.WebMvc.Controllers
                                 Time = viewModel.DeliveryConfig.Schedule.Time,
                                 StartDate = viewModel.DeliveryConfig.Schedule.StartDate
                             } : null,
-                            Trigger = viewModel.DeliveryConfig.Trigger != null ? new TriggerDto
+                            Trigger = viewModel.DeliveryConfig?.Trigger != null ? new TriggerDto
                             {
                                 Type = viewModel.DeliveryConfig.Trigger.Type,
                                 DelayHours = viewModel.DeliveryConfig.Trigger.DelayHours,
                                 SendAutomatically = viewModel.DeliveryConfig.Trigger.SendAutomatically
                             } : null
-                        } : null
+                        }
                     };
 
                     _logger.LogInformation("Enviando DTO para crear encuesta: {@SurveyDto}", createSurveyDto);
