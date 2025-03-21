@@ -90,17 +90,74 @@ namespace SurveyApp.WebMvc.Controllers
 
         public IActionResult Create()
         {
-            return View();
+            // Inicializar un nuevo modelo para el formulario
+            var model = new SurveyCreateViewModel
+            {
+                Id = Guid.NewGuid(),
+                Questions = new List<QuestionViewModel>()
+            };
+            
+            // Log para ayudar a depurar
+            _logger.LogInformation("Accediendo a la vista de creación de encuestas");
+            
+            return View(model);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(CreateSurveyDto surveyDto)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(SurveyCreateViewModel viewModel)
         {
+            _logger.LogInformation("Procesando formulario de creación de encuesta: {Title}", viewModel?.Title);
+            
             if (ModelState.IsValid)
             {
                 try
                 {
-                    await _surveyService.CreateSurveyAsync(surveyDto);
+                    // Mapear el viewModel a DTO
+                    var createSurveyDto = new CreateSurveyDto
+                    {
+                        Title = viewModel.Title,
+                        Description = viewModel.Description,
+                        Questions = viewModel.Questions?.Select(q => new CreateQuestionDto
+                        {
+                            Title = q.Title,
+                            Description = q.Description,
+                            Type = q.Type,
+                            Required = q.Required,
+                            Options = q.Options,
+                            Settings = q.Settings != null ? new QuestionSettingsDto
+                            {
+                                MinValue = q.Settings.MinValue,
+                                MaxValue = q.Settings.MaxValue,
+                                LowLabel = q.Settings.LowLabel,
+                                MiddleLabel = q.Settings.MiddleLabel,
+                                HighLabel = q.Settings.HighLabel
+                            } : null
+                        }).ToList() ?? new List<CreateQuestionDto>(),
+                        DeliveryConfig = viewModel.DeliveryConfig != null ? new DeliveryConfigDto
+                        {
+                            Type = viewModel.DeliveryConfig.Type,
+                            EmailAddresses = viewModel.DeliveryConfig.EmailAddresses,
+                            Schedule = viewModel.DeliveryConfig.Schedule != null ? new ScheduleDto
+                            {
+                                Frequency = viewModel.DeliveryConfig.Schedule.Frequency,
+                                DayOfMonth = viewModel.DeliveryConfig.Schedule.DayOfMonth,
+                                DayOfWeek = viewModel.DeliveryConfig.Schedule.DayOfWeek,
+                                Time = viewModel.DeliveryConfig.Schedule.Time,
+                                StartDate = viewModel.DeliveryConfig.Schedule.StartDate
+                            } : null,
+                            Trigger = viewModel.DeliveryConfig.Trigger != null ? new TriggerDto
+                            {
+                                Type = viewModel.DeliveryConfig.Trigger.Type,
+                                DelayHours = viewModel.DeliveryConfig.Trigger.DelayHours,
+                                SendAutomatically = viewModel.DeliveryConfig.Trigger.SendAutomatically
+                            } : null
+                        } : null
+                    };
+
+                    _logger.LogInformation("Enviando DTO para crear encuesta: {@SurveyDto}", createSurveyDto);
+                    await _surveyService.CreateSurveyAsync(createSurveyDto);
+                    
                     TempData["SuccessMessage"] = "Encuesta creada correctamente.";
                     return RedirectToAction("Index");
                 }
@@ -108,10 +165,22 @@ namespace SurveyApp.WebMvc.Controllers
                 {
                     _logger.LogError(ex, "Error al crear la encuesta: {Message}", ex.Message);
                     TempData["ErrorMessage"] = "Error al crear la encuesta: " + ex.Message;
-                    return View(surveyDto);
+                    return View(viewModel);
                 }
             }
-            return View(surveyDto);
+            else
+            {
+                // Log de errores de validación
+                foreach (var modelState in ModelState.Values)
+                {
+                    foreach (var error in modelState.Errors)
+                    {
+                        _logger.LogWarning("Error de validación: {ErrorMessage}", error.ErrorMessage);
+                    }
+                }
+                
+                return View(viewModel);
+            }
         }
 
         public async Task<IActionResult> Edit(Guid id)

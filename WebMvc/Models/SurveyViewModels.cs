@@ -39,11 +39,11 @@ namespace SurveyApp.WebMvc.Models
     {
         public Guid Id { get; set; }
         
-        [Required(ErrorMessage = "Title is required")]
-        [StringLength(200, ErrorMessage = "Title cannot be longer than 200 characters")]
+        [Required(ErrorMessage = "El título es obligatorio")]
+        [StringLength(200, ErrorMessage = "El título no puede tener más de 200 caracteres")]
         public string Title { get; set; }
 
-        [StringLength(1000, ErrorMessage = "Description cannot be longer than 1000 characters")]
+        [StringLength(1000, ErrorMessage = "La descripción no puede tener más de 1000 caracteres")]
         public string Description { get; set; }
 
         public List<QuestionViewModel> Questions { get; set; } = new List<QuestionViewModel>();
@@ -61,7 +61,7 @@ namespace SurveyApp.WebMvc.Models
         
         public DateTime? ExpiryDate { get; set; }
         public bool AllowAnonymousResponses { get; set; } = true;
-        public string ThankYouMessage { get; set; } = "Thank you for completing our survey!";
+        public string ThankYouMessage { get; set; } = "¡Gracias por completar nuestra encuesta!";
     }
 
     public class DeliveryConfigViewModel
@@ -99,5 +99,34 @@ namespace SurveyApp.WebMvc.Models
         public bool SendAutomatically { get; set; } = false;
         
         public string EventName { get; set; }
+    }
+
+    public class QuestionViewModel
+    {
+        public Guid Id { get; set; } = Guid.NewGuid();
+        
+        [Required(ErrorMessage = "El título de la pregunta es obligatorio")]
+        public string Title { get; set; }
+        
+        public string Description { get; set; }
+        
+        [Required(ErrorMessage = "El tipo de pregunta es obligatorio")]
+        public string Type { get; set; } = "single-choice";
+        
+        public bool Required { get; set; } = true;
+        
+        public List<string> Options { get; set; } = new List<string> { "Opción 1", "Opción 2", "Opción 3" };
+        
+        public QuestionSettingsViewModel Settings { get; set; }
+    }
+    
+    public class QuestionSettingsViewModel
+    {
+        public int? MinValue { get; set; }
+        public int? MaxValue { get; set; }
+        
+        public string LowLabel { get; set; }
+        public string MiddleLabel { get; set; }
+        public string HighLabel { get; set; }
     }
 }
