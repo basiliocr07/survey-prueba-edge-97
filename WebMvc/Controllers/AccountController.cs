@@ -8,18 +8,18 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using SurveyApp.Application.Services;
+using SurveyApp.Application.Ports;
 using SurveyApp.WebMvc.Models;
 
 namespace SurveyApp.WebMvc.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly Application.Ports.IAuthenticationService _authService;
+        private readonly IAuthenticationService _authService;
         private readonly ILogger<AccountController> _logger;
 
         public AccountController(
-            Application.Ports.IAuthenticationService authService,
+            IAuthenticationService authService,
             ILogger<AccountController> logger)
         {
             _authService = authService;

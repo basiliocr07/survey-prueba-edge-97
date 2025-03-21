@@ -19,8 +19,8 @@ namespace SurveyApp.WebApi.DependencyInjection
             services.AddScoped<IKnowledgeBaseService, KnowledgeBaseService>();
             services.AddScoped<IAnalyticsService, AnalyticsService>();
             
-            // Fix ambiguity by specifying the interface fully
-            services.AddScoped<SurveyApp.Application.Ports.IAuthenticationService, SurveyApp.Application.Services.AuthenticationService>();
+            // Register the authentication service with the correct interface
+            services.AddScoped<Application.Ports.IAuthenticationService, Application.Services.AuthenticationService>();
             
             return services;
         }
