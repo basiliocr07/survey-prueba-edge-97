@@ -9,6 +9,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text;
+using System.Text.Json;
 
 namespace SurveyApp.WebMvc.Controllers
 {
@@ -118,7 +120,17 @@ namespace SurveyApp.WebMvc.Controllers
                 var model = new SurveyCreateViewModel
                 {
                     Id = Guid.NewGuid(),
-                    Questions = new List<QuestionViewModel>()
+                    Questions = new List<QuestionViewModel>
+                    {
+                        new QuestionViewModel
+                        {
+                            Id = Guid.NewGuid(),
+                            Type = "single-choice",
+                            Title = "¿Cómo calificaría nuestro servicio?",
+                            Required = true,
+                            Options = new List<string> { "Excelente", "Bueno", "Regular", "Malo" }
+                        }
+                    }
                 };
                 
                 // Log para ayudar a depurar
@@ -150,94 +162,129 @@ namespace SurveyApp.WebMvc.Controllers
         {
             _logger.LogInformation("Procesando formulario de creación de encuesta: {Title}", viewModel?.Title);
             
-            if (ModelState.IsValid)
+            // Capture form data for debugging
+            var formDataSummary = new StringBuilder();
+            foreach (var key in Request.Form.Keys)
             {
-                try
+                formDataSummary.AppendLine($"{key}: {Request.Form[key]}");
+            }
+            _logger.LogInformation("Form data: {FormData}", formDataSummary.ToString());
+            
+            try
+            {
+                if (!ModelState.IsValid)
                 {
-                    // Mapear el viewModel a DTO
-                    _logger.LogInformation("Mapeando ViewModel a DTO con {QuestionCount} preguntas", 
-                        viewModel.Questions?.Count ?? 0);
-                    
-                    var createSurveyDto = new CreateSurveyDto
+                    // Log model state errors
+                    var errorViewModel = new ErrorViewModel
                     {
-                        Title = viewModel.Title,
-                        Description = viewModel.Description,
-                        Questions = viewModel.Questions?.Select(q => new CreateQuestionDto
-                        {
-                            Title = q.Title,
-                            Description = q.Description,
-                            Type = q.Type,
-                            Required = q.Required,
-                            Options = q.Options,
-                            Settings = q.Settings != null ? new QuestionSettingsDto
-                            {
-                                MinValue = q.Settings.MinValue,
-                                MaxValue = q.Settings.MaxValue,
-                                LowLabel = q.Settings.LowLabel,
-                                MiddleLabel = q.Settings.MiddleLabel,
-                                HighLabel = q.Settings.HighLabel
-                            } : null
-                        }).ToList() ?? new List<CreateQuestionDto>(),
-                        DeliveryConfig = new DeliveryConfigDto
-                        {
-                            Type = viewModel.EnableEmailDelivery ? "Email" : "Manual",
-                            EmailAddresses = viewModel.DeliveryConfig?.EmailAddresses ?? new List<string>(),
-                            Schedule = viewModel.DeliveryConfig?.Schedule != null ? new ScheduleDto
-                            {
-                                Frequency = viewModel.DeliveryConfig.Schedule.Frequency,
-                                DayOfMonth = viewModel.DeliveryConfig.Schedule.DayOfMonth,
-                                DayOfWeek = viewModel.DeliveryConfig.Schedule.DayOfWeek,
-                                Time = viewModel.DeliveryConfig.Schedule.Time,
-                                StartDate = viewModel.DeliveryConfig.Schedule.StartDate
-                            } : null,
-                            Trigger = viewModel.DeliveryConfig?.Trigger != null ? new TriggerDto
-                            {
-                                Type = viewModel.DeliveryConfig.Trigger.Type,
-                                DelayHours = viewModel.DeliveryConfig.Trigger.DelayHours,
-                                SendAutomatically = viewModel.DeliveryConfig.Trigger.SendAutomatically
-                            } : null
-                        }
+                        Message = "El formulario contiene errores de validación",
+                        ControllerName = "Survey",
+                        ActionName = "Create",
+                        HttpMethod = Request.Method,
+                        ErrorTimestamp = DateTime.UtcNow,
+                        FormDataSummary = formDataSummary.ToString()
                     };
-
-                    _logger.LogInformation("Enviando DTO para crear encuesta: {@SurveyDto}", createSurveyDto);
-                    await _surveyService.CreateSurveyAsync(createSurveyDto);
                     
-                    TempData["SuccessMessage"] = "Encuesta creada correctamente.";
-                    return RedirectToAction("Index");
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error al crear la encuesta: {Message}, StackTrace: {StackTrace}", 
-                        ex.Message, ex.StackTrace);
-                    
-                    var errorViewModel = ErrorViewModel.CreateDetailedError(ex, Activity.Current?.Id?.ToString(),
-                        "Error al crear la encuesta");
-                    errorViewModel.ControllerName = "Survey";
-                    errorViewModel.ActionName = "Create";
-                    errorViewModel.HttpMethod = Request.Method;
-                    errorViewModel.QueryString = Request.QueryString.ToString();
-                    errorViewModel.IsAuthenticated = User.Identity.IsAuthenticated;
-                    errorViewModel.Username = User.Identity.Name ?? string.Empty;
-                    errorViewModel.UserRole = User.IsInRole("Admin") ? "Admin" : "Client";
+                    foreach (var modelState in ModelState)
+                    {
+                        foreach (var error in modelState.Value.Errors)
+                        {
+                            errorViewModel.AddValidationError(modelState.Key, error.ErrorMessage);
+                            _logger.LogWarning("Error de validación: {Field} - {ErrorMessage}", 
+                                modelState.Key, error.ErrorMessage);
+                        }
+                    }
                     
                     return View("Error", errorViewModel);
                 }
-            }
-            else
-            {
-                // Log de errores de validación
-                foreach (var modelState in ModelState.Values)
+                
+                // Check if Questions collection is null or empty
+                if (viewModel.Questions == null || !viewModel.Questions.Any())
                 {
-                    foreach (var error in modelState.Errors)
+                    var errorViewModel = new ErrorViewModel
                     {
-                        _logger.LogWarning("Error de validación: {ErrorMessage}", error.ErrorMessage);
-                    }
+                        Message = "La encuesta debe contener al menos una pregunta",
+                        ControllerName = "Survey",
+                        ActionName = "Create",
+                        HttpMethod = Request.Method,
+                        ErrorTimestamp = DateTime.UtcNow,
+                        FormDataSummary = formDataSummary.ToString()
+                    };
+                    
+                    errorViewModel.AddValidationError("Questions", "La encuesta debe contener al menos una pregunta");
+                    return View("Error", errorViewModel);
                 }
                 
-                _logger.LogWarning("Modelo inválido al crear encuesta. Estado del ModelState: {@ModelState}", 
-                    ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+                // Mapear el viewModel a DTO
+                _logger.LogInformation("Mapeando ViewModel a DTO con {QuestionCount} preguntas", 
+                    viewModel.Questions?.Count ?? 0);
                 
-                return View(viewModel);
+                var createSurveyDto = new CreateSurveyDto
+                {
+                    Title = viewModel.Title,
+                    Description = viewModel.Description,
+                    Questions = viewModel.Questions?.Select(q => new CreateQuestionDto
+                    {
+                        Title = q.Title,
+                        Description = q.Description,
+                        Type = q.Type,
+                        Required = q.Required,
+                        Options = q.Options,
+                        Settings = q.Settings != null ? new QuestionSettingsDto
+                        {
+                            MinValue = q.Settings.MinValue,
+                            MaxValue = q.Settings.MaxValue,
+                            LowLabel = q.Settings.LowLabel,
+                            MiddleLabel = q.Settings.MiddleLabel,
+                            HighLabel = q.Settings.HighLabel
+                        } : null
+                    }).ToList() ?? new List<CreateQuestionDto>(),
+                    DeliveryConfig = new DeliveryConfigDto
+                    {
+                        Type = viewModel.EnableEmailDelivery ? "Email" : "Manual",
+                        EmailAddresses = viewModel.DeliveryConfig?.EmailAddresses ?? new List<string>(),
+                        Schedule = viewModel.DeliveryConfig?.Schedule != null ? new ScheduleDto
+                        {
+                            Frequency = viewModel.DeliveryConfig.Schedule.Frequency,
+                            DayOfMonth = viewModel.DeliveryConfig.Schedule.DayOfMonth,
+                            DayOfWeek = viewModel.DeliveryConfig.Schedule.DayOfWeek,
+                            Time = viewModel.DeliveryConfig.Schedule.Time,
+                            StartDate = viewModel.DeliveryConfig.Schedule.StartDate
+                        } : null,
+                        Trigger = viewModel.DeliveryConfig?.Trigger != null ? new TriggerDto
+                        {
+                            Type = viewModel.DeliveryConfig.Trigger.Type,
+                            DelayHours = viewModel.DeliveryConfig.Trigger.DelayHours,
+                            SendAutomatically = viewModel.DeliveryConfig.Trigger.SendAutomatically
+                        } : null
+                    }
+                };
+
+                _logger.LogInformation("Enviando DTO para crear encuesta: {@SurveyDto}", 
+                    JsonSerializer.Serialize(createSurveyDto));
+                
+                await _surveyService.CreateSurveyAsync(createSurveyDto);
+                
+                TempData["SuccessMessage"] = "Encuesta creada correctamente.";
+                return RedirectToAction("Index");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al crear la encuesta: {Message}, StackTrace: {StackTrace}", 
+                    ex.Message, ex.StackTrace);
+                
+                var errorViewModel = ErrorViewModel.CreateDetailedError(ex, Activity.Current?.Id?.ToString(),
+                    "Error al crear la encuesta");
+                errorViewModel.ControllerName = "Survey";
+                errorViewModel.ActionName = "Create";
+                errorViewModel.HttpMethod = Request.Method;
+                errorViewModel.QueryString = Request.QueryString.ToString();
+                errorViewModel.IsAuthenticated = User.Identity.IsAuthenticated;
+                errorViewModel.Username = User.Identity.Name ?? string.Empty;
+                errorViewModel.UserRole = User.IsInRole("Admin") ? "Admin" : "Client";
+                errorViewModel.FormDataSummary = formDataSummary.ToString();
+                
+                return View("Error", errorViewModel);
             }
         }
 

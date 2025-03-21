@@ -15,6 +15,11 @@
             {
                 <p class="mt-2 text-red-600 font-medium">Error de base de datos: Puede que la base de datos no esté inicializada correctamente.</p>
             }
+            
+            @if (!string.IsNullOrEmpty(Model.ErrorType))
+            {
+                <p class="mt-2 text-gray-700"><strong>Tipo de error:</strong> @Model.ErrorType</p>
+            }
         </div>
         
         @if (Model.ShowRequestId)
@@ -36,6 +41,35 @@
                 {
                     <p><strong>Query String:</strong> @Model.QueryString</p>
                 }
+            </div>
+        }
+        
+        @if (Model.ValidationErrors != null && Model.ValidationErrors.Count > 0)
+        {
+            <div class="mt-4 bg-yellow-50 p-4 rounded border border-yellow-200">
+                <h3 class="font-medium text-yellow-800 mb-2">Errores de validación:</h3>
+                <ul class="list-disc pl-5 text-sm">
+                    @foreach (var error in Model.ValidationErrors)
+                    {
+                        <li class="mb-2">
+                            <strong>@error.Key:</strong>
+                            <ul class="list-disc pl-5 mt-1">
+                                @foreach (var message in error.Value)
+                                {
+                                    <li>@message</li>
+                                }
+                            </ul>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+        
+        @if (!string.IsNullOrEmpty(Model.FormDataSummary))
+        {
+            <div class="mt-4 bg-blue-50 p-4 rounded border border-blue-200">
+                <h3 class="font-medium text-blue-800 mb-2">Resumen de datos del formulario:</h3>
+                <pre class="text-xs text-gray-600 whitespace-pre-wrap overflow-x-auto">@Model.FormDataSummary</pre>
             </div>
         }
 
@@ -80,6 +114,12 @@
             </a>
             
             <button 
+                onclick="history.back()" 
+                class="ml-2 inline-flex items-center px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">
+                Volver atrás
+            </button>
+            
+            <button 
                 onclick="location.reload()" 
                 class="ml-2 inline-flex items-center px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">
                 Reintentar
@@ -116,6 +156,8 @@
             <li>Compruebe la cadena de conexión en el archivo appsettings.json.</li>
             <li>Si es un error de primera ejecución, intente reiniciar la aplicación.</li>
             <li>Revise los logs para obtener más detalles sobre el error.</li>
+            <li>Asegúrese de que todos los campos requeridos del formulario están completos.</li>
+            <li>Verifique que los datos del formulario tienen el formato correcto.</li>
         </ul>
     </div>
 </div>

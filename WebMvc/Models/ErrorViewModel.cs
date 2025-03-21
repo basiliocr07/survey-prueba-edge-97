@@ -34,6 +34,15 @@ namespace SurveyApp.WebMvc.Models
         public string HttpMethod { get; set; }
         public string QueryString { get; set; }
         
+        // Form data summary - NEW
+        public string FormDataSummary { get; set; }
+        
+        // Error type classification - NEW
+        public string ErrorType { get; set; }
+        
+        // Model validation errors - NEW
+        public Dictionary<string, List<string>> ValidationErrors { get; set; } = new Dictionary<string, List<string>>();
+        
         public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
         
         // Helper method to create a comprehensive error model
@@ -46,8 +55,20 @@ namespace SurveyApp.WebMvc.Models
                 Exception = ex,
                 StackTrace = ex.StackTrace,
                 ErrorTimestamp = DateTime.UtcNow,
-                ErrorSource = ex.Source
+                ErrorSource = ex.Source,
+                ErrorType = ex.GetType().Name
             };
+        }
+        
+        // New helper method to add validation errors
+        public void AddValidationError(string key, string errorMessage)
+        {
+            if (!ValidationErrors.ContainsKey(key))
+            {
+                ValidationErrors[key] = new List<string>();
+            }
+            
+            ValidationErrors[key].Add(errorMessage);
         }
     }
 }
