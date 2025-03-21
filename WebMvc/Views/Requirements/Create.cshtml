@@ -22,13 +22,13 @@
 
                 <div class="mb-4">
                     <label asp-for="Title" class="block text-gray-700 font-medium mb-2">Título</label>
-                    <input asp-for="Title" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <input asp-for="Title" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required />
                     <span asp-validation-for="Title" class="text-red-500 text-sm"></span>
                 </div>
 
                 <div class="mb-4">
                     <label asp-for="Description" class="block text-gray-700 font-medium mb-2">Descripción</label>
-                    <textarea asp-for="Description" rows="5" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                    <textarea asp-for="Description" rows="5" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required></textarea>
                     <span asp-validation-for="Description" class="text-red-500 text-sm"></span>
                 </div>
 
@@ -36,23 +36,77 @@
                     <div>
                         <label asp-for="Priority" class="block text-gray-700 font-medium mb-2">Prioridad</label>
                         <select asp-for="Priority" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="Alta">Alta</option>
-                            <option value="Media" selected>Media</option>
-                            <option value="Baja">Baja</option>
+                            <option value="Critical">Crítica</option>
+                            <option value="High">Alta</option>
+                            <option value="Medium" selected>Media</option>
+                            <option value="Low">Baja</option>
                         </select>
                         <span asp-validation-for="Priority" class="text-red-500 text-sm"></span>
                     </div>
 
                     <div>
+                        <label asp-for="Category" class="block text-gray-700 font-medium mb-2">Categoría</label>
+                        <select asp-for="Category" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="Feature" selected>Funcionalidad</option>
+                            <option value="Bug">Error</option>
+                            <option value="UI/UX">Interfaz de Usuario</option>
+                            <option value="Performance">Rendimiento</option>
+                            <option value="Security">Seguridad</option>
+                            <option value="Other">Otro</option>
+                        </select>
+                        <span asp-validation-for="Category" class="text-red-500 text-sm"></span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
                         <label asp-for="ProjectArea" class="block text-gray-700 font-medium mb-2">Área del Proyecto</label>
                         <select asp-for="ProjectArea" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                             <option value="Frontend">Frontend</option>
                             <option value="Backend">Backend</option>
-                            <option value="Base de datos">Base de datos</option>
+                            <option value="Database">Base de datos</option>
                             <option value="UI/UX">UI/UX</option>
+                            <option value="Mobile">Móvil</option>
+                            <option value="API">API</option>
                             <option value="General" selected>General</option>
                         </select>
                         <span asp-validation-for="ProjectArea" class="text-red-500 text-sm"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="TargetDate" class="block text-gray-700 font-medium mb-2">Fecha Objetivo</label>
+                        <input type="date" asp-for="TargetDate" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        <span asp-validation-for="TargetDate" class="text-red-500 text-sm"></span>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="AcceptanceCriteria" class="block text-gray-700 font-medium mb-2">Criterios de Aceptación</label>
+                    <textarea asp-for="AcceptanceCriteria" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                    <span asp-validation-for="AcceptanceCriteria" class="text-red-500 text-sm"></span>
+                    <p class="text-sm text-gray-500 mt-1">Describa cómo se verificará que este requerimiento ha sido completado correctamente.</p>
+                </div>
+
+                <div class="border-t pt-4 mt-6">
+                    <h3 class="font-medium text-lg mb-4">Información de Contacto</h3>
+                    
+                    <div class="flex items-center mb-4">
+                        <input type="checkbox" asp-for="IsAnonymous" id="isAnonymous" class="mr-2" />
+                        <label for="isAnonymous" class="text-gray-700">Enviar de forma anónima</label>
+                    </div>
+                    
+                    <div id="contactInfo" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label asp-for="CustomerName" class="block text-gray-700 font-medium mb-2">Nombre</label>
+                            <input asp-for="CustomerName" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                            <span asp-validation-for="CustomerName" class="text-red-500 text-sm"></span>
+                        </div>
+
+                        <div>
+                            <label asp-for="CustomerEmail" class="block text-gray-700 font-medium mb-2">Correo Electrónico</label>
+                            <input asp-for="CustomerEmail" type="email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                            <span asp-validation-for="CustomerEmail" class="text-red-500 text-sm"></span>
+                        </div>
                     </div>
                 </div>
 
@@ -68,4 +122,21 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const anonymousCheckbox = document.getElementById('isAnonymous');
+            const contactInfoDiv = document.getElementById('contactInfo');
+            
+            function toggleContactInfo() {
+                if (anonymousCheckbox.checked) {
+                    contactInfoDiv.classList.add('opacity-50', 'pointer-events-none');
+                } else {
+                    contactInfoDiv.classList.remove('opacity-50', 'pointer-events-none');
+                }
+            }
+            
+            anonymousCheckbox.addEventListener('change', toggleContactInfo);
+            toggleContactInfo();
+        });
+    </script>
 }
