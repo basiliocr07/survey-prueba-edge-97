@@ -23,6 +23,31 @@ namespace SurveyApp.WebMvc.Models
         public string ErrorSource { get; set; }
         public DateTime ErrorTimestamp { get; set; } = DateTime.UtcNow;
         
+        // Stack trace information
+        public string StackTrace { get; set; }
+        
+        // Route information
+        public string ControllerName { get; set; }
+        public string ActionName { get; set; }
+        
+        // HTTP context information
+        public string HttpMethod { get; set; }
+        public string QueryString { get; set; }
+        
         public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
+        
+        // Helper method to create a comprehensive error model
+        public static ErrorViewModel CreateDetailedError(Exception ex, string requestId = null, string message = null)
+        {
+            return new ErrorViewModel
+            {
+                RequestId = requestId,
+                Message = message ?? ex.Message,
+                Exception = ex,
+                StackTrace = ex.StackTrace,
+                ErrorTimestamp = DateTime.UtcNow,
+                ErrorSource = ex.Source
+            };
+        }
     }
 }

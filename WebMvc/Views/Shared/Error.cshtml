@@ -26,13 +26,34 @@
             </div>
         }
 
+        @if (!string.IsNullOrEmpty(Model.ControllerName) && !string.IsNullOrEmpty(Model.ActionName))
+        {
+            <div class="mt-2 text-sm text-gray-600">
+                <p><strong>Controlador:</strong> @Model.ControllerName</p>
+                <p><strong>Acción:</strong> @Model.ActionName</p>
+                <p><strong>Método HTTP:</strong> @Model.HttpMethod</p>
+                @if (!string.IsNullOrEmpty(Model.QueryString))
+                {
+                    <p><strong>Query String:</strong> @Model.QueryString</p>
+                }
+            </div>
+        }
+
         @if (Model.Exception != null)
         {
             <div class="mt-4 bg-gray-50 p-4 rounded border border-gray-200">
                 <h3 class="font-medium text-gray-700 mb-2">Detalles del error:</h3>
                 <div class="overflow-x-auto">
-                    <pre class="text-xs text-gray-600 whitespace-pre-wrap">@Model.Exception.ToString()</pre>
+                    <pre class="text-xs text-gray-600 whitespace-pre-wrap">@Model.Exception.Message</pre>
                 </div>
+                
+                @if (!string.IsNullOrEmpty(Model.StackTrace))
+                {
+                    <h4 class="font-medium text-gray-700 mt-2 mb-1">Stack Trace:</h4>
+                    <div class="overflow-x-auto max-h-64 overflow-y-auto">
+                        <pre class="text-xs text-gray-600 whitespace-pre-wrap">@Model.StackTrace</pre>
+                    </div>
+                }
                 
                 @if (Model.Exception.InnerException != null)
                 {
@@ -94,6 +115,7 @@
             <li>Asegúrese de que las migraciones se han ejecutado correctamente.</li>
             <li>Compruebe la cadena de conexión en el archivo appsettings.json.</li>
             <li>Si es un error de primera ejecución, intente reiniciar la aplicación.</li>
+            <li>Revise los logs para obtener más detalles sobre el error.</li>
         </ul>
     </div>
 </div>

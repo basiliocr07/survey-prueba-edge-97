@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using SurveyApp.Application.DTOs;
@@ -9,6 +8,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace SurveyApp.WebMvc.Controllers
 {
@@ -45,8 +45,19 @@ namespace SurveyApp.WebMvc.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving surveys: {Message}", ex.Message);
-                TempData["ErrorMessage"] = "Error retrieving surveys: " + ex.Message;
-                return View(new List<SurveyListItemViewModel>());
+                
+                // Create detailed error model
+                var errorViewModel = ErrorViewModel.CreateDetailedError(ex, Activity.Current?.Id?.ToString(), 
+                    "Error al recuperar las encuestas");
+                errorViewModel.ControllerName = "Survey";
+                errorViewModel.ActionName = "Index";
+                errorViewModel.HttpMethod = Request.Method;
+                errorViewModel.QueryString = Request.QueryString.ToString();
+                errorViewModel.IsAuthenticated = User.Identity.IsAuthenticated;
+                errorViewModel.Username = User.Identity.Name ?? string.Empty;
+                errorViewModel.UserRole = User.IsInRole("Admin") ? "Admin" : "Client";
+                
+                return View("Error", errorViewModel);
             }
         }
 
@@ -84,24 +95,53 @@ namespace SurveyApp.WebMvc.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener detalles de la encuesta: {Message}", ex.Message);
-                TempData["ErrorMessage"] = "Error al obtener detalles de la encuesta: " + ex.Message;
-                return RedirectToAction("Index");
+                
+                var errorViewModel = ErrorViewModel.CreateDetailedError(ex, Activity.Current?.Id?.ToString(),
+                    "Error al obtener detalles de la encuesta");
+                errorViewModel.ControllerName = "Survey";
+                errorViewModel.ActionName = "Details";
+                errorViewModel.HttpMethod = Request.Method;
+                errorViewModel.QueryString = Request.QueryString.ToString();
+                errorViewModel.IsAuthenticated = User.Identity.IsAuthenticated;
+                errorViewModel.Username = User.Identity.Name ?? string.Empty;
+                errorViewModel.UserRole = User.IsInRole("Admin") ? "Admin" : "Client";
+                
+                return View("Error", errorViewModel);
             }
         }
 
         public IActionResult Create()
         {
-            // Inicializar un nuevo modelo para el formulario
-            var model = new SurveyCreateViewModel
+            try
             {
-                Id = Guid.NewGuid(),
-                Questions = new List<QuestionViewModel>()
-            };
-            
-            // Log para ayudar a depurar
-            _logger.LogInformation("Accediendo a la vista de creación de encuestas");
-            
-            return View(model);
+                // Inicializar un nuevo modelo para el formulario
+                var model = new SurveyCreateViewModel
+                {
+                    Id = Guid.NewGuid(),
+                    Questions = new List<QuestionViewModel>()
+                };
+                
+                // Log para ayudar a depurar
+                _logger.LogInformation("Accediendo a la vista de creación de encuestas");
+                
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al preparar la vista de creación: {Message}", ex.Message);
+                
+                var errorViewModel = ErrorViewModel.CreateDetailedError(ex, Activity.Current?.Id?.ToString(),
+                    "Error al preparar la vista de creación de encuestas");
+                errorViewModel.ControllerName = "Survey";
+                errorViewModel.ActionName = "Create";
+                errorViewModel.HttpMethod = Request.Method;
+                errorViewModel.QueryString = Request.QueryString.ToString();
+                errorViewModel.IsAuthenticated = User.Identity.IsAuthenticated;
+                errorViewModel.Username = User.Identity.Name ?? string.Empty;
+                errorViewModel.UserRole = User.IsInRole("Admin") ? "Admin" : "Client";
+                
+                return View("Error", errorViewModel);
+            }
         }
 
         [HttpPost]
@@ -115,6 +155,9 @@ namespace SurveyApp.WebMvc.Controllers
                 try
                 {
                     // Mapear el viewModel a DTO
+                    _logger.LogInformation("Mapeando ViewModel a DTO con {QuestionCount} preguntas", 
+                        viewModel.Questions?.Count ?? 0);
+                    
                     var createSurveyDto = new CreateSurveyDto
                     {
                         Title = viewModel.Title,
@@ -164,9 +207,20 @@ namespace SurveyApp.WebMvc.Controllers
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error al crear la encuesta: {Message}", ex.Message);
-                    TempData["ErrorMessage"] = "Error al crear la encuesta: " + ex.Message;
-                    return View(viewModel);
+                    _logger.LogError(ex, "Error al crear la encuesta: {Message}, StackTrace: {StackTrace}", 
+                        ex.Message, ex.StackTrace);
+                    
+                    var errorViewModel = ErrorViewModel.CreateDetailedError(ex, Activity.Current?.Id?.ToString(),
+                        "Error al crear la encuesta");
+                    errorViewModel.ControllerName = "Survey";
+                    errorViewModel.ActionName = "Create";
+                    errorViewModel.HttpMethod = Request.Method;
+                    errorViewModel.QueryString = Request.QueryString.ToString();
+                    errorViewModel.IsAuthenticated = User.Identity.IsAuthenticated;
+                    errorViewModel.Username = User.Identity.Name ?? string.Empty;
+                    errorViewModel.UserRole = User.IsInRole("Admin") ? "Admin" : "Client";
+                    
+                    return View("Error", errorViewModel);
                 }
             }
             else
@@ -179,6 +233,9 @@ namespace SurveyApp.WebMvc.Controllers
                         _logger.LogWarning("Error de validación: {ErrorMessage}", error.ErrorMessage);
                     }
                 }
+                
+                _logger.LogWarning("Modelo inválido al crear encuesta. Estado del ModelState: {@ModelState}", 
+                    ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
                 
                 return View(viewModel);
             }
@@ -209,7 +266,17 @@ namespace SurveyApp.WebMvc.Controllers
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error al actualizar la encuesta: {Message}", ex.Message);
-                    TempData["ErrorMessage"] = "Error al actualizar la encuesta: " + ex.Message;
+                    
+                    var errorViewModel = ErrorViewModel.CreateDetailedError(ex, Activity.Current?.Id?.ToString(),
+                        "Error al actualizar la encuesta");
+                    errorViewModel.ControllerName = "Survey";
+                    errorViewModel.ActionName = "Edit";
+                    errorViewModel.HttpMethod = Request.Method;
+                    errorViewModel.QueryString = Request.QueryString.ToString();
+                    errorViewModel.IsAuthenticated = User.Identity.IsAuthenticated;
+                    errorViewModel.Username = User.Identity.Name ?? string.Empty;
+                    errorViewModel.UserRole = User.IsInRole("Admin") ? "Admin" : "Client";
+                    
                     return View(surveyDto);
                 }
             }
@@ -239,8 +306,18 @@ namespace SurveyApp.WebMvc.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al eliminar la encuesta: {Message}", ex.Message);
-                TempData["ErrorMessage"] = "Error al eliminar la encuesta: " + ex.Message;
-                return RedirectToAction("Index");
+                
+                var errorViewModel = ErrorViewModel.CreateDetailedError(ex, Activity.Current?.Id?.ToString(),
+                    "Error al eliminar la encuesta");
+                errorViewModel.ControllerName = "Survey";
+                errorViewModel.ActionName = "Delete";
+                errorViewModel.HttpMethod = Request.Method;
+                errorViewModel.QueryString = Request.QueryString.ToString();
+                errorViewModel.IsAuthenticated = User.Identity.IsAuthenticated;
+                errorViewModel.Username = User.Identity.Name ?? string.Empty;
+                errorViewModel.UserRole = User.IsInRole("Admin") ? "Admin" : "Client";
+                
+                return View("Error", errorViewModel);
             }
         }
 
@@ -274,8 +351,18 @@ namespace SurveyApp.WebMvc.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al enviar la encuesta por email: {Message}", ex.Message);
-                TempData["ErrorMessage"] = "Ocurrió un error al enviar la encuesta por email: " + ex.Message;
-                return RedirectToAction("Details", new { id });
+                
+                var errorViewModel = ErrorViewModel.CreateDetailedError(ex, Activity.Current?.Id?.ToString(),
+                    "Error al enviar la encuesta por email");
+                errorViewModel.ControllerName = "Survey";
+                errorViewModel.ActionName = "SendSurveyEmail";
+                errorViewModel.HttpMethod = Request.Method;
+                errorViewModel.QueryString = Request.QueryString.ToString();
+                errorViewModel.IsAuthenticated = User.Identity.IsAuthenticated;
+                errorViewModel.Username = User.Identity.Name ?? string.Empty;
+                errorViewModel.UserRole = User.IsInRole("Admin") ? "Admin" : "Client";
+                
+                return View("Error", errorViewModel);
             }
         }
 
@@ -292,8 +379,18 @@ namespace SurveyApp.WebMvc.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al enviar la encuesta a todos los destinatarios: {Message}", ex.Message);
-                TempData["ErrorMessage"] = "Ocurrió un error al enviar la encuesta a los destinatarios: " + ex.Message;
-                return RedirectToAction("Details", new { id });
+                
+                var errorViewModel = ErrorViewModel.CreateDetailedError(ex, Activity.Current?.Id?.ToString(),
+                    "Error al enviar la encuesta a todos los destinatarios");
+                errorViewModel.ControllerName = "Survey";
+                errorViewModel.ActionName = "SendSurveyToAllRecipients";
+                errorViewModel.HttpMethod = Request.Method;
+                errorViewModel.QueryString = Request.QueryString.ToString();
+                errorViewModel.IsAuthenticated = User.Identity.IsAuthenticated;
+                errorViewModel.Username = User.Identity.Name ?? string.Empty;
+                errorViewModel.UserRole = User.IsInRole("Admin") ? "Admin" : "Client";
+                
+                return View("Error", errorViewModel);
             }
         }
 
@@ -334,8 +431,18 @@ namespace SurveyApp.WebMvc.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al configurar el envío automático: {Message}", ex.Message);
-                TempData["ErrorMessage"] = "Ocurrió un error al configurar el envío automático: " + ex.Message;
-                return RedirectToAction("Details", new { id });
+                
+                var errorViewModel = ErrorViewModel.CreateDetailedError(ex, Activity.Current?.Id?.ToString(),
+                    "Error al configurar el envío automático");
+                errorViewModel.ControllerName = "Survey";
+                errorViewModel.ActionName = "ConfigureAutomaticDelivery";
+                errorViewModel.HttpMethod = Request.Method;
+                errorViewModel.QueryString = Request.QueryString.ToString();
+                errorViewModel.IsAuthenticated = User.Identity.IsAuthenticated;
+                errorViewModel.Username = User.Identity.Name ?? string.Empty;
+                errorViewModel.UserRole = User.IsInRole("Admin") ? "Admin" : "Client";
+                
+                return View("Error", errorViewModel);
             }
         }
 
@@ -374,8 +481,18 @@ namespace SurveyApp.WebMvc.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error al enviar el email de prueba a {email}: {ex.Message}");
-                TempData["ErrorMessage"] = $"Error al enviar el email de prueba: {ex.Message}";
-                return RedirectToAction("Index");
+                
+                var errorViewModel = ErrorViewModel.CreateDetailedError(ex, Activity.Current?.Id?.ToString(),
+                    "Error al enviar el email de prueba");
+                errorViewModel.ControllerName = "Survey";
+                errorViewModel.ActionName = "SendTestEmail";
+                errorViewModel.HttpMethod = Request.Method;
+                errorViewModel.QueryString = Request.QueryString.ToString();
+                errorViewModel.IsAuthenticated = User.Identity.IsAuthenticated;
+                errorViewModel.Username = User.Identity.Name ?? string.Empty;
+                errorViewModel.UserRole = User.IsInRole("Admin") ? "Admin" : "Client";
+                
+                return View("Error", errorViewModel);
             }
         }
 
