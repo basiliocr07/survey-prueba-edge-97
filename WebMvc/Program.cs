@@ -8,10 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SurveyApp.Infrastructure.Data;
-using SurveyApp.Infrastructure.Repositories;
-using SurveyApp.Infrastructure.Services;
-using SurveyApp.Application.Services;
-using SurveyApp.Application.Ports;
+using SurveyApp.WebApi.DependencyInjection;
 using System;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -46,25 +43,9 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole("Admin", "Client"));
 });
 
-// Register Application Services
-builder.Services.AddScoped<IKnowledgeBaseService, KnowledgeBaseService>();
-builder.Services.AddScoped<ISuggestionService, SuggestionService>();
-builder.Services.AddScoped<ISurveyService, SurveyService>();
-builder.Services.AddScoped<ICustomerService, CustomerService>();
-builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
-builder.Services.AddScoped<IRequirementService, RequirementService>();
-builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
-
-// Register Infrastructure Services
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IKnowledgeBaseRepository, KnowledgeBaseRepository>();
-builder.Services.AddScoped<ISuggestionRepository, SuggestionRepository>();
-builder.Services.AddScoped<ISurveyRepository, SurveyRepository>();
-builder.Services.AddScoped<ISurveyResponseRepository, SurveyResponseRepository>();
-builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
-builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
-builder.Services.AddScoped<IRequirementRepository, RequirementRepository>();
-builder.Services.AddScoped<IEmailService, EmailService>();
+// Register services using extension methods
+builder.Services.AddApplicationServices();
+builder.Services.AddInfrastructureServices();
 
 var app = builder.Build();
 
