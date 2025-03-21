@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
@@ -83,6 +84,9 @@ namespace SurveyApp.Infrastructure.Data
                 entity.Property(e => e.Title).IsRequired().HasMaxLength(500);
                 entity.Property(e => e.Description).HasMaxLength(1000);
                 entity.Property(e => e.Type).HasConversion<string>();
+
+                // Configure QuestionSettings as an owned entity
+                entity.OwnsOne(q => q.Settings);
 
                 // Configure complex properties
                 entity.Property(e => e.Options).HasConversion(
