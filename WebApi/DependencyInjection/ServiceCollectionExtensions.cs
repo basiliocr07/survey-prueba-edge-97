@@ -19,7 +19,7 @@ namespace SurveyApp.WebApi.DependencyInjection
             services.AddScoped<IKnowledgeBaseService, KnowledgeBaseService>();
             services.AddScoped<IAnalyticsService, AnalyticsService>();
             
-            // Register authentication service using full type names
+            // Register authentication service
             services.AddScoped<IAuthenticationService, AuthenticationService>();
             
             return services;
