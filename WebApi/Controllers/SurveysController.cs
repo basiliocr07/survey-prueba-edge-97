@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -82,7 +83,7 @@ namespace SurveyApp.WebApi.Controllers
 
         // PUT: api/surveys/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateSurvey(Guid id, CreateSurveyDto updateSurveyDto)
+        public async Task<IActionResult> UpdateSurvey(Guid id, UpdateSurveyDto updateSurveyDto)
         {
             if (!ModelState.IsValid)
             {
