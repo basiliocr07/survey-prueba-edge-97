@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -184,8 +185,14 @@ namespace SurveyApp.Application.Services
                 case SuggestionStatus.New:
                     completionPercentage = 0;
                     break;
+                case SuggestionStatus.InReview:
+                    completionPercentage = 25;
+                    break;
                 case SuggestionStatus.Reviewed:
                     completionPercentage = 50;
+                    break;
+                case SuggestionStatus.Approved:
+                    completionPercentage = 75;
                     break;
                 case SuggestionStatus.Implemented:
                 case SuggestionStatus.Rejected:

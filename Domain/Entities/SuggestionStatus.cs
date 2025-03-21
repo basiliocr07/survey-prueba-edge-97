@@ -5,6 +5,7 @@ namespace SurveyApp.Domain.Entities
     {
         New,
         InReview,
+        Reviewed,
         Approved,
         Implemented,
         Rejected

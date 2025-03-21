@@ -1,9 +1,11 @@
 
+using SurveyApp.Domain.Entities;
+
 namespace SurveyApp.Application.DTOs
 {
     public class UpdateSuggestionStatusDto
     {
-        public string Status { get; set; }
+        public SuggestionStatus Status { get; set; }
         public string Response { get; set; }
     }
 }

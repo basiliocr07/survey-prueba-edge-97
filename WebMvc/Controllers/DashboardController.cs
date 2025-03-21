@@ -71,7 +71,7 @@ namespace SurveyApp.WebMvc.Controllers
                     {
                         Id = latestSurvey.Id,
                         Title = latestSurvey.Title,
-                        Description = latestSurvey.Description,
+                        Description = latestSurvey.Description ?? "No description available", // Ensure Description is always set
                         CreatedAt = latestSurvey.CreatedAt,
                         Responses = latestSurvey.Responses,
                         Status = latestSurvey.Status
