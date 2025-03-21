@@ -73,7 +73,6 @@ namespace SurveyApp.WebMvc.Controllers
                             Icon = "fa-plus-circle"
                         }
                     },
-                    // Añadir información del usuario
                     IsAuthenticated = User.Identity.IsAuthenticated,
                     Username = User.Identity.IsAuthenticated ? User.Identity.Name : string.Empty,
                     UserRole = User.Identity.IsAuthenticated ? User.FindFirst(ClaimTypes.Role)?.Value : string.Empty
