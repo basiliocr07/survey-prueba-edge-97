@@ -50,7 +50,7 @@ namespace SurveyApp.Application.Services
                     {
                         Frequency = surveyDto.DeliveryConfig.Schedule.Frequency,
                         DayOfMonth = surveyDto.DeliveryConfig.Schedule.DayOfMonth ?? 1,
-                        DayOfWeek = surveyDto.DeliveryConfig.Schedule.DayOfWeek,
+                        DayOfWeek = surveyDto.DeliveyConfig.Schedule.DayOfWeek,
                         Time = surveyDto.DeliveryConfig.Schedule.Time,
                         StartDate = surveyDto.DeliveryConfig.Schedule.StartDate
                     };

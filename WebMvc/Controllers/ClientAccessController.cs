@@ -50,7 +50,6 @@ namespace SurveyApp.WebMvc.Controllers
             }
             catch (Exception ex)
             {
-                // Log the error
                 return RedirectToAction("Error", "Home", new { message = ex.Message });
             }
         }
