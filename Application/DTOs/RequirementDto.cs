@@ -1,5 +1,6 @@
 
 using System;
+using System.Collections.Generic;
 
 namespace SurveyApp.Application.DTOs
 {
@@ -57,5 +58,18 @@ namespace SurveyApp.Application.DTOs
         public string Status { get; set; }
         public string Response { get; set; }
         public int? CompletionPercentage { get; set; }
+    }
+
+    public class RequirementReportsViewModel
+    {
+        public int TotalRequirements { get; set; }
+        public int ProposedRequirements { get; set; }
+        public int InProgressRequirements { get; set; }
+        public int ImplementedRequirements { get; set; }
+        public int RejectedRequirements { get; set; }
+        public Dictionary<string, int> CategoryDistribution { get; set; } = new Dictionary<string, int>();
+        public Dictionary<string, int> PriorityDistribution { get; set; } = new Dictionary<string, int>();
+        public Dictionary<string, int> ProjectAreaDistribution { get; set; } = new Dictionary<string, int>();
+        public Dictionary<string, int> MonthlyRequirements { get; set; } = new Dictionary<string, int>();
     }
 }

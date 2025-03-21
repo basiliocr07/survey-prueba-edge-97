@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +7,6 @@ using Microsoft.Extensions.Logging;
 using SurveyApp.Application.DTOs;
 using SurveyApp.Application.Ports;
 using SurveyApp.Domain.Entities;
-using SurveyApp.WebMvc.Models;
 
 namespace SurveyApp.Application.Services
 {
