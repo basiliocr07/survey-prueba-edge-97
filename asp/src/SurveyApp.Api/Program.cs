@@ -41,11 +41,13 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<ISurveyRepository, SurveyRepository>();
 builder.Services.AddScoped<ISurveyResponseRepository, SurveyResponseRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<ISuggestionRepository, SuggestionRepository>();
-builder.Services.AddScoped<IKnowledgeBaseRepository, KnowledgeBaseRepository>();
-builder.Services.AddScoped<IRequirementRepository, RequirementRepository>();
-builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
-builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
+
+// Repositorios que aún no se utilizan
+// builder.Services.AddScoped<ISuggestionRepository, SuggestionRepository>();
+// builder.Services.AddScoped<IKnowledgeBaseRepository, KnowledgeBaseRepository>();
+// builder.Services.AddScoped<IRequirementRepository, RequirementRepository>();
+// builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+// builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
 
 // Register services
 builder.Services.AddScoped<ISurveyService, SurveyService>();

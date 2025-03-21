@@ -53,6 +53,8 @@ namespace SurveyApp.Api.Controllers
             }
         }
 
+        // El método CreateSurvey está duplicado en SurveysController.cs
+        /*
         [HttpPost]
         [Authorize]
         public async Task<ActionResult<Survey>> CreateSurvey([FromBody] CreateSurveyDto surveyDto)
@@ -72,7 +74,10 @@ namespace SurveyApp.Api.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
+        */
 
+        // El método UpdateSurvey está duplicado en SurveysController.cs
+        /*
         [HttpPut("{id}")]
         [Authorize]
         public async Task<IActionResult> UpdateSurvey(Guid id, [FromBody] UpdateSurveyDto surveyDto)
@@ -93,7 +98,10 @@ namespace SurveyApp.Api.Controllers
                 return NotFound($"Survey with ID {id} not found");
             }
         }
+        */
 
+        // El método DeleteSurvey está duplicado en SurveysController.cs
+        /*
         [HttpDelete("{id}")]
         [Authorize]
         public async Task<IActionResult> DeleteSurvey(Guid id)
@@ -109,6 +117,7 @@ namespace SurveyApp.Api.Controllers
                 return NotFound($"Survey with ID {id} not found");
             }
         }
+        */
 
         [HttpPost("{surveyId}/questions")]
         [Authorize]

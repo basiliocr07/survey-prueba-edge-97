@@ -119,5 +119,24 @@ namespace SurveyApp.Application.Services
                 }).ToList()
             };
         }
+
+        // Métodos para exportar respuestas que aún no se utilizan
+        /*
+        public async Task<byte[]> ExportResponsesAsCsvAsync(Guid surveyId)
+        {
+            var responses = await GetResponsesBySurveyIdAsync(surveyId);
+            // Aquí iría la lógica para convertir respuestas a CSV
+            // Pendiente de implementar cuando se necesite esta funcionalidad
+            return new byte[0];
+        }
+
+        public async Task<byte[]> ExportResponsesAsExcelAsync(Guid surveyId)
+        {
+            var responses = await GetResponsesBySurveyIdAsync(surveyId);
+            // Aquí iría la lógica para convertir respuestas a Excel
+            // Pendiente de implementar cuando se necesite esta funcionalidad
+            return new byte[0];
+        }
+        */
     }
 }

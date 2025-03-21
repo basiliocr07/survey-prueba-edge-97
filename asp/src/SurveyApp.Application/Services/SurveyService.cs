@@ -145,5 +145,35 @@ namespace SurveyApp.Application.Services
                 throw;
             }
         }
+
+        // Método para analytics que aún no se utiliza
+        /*
+        public async Task<SurveyAnalyticsDto> GetSurveyAnalyticsAsync(Guid id)
+        {
+            try
+            {
+                var survey = await _surveyRepository.GetByIdAsync(id);
+                if (survey == null)
+                {
+                    throw new Exception($"Survey with ID {id} not found");
+                }
+
+                // Aquí iría la lógica para obtener y calcular las métricas de analytics
+                // Pendiente de implementar cuando se utilice
+
+                return new SurveyAnalyticsDto 
+                {
+                    SurveyId = id,
+                    ResponseCount = survey.ResponseCount,
+                    // Otras métricas
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error occurred while getting analytics for survey with ID {id}");
+                throw;
+            }
+        }
+        */
     }
 }
