@@ -20,6 +20,11 @@
             {
                 <p class="mt-2 text-gray-700"><strong>Tipo de error:</strong> @Model.ErrorType</p>
             }
+            
+            @if (Model.StatusCode.HasValue)
+            {
+                <p class="mt-2 text-gray-700"><strong>Código de estado:</strong> @Model.StatusCode</p>
+            }
         </div>
         
         @if (Model.ShowRequestId)
@@ -70,6 +75,14 @@
             <div class="mt-4 bg-blue-50 p-4 rounded border border-blue-200">
                 <h3 class="font-medium text-blue-800 mb-2">Resumen de datos del formulario:</h3>
                 <pre class="text-xs text-gray-600 whitespace-pre-wrap overflow-x-auto">@Model.FormDataSummary</pre>
+            </div>
+        }
+        
+        @if (!string.IsNullOrEmpty(Model.RequestBody))
+        {
+            <div class="mt-4 bg-blue-50 p-4 rounded border border-blue-200">
+                <h3 class="font-medium text-blue-800 mb-2">Contenido de la solicitud:</h3>
+                <pre class="text-xs text-gray-600 whitespace-pre-wrap overflow-x-auto">@Model.RequestBody</pre>
             </div>
         }
 
@@ -158,6 +171,8 @@
             <li>Revise los logs para obtener más detalles sobre el error.</li>
             <li>Asegúrese de que todos los campos requeridos del formulario están completos.</li>
             <li>Verifique que los datos del formulario tienen el formato correcto.</li>
+            <li>En caso de problemas de conexión, verifique su red o VPN.</li>
         </ul>
     </div>
 </div>
+

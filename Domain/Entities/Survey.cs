@@ -12,16 +12,16 @@ namespace SurveyApp.Domain.Entities
         public DateTime CreatedAt { get; set; }
         public int Responses { get; set; }
         public int CompletionRate { get; set; }
-        public string Status { get; set; } = "Active";
-        public string Category { get; set; } = "General";
-        public List<Question> Questions { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public string Category { get; set; } = "General"; // Default value for Category
+        public List<Question> Questions { get; set; } = new List<Question>();
         public DeliveryConfig? DeliveryConfig { get; set; }
         
-        // Nuevas propiedades para coincidiendo con SurveyCreateViewModel
+        // New properties to match SurveyCreateViewModel
         public DateTime? ExpiryDate { get; set; }
-        public bool AllowAnonymousResponses { get; set; } = true;
+        public bool AllowAnonymousResponses { get; set; }
         public bool LimitOneResponsePerUser { get; set; }
-        public string ThankYouMessage { get; set; } = "¡Gracias por completar nuestra encuesta!";
+        public string ThankYouMessage { get; set; } = string.Empty;
 
         public Survey()
         {
@@ -50,13 +50,10 @@ namespace SurveyApp.Domain.Entities
         {
             DeliveryConfig = config;
         }
-        
+
         public void UpdateCategory(string category)
         {
-            if (!string.IsNullOrWhiteSpace(category))
-            {
-                Category = category;
-            }
+            Category = !string.IsNullOrWhiteSpace(category) ? category : "General";
         }
     }
 }

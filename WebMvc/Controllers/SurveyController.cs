@@ -148,52 +148,8 @@ namespace SurveyApp.WebMvc.Controllers
                 errorViewModel.ActionName = "Create";
                 errorViewModel.HttpMethod = Request.Method;
                 errorViewModel.QueryString = Request.QueryString.ToString();
-                errorViewModel.IsAuthenticated = User.Identity.IsAuthenticated;
-                errorViewModel.Username = User.Identity.Name ?? string.Empty;
-                errorViewModel.UserRole = User.IsInRole("Admin") ? "Admin" : "Client";
-                
-                return View("Error", errorViewModel);
-            }
-        }
-
-        public IActionResult CreateSurvey()
-        {
-            try
-            {
-                // Inicializar un nuevo modelo para el formulario
-                var model = new SurveyCreateViewModel
-                {
-                    Id = Guid.NewGuid(),
-                    Questions = new List<QuestionViewModel>
-                    {
-                        new QuestionViewModel
-                        {
-                            Id = Guid.NewGuid(),
-                            Type = "single-choice",
-                            Title = "¿Cómo calificaría nuestro servicio?",
-                            Required = true,
-                            Options = new List<string> { "Excelente", "Bueno", "Regular", "Malo" }
-                        }
-                    }
-                };
-                
-                // Log para ayudar a depurar
-                _logger.LogInformation("Accediendo a la vista nueva de creación de encuestas (CreateSurvey)");
-                
-                return View(model);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al preparar la vista de creación (CreateSurvey): {Message}", ex.Message);
-                
-                var errorViewModel = ErrorViewModel.CreateDetailedError(ex, Activity.Current?.Id?.ToString(),
-                    "Error al preparar la vista de creación de encuestas");
-                errorViewModel.ControllerName = "Survey";
-                errorViewModel.ActionName = "CreateSurvey";
-                errorViewModel.HttpMethod = Request.Method;
-                errorViewModel.QueryString = Request.QueryString.ToString();
-                errorViewModel.IsAuthenticated = User.Identity.IsAuthenticated;
-                errorViewModel.Username = User.Identity.Name ?? string.Empty;
+                errorViewModel.IsAuthenticated = User.Identity?.IsAuthenticated ?? false;
+                errorViewModel.Username = User.Identity?.Name ?? string.Empty;
                 errorViewModel.UserRole = User.IsInRole("Admin") ? "Admin" : "Client";
                 
                 return View("Error", errorViewModel);
@@ -202,9 +158,9 @@ namespace SurveyApp.WebMvc.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateSurvey(SurveyCreateViewModel viewModel)
+        public async Task<IActionResult> Create(SurveyCreateViewModel viewModel)
         {
-            _logger.LogInformation("Procesando formulario de creación de encuesta (CreateSurvey): {Title}", viewModel?.Title);
+            _logger.LogInformation("Procesando formulario de creación de encuesta: {Title}", viewModel?.Title);
             
             // Capture form data for debugging
             var formDataSummary = new StringBuilder();
@@ -212,30 +168,61 @@ namespace SurveyApp.WebMvc.Controllers
             {
                 formDataSummary.AppendLine($"{key}: {Request.Form[key]}");
             }
+            
             _logger.LogInformation("Form data: {FormData}", formDataSummary.ToString());
+            
+            // Debug log for incoming view model
+            _logger.LogInformation("ViewModel received: {@ViewModel}", 
+                JsonSerializer.Serialize(viewModel, new JsonSerializerOptions { WriteIndented = true }));
             
             try
             {
                 if (!ModelState.IsValid)
                 {
-                    // Log model state errors
+                    _logger.LogWarning("ModelState is invalid. Errors follow:");
+                    
+                    var errorViewModel = new ErrorViewModel
+                    {
+                        Message = "El formulario contiene errores de validación",
+                        ControllerName = "Survey",
+                        ActionName = "Create",
+                        HttpMethod = Request.Method,
+                        ErrorTimestamp = DateTime.UtcNow,
+                        FormDataSummary = formDataSummary.ToString(),
+                        ErrorType = "ValidationError"
+                    };
+                    
                     foreach (var modelState in ModelState)
                     {
                         foreach (var error in modelState.Value.Errors)
                         {
-                            _logger.LogWarning("Error de validación (CreateSurvey): {Field} - {ErrorMessage}", 
+                            errorViewModel.AddValidationError(modelState.Key, error.ErrorMessage);
+                            _logger.LogWarning("Error de validación: {Field} - {ErrorMessage}", 
                                 modelState.Key, error.ErrorMessage);
                         }
                     }
                     
-                    return View(viewModel);
+                    return View("Error", errorViewModel);
                 }
                 
                 // Check if Questions collection is null or empty
                 if (viewModel.Questions == null || !viewModel.Questions.Any())
                 {
-                    ModelState.AddModelError("Questions", "La encuesta debe contener al menos una pregunta");
-                    return View(viewModel);
+                    _logger.LogWarning("Questions collection is null or empty");
+                    
+                    var errorViewModel = new ErrorViewModel
+                    {
+                        Message = "La encuesta debe contener al menos una pregunta",
+                        ControllerName = "Survey",
+                        ActionName = "Create",
+                        HttpMethod = Request.Method,
+                        ErrorTimestamp = DateTime.UtcNow,
+                        FormDataSummary = formDataSummary.ToString(),
+                        ErrorType = "ValidationError"
+                    };
+                    
+                    errorViewModel.AddValidationError("Questions", "La encuesta debe contener al menos una pregunta");
+                    return View("Error", errorViewModel);
                 }
                 
                 // Mapear el viewModel a DTO
@@ -283,38 +270,44 @@ namespace SurveyApp.WebMvc.Controllers
                     }
                 };
 
-                _logger.LogInformation("Enviando DTO para crear encuesta: {@SurveyDto}", 
-                    JsonSerializer.Serialize(createSurveyDto));
+                _logger.LogInformation("DTO preparado para crear encuesta: {@SurveyDto}", 
+                    JsonSerializer.Serialize(createSurveyDto, new JsonSerializerOptions { WriteIndented = true }));
                 
-                await _surveyService.CreateSurveyAsync(createSurveyDto);
+                try {
+                    var result = await _surveyService.CreateSurveyAsync(createSurveyDto);
+                    _logger.LogInformation("Encuesta creada exitosamente con ID: {SurveyId}", result.Id);
+                }
+                catch (Exception ex) {
+                    _logger.LogError(ex, "Error específico al llamar a CreateSurveyAsync: {Message}", ex.Message);
+                    throw; // Re-throw to be caught by the outer catch
+                }
                 
                 TempData["SuccessMessage"] = "Encuesta creada correctamente.";
                 return RedirectToAction("Index");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al crear la encuesta (CreateSurvey): {Message}, StackTrace: {StackTrace}", 
+                _logger.LogError(ex, "Error al crear la encuesta: {Message}, StackTrace: {StackTrace}", 
                     ex.Message, ex.StackTrace);
+                
+                // Get inner exception details if available
+                var innerExMsg = ex.InnerException != null ? 
+                    $"Inner exception: {ex.InnerException.Message}" : "No inner exception";
+                _logger.LogError(innerExMsg);
                 
                 var errorViewModel = ErrorViewModel.CreateDetailedError(ex, Activity.Current?.Id?.ToString(),
                     "Error al crear la encuesta");
                 errorViewModel.ControllerName = "Survey";
-                errorViewModel.ActionName = "CreateSurvey";
+                errorViewModel.ActionName = "Create";
                 errorViewModel.HttpMethod = Request.Method;
                 errorViewModel.QueryString = Request.QueryString.ToString();
-                errorViewModel.IsAuthenticated = User.Identity.IsAuthenticated;
-                errorViewModel.Username = User.Identity.Name ?? string.Empty;
+                errorViewModel.IsAuthenticated = User.Identity?.IsAuthenticated ?? false;
+                errorViewModel.Username = User.Identity?.Name ?? string.Empty;
                 errorViewModel.UserRole = User.IsInRole("Admin") ? "Admin" : "Client";
                 errorViewModel.FormDataSummary = formDataSummary.ToString();
-                
-                // Añadir los errores de modelo al ViewModel de error para mostrarlos
-                foreach (var modelState in ModelState)
-                {
-                    foreach (var error in modelState.Value.Errors)
-                    {
-                        errorViewModel.AddValidationError(modelState.Key, error.ErrorMessage);
-                    }
-                }
+                errorViewModel.ErrorType = ex.GetType().Name;
+                errorViewModel.IsDatabaseError = ex.Message.Contains("database") || 
+                                               (ex.InnerException?.Message?.Contains("database") ?? false);
                 
                 return View("Error", errorViewModel);
             }
