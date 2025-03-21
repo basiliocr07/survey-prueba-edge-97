@@ -59,7 +59,6 @@ namespace SurveyApp.WebMvc.Controllers
         [HttpGet("thank-you")]
         public IActionResult ThankYou()
         {
-            // Using nullish coalescing operator
             ViewBag.SurveyTitle = TempData["SurveyTitle"] ?? "Encuesta";
             ViewBag.ThankYouMessage = TempData["ThankYouMessage"] ?? "Gracias por completar nuestra encuesta.";
             

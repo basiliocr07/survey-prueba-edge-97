@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -28,19 +29,6 @@ namespace SurveyApp.WebMvc.Models
         public string Status { get; set; } = "Active";
         
         public string Category { get; set; }
-        
-        public bool IsFeatured { get; set; }
-        
-        public DateTime? LastUpdated { get; set; }
-        
-        public DateTime? LastResponseDate { get; set; }
-        
-        public string CreatedBy { get; set; }
-        
-        // User authentication and role properties
-        public bool IsAuthenticated { get; set; }
-        public string UserRole { get; set; } = string.Empty;
-        public string Username { get; set; } = string.Empty;
     }
 
     public class SurveyListViewModel
@@ -76,7 +64,6 @@ namespace SurveyApp.WebMvc.Models
         
         public ValidationRulesViewModel ValidationRules { get; set; } = new ValidationRulesViewModel();
         
-        // Settings para tipos de preguntas específicas como Rating y NPS
         public QuestionSettingsViewModel Settings { get; set; } = new QuestionSettingsViewModel();
     }
 
@@ -118,8 +105,6 @@ namespace SurveyApp.WebMvc.Models
         
         public string Category { get; set; }
         
-        public bool IsFeatured { get; set; }
-        
         // Email specific properties
         public bool EnableEmailDelivery { get; set; }
         public string SenderName { get; set; }
@@ -129,13 +114,7 @@ namespace SurveyApp.WebMvc.Models
         
         public DateTime? ExpiryDate { get; set; }
         public bool AllowAnonymousResponses { get; set; } = true;
-        public bool LimitOneResponsePerUser { get; set; }
         public string ThankYouMessage { get; set; } = "Thank you for completing our survey!";
-        
-        // Authentication properties
-        public bool IsAuthenticated { get; set; }
-        public string UserRole { get; set; } = string.Empty;
-        public string Username { get; set; } = string.Empty;
     }
 
     public class DeliveryConfigViewModel
