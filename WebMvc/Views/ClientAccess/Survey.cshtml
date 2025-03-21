@@ -5,7 +5,7 @@
     Layout = "_ClientLayout";
 }
 
-<div class="container mx-auto px-4 py-8">
+<div class="container mx-auto px-4 py-8 animate-fade-in">
     <div class="max-w-3xl mx-auto">
         <div class="bg-white shadow-md rounded-lg p-6 mb-6">
             <h1 class="text-2xl font-bold mb-2">@Model.Title</h1>
@@ -46,7 +46,7 @@
                                 @question.Title
                                 @if (question.Required)
                                 {
-                                    <span class="text-red-500">*</span>
+                                    <span class="text-red-500 ml-1">*</span>
                                 }
                             </h3>
 
@@ -88,17 +88,13 @@
                             else if (question.Type == "rating")
                             {
                                 <div class="mt-3">
-                                    <div class="flex space-x-2">
-                                        @for (int rating = 1; rating <= 5; rating++)
-                                        {
-                                            <div class="text-center">
-                                                <input type="radio" id="q@(question.Id)_@rating" name="Answers[@question.Id]" value="@rating" @(question.Required ? "required" : "") class="hidden peer" />
-                                                <label for="q@(question.Id)_@rating" class="inline-block w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center cursor-pointer peer-checked:bg-blue-500 peer-checked:text-white peer-checked:border-blue-500 hover:bg-gray-100">
-                                                    @rating
-                                                </label>
-                                            </div>
-                                        }
-                                    </div>
+                                    <partial name="_StarRatingPartial" model="(name: $"Answers[{question.Id}]", value: "", required: question.Required)" />
+                                </div>
+                            }
+                            else if (question.Type == "nps")
+                            {
+                                <div class="mt-3">
+                                    <partial name="_NPSRatingPartial" model="(name: $"Answers[{question.Id}]", value: "", required: question.Required)" />
                                 </div>
                             }
                         </div>
@@ -106,7 +102,7 @@
                 </div>
 
                 <div class="mt-8">
-                    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded">
+                    <button type="submit" class="bg-primary hover:bg-primary/90 text-white font-bold py-2 px-6 rounded">
                         Enviar Respuestas
                     </button>
                 </div>
