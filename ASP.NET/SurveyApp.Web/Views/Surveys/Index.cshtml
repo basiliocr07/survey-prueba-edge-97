@@ -50,9 +50,14 @@
                                         <div class="flex-grow">
                                             <div class="flex items-center justify-between mb-1">
                                                 <h3 class="font-medium">@survey.Title</h3>
-                                                <span class="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full">
-                                                    @survey.Responses responses
-                                                </span>
+                                                <div class="flex items-center gap-2">
+                                                    <span class="bg-status-@survey.Status.ToLower() px-2 py-0.5 rounded-full text-xs">
+                                                        @survey.Status
+                                                    </span>
+                                                    <span class="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full">
+                                                        @survey.Responses responses
+                                                    </span>
+                                                </div>
                                             </div>
                                             <p class="text-xs text-muted-foreground line-clamp-1 mb-1">
                                                 @survey.Description

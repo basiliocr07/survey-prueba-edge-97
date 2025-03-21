@@ -21,39 +21,7 @@ namespace SurveyApp.Web.Controllers
         // GET: Surveys
         public async Task<IActionResult> Index()
         {
-            // This would normally come from the database via the service
-            // For now, we're creating sample data that matches the React version
-            var surveys = new List<SurveyViewModel>
-            {
-                new SurveyViewModel
-                {
-                    Id = "1",
-                    Title = "Customer Satisfaction Survey",
-                    Description = "Gather feedback about our customer service quality",
-                    CreatedAt = DateTime.Parse("2023-10-15T12:00:00Z"),
-                    Responses = 42,
-                    CompletionRate = 78
-                },
-                new SurveyViewModel
-                {
-                    Id = "2",
-                    Title = "Product Feedback Survey",
-                    Description = "Help us improve our product offerings",
-                    CreatedAt = DateTime.Parse("2023-09-22T15:30:00Z"),
-                    Responses = 103,
-                    CompletionRate = 89
-                },
-                new SurveyViewModel
-                {
-                    Id = "3",
-                    Title = "Website Usability Survey",
-                    Description = "Evaluate the user experience of our new website",
-                    CreatedAt = DateTime.Parse("2023-11-05T09:15:00Z"),
-                    Responses = 28,
-                    CompletionRate = 65
-                }
-            };
-
+            var surveys = await GetSampleSurveys();
             ViewBag.FilterActive = "all"; // Default filter
             
             return View(surveys);
@@ -61,45 +29,19 @@ namespace SurveyApp.Web.Controllers
 
         // GET: Surveys/Filter
         [HttpGet]
-        public ActionResult Filter(string filter)
+        public async Task<ActionResult> Filter(string filter)
         {
-            // This would filter based on the active filter in a real application
-            // For now, we're just returning the view with the filter value
-            ViewBag.FilterActive = filter ?? "all";
-
-            // Same sample data as in Index
-            var surveys = new List<SurveyViewModel>
+            var allSurveys = await GetSampleSurveys();
+            var filteredSurveys = filter switch
             {
-                new SurveyViewModel
-                {
-                    Id = "1",
-                    Title = "Customer Satisfaction Survey",
-                    Description = "Gather feedback about our customer service quality",
-                    CreatedAt = DateTime.Parse("2023-10-15T12:00:00Z"),
-                    Responses = 42,
-                    CompletionRate = 78
-                },
-                new SurveyViewModel
-                {
-                    Id = "2",
-                    Title = "Product Feedback Survey",
-                    Description = "Help us improve our product offerings",
-                    CreatedAt = DateTime.Parse("2023-09-22T15:30:00Z"),
-                    Responses = 103,
-                    CompletionRate = 89
-                },
-                new SurveyViewModel
-                {
-                    Id = "3",
-                    Title = "Website Usability Survey",
-                    Description = "Evaluate the user experience of our new website",
-                    CreatedAt = DateTime.Parse("2023-11-05T09:15:00Z"),
-                    Responses = 28,
-                    CompletionRate = 65
-                }
+                "active" => allSurveys.Where(s => s.Status == "active").ToList(),
+                "draft" => allSurveys.Where(s => s.Status == "draft").ToList(),
+                "archived" => allSurveys.Where(s => s.Status == "archived").ToList(),
+                _ => allSurveys
             };
 
-            return View("Index", surveys);
+            ViewBag.FilterActive = filter ?? "all";
+            return View("Index", filteredSurveys);
         }
 
         // GET: Surveys/Create
@@ -121,6 +63,56 @@ namespace SurveyApp.Web.Controllers
         {
             // In a real application, this would delete the survey by ID
             return RedirectToAction(nameof(Index));
+        }
+
+        // Helper method to get sample surveys while we're developing
+        private async Task<List<SurveyViewModel>> GetSampleSurveys()
+        {
+            // This would normally come from the database via the service
+            // For now, we're creating sample data that matches the React version
+            return new List<SurveyViewModel>
+            {
+                new SurveyViewModel
+                {
+                    Id = "1",
+                    Title = "Customer Satisfaction Survey",
+                    Description = "Gather feedback about our customer service quality",
+                    CreatedAt = DateTime.Parse("2023-10-15T12:00:00Z"),
+                    Responses = 42,
+                    CompletionRate = 78,
+                    Status = "active"
+                },
+                new SurveyViewModel
+                {
+                    Id = "2",
+                    Title = "Product Feedback Survey",
+                    Description = "Help us improve our product offerings",
+                    CreatedAt = DateTime.Parse("2023-09-22T15:30:00Z"),
+                    Responses = 103,
+                    CompletionRate = 89,
+                    Status = "active"
+                },
+                new SurveyViewModel
+                {
+                    Id = "3",
+                    Title = "Website Usability Survey",
+                    Description = "Evaluate the user experience of our new website",
+                    CreatedAt = DateTime.Parse("2023-11-05T09:15:00Z"),
+                    Responses = 28,
+                    CompletionRate = 65,
+                    Status = "draft"
+                },
+                new SurveyViewModel
+                {
+                    Id = "4",
+                    Title = "Employee Satisfaction Survey",
+                    Description = "Annual survey for employee feedback",
+                    CreatedAt = DateTime.Parse("2023-08-10T14:20:00Z"),
+                    Responses = 56,
+                    CompletionRate = 92,
+                    Status = "archived"
+                }
+            };
         }
     }
 }

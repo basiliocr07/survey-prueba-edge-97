@@ -75,3 +75,19 @@
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
+
+/* Status badge colors */
+.bg-status-active {
+    background-color: rgba(132, 204, 22, 0.1);
+    color: rgb(132, 204, 22);
+}
+
+.bg-status-draft {
+    background-color: rgba(234, 179, 8, 0.1);
+    color: rgb(234, 179, 8);
+}
+
+.bg-status-archived {
+    background-color: rgba(100, 116, 139, 0.1);
+    color: rgb(100, 116, 139);
+}

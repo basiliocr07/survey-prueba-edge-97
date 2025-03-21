@@ -10,6 +10,9 @@ namespace SurveyApp.Domain.Models
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
+        public string Status { get; set; } = "active"; // Can be "active", "draft", or "archived"
+        public int ResponseCount { get; set; }
+        public int CompletionRate { get; set; }
         public List<Question> Questions { get; set; } = new List<Question>();
     }
 

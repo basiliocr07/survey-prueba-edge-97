@@ -12,5 +12,6 @@ namespace SurveyApp.Web.Models
         public DateTime CreatedAt { get; set; }
         public int Responses { get; set; }
         public int CompletionRate { get; set; }
+        public string Status { get; set; } = "active"; // Can be "active", "draft", or "archived"
     }
 }
