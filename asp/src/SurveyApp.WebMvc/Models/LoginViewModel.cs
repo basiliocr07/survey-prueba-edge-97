@@ -17,7 +17,13 @@ namespace SurveyApp.WebMvc.Models
         [Display(Name = "Recordarme")]
         public bool RememberMe { get; set; }
 
-        // Propiedades para el registro
+        // Propiedades para mostrar mensajes de error
+        public string? ErrorMessage { get; set; }
+        
+        // Propiedad para determinar si mostrar el formulario de registro
+        public bool ShowRegisterForm { get; set; }
+        
+        // Modelo de registro embebido
         public RegisterViewModel RegisterModel { get; set; } = new RegisterViewModel();
     }
 
@@ -42,5 +48,8 @@ namespace SurveyApp.WebMvc.Models
         [Display(Name = "Confirmar contraseña")]
         [Compare("Password", ErrorMessage = "Las contraseñas no coinciden.")]
         public string ConfirmPassword { get; set; } = string.Empty;
+        
+        // Propiedad para mostrar mensajes de error
+        public string? ErrorMessage { get; set; }
     }
 }
