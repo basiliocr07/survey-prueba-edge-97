@@ -34,6 +34,8 @@ namespace SurveyApp.Application.DTOs
         public string CustomerEmail { get; set; }
         public bool IsAnonymous { get; set; }
         public string Category { get; set; }
+        public string AcceptanceCriteria { get; set; }
+        public DateTime? TargetDate { get; set; }
     }
 
     public class UpdateRequirementDto

@@ -10,6 +10,7 @@ namespace SurveyApp.WebMvc.Models
         public List<RequirementDto> Requirements { get; set; } = new List<RequirementDto>();
         public List<KnowledgeBaseItemDto> KnowledgeBase { get; set; } = new List<KnowledgeBaseItemDto>();
         public string[] Categories { get; set; }
+        public string[] ProjectAreas { get; set; }
         public string ActiveTab { get; set; } = "new";
 
         // Additional properties for requirement counts
@@ -24,6 +25,11 @@ namespace SurveyApp.WebMvc.Models
         public int HighCount { get; set; }
         public int MediumCount { get; set; }
         public int LowCount { get; set; }
+        
+        // Distribuciones para reportes
+        public Dictionary<string, int> CategoryDistribution { get; set; } = new Dictionary<string, int>();
+        public Dictionary<string, int> ProjectAreaDistribution { get; set; } = new Dictionary<string, int>();
+        public Dictionary<string, int> MonthlyRequirements { get; set; } = new Dictionary<string, int>();
     }
 
     public class RequirementsListViewModel
@@ -41,6 +47,8 @@ namespace SurveyApp.WebMvc.Models
     {
         public RequirementDto Requirement { get; set; }
         public List<KnowledgeBaseItemDto> RelatedItems { get; set; } = new List<KnowledgeBaseItemDto>();
+        public string[] StatusOptions { get; set; } = new[] { "Proposed", "In-Progress", "Testing", "Implemented", "Rejected" };
+        public string[] PriorityOptions { get; set; } = new[] { "Low", "Medium", "High", "Critical" };
     }
 
     public class RequirementReportsViewModel

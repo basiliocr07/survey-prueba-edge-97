@@ -30,12 +30,6 @@ namespace SurveyApp.WebMvc.Controllers
 
         public async Task<IActionResult> Index()
         {
-            // Los clientes son redirigidos a la página de creación
-            if (!User.IsInRole("Admin"))
-            {
-                return RedirectToAction("Create");
-            }
-
             try
             {
                 var requirements = await _requirementService.GetAllRequirementsAsync();
@@ -43,18 +37,33 @@ namespace SurveyApp.WebMvc.Controllers
                 var viewModel = new RequirementsViewModel
                 {
                     Requirements = requirements,
-                    KnowledgeBase = new List<KnowledgeBaseItemDto>(),
                     Categories = new[] { "Feature", "Bug", "UI/UX", "Performance", "Security", "Other" },
+                    ProjectAreas = new[] { "Web", "Mobile", "Backend", "Frontend", "API", "Database", "Infrastructure", "Other" },
                     TotalCount = requirements.Count,
-                    ProposedCount = requirements.Count(r => r.Status.ToLower() == "proposed"),
-                    InProgressCount = requirements.Count(r => r.Status.ToLower() == "in-progress"),
-                    TestingCount = requirements.Count(r => r.Status.ToLower() == "testing"),
-                    CompletedCount = requirements.Count(r => r.Status.ToLower() == "implemented"),
-                    CriticalCount = requirements.Count(r => r.Priority.ToLower() == "critical"),
-                    HighCount = requirements.Count(r => r.Priority.ToLower() == "high"),
-                    MediumCount = requirements.Count(r => r.Priority.ToLower() == "medium"),
-                    LowCount = requirements.Count(r => r.Priority.ToLower() == "low")
+                    ProposedCount = requirements.Count(r => r.Status?.ToLower() == "proposed"),
+                    InProgressCount = requirements.Count(r => r.Status?.ToLower() == "in-progress"),
+                    TestingCount = requirements.Count(r => r.Status?.ToLower() == "testing"),
+                    CompletedCount = requirements.Count(r => r.Status?.ToLower() == "implemented"),
+                    CriticalCount = requirements.Count(r => r.Priority?.ToLower() == "critical"),
+                    HighCount = requirements.Count(r => r.Priority?.ToLower() == "high"),
+                    MediumCount = requirements.Count(r => r.Priority?.ToLower() == "medium"),
+                    LowCount = requirements.Count(r => r.Priority?.ToLower() == "low"),
+                    CategoryDistribution = requirements
+                        .GroupBy(r => r.Category)
+                        .ToDictionary(g => g.Key ?? "Uncategorized", g => g.Count()),
+                    ProjectAreaDistribution = requirements
+                        .GroupBy(r => r.ProjectArea)
+                        .ToDictionary(g => g.Key ?? "General", g => g.Count()),
+                    MonthlyRequirements = requirements
+                        .GroupBy(r => $"{r.CreatedAt.Year}-{r.CreatedAt.Month:D2}")
+                        .OrderBy(g => g.Key)
+                        .ToDictionary(g => g.Key, g => g.Count())
                 };
+
+                if (!User.IsInRole("Admin"))
+                {
+                    return RedirectToAction("Create");
+                }
                 
                 return View(viewModel);
             }
@@ -66,11 +75,36 @@ namespace SurveyApp.WebMvc.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> Details(Guid id)
+        {
+            try
+            {
+                var requirement = await _requirementService.GetRequirementByIdAsync(id);
+                if (requirement == null)
+                {
+                    return NotFound();
+                }
+                
+                var viewModel = new RequirementDetailViewModel
+                {
+                    Requirement = requirement
+                };
+                
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al obtener detalles del requerimiento con ID {id}");
+                return View("Error");
+            }
+        }
+
+        [HttpGet]
         public IActionResult Create()
         {
             var viewModel = new NewRequirementViewModel();
             ViewData["PageTitle"] = User.IsInRole("Admin") ? 
-                "Gestión de Requerimientos" : "Enviar Requerimiento";
+                "Nuevo Requerimiento" : "Enviar Requerimiento";
             return View(viewModel);
         }
 
@@ -82,7 +116,6 @@ namespace SurveyApp.WebMvc.Controllers
             {
                 try
                 {
-                    // Creamos el requerimiento usando el servicio de requerimientos
                     var dto = new CreateRequirementDto
                     {
                         Title = model.Title,
@@ -92,24 +125,15 @@ namespace SurveyApp.WebMvc.Controllers
                         CustomerName = model.CustomerName,
                         CustomerEmail = model.CustomerEmail,
                         IsAnonymous = model.IsAnonymous,
-                        Category = model.Category
+                        Category = model.Category,
+                        AcceptanceCriteria = model.AcceptanceCriteria,
+                        TargetDate = model.TargetDate
                     };
 
                     await _requirementService.CreateRequirementAsync(dto);
 
-                    // También lo agregamos como elemento de la base de conocimientos
-                    var kbDto = new CreateKnowledgeBaseItemDto
-                    {
-                        Title = model.Title,
-                        Content = model.Description,
-                        Category = "Requirement",
-                        Tags = new[] { model.Priority, model.ProjectArea, model.Category }
-                    };
-
-                    await _knowledgeBaseService.CreateKnowledgeBaseItemAsync(kbDto);
-
                     TempData["SuccessMessage"] = "Requerimiento enviado correctamente.";
-                    return RedirectToAction(User.IsInRole("Admin") ? "Index" : "Create");
+                    return RedirectToAction("Index");
                 }
                 catch (Exception ex)
                 {
@@ -119,13 +143,55 @@ namespace SurveyApp.WebMvc.Controllers
             }
 
             ViewData["PageTitle"] = User.IsInRole("Admin") ? 
-                "Gestión de Requerimientos" : "Enviar Requerimiento";
+                "Nuevo Requerimiento" : "Enviar Requerimiento";
             return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> UpdateStatus(Guid id, string status, string response, int? completionPercentage)
+        {
+            try
+            {
+                var statusUpdate = new RequirementStatusUpdateDto
+                {
+                    Status = status,
+                    Response = response,
+                    CompletionPercentage = completionPercentage
+                };
+                
+                await _requirementService.UpdateRequirementStatusAsync(id, statusUpdate);
+                
+                TempData["SuccessMessage"] = "Estado del requerimiento actualizado correctamente.";
+                return RedirectToAction("Details", new { id });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al actualizar el estado del requerimiento con ID {id}");
+                TempData["ErrorMessage"] = "Ocurrió un error al actualizar el estado del requerimiento.";
+                return RedirectToAction("Details", new { id });
+            }
         }
 
         [HttpGet]
         [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> ViewRequirements(string status = "", string priority = "", string category = "", string search = "", string projectArea = "")
+        public async Task<IActionResult> Reports()
+        {
+            try
+            {
+                var reportsData = await _requirementService.GetRequirementReportsAsync();
+                return View(reportsData);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener los informes de requerimientos");
+                return View("Error");
+            }
+        }
+        
+        [HttpGet]
+        public async Task<IActionResult> List(string status = "", string priority = "", string category = "", string projectArea = "", string searchTerm = "")
         {
             try
             {
@@ -147,9 +213,9 @@ namespace SurveyApp.WebMvc.Controllers
                 {
                     requirements = await _requirementService.GetRequirementsByProjectAreaAsync(projectArea);
                 }
-                else if (!string.IsNullOrEmpty(search))
+                else if (!string.IsNullOrEmpty(searchTerm))
                 {
-                    requirements = await _requirementService.SearchRequirementsAsync(search);
+                    requirements = await _requirementService.SearchRequirementsAsync(searchTerm);
                 }
                 else
                 {
@@ -164,206 +230,16 @@ namespace SurveyApp.WebMvc.Controllers
                     PriorityFilter = priority,
                     CategoryFilter = category,
                     ProjectAreaFilter = projectArea,
-                    SearchTerm = search
+                    SearchTerm = searchTerm
                 };
                 
                 return View(viewModel);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener los requerimientos");
+                _logger.LogError(ex, "Error al obtener la lista de requerimientos");
                 return View("Error");
             }
-        }
-
-        [HttpGet]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> Details(Guid id)
-        {
-            try
-            {
-                var requirement = await _requirementService.GetRequirementByIdAsync(id);
-                if (requirement == null)
-                {
-                    return NotFound();
-                }
-                
-                // Obtener elementos relacionados de la base de conocimientos
-                var relatedItems = await _knowledgeBaseService.GetItemsByTagsAsync(
-                    new[] { requirement.Priority, requirement.ProjectArea, requirement.Category }.Where(t => !string.IsNullOrEmpty(t)).ToArray()
-                );
-                
-                var viewModel = new RequirementDetailViewModel
-                {
-                    Requirement = requirement,
-                    RelatedItems = relatedItems
-                };
-                
-                return View(viewModel);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error al obtener los detalles del requerimiento con ID {id}");
-                return View("Error");
-            }
-        }
-
-        [HttpGet]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> Reports()
-        {
-            try
-            {
-                var reportsData = await _requirementService.GetRequirementReportsAsync();
-                return View(reportsData);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener los informes de requerimientos");
-                return View("Error");
-            }
-        }
-
-        [HttpGet]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> KnowledgeBase(string search = "")
-        {
-            try
-            {
-                var items = string.IsNullOrEmpty(search)
-                    ? await _knowledgeBaseService.GetAllKnowledgeBaseItemsAsync()
-                    : await _knowledgeBaseService.SearchKnowledgeBaseItemsAsync(search);
-                
-                var viewModel = new KnowledgeBaseViewModel
-                {
-                    KnowledgeBaseItems = items,
-                    SearchTerm = search
-                };
-                
-                return View(viewModel);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener la base de conocimientos");
-                return View("Error");
-            }
-        }
-
-        [HttpGet]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> Edit(Guid id)
-        {
-            try
-            {
-                var requirement = await _requirementService.GetRequirementByIdAsync(id);
-                if (requirement == null)
-                {
-                    return NotFound();
-                }
-
-                var viewModel = new NewRequirementViewModel
-                {
-                    Title = requirement.Title,
-                    Description = requirement.Description,
-                    Priority = requirement.Priority,
-                    ProjectArea = requirement.ProjectArea ?? "General",
-                    Status = requirement.Status,
-                    CustomerName = requirement.CustomerName,
-                    CustomerEmail = requirement.CustomerEmail,
-                    IsAnonymous = requirement.IsAnonymous,
-                    Category = requirement.Category ?? "Feature",
-                    AcceptanceCriteria = requirement.AcceptanceCriteria,
-                    TargetDate = requirement.TargetDate
-                };
-
-                return View(viewModel);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error al obtener el requerimiento con ID {id}");
-                return View("Error");
-            }
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> Edit(Guid id, NewRequirementViewModel model)
-        {
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    var dto = new UpdateRequirementDto
-                    {
-                        Title = model.Title,
-                        Description = model.Description,
-                        Priority = model.Priority,
-                        Status = model.Status,
-                        ProjectArea = model.ProjectArea,
-                        Category = model.Category,
-                        AcceptanceCriteria = model.AcceptanceCriteria,
-                        TargetDate = model.TargetDate
-                    };
-
-                    await _requirementService.UpdateRequirementAsync(id, dto);
-
-                    TempData["SuccessMessage"] = "Requerimiento actualizado correctamente.";
-                    return RedirectToAction("Index");
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, $"Error al actualizar el requerimiento con ID {id}");
-                    ModelState.AddModelError("", "Ocurrió un error al actualizar el requerimiento.");
-                }
-            }
-
-            return View(model);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> UpdateStatus(Guid id, string status, string response)
-        {
-            try
-            {
-                var statusUpdate = new RequirementStatusUpdateDto
-                {
-                    Status = status,
-                    Response = response
-                };
-                
-                await _requirementService.UpdateRequirementStatusAsync(id, statusUpdate);
-                
-                TempData["SuccessMessage"] = "Estado del requerimiento actualizado correctamente.";
-                return RedirectToAction("Details", new { id });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error al actualizar el estado del requerimiento con ID {id}");
-                TempData["ErrorMessage"] = "Ocurrió un error al actualizar el estado del requerimiento.";
-                return RedirectToAction("Details", new { id });
-            }
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> Delete(Guid id)
-        {
-            try
-            {
-                await _requirementService.DeleteRequirementAsync(id);
-                TempData["SuccessMessage"] = "Requerimiento eliminado correctamente.";
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error al eliminar el requerimiento con ID {id}");
-                TempData["ErrorMessage"] = "Ocurrió un error al eliminar el requerimiento.";
-            }
-
-            return RedirectToAction("Index");
         }
     }
 }
