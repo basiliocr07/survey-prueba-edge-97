@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using SurveyApp.Application.DTOs;
+using SurveyApp.WebMvc.Models;
 
 namespace SurveyApp.Application.Services
 {
