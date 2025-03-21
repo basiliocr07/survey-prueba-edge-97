@@ -20,7 +20,7 @@ namespace SurveyApp.WebApi.DependencyInjection
             services.AddScoped<IAnalyticsService, AnalyticsService>();
             
             // Register authentication service using full type names
-            services.AddScoped<SurveyApp.Application.Ports.IAuthenticationService, SurveyApp.Application.Services.AuthenticationService>();
+            services.AddScoped<IAuthenticationService, AuthenticationService>();
             
             return services;
         }
