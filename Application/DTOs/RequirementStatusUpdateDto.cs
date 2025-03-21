@@ -5,5 +5,6 @@ namespace SurveyApp.Application.DTOs
     {
         public string Status { get; set; }
         public string Comment { get; set; }
+        public int? CompletionPercentage { get; set; }
     }
 }

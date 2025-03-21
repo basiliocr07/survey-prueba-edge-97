@@ -165,12 +165,11 @@ namespace SurveyApp.WebMvc.Controllers
                 var statusUpdate = new RequirementStatusUpdateDto
                 {
                     Status = status,
-                    Response = response,
-                    CompletionPercentage = completionPercentage
+                    Comment = response  // Changed from Response to Comment to match the DTO property
                 };
-                
+            
                 await _requirementService.UpdateRequirementStatusAsync(id, statusUpdate);
-                
+            
                 TempData["SuccessMessage"] = "Estado del requerimiento actualizado correctamente.";
                 return RedirectToAction("Details", new { id });
             }

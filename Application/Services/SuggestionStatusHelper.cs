@@ -14,5 +14,11 @@ namespace SurveyApp.Application.Services
             }
             return SuggestionStatus.New; // Default value
         }
+        
+        // Add a useful helper method to convert from status enum to string
+        public static string GetStatusString(SuggestionStatus status)
+        {
+            return status.ToString();
+        }
     }
 }
