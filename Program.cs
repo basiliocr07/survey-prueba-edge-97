@@ -13,17 +13,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container
 builder.Services.AddControllers();
 
-// Configure DbContext with SQL Server
+// Configure DbContext with SQLite
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        sqlServerOptionsAction: sqlOptions =>
-        {
-            sqlOptions.EnableRetryOnFailure(
-                maxRetryCount: 5,
-                maxRetryDelay: TimeSpan.FromSeconds(30),
-                errorNumbersToAdd: null);
-        }));
+    options.UseSqlite(
+        builder.Configuration.GetConnectionString("SqliteConnection") ?? "Data Source=surveyapp.db"));
 
 // Register application and infrastructure services
 builder.Services.AddApplicationServices();
