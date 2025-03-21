@@ -127,15 +127,12 @@ namespace SurveyApp.WebMvc.Controllers
                     SubmittedAt = r.SubmittedAt,
                     IsValidated = r.IsValidated,
                     CompletionTime = r.CompletionTime,
-                    FormattedCompletionTime = r.FormattedCompletionTime,
                     QuestionCount = r.QuestionCount,
                     ValidAnswersCount = r.ValidAnswersCount,
-                    ValidationRate = r.ValidationRate,
                     DeviceType = r.DeviceType,
                     Browser = r.Browser,
                     OperatingSystem = r.OperatingSystem,
                     Location = r.Location,
-                    AverageTimePerQuestion = r.AverageTimePerQuestion,
                     Answers = r.Answers.Select(a => new QuestionAnswerViewModel
                     {
                         QuestionId = a.QuestionId,
@@ -146,8 +143,7 @@ namespace SurveyApp.WebMvc.Controllers
                         IsValid = a.IsValid,
                         ScoreValue = a.ScoreValue,
                         CompletionTimeSeconds = a.CompletionTimeSeconds,
-                        Category = a.Category,
-                        FormattedCompletionTime = a.FormattedCompletionTime
+                        Category = a.Category
                     }).ToList()
                 }).ToList();
                 
@@ -192,18 +188,12 @@ namespace SurveyApp.WebMvc.Controllers
                     SubmittedAt = responseDto.SubmittedAt,
                     IsValidated = responseDto.IsValidated,
                     CompletionTime = responseDto.CompletionTime,
-                    FormattedCompletionTime = responseDto.FormattedCompletionTime,
                     QuestionCount = responseDto.QuestionCount,
                     ValidAnswersCount = responseDto.ValidAnswersCount,
-                    ValidationRate = responseDto.ValidationRate,
                     DeviceType = responseDto.DeviceType,
                     Browser = responseDto.Browser,
                     OperatingSystem = responseDto.OperatingSystem,
                     Location = responseDto.Location,
-                    AverageTimePerQuestion = responseDto.AverageTimePerQuestion,
-                    QuestionTypeDistribution = responseDto.QuestionTypeDistribution,
-                    CompletionRateByQuestionType = responseDto.CompletionRateByQuestionType,
-                    AverageScoreByCategory = responseDto.AverageScoreByCategory,
                     Answers = responseDto.Answers.Select(a => new QuestionAnswerViewModel
                     {
                         QuestionId = a.QuestionId,
@@ -214,8 +204,7 @@ namespace SurveyApp.WebMvc.Controllers
                         IsValid = a.IsValid,
                         ScoreValue = a.ScoreValue,
                         CompletionTimeSeconds = a.CompletionTimeSeconds,
-                        Category = a.Category,
-                        FormattedCompletionTime = a.FormattedCompletionTime
+                        Category = a.Category
                     }).ToList()
                 };
                 

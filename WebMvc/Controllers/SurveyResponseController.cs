@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -74,16 +73,13 @@ namespace SurveyApp.WebMvc.Controllers
 
             try
             {
-                // Inicializar el diccionario de respuestas si es nulo
                 if (model.Answers == null)
                 {
                     model.Answers = new Dictionary<string, object>();
                 }
 
-                // Obtener la encuesta para validación
                 var survey = await _surveyService.GetSurveyByIdAsync(id);
                 
-                // Validar respuestas requeridas
                 foreach (var question in survey.Questions.Where(q => q.Required))
                 {
                     var questionIdStr = question.Id.ToString();
@@ -97,10 +93,8 @@ namespace SurveyApp.WebMvc.Controllers
                     }
                 }
 
-                // Procesar formulario para preguntas de opción múltiple
                 ProcessMultipleChoiceAnswers(model);
 
-                // Crear el DTO para enviar al servicio
                 var responseDto = new CreateSurveyResponseDto
                 {
                     SurveyId = id,
@@ -113,10 +107,8 @@ namespace SurveyApp.WebMvc.Controllers
                     ExistingClientId = model.ExistingClientId
                 };
 
-                // Enviar la respuesta
                 await _surveyService.SubmitSurveyResponseAsync(responseDto);
 
-                // Redireccionar a la página de agradecimiento
                 return RedirectToAction("ThankYou", new { id });
             }
             catch (Exception ex)
@@ -133,11 +125,9 @@ namespace SurveyApp.WebMvc.Controllers
             {
                 if (key.StartsWith("Answers[") && key.EndsWith("]") && Request.Form[key].Count > 1)
                 {
-                    // Extraer ID de pregunta
                     var questionIdStr = key.Substring(8, key.Length - 9);
                     var values = Request.Form[key].ToList();
                     
-                    // Añadir al diccionario como lista
                     model.Answers[questionIdStr] = values;
                 }
                 else if (key.StartsWith("Answers[") && key.EndsWith("]") && !model.Answers.ContainsKey(key.Substring(8, key.Length - 9)))
@@ -207,6 +197,9 @@ namespace SurveyApp.WebMvc.Controllers
                     RespondentCompany = response.RespondentCompany,
                     SubmittedAt = response.SubmittedAt,
                     IsValidated = response.Answers.All(a => a.IsValid),
+                    CompletionTime = 0,
+                    QuestionCount = response.Answers.Count,
+                    ValidAnswersCount = response.Answers.Count(a => a.IsValid),
                     Answers = response.Answers.Select(a => new QuestionAnswerViewModel
                     {
                         QuestionId = a.QuestionId,
@@ -214,7 +207,9 @@ namespace SurveyApp.WebMvc.Controllers
                         QuestionType = a.QuestionType,
                         Answer = a.Answer,
                         MultipleAnswers = a.MultipleAnswers,
-                        IsValid = a.IsValid
+                        IsValid = a.IsValid,
+                        ScoreValue = 0,
+                        CompletionTimeSeconds = 0
                     }).ToList()
                 };
                 
