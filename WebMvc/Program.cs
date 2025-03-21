@@ -18,10 +18,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// Database Configuration - Using SQLite for simplicity
+// Database Configuration with SQLite
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(
-        builder.Configuration.GetConnectionString("DefaultConnection")));
+        builder.Configuration.GetConnectionString("SqliteConnection") ?? "Data Source=surveyapp.db"));
 
 // Configure Authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -90,7 +90,7 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// Ensure database is created
+// Ensure the database is created when the application starts
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
