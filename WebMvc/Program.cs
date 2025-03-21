@@ -52,6 +52,7 @@ builder.Services.AddScoped<ISuggestionService, SuggestionService>();
 builder.Services.AddScoped<ISurveyService, SurveyService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+builder.Services.AddScoped<IRequirementService, RequirementService>();
 
 // Register Authentication Service explicitly with full namespace to avoid ambiguity
 builder.Services.AddScoped<SurveyApp.Application.Ports.IAuthenticationService, SurveyApp.Application.Services.AuthenticationService>();
@@ -64,6 +65,7 @@ builder.Services.AddScoped<ISurveyRepository, SurveyRepository>();
 builder.Services.AddScoped<ISurveyResponseRepository, SurveyResponseRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
+builder.Services.AddScoped<IRequirementRepository, RequirementRepository>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 
 var app = builder.Build();
