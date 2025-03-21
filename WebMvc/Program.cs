@@ -10,7 +10,6 @@ using SurveyApp.Infrastructure.Data;
 using SurveyApp.Infrastructure.Repositories;
 using SurveyApp.Infrastructure.Services;
 using System;
-// Use alias for Application.Ports.IAuthenticationService
 using AuthService = SurveyApp.Application.Ports.IAuthenticationService;
 
 var builder = WebApplication.CreateBuilder(args);
