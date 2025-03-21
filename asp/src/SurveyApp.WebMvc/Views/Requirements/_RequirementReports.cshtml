@@ -1,0 +1,191 @@
+
+@model RequirementsViewModel
+
+<div class="space-y-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Requirements by Status</h2>
+            </div>
+            <div class="card-content h-[300px]" id="statusChartContainer">
+                <div class="chart-placeholder">
+                    <p class="text-center text-muted-foreground">
+                        <i class="icon-bar-chart-2 h-6 w-6 mb-2"></i><br>
+                        Status Distribution Chart
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Requirements by Priority</h2>
+            </div>
+            <div class="card-content h-[300px]" id="priorityChartContainer">
+                <div class="chart-placeholder">
+                    <p class="text-center text-muted-foreground">
+                        <i class="icon-pie-chart h-6 w-6 mb-2"></i><br>
+                        Priority Distribution Chart
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Top Categories</h2>
+            </div>
+            <div class="card-content h-[300px]" id="categoryChartContainer">
+                <div class="chart-placeholder">
+                    <p class="text-center text-muted-foreground">
+                        <i class="icon-bar-chart h-6 w-6 mb-2"></i><br>
+                        Category Distribution Chart
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Requirements by Project Area</h2>
+            </div>
+            <div class="card-content h-[300px]" id="areaChartContainer">
+                <div class="chart-placeholder">
+                    <p class="text-center text-muted-foreground">
+                        <i class="icon-bar-chart h-6 w-6 mb-2"></i><br>
+                        Project Area Distribution Chart
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Status Chart
+            const statusData = {
+                labels: @Html.Raw(Json.Serialize(Model.StatusDistribution?.Keys ?? new string[0])),
+                datasets: [{
+                    label: 'Requirements by Status',
+                    data: @Html.Raw(Json.Serialize(Model.StatusDistribution?.Values ?? new int[0])),
+                    backgroundColor: ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c'],
+                    borderWidth: 1
+                }]
+            };
+            
+            const statusCtx = document.createElement('canvas');
+            document.getElementById('statusChartContainer').innerHTML = '';
+            document.getElementById('statusChartContainer').appendChild(statusCtx);
+            
+            new Chart(statusCtx, {
+                type: 'bar',
+                data: statusData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Priority Chart
+            const priorityData = {
+                labels: @Html.Raw(Json.Serialize(Model.PriorityDistribution?.Keys ?? new string[0])),
+                datasets: [{
+                    label: 'Requirements by Priority',
+                    data: @Html.Raw(Json.Serialize(Model.PriorityDistribution?.Values ?? new int[0])),
+                    backgroundColor: ['#ff5252', '#ff9800', '#2196f3', '#4caf50'],
+                    borderWidth: 1
+                }]
+            };
+            
+            const priorityCtx = document.createElement('canvas');
+            document.getElementById('priorityChartContainer').innerHTML = '';
+            document.getElementById('priorityChartContainer').appendChild(priorityCtx);
+            
+            new Chart(priorityCtx, {
+                type: 'pie',
+                data: priorityData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            // Category Chart
+            const categoryData = {
+                labels: @Html.Raw(Json.Serialize(Model.CategoryDistribution?.Keys ?? new string[0])),
+                datasets: [{
+                    label: 'Requirements by Category',
+                    data: @Html.Raw(Json.Serialize(Model.CategoryDistribution?.Values ?? new int[0])),
+                    backgroundColor: '#82ca9d',
+                    borderWidth: 1
+                }]
+            };
+            
+            const categoryCtx = document.createElement('canvas');
+            document.getElementById('categoryChartContainer').innerHTML = '';
+            document.getElementById('categoryChartContainer').appendChild(categoryCtx);
+            
+            new Chart(categoryCtx, {
+                type: 'bar',
+                data: categoryData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Project Area Chart
+            const areaData = {
+                labels: @Html.Raw(Json.Serialize(Model.ProjectAreaDistribution?.Keys ?? new string[0])),
+                datasets: [{
+                    label: 'Requirements by Project Area',
+                    data: @Html.Raw(Json.Serialize(Model.ProjectAreaDistribution?.Values ?? new int[0])),
+                    backgroundColor: '#ffc658',
+                    borderWidth: 1
+                }]
+            };
+            
+            const areaCtx = document.createElement('canvas');
+            document.getElementById('areaChartContainer').innerHTML = '';
+            document.getElementById('areaChartContainer').appendChild(areaCtx);
+            
+            new Chart(areaCtx, {
+                type: 'bar',
+                data: areaData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+}

@@ -1,0 +1,218 @@
+
+@model RequirementDetailViewModel
+@{
+    ViewData["Title"] = "Requirement Details";
+}
+
+<div class="min-h-screen flex flex-col bg-background">
+    <main class="flex-1 w-full px-4 sm:px-6 lg:px-8 pt-24 pb-20 flex justify-center">
+        <div class="w-full max-w-[900px]">
+            <div class="mb-6 flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight mb-1">Requirement Details</h1>
+                    <p class="text-muted-foreground">
+                        View and manage requirement information
+                    </p>
+                </div>
+                <div>
+                    <a asp-action="Index" class="btn btn-outline">
+                        <i class="icon-arrow-left mr-2 h-4 w-4"></i>
+                        Back to Requirements
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header flex justify-between items-center">
+                    <h2 class="card-title">@Model.Requirement.Title</h2>
+                    <div>
+                        @{
+                            var statusClass = Model.Requirement.Status?.ToLower() switch
+                            {
+                                "proposed" => "bg-blue-100 text-blue-800",
+                                "in-progress" => "bg-yellow-100 text-yellow-800",
+                                "implemented" => "bg-green-100 text-green-800",
+                                "rejected" => "bg-red-100 text-red-800",
+                                _ => "bg-gray-100 text-gray-800"
+                            };
+                        }
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @statusClass">
+                            @Model.Requirement.Status
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-content">
+                    <div class="space-y-6">
+                        <div>
+                            <h3 class="text-sm font-medium text-muted-foreground mb-2">Description</h3>
+                            <p>@Model.Requirement.Description</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <h3 class="text-sm font-medium text-muted-foreground mb-2">Priority</h3>
+                                <p>@Model.Requirement.Priority</p>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-medium text-muted-foreground mb-2">Category</h3>
+                                <p>@Model.Requirement.Category</p>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-medium text-muted-foreground mb-2">Project Area</h3>
+                                <p>@Model.Requirement.ProjectArea</p>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <h3 class="text-sm font-medium text-muted-foreground mb-2">Created At</h3>
+                                <p>@Model.Requirement.CreatedAt.ToString("MMM d, yyyy")</p>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-medium text-muted-foreground mb-2">Updated At</h3>
+                                <p>
+                                    @(Model.Requirement.UpdatedAt.HasValue 
+                                        ? Model.Requirement.UpdatedAt.Value.ToString("MMM d, yyyy")
+                                        : "Not updated yet")
+                                </p>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-medium text-muted-foreground mb-2">Target Date</h3>
+                                <p>
+                                    @(Model.Requirement.TargetDate.HasValue 
+                                        ? Model.Requirement.TargetDate.Value.ToString("MMM d, yyyy")
+                                        : "Not specified")
+                                </p>
+                            </div>
+                        </div>
+                        
+                        @if (!string.IsNullOrEmpty(Model.Requirement.AcceptanceCriteria))
+                        {
+                            <div>
+                                <h3 class="text-sm font-medium text-muted-foreground mb-2">Acceptance Criteria</h3>
+                                <p>@Model.Requirement.AcceptanceCriteria</p>
+                            </div>
+                        }
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <h3 class="text-sm font-medium text-muted-foreground mb-2">Submitted By</h3>
+                                <p>
+                                    @if (Model.Requirement.IsAnonymous)
+                                    {
+                                        <span>Anonymous</span>
+                                    }
+                                    else
+                                    {
+                                        <span>@Model.Requirement.CustomerName (@Model.Requirement.CustomerEmail)</span>
+                                    }
+                                </p>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-medium text-muted-foreground mb-2">Completion</h3>
+                                <div class="flex items-center">
+                                    <div class="w-full bg-muted rounded-full h-2 mr-2">
+                                        <div class="bg-primary h-2 rounded-full" style="width: @(Model.Requirement.CompletionPercentage)%"></div>
+                                    </div>
+                                    <span class="text-sm">@Model.Requirement.CompletionPercentage%</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        @if (!string.IsNullOrEmpty(Model.Requirement.Response))
+                        {
+                            <div class="border-t pt-4">
+                                <h3 class="text-sm font-medium text-muted-foreground mb-2">Response</h3>
+                                <div class="bg-muted/30 p-4 rounded-lg">
+                                    <p>@Model.Requirement.Response</p>
+                                    @if (Model.Requirement.ResponseDate.HasValue)
+                                    {
+                                        <p class="text-xs text-muted-foreground mt-2">
+                                            Response added on @Model.Requirement.ResponseDate.Value.ToString("MMM d, yyyy")
+                                        </p>
+                                    }
+                                </div>
+                            </div>
+                        }
+                        
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <div class="border-t pt-4">
+                                <h3 class="text-lg font-medium mb-4">Update Requirement</h3>
+                                
+                                <form asp-action="UpdateStatus" method="post" class="space-y-4">
+                                    <input type="hidden" name="id" value="@Model.Requirement.Id" />
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label for="status" class="form-label">Status</label>
+                                            <select id="status" name="status" class="form-select">
+                                                @foreach (var status in Model.StatusOptions)
+                                                {
+                                                    <option value="@status.ToLower()" selected="@(Model.Requirement.Status?.ToLower() == status.ToLower())">
+                                                        @status
+                                                    </option>
+                                                }
+                                            </select>
+                                        </div>
+                                        
+                                        <div>
+                                            <label for="completionPercentage" class="form-label">
+                                                Completion Percentage: <span id="percentageValue">@Model.Requirement.CompletionPercentage%</span>
+                                            </label>
+                                            <input type="range" id="completionPercentage" name="completionPercentage" 
+                                                min="0" max="100" step="5" value="@Model.Requirement.CompletionPercentage" class="w-full" 
+                                                oninput="document.getElementById('percentageValue').textContent = this.value + '%'" />
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label for="response" class="form-label">Response / Comment</label>
+                                        <textarea id="response" name="response" rows="3" class="form-textarea">@Model.Requirement.Response</textarea>
+                                    </div>
+                                    
+                                    <div class="flex justify-end space-x-3">
+                                        <a asp-action="Edit" asp-route-id="@Model.Requirement.Id" class="btn btn-outline">
+                                            Edit Full Details
+                                        </a>
+                                        <button type="submit" class="btn btn-primary">
+                                            Update Status
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            
+            @if (Model.RelatedItems.Any())
+            {
+                <div class="mt-6">
+                    <h2 class="text-xl font-medium mb-4">Related Knowledge Base Items</h2>
+                    <div class="space-y-4">
+                        @foreach (var item in Model.RelatedItems)
+                        {
+                            <div class="card">
+                                <div class="card-content p-4">
+                                    <h3 class="text-lg font-medium mb-2">@item.Title</h3>
+                                    <p class="text-muted-foreground">@item.Content</p>
+                                    
+                                    <div class="flex flex-wrap gap-1 mt-2">
+                                        @foreach (var tag in item.Tags)
+                                        {
+                                            <span class="inline-block px-2 py-1 text-xs bg-muted rounded-full">
+                                                @tag
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </main>
+</div>

@@ -280,3 +280,58 @@
 .customer-since {
     @apply text-sm text-muted-foreground;
 }
+
+/* Requirements-specific styles */
+.requirement-item {
+    @apply transition-all duration-200;
+}
+
+.requirement-item:hover {
+    @apply shadow-md;
+}
+
+/* Requirements dashboard styles */
+.stat-card {
+    @apply bg-white rounded-lg border shadow-sm overflow-hidden;
+}
+
+.stat-card .rounded-full {
+    @apply flex items-center justify-center h-12 w-12;
+}
+
+.stat-card .icon-clipboard-list,
+.stat-card .icon-lightbulb,
+.stat-card .icon-clock,
+.stat-card .icon-check-circle {
+    @apply h-5 w-5;
+}
+
+/* Charts styling */
+#statusChartContainer,
+#priorityChartContainer,
+#categoryChartContainer,
+#areaChartContainer {
+    @apply bg-white rounded-md;
+}
+
+/* Modal styling */
+#updateStatusModal,
+#deleteModal {
+    @apply transition-opacity duration-200;
+}
+
+.form-range {
+    @apply w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer;
+}
+
+.form-range::-webkit-slider-thumb {
+    @apply appearance-none bg-primary h-4 w-4 rounded-full;
+}
+
+/* Specificity overrides for icons in buttons */
+.btn .icon-arrow-left,
+.btn .icon-plus,
+.btn .icon-edit,
+.btn .icon-trash {
+    @apply inline-block;
+}
