@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
@@ -30,11 +29,25 @@ namespace SurveyApp.Infrastructure.Data
             Database.EnsureCreated();
         }
 
+        public bool MigrateDatabase()
+        {
+            try
+            {
+                bool anyPendingMigrations = Database.GetPendingMigrations().Any();
+                Database.Migrate();
+                return anyPendingMigrations;
+            }
+            catch (Exception)
+            {
+                Database.EnsureCreated();
+                return true;
+            }
+        }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configure User entity
             modelBuilder.Entity<User>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -44,12 +57,10 @@ namespace SurveyApp.Infrastructure.Data
                 entity.Property(e => e.Role).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.CreatedAt).IsRequired();
 
-                // Add a unique constraint on Username
                 entity.HasIndex(e => e.Username).IsUnique();
                 entity.HasIndex(e => e.Email).IsUnique();
             });
 
-            // Configure Survey entity
             modelBuilder.Entity<Survey>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -63,7 +74,6 @@ namespace SurveyApp.Infrastructure.Data
                       .HasForeignKey("SurveyId")
                       .OnDelete(DeleteBehavior.Cascade);
 
-                // Configure complex properties
                 entity.OwnsOne(e => e.DeliveryConfig, config =>
                 {
                     config.Property(c => c.Type).HasConversion<string>();
@@ -77,7 +87,6 @@ namespace SurveyApp.Infrastructure.Data
                 });
             });
 
-            // Configure Question entity
             modelBuilder.Entity<Question>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -85,17 +94,17 @@ namespace SurveyApp.Infrastructure.Data
                 entity.Property(e => e.Description).HasMaxLength(1000);
                 entity.Property(e => e.Type).HasConversion<string>();
 
-                // Configure QuestionSettings as an owned entity
-                entity.OwnsOne(q => q.Settings);
+                entity.OwnsOne(q => q.Settings, settings =>
+                {
+                    settings.ToJson();
+                });
 
-                // Configure complex properties
                 entity.Property(e => e.Options).HasConversion(
                     v => JsonSerializer.Serialize(v, new JsonSerializerOptions()),
                     v => JsonSerializer.Deserialize<List<string>>(v, new JsonSerializerOptions())
                 );
             });
 
-            // Configure Customer entity
             modelBuilder.Entity<Customer>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -115,14 +124,12 @@ namespace SurveyApp.Infrastructure.Data
                       .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // Configure GrowthMetric entity
             modelBuilder.Entity<GrowthMetric>(entity =>
             {
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Period).IsRequired().HasMaxLength(20);
             });
 
-            // Configure Suggestion entity
             modelBuilder.Entity<Suggestion>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -135,14 +142,12 @@ namespace SurveyApp.Infrastructure.Data
                 entity.Property(e => e.Priority).HasConversion<string>().IsRequired(false);
                 entity.Property(e => e.Response).HasMaxLength(1000);
 
-                // Using correct conversion for string array
                 entity.Property(e => e.SimilarSuggestions).HasConversion(
                     v => JsonSerializer.Serialize(v, new JsonSerializerOptions()),
                     v => JsonSerializer.Deserialize<string[]>(v, new JsonSerializerOptions()) ?? Array.Empty<string>()
                 );
             });
 
-            // Configure KnowledgeBaseItem entity
             modelBuilder.Entity<KnowledgeBaseItem>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -158,7 +163,6 @@ namespace SurveyApp.Infrastructure.Data
                 );
             });
 
-            // Configure AnalyticsData entity
             modelBuilder.Entity<AnalyticsData>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -177,7 +181,6 @@ namespace SurveyApp.Infrastructure.Data
                       .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // Configure SurveyResponseTrend entity
             modelBuilder.Entity<SurveyResponseTrend>(entity =>
             {
                 entity.HasKey(e => e.Date);
@@ -185,7 +188,6 @@ namespace SurveyApp.Infrastructure.Data
                 entity.Property(e => e.Responses);
             });
 
-            // Configure Requirement entity
             modelBuilder.Entity<Requirement>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -198,7 +200,6 @@ namespace SurveyApp.Infrastructure.Data
                 entity.Property(e => e.ProjectArea).HasMaxLength(100);
             });
 
-            // Configure SurveyResponse entity
             modelBuilder.Entity<SurveyResponse>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -206,7 +207,6 @@ namespace SurveyApp.Infrastructure.Data
                 entity.Property(e => e.ResponseDate).IsRequired();
                 entity.Property(e => e.SubmittedAt).IsRequired();
                 
-                // Convert List<QuestionResponse> to JSON for storage
                 entity.Property(e => e.Answers).HasConversion(
                     v => JsonSerializer.Serialize(v, new JsonSerializerOptions()),
                     v => JsonSerializer.Deserialize<List<QuestionResponse>>(v, new JsonSerializerOptions()) ?? new List<QuestionResponse>()

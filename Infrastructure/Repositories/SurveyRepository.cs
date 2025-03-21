@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using SurveyApp.Application.Ports;
 using SurveyApp.Domain.Entities;
 using SurveyApp.Infrastructure.Data;
@@ -12,66 +13,98 @@ namespace SurveyApp.Infrastructure.Repositories
     public class SurveyRepository : ISurveyRepository
     {
         private readonly AppDbContext _dbContext;
+        private readonly ILogger<SurveyRepository> _logger;
 
-        public SurveyRepository(AppDbContext dbContext)
+        public SurveyRepository(AppDbContext dbContext, ILogger<SurveyRepository> logger)
         {
             _dbContext = dbContext;
+            _logger = logger;
         }
 
         public async Task<Survey> GetByIdAsync(Guid id)
         {
-            return await _dbContext.Surveys
-                .Include(s => s.Questions)
-                .Include(s => s.DeliveryConfig)
-                .AsNoTracking()
-                .FirstOrDefaultAsync(s => s.Id == id);
+            try
+            {
+                _logger.LogInformation("Getting survey with id {SurveyId}", id);
+                return await _dbContext.Surveys
+                    .Include(s => s.Questions)
+                    .Include(s => s.DeliveryConfig)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(s => s.Id == id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting survey with id {SurveyId}", id);
+                throw;
+            }
         }
 
         public async Task<List<Survey>> GetAllAsync()
         {
-            return await _dbContext.Surveys
-                .Include(s => s.Questions)
-                .Include(s => s.DeliveryConfig)
-                .AsNoTracking()
-                .ToListAsync();
+            try
+            {
+                _logger.LogInformation("Getting all surveys");
+                return await _dbContext.Surveys
+                    .Include(s => s.Questions)
+                    .Include(s => s.DeliveryConfig)
+                    .AsNoTracking()
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting all surveys");
+                throw;
+            }
         }
         
         public async Task<(List<Survey> Surveys, int TotalCount)> GetPagedSurveysAsync(int pageNumber, int pageSize, string searchTerm = null, string statusFilter = null, string categoryFilter = null)
         {
-            var query = _dbContext.Surveys
-                .Include(s => s.Questions)
-                .Include(s => s.DeliveryConfig)
-                .AsQueryable();
+            try
+            {
+                _logger.LogInformation("Getting paged surveys: page {Page}, size {Size}, search {Search}, status {Status}, category {Category}", 
+                    pageNumber, pageSize, searchTerm, statusFilter, categoryFilter);
+                    
+                var query = _dbContext.Surveys
+                    .Include(s => s.Questions)
+                    .Include(s => s.DeliveryConfig)
+                    .AsQueryable();
+                    
+                // Apply filters
+                if (!string.IsNullOrWhiteSpace(searchTerm))
+                {
+                    searchTerm = searchTerm.ToLower();
+                    query = query.Where(s => s.Title.ToLower().Contains(searchTerm) || 
+                                                 s.Description.ToLower().Contains(searchTerm));
+                }
                 
-            // Apply filters
-            if (!string.IsNullOrWhiteSpace(searchTerm))
-            {
-                searchTerm = searchTerm.ToLower();
-                query = query.Where(s => s.Title.ToLower().Contains(searchTerm) || 
-                                         s.Description.ToLower().Contains(searchTerm));
-            }
-            
-            if (!string.IsNullOrWhiteSpace(statusFilter))
-            {
-                query = query.Where(s => s.Status == statusFilter);
-            }
-            
-            if (!string.IsNullOrWhiteSpace(categoryFilter))
-            {
-                query = query.Where(s => s.Category == categoryFilter);
-            }
-            
-            // Get total count before pagination
-            var totalCount = await query.CountAsync();
-            
-            // Apply pagination
-            var pagedSurveys = await query
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .AsNoTracking()
-                .ToListAsync();
+                if (!string.IsNullOrWhiteSpace(statusFilter))
+                {
+                    query = query.Where(s => s.Status == statusFilter);
+                }
                 
-            return (pagedSurveys, totalCount);
+                if (!string.IsNullOrWhiteSpace(categoryFilter))
+                {
+                    query = query.Where(s => s.Category == categoryFilter);
+                }
+                
+                // Get total count before pagination
+                var totalCount = await query.CountAsync();
+                
+                // Apply pagination
+                var pagedSurveys = await query
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .AsNoTracking()
+                    .ToListAsync();
+                    
+                return (pagedSurveys, totalCount);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting paged surveys with parameters: page {Page}, size {Size}", 
+                    pageNumber, pageSize);
+                throw;
+            }
         }
 
         public async Task<Survey> CreateAsync(Survey survey)
@@ -238,7 +271,16 @@ namespace SurveyApp.Infrastructure.Repositories
 
         public async Task<int> GetTotalSurveyCountAsync()
         {
-            return await _dbContext.Surveys.CountAsync();
+            try
+            {
+                _logger.LogInformation("Getting total survey count");
+                return await _dbContext.Surveys.CountAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting total survey count");
+                throw;
+            }
         }
     }
 }

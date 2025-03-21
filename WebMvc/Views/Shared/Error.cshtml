@@ -10,6 +10,11 @@
         
         <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
             <p class="text-red-700">@(Model.Message ?? "Se ha producido un error al procesar su solicitud.")</p>
+            
+            @if (Model.IsDatabaseError)
+            {
+                <p class="mt-2 text-red-600 font-medium">Error de base de datos: Puede que la base de datos no esté inicializada correctamente.</p>
+            }
         </div>
         
         @if (!string.IsNullOrEmpty(Model.RequestId))
@@ -35,6 +40,14 @@
                     <pre class="text-xs text-gray-600 whitespace-pre-wrap">@Model.Exception.InnerException.ToString()</pre>
                 }
             </div>
+            
+            @if (Model.ErrorSource != null)
+            {
+                <div class="mt-2 text-sm text-gray-600">
+                    <p>Origen del error: @Model.ErrorSource</p>
+                    <p>Fecha y hora: @Model.ErrorTimestamp.ToString("yyyy-MM-dd HH:mm:ss")</p>
+                </div>
+            }
         }
         
         <div class="mt-6">
@@ -44,6 +57,12 @@
                 </svg>
                 Volver a la página de inicio
             </a>
+            
+            <button 
+                onclick="location.reload()" 
+                class="ml-2 inline-flex items-center px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">
+                Reintentar
+            </button>
         </div>
     </div>
     
@@ -60,4 +79,21 @@
             <p>Referencia de log: @Model.LogReference</p>
         </div>
     }
+    
+    @if (!string.IsNullOrEmpty(Model.DatabaseConnectionInfo))
+    {
+        <div class="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
+            <p class="text-yellow-800">Información de conexión: @Model.DatabaseConnectionInfo</p>
+        </div>
+    }
+    
+    <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded">
+        <h3 class="text-blue-800 font-medium mb-2">Soluciones comunes:</h3>
+        <ul class="list-disc list-inside text-sm text-blue-700">
+            <li>Verifique que la base de datos está correctamente configurada.</li>
+            <li>Asegúrese de que las migraciones se han ejecutado correctamente.</li>
+            <li>Compruebe la cadena de conexión en el archivo appsettings.json.</li>
+            <li>Si es un error de primera ejecución, intente reiniciar la aplicación.</li>
+        </ul>
+    </div>
 </div>
