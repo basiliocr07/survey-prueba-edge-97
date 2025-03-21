@@ -11,14 +11,14 @@ namespace SurveyApp.WebMvc.Models
 
         [Required(ErrorMessage = "Title is required")]
         [StringLength(200, ErrorMessage = "Title cannot be longer than 200 characters")]
-        public string Title { get; set; }
+        public string Title { get; set; } = string.Empty;
 
         [StringLength(1000, ErrorMessage = "Description cannot be longer than 1000 characters")]
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         public List<QuestionViewModel> Questions { get; set; } = new List<QuestionViewModel>();
 
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         
         public int Responses { get; set; }
         
@@ -28,12 +28,12 @@ namespace SurveyApp.WebMvc.Models
         
         public string Status { get; set; } = "Active";
         
-        public string Category { get; set; }
+        public string Category { get; set; } = "General";
         
-        // Propiedades adicionales para gestionar la autenticación y roles
+        // Additional properties for authentication and roles
         public bool IsAuthenticated { get; set; }
-        public string UserRole { get; set; }
-        public string Username { get; set; }
+        public string UserRole { get; set; } = string.Empty;
+        public string Username { get; set; } = string.Empty;
     }
 
     public class SurveyCreateViewModel
@@ -42,10 +42,10 @@ namespace SurveyApp.WebMvc.Models
         
         [Required(ErrorMessage = "El título es obligatorio")]
         [StringLength(200, ErrorMessage = "El título no puede tener más de 200 caracteres")]
-        public string Title { get; set; }
+        public string Title { get; set; } = string.Empty;
 
         [StringLength(1000, ErrorMessage = "La descripción no puede tener más de 1000 caracteres")]
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         public List<QuestionViewModel> Questions { get; set; } = new List<QuestionViewModel>();
 
@@ -56,7 +56,7 @@ namespace SurveyApp.WebMvc.Models
         // Email specific properties
         public bool EnableEmailDelivery { get; set; }
         public string SenderName { get; set; } = "Sistema de Encuestas";
-        public string SenderEmail { get; set; } = "";
+        public string SenderEmail { get; set; } = string.Empty;
         public string EmailSubject { get; set; } = "Nueva encuesta para completar";
         public string EmailBody { get; set; } = "Por favor, complete nuestra encuesta. Su opinión es importante para nosotros.";
         
