@@ -6,63 +6,23 @@ namespace SurveyApp.Domain.Entities
 {
     public class KnowledgeBaseItem
     {
-        public Guid Id { get; private set; }
-        public string Title { get; private set; }
-        public string Content { get; private set; }
-        public string Category { get; private set; }
-        public List<string> Tags { get; private set; }
-        public DateTime CreatedAt { get; private set; }
-        public DateTime UpdatedAt { get; private set; }
+        public Guid Id { get; set; }
+        public string Title { get; set; }
+        public string Content { get; set; }
+        public string Category { get; set; }
+        public List<string> Tags { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+        public string Author { get; set; }
+        public int ViewCount { get; set; }
+        public bool IsPublished { get; set; }
 
-        // Constructor for creating a new knowledge base item
-        public KnowledgeBaseItem(string title, string content, string category, List<string> tags = null)
+        public KnowledgeBaseItem()
         {
             Id = Guid.NewGuid();
-            Title = title ?? throw new ArgumentNullException(nameof(title));
-            Content = content ?? throw new ArgumentNullException(nameof(content));
-            Category = category;
-            Tags = tags ?? new List<string>();
+            Tags = new List<string>();
             CreatedAt = DateTime.UtcNow;
-            UpdatedAt = DateTime.UtcNow;
-        }
-
-        // Protected constructor for Entity Framework
-        protected KnowledgeBaseItem() { }
-
-        // Update methods
-        public void UpdateTitle(string title)
-        {
-            if (string.IsNullOrWhiteSpace(title))
-                throw new ArgumentException("Title cannot be empty", nameof(title));
-            
-            Title = title;
-            UpdateLastModified();
-        }
-
-        public void UpdateContent(string content)
-        {
-            if (string.IsNullOrWhiteSpace(content))
-                throw new ArgumentException("Content cannot be empty", nameof(content));
-            
-            Content = content;
-            UpdateLastModified();
-        }
-
-        public void UpdateCategory(string category)
-        {
-            Category = category;
-            UpdateLastModified();
-        }
-
-        public void UpdateTags(List<string> tags)
-        {
-            Tags = tags ?? new List<string>();
-            UpdateLastModified();
-        }
-
-        private void UpdateLastModified()
-        {
-            UpdatedAt = DateTime.UtcNow;
+            IsPublished = true;
         }
     }
 }

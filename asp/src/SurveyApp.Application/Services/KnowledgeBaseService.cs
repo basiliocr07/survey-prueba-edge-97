@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using SurveyApp.Application.DTOs;
 using SurveyApp.Application.Ports;
 using SurveyApp.Domain.Entities;
@@ -13,144 +12,93 @@ namespace SurveyApp.Application.Services
     public class KnowledgeBaseService : IKnowledgeBaseService
     {
         private readonly IKnowledgeBaseRepository _knowledgeBaseRepository;
-        private readonly ILogger<KnowledgeBaseService> _logger;
 
-        public KnowledgeBaseService(
-            IKnowledgeBaseRepository knowledgeBaseRepository,
-            ILogger<KnowledgeBaseService> logger)
+        public KnowledgeBaseService(IKnowledgeBaseRepository knowledgeBaseRepository)
         {
             _knowledgeBaseRepository = knowledgeBaseRepository;
-            _logger = logger;
         }
 
         public async Task<KnowledgeBaseItemDto> GetKnowledgeBaseItemByIdAsync(Guid id)
         {
-            try
+            var item = await _knowledgeBaseRepository.GetByIdAsync(id);
+            if (item == null)
             {
-                var item = await _knowledgeBaseRepository.GetByIdAsync(id);
-                return item != null ? MapToDto(item) : null;
+                throw new KeyNotFoundException($"Knowledge base item with ID {id} not found");
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error getting knowledge base item by ID: {id}");
-                throw;
-            }
+            return MapToDto(item);
         }
 
         public async Task<List<KnowledgeBaseItemDto>> GetAllKnowledgeBaseItemsAsync()
         {
-            try
-            {
-                var items = await _knowledgeBaseRepository.GetAllAsync();
-                return items.Select(MapToDto).ToList();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting all knowledge base items");
-                throw;
-            }
+            var items = await _knowledgeBaseRepository.GetAllAsync();
+            return items.Select(MapToDto).ToList();
         }
 
         public async Task<KnowledgeBaseItemDto> CreateKnowledgeBaseItemAsync(CreateKnowledgeBaseItemDto itemDto)
         {
-            try
+            var item = new KnowledgeBaseItem
             {
-                var newItem = new KnowledgeBaseItem(
-                    itemDto.Title,
-                    itemDto.Content,
-                    itemDto.Category,
-                    itemDto.Tags);
+                Title = itemDto.Title,
+                Content = itemDto.Content,
+                Category = itemDto.Category,
+                Tags = itemDto.Tags ?? new List<string>(),
+                Author = itemDto.Author,
+                CreatedAt = DateTime.UtcNow,
+                IsPublished = true
+            };
 
-                var createdItem = await _knowledgeBaseRepository.CreateAsync(newItem);
-                return MapToDto(createdItem);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error creating knowledge base item");
-                throw;
-            }
+            var createdItem = await _knowledgeBaseRepository.CreateAsync(item);
+            return MapToDto(createdItem);
         }
 
         public async Task UpdateKnowledgeBaseItemAsync(Guid id, UpdateKnowledgeBaseItemDto itemDto)
         {
-            try
+            var existingItem = await _knowledgeBaseRepository.GetByIdAsync(id);
+            if (existingItem == null)
             {
-                var item = await _knowledgeBaseRepository.GetByIdAsync(id);
-                if (item == null)
-                {
-                    throw new InvalidOperationException($"Knowledge base item with ID {id} not found");
-                }
-
-                item.UpdateTitle(itemDto.Title);
-                item.UpdateContent(itemDto.Content);
-                item.UpdateCategory(itemDto.Category);
-                item.UpdateTags(itemDto.Tags);
-
-                await _knowledgeBaseRepository.UpdateAsync(item);
+                throw new KeyNotFoundException($"Knowledge base item with ID {id} not found");
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error updating knowledge base item with ID: {id}");
-                throw;
-            }
+
+            existingItem.Title = itemDto.Title;
+            existingItem.Content = itemDto.Content;
+            existingItem.Category = itemDto.Category;
+            existingItem.Tags = itemDto.Tags ?? new List<string>();
+            existingItem.UpdatedAt = DateTime.UtcNow;
+            existingItem.IsPublished = itemDto.IsPublished;
+
+            await _knowledgeBaseRepository.UpdateAsync(existingItem);
         }
 
         public async Task DeleteKnowledgeBaseItemAsync(Guid id)
         {
-            try
+            var existingItem = await _knowledgeBaseRepository.GetByIdAsync(id);
+            if (existingItem == null)
             {
-                await _knowledgeBaseRepository.DeleteAsync(id);
+                throw new KeyNotFoundException($"Knowledge base item with ID {id} not found");
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error deleting knowledge base item with ID: {id}");
-                throw;
-            }
+
+            await _knowledgeBaseRepository.DeleteAsync(id);
         }
 
         public async Task<List<KnowledgeBaseItemDto>> SearchKnowledgeBaseAsync(string searchTerm)
         {
-            try
-            {
-                var items = await _knowledgeBaseRepository.SearchAsync(searchTerm);
-                return items.Select(MapToDto).ToList();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error searching knowledge base with term: {searchTerm}");
-                throw;
-            }
+            var items = await _knowledgeBaseRepository.SearchAsync(searchTerm);
+            return items.Select(MapToDto).ToList();
         }
 
         public async Task<List<KnowledgeBaseItemDto>> GetRelatedItemsAsync(string topic, int count)
         {
-            try
-            {
-                var items = await _knowledgeBaseRepository.GetRelatedItemsAsync(topic, count);
-                return items.Select(MapToDto).ToList();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error getting related knowledge base items for topic: {topic}");
-                throw;
-            }
+            var items = await _knowledgeBaseRepository.GetRelatedItemsAsync(topic, count);
+            return items.Select(MapToDto).ToList();
         }
 
         public async Task<List<KnowledgeBaseItemDto>> GetMostRecentItemsAsync(int count)
         {
-            try
-            {
-                var items = await _knowledgeBaseRepository.GetMostRecentAsync(count);
-                return items.Select(MapToDto).ToList();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error getting most recent knowledge base items");
-                throw;
-            }
+            var items = await _knowledgeBaseRepository.GetMostRecentAsync(count);
+            return items.Select(MapToDto).ToList();
         }
 
-        private KnowledgeBaseItemDto MapToDto(KnowledgeBaseItem item)
+        private static KnowledgeBaseItemDto MapToDto(KnowledgeBaseItem item)
         {
             return new KnowledgeBaseItemDto
             {
@@ -160,7 +108,10 @@ namespace SurveyApp.Application.Services
                 Category = item.Category,
                 Tags = item.Tags,
                 CreatedAt = item.CreatedAt,
-                UpdatedAt = item.UpdatedAt
+                UpdatedAt = item.UpdatedAt,
+                Author = item.Author,
+                ViewCount = item.ViewCount,
+                IsPublished = item.IsPublished
             };
         }
     }

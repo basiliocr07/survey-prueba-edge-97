@@ -17,6 +17,7 @@ namespace SurveyApp.Infrastructure.Data
         public DbSet<DeliveryConfig> DeliveryConfigs { get; set; }
         public DbSet<Schedule> Schedules { get; set; }
         public DbSet<Trigger> Triggers { get; set; }
+        public DbSet<KnowledgeBaseItem> KnowledgeBaseItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -49,6 +50,13 @@ namespace SurveyApp.Infrastructure.Data
                 .HasOne(dc => dc.Trigger)
                 .WithOne()
                 .HasForeignKey<Trigger>("DeliveryConfigId");
+
+            // KnowledgeBaseItem
+            modelBuilder.Entity<KnowledgeBaseItem>()
+                .Property(k => k.Tags)
+                .HasConversion(
+                    v => string.Join(',', v),
+                    v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList());
 
             // Handle collection of primitive types
             modelBuilder.Entity<Question>()
