@@ -9,6 +9,9 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SurveyApp.Infrastructure.Data;
 using SurveyApp.WebApi.DependencyInjection;
+using SurveyApp.Application.Services;
+using SurveyApp.Application.Ports;
+using SurveyApp.Infrastructure.Repositories;
 using System;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -46,6 +49,13 @@ builder.Services.AddAuthorization(options =>
 // Register services using extension methods
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices();
+
+// Ensuring all required services are properly registered
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ISurveyService, SurveyService>();
+builder.Services.AddScoped<ISuggestionService, SuggestionService>();
+builder.Services.AddScoped<IRequirementService, RequirementService>();
 
 var app = builder.Build();
 

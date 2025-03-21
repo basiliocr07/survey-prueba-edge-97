@@ -27,7 +27,9 @@ namespace SurveyApp.Infrastructure.Repositories
             try
             {
                 _logger.LogInformation($"Validating database user credentials for: {username}");
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Username.ToLower() == username.ToLower());
+                var user = await _context.Users.FirstOrDefaultAsync(u => 
+                    u.Username.ToLower() == username.ToLower());
+                
                 if (user == null)
                 {
                     _logger.LogWarning($"User validation failed: Username {username} not found in database");
@@ -52,7 +54,8 @@ namespace SurveyApp.Infrastructure.Repositories
             try
             {
                 _logger.LogInformation($"Getting user by username: {username}");
-                return await _context.Users.FirstOrDefaultAsync(u => u.Username.ToLower() == username.ToLower());
+                return await _context.Users.FirstOrDefaultAsync(u => 
+                    u.Username.ToLower() == username.ToLower());
             }
             catch (Exception ex)
             {
@@ -87,7 +90,8 @@ namespace SurveyApp.Infrastructure.Repositories
             try
             {
                 _logger.LogInformation($"Checking if user exists: {username}");
-                return await _context.Users.AnyAsync(u => u.Username.ToLower() == username.ToLower());
+                return await _context.Users.AnyAsync(u => 
+                    u.Username.ToLower() == username.ToLower());
             }
             catch (Exception ex)
             {

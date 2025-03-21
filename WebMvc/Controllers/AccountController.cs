@@ -48,13 +48,13 @@ namespace SurveyApp.WebMvc.Controllers
             {
                 _logger.LogInformation($"Attempting login for user: {model.Username}");
                 
-                // Validar credenciales 
-                bool isValid = await _authService.ValidateUserAsync(model.Username, model.Password);
+                // Validate credentials - ensure we use case-insensitive comparison
+                bool isValid = await _authService.ValidateUserAsync(model.Username.Trim(), model.Password);
                 
                 if (isValid)
                 {
-                    // Obtener información del usuario
-                    var user = await _authService.GetUserByUsernameAsync(model.Username);
+                    // Get user information
+                    var user = await _authService.GetUserByUsernameAsync(model.Username.Trim());
                     
                     if (user == null)
                     {
@@ -89,8 +89,8 @@ namespace SurveyApp.WebMvc.Controllers
 
                     _logger.LogInformation($"Usuario {model.Username} ha iniciado sesión correctamente");
                     
-                    // Dirigir al usuario a la página adecuada según su rol
-                    if (userRole == "Admin")
+                    // Direct user to appropriate page based on role
+                    if (userRole.Equals("Admin", StringComparison.OrdinalIgnoreCase))
                     {
                         return RedirectToAction("Index", "Dashboard");
                     }

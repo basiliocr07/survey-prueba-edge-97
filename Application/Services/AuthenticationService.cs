@@ -1,4 +1,5 @@
 
+using System;
 using System.Threading.Tasks;
 using SurveyApp.Application.DTOs;
 using SurveyApp.Application.Ports;
@@ -25,10 +26,12 @@ namespace SurveyApp.Application.Services
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
                 return false;
                 
-            // Verificación de usuarios predefinidos (hardcoded para desarrollo)
+            // Check predefined users (hardcoded for development)
             _logger.LogInformation($"Validating predefined user: {username}");
-            if ((username.ToLower() == "admin" && password == "adminpass") || 
-                (username.ToLower() == "client" && password == "clientpass"))
+            
+            // Ensure case-insensitive comparison for predefined users
+            if ((username.Equals("admin", StringComparison.OrdinalIgnoreCase) && password == "adminpass") || 
+                (username.Equals("client", StringComparison.OrdinalIgnoreCase) && password == "clientpass"))
             {
                 _logger.LogInformation($"Predefined user {username} validated successfully");
                 return true;
@@ -40,8 +43,8 @@ namespace SurveyApp.Application.Services
 
         public async Task<UserDto> GetUserByUsernameAsync(string username)
         {
-            // Para usuarios predefinidos hardcoded
-            if (username.ToLower() == "admin")
+            // For predefined hardcoded users
+            if (username.Equals("admin", StringComparison.OrdinalIgnoreCase))
             {
                 _logger.LogInformation("Returning predefined admin user");
                 return new UserDto
@@ -53,7 +56,7 @@ namespace SurveyApp.Application.Services
                 };
             }
             
-            if (username.ToLower() == "client")
+            if (username.Equals("client", StringComparison.OrdinalIgnoreCase))
             {
                 _logger.LogInformation("Returning predefined client user");
                 return new UserDto
@@ -88,8 +91,9 @@ namespace SurveyApp.Application.Services
                 string.IsNullOrEmpty(password) || string.IsNullOrEmpty(role))
                 return false;
                 
-            // No permitir registrar usuarios predefinidos
-            if (username.ToLower() == "admin" || username.ToLower() == "client")
+            // Don't allow registering predefined users
+            if (username.Equals("admin", StringComparison.OrdinalIgnoreCase) || 
+                username.Equals("client", StringComparison.OrdinalIgnoreCase))
                 return false;
                 
             if (await _userRepository.UserExistsAsync(username))
@@ -102,7 +106,8 @@ namespace SurveyApp.Application.Services
 
         public async Task<bool> UserExistsAsync(string username)
         {
-            if (username.ToLower() == "admin" || username.ToLower() == "client")
+            if (username.Equals("admin", StringComparison.OrdinalIgnoreCase) || 
+                username.Equals("client", StringComparison.OrdinalIgnoreCase))
                 return true;
                 
             return await _userRepository.UserExistsAsync(username);

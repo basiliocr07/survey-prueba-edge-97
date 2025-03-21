@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
+import { AlertCircle } from "lucide-react";
 
 export default function ClientLogin() {
   const navigate = useNavigate();
@@ -22,16 +23,26 @@ export default function ClientLogin() {
     confirmPassword: '',
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [registerError, setRegisterError] = useState<string | null>(null);
 
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setLoginError(null);
     setIsLoading(true);
     
-    // Verificar si es administrador (case insensitive)
+    // Validate inputs
+    if (!loginFormData.username || !loginFormData.password) {
+      setLoginError("Por favor, complete todos los campos");
+      setIsLoading(false);
+      return;
+    }
+    
+    // Verify if admin (case insensitive)
     if (loginFormData.username.toLowerCase() === 'admin' && loginFormData.password === 'adminpass') {
       console.log('Admin login successful');
       localStorage.setItem('userRole', 'admin');
-      localStorage.setItem('username', loginFormData.username);
+      localStorage.setItem('username', 'admin'); // Store consistent casing
       localStorage.setItem('isLoggedIn', 'true');
       
       toast({
@@ -44,11 +55,11 @@ export default function ClientLogin() {
       return;
     }
     
-    // Verificar si es cliente (case insensitive)
+    // Verify if client (case insensitive)
     if (loginFormData.username.toLowerCase() === 'client' && loginFormData.password === 'clientpass') {
       console.log('Client login successful');
       localStorage.setItem('userRole', 'client');
-      localStorage.setItem('username', loginFormData.username);
+      localStorage.setItem('username', 'client'); // Store consistent casing
       localStorage.setItem('isLoggedIn', 'true');
       
       toast({
@@ -61,65 +72,58 @@ export default function ClientLogin() {
       return;
     }
     
-    // En caso de credenciales incorrectas o para usuarios normales
-    if (loginFormData.username && loginFormData.password) {
-      console.log('Attempting normal login');
-      // Normalmente aquí iría una llamada a la API para verificar las credenciales
-      localStorage.setItem('userRole', 'client');
-      localStorage.setItem('username', loginFormData.username);
-      localStorage.setItem('isLoggedIn', 'true');
-      
-      toast({
-        title: "Inicio de sesión exitoso",
-        description: "Bienvenido al sistema de encuestas",
-      });
-      
-      setIsLoading(false);
-      navigate('/');
-    } else {
-      toast({
-        title: "Error de inicio de sesión",
-        description: "Por favor, complete todos los campos",
-        variant: "destructive",
-      });
-      setIsLoading(false);
-    }
+    // In case of incorrect credentials or for normal users
+    setLoginError("Nombre de usuario o contraseña incorrectos");
+    setIsLoading(false);
   };
 
   const handleRegisterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setRegisterError(null);
     setIsLoading(true);
     
-    if (registerFormData.password !== registerFormData.confirmPassword) {
-      toast({
-        title: "Error de registro",
-        description: "Las contraseñas no coinciden",
-        variant: "destructive",
-      });
+    // Validate all fields are filled
+    if (!registerFormData.username || !registerFormData.email || 
+        !registerFormData.password || !registerFormData.confirmPassword) {
+      setRegisterError("Por favor, complete todos los campos");
       setIsLoading(false);
       return;
     }
     
-    if (registerFormData.username && registerFormData.email && registerFormData.password) {
-      localStorage.setItem('userRole', 'client');
-      localStorage.setItem('username', registerFormData.username);
-      localStorage.setItem('isLoggedIn', 'true');
-      
-      toast({
-        title: "Registro exitoso",
-        description: "Su cuenta ha sido creada correctamente",
-      });
-      
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(registerFormData.email)) {
+      setRegisterError("Por favor, ingrese un correo electrónico válido");
       setIsLoading(false);
-      navigate('/');
-    } else {
-      toast({
-        title: "Error de registro",
-        description: "Por favor, complete todos los campos",
-        variant: "destructive",
-      });
-      setIsLoading(false);
+      return;
     }
+    
+    // Validate password matching
+    if (registerFormData.password !== registerFormData.confirmPassword) {
+      setRegisterError("Las contraseñas no coinciden");
+      setIsLoading(false);
+      return;
+    }
+    
+    // Process registration
+    if (registerFormData.username.toLowerCase() === 'admin' || 
+        registerFormData.username.toLowerCase() === 'client') {
+      setRegisterError("Este nombre de usuario está reservado");
+      setIsLoading(false);
+      return;
+    }
+    
+    localStorage.setItem('userRole', 'client');
+    localStorage.setItem('username', registerFormData.username);
+    localStorage.setItem('isLoggedIn', 'true');
+    
+    toast({
+      title: "Registro exitoso",
+      description: "Su cuenta ha sido creada correctamente",
+    });
+    
+    setIsLoading(false);
+    navigate('/');
   };
 
   return (
@@ -140,6 +144,13 @@ export default function ClientLogin() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {loginError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-md flex items-start">
+                    <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0 text-red-500" />
+                    <p className="text-sm">{loginError}</p>
+                  </div>
+                )}
+                
                 <div className="space-y-2">
                   <Label htmlFor="username">Usuario</Label>
                   <Input 
@@ -182,6 +193,13 @@ export default function ClientLogin() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {registerError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-md flex items-start">
+                    <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0 text-red-500" />
+                    <p className="text-sm">{registerError}</p>
+                  </div>
+                )}
+              
                 <div className="space-y-2">
                   <Label htmlFor="reg-username">Usuario</Label>
                   <Input 
