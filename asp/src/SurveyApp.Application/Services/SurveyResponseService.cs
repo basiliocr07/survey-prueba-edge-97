@@ -81,6 +81,10 @@ namespace SurveyApp.Application.Services
                             answer.Answer = singleAnswer;
                         }
                     }
+                    else if (question.Type == "rating" || question.Type == "nps")
+                    {
+                        answer.Answer = answerObj?.ToString() ?? string.Empty;
+                    }
                     else
                     {
                         answer.Answer = answerObj?.ToString() ?? string.Empty;
@@ -99,6 +103,32 @@ namespace SurveyApp.Application.Services
             return MapToDto(createdResponse);
         }
 
+        public async Task<SurveyResponseAnalyticsDto> GetResponseAnalyticsAsync(Guid surveyId)
+        {
+            var responses = await _responseRepository.GetBySurveyIdAsync(surveyId);
+            var analytics = new SurveyResponseAnalyticsDto
+            {
+                SurveyId = surveyId,
+                TotalResponses = responses.Count(),
+                AverageCompletionTime = responses.Any() ? responses.Average(r => r.CompletionTime) : 0,
+                CompletionRate = 100, // Asumimos que todas las respuestas están completas
+                ResponsesByDate = responses
+                    .GroupBy(r => r.SubmittedAt.Date)
+                    .Select(g => new { Date = g.Key, Count = g.Count() })
+                    .ToDictionary(x => x.Date.ToString("yyyy-MM-dd"), x => x.Count)
+            };
+
+            // Agregar análisis por tipo de dispositivo
+            var deviceCounts = responses
+                .GroupBy(r => string.IsNullOrEmpty(r.DeviceType) ? "Unknown" : r.DeviceType)
+                .Select(g => new { Device = g.Key, Count = g.Count() })
+                .ToDictionary(x => x.Device, x => x.Count);
+            
+            analytics.DeviceBreakdown = deviceCounts;
+
+            return analytics;
+        }
+
         private SurveyResponseDto MapToDto(SurveyResponse response)
         {
             return new SurveyResponseDto
@@ -108,6 +138,8 @@ namespace SurveyApp.Application.Services
                 SurveyTitle = string.Empty, // This would need to be populated separately by joining with survey data
                 RespondentName = response.RespondentName,
                 RespondentEmail = response.RespondentEmail,
+                RespondentPhone = response.RespondentPhone,
+                RespondentCompany = response.RespondentCompany,
                 SubmittedAt = response.SubmittedAt,
                 Answers = response.Answers.Select(a => new QuestionResponseDto
                 {
@@ -116,7 +148,13 @@ namespace SurveyApp.Application.Services
                     QuestionType = a.QuestionType,
                     Answer = a.Answer,
                     MultipleAnswers = a.MultipleAnswers
-                }).ToList()
+                }).ToList(),
+                IsExistingClient = response.IsExistingClient,
+                ExistingClientId = response.ExistingClientId,
+                CompletionTime = response.CompletionTime,
+                DeviceType = response.DeviceType,
+                Browser = response.Browser,
+                Location = response.Location
             };
         }
 

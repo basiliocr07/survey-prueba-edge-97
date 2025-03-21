@@ -88,8 +88,7 @@
     background-color: #f3f4f6;
 }
 
-/* Animaciones que aún no se utilizan */
-/*
+/* Animaciones */
 .animated-fade-in {
     animation: fadeIn 0.3s ease-in-out;
 }
@@ -107,4 +106,55 @@
     from { transform: translateY(20px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
 }
-*/
+
+/* Hover effects */
+.hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* Utility classes para inputs estilizados */
+.form-input {
+    width: 100%;
+    border-radius: 0.375rem;
+    border: 1px solid #d1d5db;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    transition-property: border-color, box-shadow;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+    background-color: white;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: hsl(var(--primary));
+    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2);
+}
+
+/* Estilos para los ratings */
+.star-rating svg {
+    transition: color 0.2s ease, fill 0.2s ease;
+}
+
+.star-rating label:hover svg,
+.star-rating input:checked ~ label svg {
+    color: #f59e0b;
+    fill: #f59e0b;
+}
+
+/* Estilos para NPS Rating */
+[id^="nps"] + label {
+    transition: all 0.2s ease;
+}
+
+[id^="nps"]:checked + label {
+    background-color: hsl(var(--primary));
+    color: white;
+    border-color: hsl(var(--primary));
+}
