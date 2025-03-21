@@ -168,7 +168,7 @@ namespace SurveyApp.WebMvc.Controllers
                         var requirementStatusUpdate = new RequirementStatusUpdateDto
                         {
                             Status = status,
-                            Comment = "", // Default empty comment
+                            Response = "", // Changed from Comment to Response to match the DTO property
                             CompletionPercentage = null // Default null percentage
                         };
                         await _requirementService.UpdateRequirementStatusAsync(id, requirementStatusUpdate);
