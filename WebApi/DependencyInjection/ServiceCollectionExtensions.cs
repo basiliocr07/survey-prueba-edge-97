@@ -4,6 +4,8 @@ using SurveyApp.Application.Ports;
 using SurveyApp.Application.Services;
 using SurveyApp.Infrastructure.Repositories;
 using SurveyApp.Infrastructure.Services;
+// Use alias for Application.Ports.IAuthenticationService
+using AuthService = SurveyApp.Application.Ports.IAuthenticationService;
 
 namespace SurveyApp.WebApi.DependencyInjection
 {
@@ -20,7 +22,7 @@ namespace SurveyApp.WebApi.DependencyInjection
             services.AddScoped<IAnalyticsService, AnalyticsService>();
             
             // Register the authentication service with the correct interface
-            services.AddScoped<Application.Ports.IAuthenticationService, Application.Services.AuthenticationService>();
+            services.AddScoped<AuthService, Application.Services.AuthenticationService>();
             
             return services;
         }

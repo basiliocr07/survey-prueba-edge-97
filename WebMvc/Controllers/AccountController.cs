@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
@@ -8,18 +7,18 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using SurveyApp.Application.Ports;
 using SurveyApp.WebMvc.Models;
+using AuthService = SurveyApp.Application.Ports.IAuthenticationService;
 
 namespace SurveyApp.WebMvc.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly IAuthenticationService _authService;
+        private readonly AuthService _authService;
         private readonly ILogger<AccountController> _logger;
 
         public AccountController(
-            IAuthenticationService authService,
+            AuthService authService,
             ILogger<AccountController> logger)
         {
             _authService = authService;
@@ -122,7 +121,6 @@ namespace SurveyApp.WebMvc.Controllers
                         return View(model);
                     }
                     
-                    // Asignar el rol predeterminado (Cliente)
                     var success = await _authService.RegisterUserAsync(model.Username, model.Email, model.Password, "Client");
                     
                     if (success)
