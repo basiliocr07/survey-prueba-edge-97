@@ -13,11 +13,16 @@ using SurveyApp.Application.Ports;
 using SurveyApp.Application.Services;
 using SurveyApp.Infrastructure.Data;
 using SurveyApp.Infrastructure.Repositories;
+using SurveyApp.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddNewtonsoftJson(options => {
+        options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+    });
+    
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -35,7 +40,7 @@ builder.Services.AddCors(options =>
 
 // Configure database
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite(builder.Configuration.GetConnectionString("SqliteConnection")));
 
 // Register repositories
 builder.Services.AddScoped<ISurveyRepository, SurveyRepository>();
@@ -50,6 +55,13 @@ builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
 // Register services
 builder.Services.AddScoped<ISurveyService, SurveyService>();
 builder.Services.AddScoped<ISurveyResponseService, SurveyResponseService>();
+builder.Services.AddScoped<IRequirementService, RequirementService>();
+builder.Services.AddScoped<ISuggestionService, SuggestionService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<IKnowledgeBaseService, KnowledgeBaseService>();
+builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
 // Configure logging
 builder.Logging.ClearProviders();
@@ -89,6 +101,12 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseDeveloperExceptionPage();
+}
+else
+{
+    app.UseExceptionHandler("/Error");
+    app.UseHsts();
 }
 
 app.UseHttpsRedirection();
@@ -102,8 +120,31 @@ app.MapControllers();
 // Initialize/migrate the database on application startup
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    dbContext.EnsureDatabaseCreated();
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    
+    try
+    {
+        logger.LogInformation("Initializing API database...");
+        var context = services.GetRequiredService<AppDbContext>();
+        
+        // Try to apply migrations first, if that fails ensure database is created
+        var migrated = context.MigrateDatabase();
+        
+        if (migrated)
+        {
+            logger.LogInformation("API database was successfully migrated or created.");
+        }
+        else
+        {
+            logger.LogInformation("API database already up to date.");
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "An error occurred while initializing the API database: {Message}", ex.Message);
+        logger.LogDebug("Exception details: {StackTrace}", ex.StackTrace);
+    }
 }
 
 app.Run();

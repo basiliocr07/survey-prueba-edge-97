@@ -1,3 +1,4 @@
+
 using System;
 
 namespace SurveyApp.Domain.Entities
@@ -64,6 +65,94 @@ namespace SurveyApp.Domain.Entities
         {
             Priority = priority ?? "medium";
             UpdateLastModified();
+        }
+
+        public void UpdateStatus(string status)
+        {
+            Status = status ?? "proposed";
+            
+            if (status == "completed")
+            {
+                CompletionPercentage = 100;
+            }
+            else if (status == "inProgress")
+            {
+                if (CompletionPercentage == null || CompletionPercentage == 0)
+                {
+                    CompletionPercentage = 25;
+                }
+            }
+            
+            UpdateLastModified();
+        }
+
+        public void UpdateProjectArea(string projectArea)
+        {
+            ProjectArea = projectArea ?? "general";
+            UpdateLastModified();
+        }
+
+        public void SetCustomerInfo(string customerName, string customerEmail, bool isAnonymous)
+        {
+            CustomerName = customerName;
+            CustomerEmail = customerEmail;
+            IsAnonymous = isAnonymous;
+            UpdateLastModified();
+        }
+
+        public void SetResponse(string response)
+        {
+            Response = response;
+            ResponseDate = DateTime.UtcNow;
+            UpdateLastModified();
+        }
+
+        public void UpdateCompletionPercentage(int percentage)
+        {
+            if (percentage < 0 || percentage > 100)
+                throw new ArgumentException("Percentage must be between 0 and 100", nameof(percentage));
+            
+            CompletionPercentage = percentage;
+            
+            if (percentage == 100)
+            {
+                Status = "completed";
+            }
+            else if (percentage > 0)
+            {
+                Status = "inProgress";
+            }
+            
+            UpdateLastModified();
+        }
+
+        public void SetCategory(string category)
+        {
+            Category = category;
+            UpdateLastModified();
+        }
+
+        public void SetAcceptanceCriteria(string criteria)
+        {
+            AcceptanceCriteria = criteria;
+            UpdateLastModified();
+        }
+
+        public void SetTargetDate(DateTime? targetDate)
+        {
+            TargetDate = targetDate;
+            UpdateLastModified();
+        }
+
+        public void SetContent(string content)
+        {
+            Content = content;
+            UpdateLastModified();
+        }
+
+        private void UpdateLastModified()
+        {
+            UpdatedAt = DateTime.UtcNow;
         }
     }
 }

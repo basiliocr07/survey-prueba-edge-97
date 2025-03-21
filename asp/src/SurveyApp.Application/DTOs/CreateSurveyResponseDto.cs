@@ -16,7 +16,7 @@ namespace SurveyApp.Application.DTOs
         public Guid? ExistingClientId { get; set; }
         
         // Propiedades adicionales para análisis
-        public double CompletionTime { get; set; }
+        public double CompletionTimeInSeconds { get; set; }
         public string DeviceType { get; set; }
         public string Browser { get; set; }
         public string OperatingSystem { get; set; }
