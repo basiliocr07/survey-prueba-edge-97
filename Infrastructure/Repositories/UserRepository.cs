@@ -26,17 +26,18 @@ namespace SurveyApp.Infrastructure.Repositories
         {
             try
             {
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+                _logger.LogInformation($"Validating database user credentials for: {username}");
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Username.ToLower() == username.ToLower());
                 if (user == null)
                 {
-                    _logger.LogWarning($"User validation failed: Username {username} not found");
+                    _logger.LogWarning($"User validation failed: Username {username} not found in database");
                     return false;
                 }
 
                 var hashedPassword = HashPassword(password);
                 var isValid = user.PasswordHash == hashedPassword;
                 
-                _logger.LogInformation($"User validation for {username}: {(isValid ? "successful" : "failed")}");
+                _logger.LogInformation($"Database user validation for {username}: {(isValid ? "successful" : "failed")}");
                 return isValid;
             }
             catch (Exception ex)
@@ -50,7 +51,8 @@ namespace SurveyApp.Infrastructure.Repositories
         {
             try
             {
-                return await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+                _logger.LogInformation($"Getting user by username: {username}");
+                return await _context.Users.FirstOrDefaultAsync(u => u.Username.ToLower() == username.ToLower());
             }
             catch (Exception ex)
             {
@@ -63,6 +65,7 @@ namespace SurveyApp.Infrastructure.Repositories
         {
             try
             {
+                _logger.LogInformation($"Creating new user: {username}");
                 var hashedPassword = HashPassword(password);
                 var user = new User(username, email, hashedPassword, role);
                 
@@ -83,7 +86,8 @@ namespace SurveyApp.Infrastructure.Repositories
         {
             try
             {
-                return await _context.Users.AnyAsync(u => u.Username == username);
+                _logger.LogInformation($"Checking if user exists: {username}");
+                return await _context.Users.AnyAsync(u => u.Username.ToLower() == username.ToLower());
             }
             catch (Exception ex)
             {

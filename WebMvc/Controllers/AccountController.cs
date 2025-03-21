@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
@@ -54,8 +55,16 @@ namespace SurveyApp.WebMvc.Controllers
                 {
                     // Obtener información del usuario
                     var user = await _authService.GetUserByUsernameAsync(model.Username);
-                    string userRole = user?.Role ?? "Client";
-                    string userEmail = user?.Email ?? $"{model.Username}@example.com";
+                    
+                    if (user == null)
+                    {
+                        _logger.LogWarning($"User validated but not found: {model.Username}");
+                        ModelState.AddModelError(string.Empty, "Error al obtener información del usuario");
+                        return View(model);
+                    }
+                    
+                    string userRole = user.Role;
+                    string userEmail = user.Email;
                     
                     _logger.LogInformation($"User {model.Username} authenticated successfully with role: {userRole}");
                     

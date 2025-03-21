@@ -21,12 +21,15 @@ export default function ClientLogin() {
     password: '',
     confirmPassword: '',
   });
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
-    // Verificar si es administrador
-    if (loginFormData.username === 'admin' && loginFormData.password === 'adminpass') {
+    // Verificar si es administrador (case insensitive)
+    if (loginFormData.username.toLowerCase() === 'admin' && loginFormData.password === 'adminpass') {
+      console.log('Admin login successful');
       localStorage.setItem('userRole', 'admin');
       localStorage.setItem('username', loginFormData.username);
       localStorage.setItem('isLoggedIn', 'true');
@@ -36,12 +39,14 @@ export default function ClientLogin() {
         description: "Bienvenido administrador",
       });
       
+      setIsLoading(false);
       navigate('/dashboard');
       return;
     }
     
-    // Verificar si es cliente
-    if (loginFormData.username === 'client' && loginFormData.password === 'clientpass') {
+    // Verificar si es cliente (case insensitive)
+    if (loginFormData.username.toLowerCase() === 'client' && loginFormData.password === 'clientpass') {
+      console.log('Client login successful');
       localStorage.setItem('userRole', 'client');
       localStorage.setItem('username', loginFormData.username);
       localStorage.setItem('isLoggedIn', 'true');
@@ -51,12 +56,15 @@ export default function ClientLogin() {
         description: "Bienvenido cliente",
       });
       
+      setIsLoading(false);
       navigate('/');
       return;
     }
     
     // En caso de credenciales incorrectas o para usuarios normales
     if (loginFormData.username && loginFormData.password) {
+      console.log('Attempting normal login');
+      // Normalmente aquí iría una llamada a la API para verificar las credenciales
       localStorage.setItem('userRole', 'client');
       localStorage.setItem('username', loginFormData.username);
       localStorage.setItem('isLoggedIn', 'true');
@@ -66,6 +74,7 @@ export default function ClientLogin() {
         description: "Bienvenido al sistema de encuestas",
       });
       
+      setIsLoading(false);
       navigate('/');
     } else {
       toast({
@@ -73,11 +82,13 @@ export default function ClientLogin() {
         description: "Por favor, complete todos los campos",
         variant: "destructive",
       });
+      setIsLoading(false);
     }
   };
 
   const handleRegisterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
     if (registerFormData.password !== registerFormData.confirmPassword) {
       toast({
@@ -85,6 +96,7 @@ export default function ClientLogin() {
         description: "Las contraseñas no coinciden",
         variant: "destructive",
       });
+      setIsLoading(false);
       return;
     }
     
@@ -98,6 +110,7 @@ export default function ClientLogin() {
         description: "Su cuenta ha sido creada correctamente",
       });
       
+      setIsLoading(false);
       navigate('/');
     } else {
       toast({
@@ -105,6 +118,7 @@ export default function ClientLogin() {
         description: "Por favor, complete todos los campos",
         variant: "destructive",
       });
+      setIsLoading(false);
     }
   };
 
@@ -145,15 +159,16 @@ export default function ClientLogin() {
                     onChange={(e) => setLoginFormData({...loginFormData, password: e.target.value})}
                   />
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  <p>Para iniciar como administrador:</p>
-                  <p>Usuario: admin / Contraseña: adminpass</p>
-                  <p>Para iniciar como cliente:</p>
-                  <p>Usuario: client / Contraseña: clientpass</p>
+                <div className="text-sm text-muted-foreground p-3 bg-gray-100 rounded-md border border-gray-200">
+                  <p className="font-medium mb-1">Credenciales de prueba:</p>
+                  <p><span className="font-semibold">Admin:</span> admin / adminpass</p>
+                  <p><span className="font-semibold">Cliente:</span> client / clientpass</p>
                 </div>
               </CardContent>
               <CardFooter>
-                <Button type="submit" className="w-full">Iniciar Sesión</Button>
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "Procesando..." : "Iniciar Sesión"}
+                </Button>
               </CardFooter>
             </form>
           </TabsContent>
@@ -208,7 +223,9 @@ export default function ClientLogin() {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button type="submit" className="w-full">Registrarse</Button>
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "Procesando..." : "Registrarse"}
+                </Button>
               </CardFooter>
             </form>
           </TabsContent>
