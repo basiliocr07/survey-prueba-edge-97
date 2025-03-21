@@ -15,11 +15,11 @@ namespace SurveyApp.WebMvc.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly SurveyApp.Application.Ports.IAuthenticationService _authService;
+        private readonly IAuthenticationService _authService;
         private readonly ILogger<AccountController> _logger;
 
         public AccountController(
-            SurveyApp.Application.Ports.IAuthenticationService authService,
+            IAuthenticationService authService,
             ILogger<AccountController> logger)
         {
             _authService = authService;
