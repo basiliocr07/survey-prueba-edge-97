@@ -6,7 +6,7 @@ using SurveyApp.Domain.Entities;
 
 namespace SurveyApp.Application.Services
 {
-    public class AuthenticationService : SurveyApp.Application.Ports.IAuthenticationService
+    public class AuthenticationService : IAuthenticationService
     {
         private readonly IUserRepository _userRepository;
 
