@@ -1,0 +1,801 @@
+
+@model SurveyApp.Web.Models.CreateSurveyViewModel
+
+@{
+    ViewData["Title"] = "Create Survey";
+}
+
+<div class="min-h-screen flex flex-col bg-background">
+    <main class="flex-1 w-full max-w-7xl mx-auto pt-24 px-6 pb-16">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold mb-2">Create a New Survey</h1>
+            <p class="text-muted-foreground">
+                Design your survey, add questions, and customize settings
+            </p>
+        </div>
+        
+        <div class="w-full mb-8">
+            <ul class="grid w-full grid-cols-4 mb-8 border-b">
+                <li class="flex-1">
+                    <button type="button" 
+                            class="w-full py-3 border-b-2 border-primary text-primary" 
+                            data-tab="design">Design Survey</button>
+                </li>
+                <li class="flex-1">
+                    <button type="button" 
+                            class="w-full py-3 border-b-2 border-transparent" 
+                            data-tab="delivery">Email Delivery</button>
+                </li>
+                <li class="flex-1">
+                    <button type="button" 
+                            class="w-full py-3 border-b-2 border-transparent" 
+                            data-tab="settings">Settings</button>
+                </li>
+                <li class="flex-1">
+                    <button type="button" 
+                            class="w-full py-3 border-b-2 border-transparent" 
+                            data-tab="preview">Preview</button>
+                </li>
+            </ul>
+            
+            <div id="design-tab" class="tab-content animate-fade-in">
+                <form asp-action="Create" method="post">
+                    <div class="grid gap-8">
+                        <div class="border rounded-lg shadow-sm">
+                            <div class="px-4 py-5 border-b bg-muted/30">
+                                <h3 class="font-medium">Survey Details</h3>
+                            </div>
+                            <div class="p-4 space-y-4">
+                                <div>
+                                    <label for="survey-title" class="block text-sm font-medium mb-1">
+                                        Survey Title
+                                    </label>
+                                    <input asp-for="Title"
+                                           id="survey-title"
+                                           class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base"
+                                           placeholder="Enter survey title" />
+                                </div>
+                                <div>
+                                    <label for="survey-description" class="block text-sm font-medium mb-1">
+                                        Description (optional)
+                                    </label>
+                                    <textarea asp-for="Description"
+                                              id="survey-description"
+                                              class="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                              placeholder="Enter a description for your survey"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <h2 class="text-xl font-semibold">Questions</h2>
+                                <button type="button" class="add-question-btn px-4 py-2 rounded-md bg-primary text-white flex items-center">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                    </svg>
+                                    Add Question
+                                </button>
+                            </div>
+                            
+                            <div id="questions-container" class="space-y-4">
+                                @for (int i = 0; i < Model.Questions.Count; i++)
+                                {
+                                    <div class="question-builder border rounded-lg shadow-sm">
+                                        <div class="flex items-center px-4 py-3 border-b bg-muted/30">
+                                            <div class="mr-2 text-muted-foreground">
+                                                <svg class="h-5 w-5 cursor-grab" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
+                                                </svg>
+                                            </div>
+                                            <button type="button" class="toggle-question p-0 h-auto mr-2 bg-transparent">
+                                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                                                </svg>
+                                            </button>
+                                            <div class="flex-1 font-medium truncate">
+                                                <span class="question-title">@(string.IsNullOrEmpty(Model.Questions[i].Title) ? "Untitled Question" : Model.Questions[i].Title)</span>
+                                            </div>
+                                            <div class="flex items-center gap-1">
+                                                <button type="button" class="move-up-btn bg-transparent p-2 rounded-md">
+                                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                                                    </svg>
+                                                </button>
+                                                <button type="button" class="move-down-btn bg-transparent p-2 rounded-md">
+                                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                                    </svg>
+                                                </button>
+                                                <button type="button" class="delete-question bg-transparent p-2 rounded-md text-muted-foreground hover:text-red-500">
+                                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="question-content p-4 space-y-4">
+                                            <input type="hidden" asp-for="Questions[i].Id" />
+                                            <div class="space-y-2">
+                                                <div>
+                                                    <label class="block text-sm font-medium mb-1">Question</label>
+                                                    <input asp-for="Questions[i].Title" 
+                                                           class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base"
+                                                           placeholder="Enter your question" />
+                                                </div>
+                                                
+                                                <div>
+                                                    <label class="block text-sm font-medium mb-1">Description (optional)</label>
+                                                    <textarea asp-for="Questions[i].Description"
+                                                              class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                                              placeholder="Add a description to provide more context"></textarea>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <button type="button" class="question-type-btn w-full justify-between flex items-center px-4 py-2 rounded-md border">
+                                                    <span>Question Type: <span class="font-medium question-type-label">@Model.Questions[i].Type.Replace("-", " ")</span></span>
+                                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                                    </svg>
+                                                </button>
+                                                <input type="hidden" asp-for="Questions[i].Type" class="question-type-input" />
+                                                
+                                                <div class="question-types-list mt-3 p-3 border rounded-md hidden">
+                                                    <!-- Question types will be rendered here via JavaScript -->
+                                                </div>
+                                            </div>
+
+                                            @if (new[] { "multiple-choice", "single-choice", "dropdown", "ranking" }.Contains(Model.Questions[i].Type))
+                                            {
+                                                <div class="options-container space-y-3 mt-4">
+                                                    <label class="block text-sm font-medium">Options</label>
+                                                    @for (int j = 0; j < Model.Questions[i].Options.Count; j++)
+                                                    {
+                                                        <div class="option-item flex items-center gap-2">
+                                                            <div class="flex-1">
+                                                                <input asp-for="Questions[i].Options[j]"
+                                                                       class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base"
+                                                                       placeholder="@($"Option {j + 1}")" />
+                                                            </div>
+                                                            <button type="button" class="delete-option bg-transparent p-2 rounded-md text-muted-foreground hover:text-red-500">
+                                                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                                </svg>
+                                                            </button>
+                                                        </div>
+                                                    }
+                                                    <button type="button" class="add-option-btn px-3 py-1 rounded-md border inline-flex items-center text-sm">
+                                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                                        </svg>
+                                                        Add Option
+                                                    </button>
+                                                </div>
+                                            }
+
+                                            <div class="flex items-center space-x-2 pt-2">
+                                                <input type="checkbox" asp-for="Questions[i].Required" id="@($"question-{i}-required")" class="rounded" />
+                                                <label for="@($"question-{i}-required")" class="text-sm">Required question</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-end space-x-4 mt-8">
+                            <button type="button" id="preview-btn" class="px-4 py-2 rounded-md border bg-secondary text-foreground">
+                                Preview
+                            </button>
+                            <button type="submit" class="px-4 py-2 rounded-md bg-primary text-white flex items-center">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                                </svg>
+                                Save Survey
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div id="delivery-tab" class="tab-content hidden">
+                <div class="border rounded-lg shadow-sm">
+                    <div class="px-4 py-5 border-b bg-muted/30">
+                        <h3 class="font-medium">Email Delivery Settings</h3>
+                    </div>
+                    <div class="p-4 space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-4">Delivery Type</label>
+                            <div class="space-y-2">
+                                <div class="flex items-center">
+                                    <input type="radio" id="delivery-manual" name="delivery-type" value="manual" checked class="mr-2" />
+                                    <label for="delivery-manual">Manual (send as needed)</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="radio" id="delivery-auto" name="delivery-type" value="automated" class="mr-2" />
+                                    <label for="delivery-auto">Automated (schedule based)</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="radio" id="delivery-trigger" name="delivery-type" value="triggered" class="mr-2" />
+                                    <label for="delivery-trigger">Event Triggered</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="email-recipients" class="space-y-3">
+                            <label class="block text-sm font-medium mb-1">Recipients</label>
+                            <div class="space-y-2">
+                                <div class="flex items-center gap-2">
+                                    <input type="email" placeholder="Enter email address" class="flex-1 h-10 rounded-md border border-input bg-background px-3 py-2" />
+                                    <button type="button" class="add-email-btn px-3 py-1 rounded-md bg-primary text-white">Add</button>
+                                </div>
+                                <div id="email-list" class="border rounded-md p-2 min-h-[100px] max-h-[200px] overflow-y-auto space-y-1">
+                                    <!-- Email chips will be added here by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-end mt-4">
+                            <button type="button" id="send-emails-btn" class="px-4 py-2 rounded-md bg-primary text-white flex items-center" disabled>
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                </svg>
+                                Send Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="settings-tab" class="tab-content hidden">
+                <div class="border rounded-lg shadow-sm">
+                    <div class="px-4 py-5 border-b bg-muted/30">
+                        <h3 class="font-medium">Survey Settings</h3>
+                    </div>
+                    <div class="p-4 space-y-6">
+                        <div>
+                            <h3 class="text-lg font-medium mb-4">Data Collection</h3>
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="font-medium">Allow anonymous responses</h4>
+                                        <p class="text-sm text-muted-foreground">Respondents can submit without identifying themselves</p>
+                                    </div>
+                                    <div class="flex items-center h-6">
+                                        <input type="checkbox" id="anonymous" class="mr-2" checked />
+                                        <label for="anonymous">Enable</label>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="font-medium">Multiple submissions</h4>
+                                        <p class="text-sm text-muted-foreground">Allow respondents to submit multiple times</p>
+                                    </div>
+                                    <div class="flex items-center h-6">
+                                        <input type="checkbox" id="multiple" class="mr-2" />
+                                        <label for="multiple">Enable</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-lg font-medium mb-4">Display Options</h3>
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="font-medium">Show progress bar</h4>
+                                        <p class="text-sm text-muted-foreground">Display completion progress to respondents</p>
+                                    </div>
+                                    <div class="flex items-center h-6">
+                                        <input type="checkbox" id="progress" class="mr-2" checked />
+                                        <label for="progress">Enable</label>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="font-medium">Show question numbers</h4>
+                                        <p class="text-sm text-muted-foreground">Display question numbers to respondents</p>
+                                    </div>
+                                    <div class="flex items-center h-6">
+                                        <input type="checkbox" id="numbers" class="mr-2" checked />
+                                        <label for="numbers">Enable</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="preview-tab" class="tab-content hidden">
+                <div class="border rounded-lg shadow-sm">
+                    <div class="px-4 py-5 border-b bg-muted/30">
+                        <h3 class="font-medium">Preview Your Survey</h3>
+                    </div>
+                    <div class="p-4">
+                        <div class="max-w-3xl mx-auto border rounded-lg p-6 bg-white shadow-sm">
+                            <div class="mb-8">
+                                <h2 class="text-2xl font-bold mb-2" id="preview-title">Untitled Survey</h2>
+                                <p class="text-muted-foreground" id="preview-description"></p>
+                            </div>
+                            
+                            <div id="preview-questions" class="space-y-8">
+                                <!-- Question previews will be generated here -->
+                            </div>
+                            
+                            <div class="mt-8 flex justify-end">
+                                <button type="button" class="px-4 py-2 rounded-md bg-primary text-white">Submit Responses</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end p-4 mt-6">
+                        <button type="button" id="back-to-design-btn" class="px-4 py-2 rounded-md border">
+                            Return to Editing
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab switching
+            const tabButtons = document.querySelectorAll('[data-tab]');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            function switchTab(tabId) {
+                tabButtons.forEach(btn => {
+                    if (btn.dataset.tab === tabId) {
+                        btn.classList.add('border-primary', 'text-primary');
+                        btn.classList.remove('border-transparent');
+                    } else {
+                        btn.classList.remove('border-primary', 'text-primary');
+                        btn.classList.add('border-transparent');
+                    }
+                });
+                
+                tabContents.forEach(content => {
+                    if (content.id === tabId + '-tab') {
+                        content.classList.remove('hidden');
+                    } else {
+                        content.classList.add('hidden');
+                    }
+                });
+            }
+            
+            tabButtons.forEach(btn => {
+                btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+            });
+            
+            // Question builder logic
+            const questionTypes = [
+                { type: 'multiple-choice', name: 'Multiple Choice', icon: 'M2 4h16v16H2V4zm14 12H4v-2h12v2zm0-4H4v-2h12v2zm0-4H4V6h12v2z' },
+                { type: 'single-choice', name: 'Single Choice', icon: 'M12 16a4 4 0 100-8 4 4 0 000 8z' },
+                { type: 'text', name: 'Text Input', icon: 'M4 5h16v2H4V5zm0 6h16v2H4v-2zm0 6h10v2H4v-2z' },
+                { type: 'rating', name: 'Star Rating', icon: 'M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z' },
+                { type: 'dropdown', name: 'Dropdown', icon: 'M7 10l5 5 5-5H7z' },
+                { type: 'nps', name: 'NPS Scale', icon: 'M3 3v18h18V3H3zm16 16H5V5h14v14z' }
+            ];
+            
+            const questionsContainer = document.getElementById('questions-container');
+            const addQuestionBtn = document.querySelector('.add-question-btn');
+            const previewBtn = document.getElementById('preview-btn');
+            const backToDesignBtn = document.getElementById('back-to-design-btn');
+            
+            // Toggle question expansion
+            questionsContainer.addEventListener('click', function(e) {
+                if (e.target.closest('.toggle-question')) {
+                    const questionBuilder = e.target.closest('.question-builder');
+                    const content = questionBuilder.querySelector('.question-content');
+                    content.classList.toggle('hidden');
+                    
+                    const icon = e.target.closest('.toggle-question').querySelector('svg');
+                    if (content.classList.contains('hidden')) {
+                        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>';
+                    } else {
+                        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>';
+                    }
+                }
+                
+                // Toggle question types panel
+                if (e.target.closest('.question-type-btn')) {
+                    const questionBuilder = e.target.closest('.question-builder');
+                    const typesList = questionBuilder.querySelector('.question-types-list');
+                    
+                    if (typesList.classList.contains('hidden')) {
+                        // First, generate the type options
+                        if (typesList.children.length === 0) {
+                            const typesHtml = questionTypes.map(type => `
+                                <button type="button" data-type="${type.type}" class="question-type-option flex items-center gap-3 p-3 w-full text-left hover:bg-muted rounded-md">
+                                    <div class="bg-accent rounded-full p-2">
+                                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                            <path d="${type.icon}" stroke-width="2" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium">${type.name}</div>
+                                        <div class="text-xs text-muted-foreground">Add a ${type.name.toLowerCase()} question</div>
+                                    </div>
+                                </button>
+                            `).join('');
+                            typesList.innerHTML = typesHtml;
+                        }
+                        
+                        // Show the types list
+                        typesList.classList.remove('hidden');
+                        
+                        // Add event listeners to type options
+                        const typeOptions = typesList.querySelectorAll('.question-type-option');
+                        typeOptions.forEach(option => {
+                            option.addEventListener('click', function() {
+                                const selectedType = this.dataset.type;
+                                const typeInput = questionBuilder.querySelector('.question-type-input');
+                                const typeLabel = questionBuilder.querySelector('.question-type-label');
+                                
+                                typeInput.value = selectedType;
+                                typeLabel.textContent = selectedType.replace('-', ' ');
+                                
+                                // Update the options section based on the question type
+                                const optionsContainer = questionBuilder.querySelector('.options-container');
+                                if (['multiple-choice', 'single-choice', 'dropdown', 'ranking'].includes(selectedType)) {
+                                    if (!optionsContainer) {
+                                        // Create options container if it doesn't exist
+                                        const newOptionsContainer = document.createElement('div');
+                                        newOptionsContainer.className = 'options-container space-y-3 mt-4';
+                                        newOptionsContainer.innerHTML = `
+                                            <label class="block text-sm font-medium">Options</label>
+                                            <div class="option-item flex items-center gap-2">
+                                                <div class="flex-1">
+                                                    <input name="Questions[0].Options[0]" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base" placeholder="Option 1">
+                                                </div>
+                                                <button type="button" class="delete-option bg-transparent p-2 rounded-md text-muted-foreground hover:text-red-500">
+                                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                            <div class="option-item flex items-center gap-2">
+                                                <div class="flex-1">
+                                                    <input name="Questions[0].Options[1]" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base" placeholder="Option 2">
+                                                </div>
+                                                <button type="button" class="delete-option bg-transparent p-2 rounded-md text-muted-foreground hover:text-red-500">
+                                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                            <button type="button" class="add-option-btn px-3 py-1 rounded-md border inline-flex items-center text-sm">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                                </svg>
+                                                Add Option
+                                            </button>
+                                        `;
+                                        
+                                        const requiredCheckbox = questionBuilder.querySelector('.flex.items-center.space-x-2.pt-2');
+                                        questionBuilder.querySelector('.question-content').insertBefore(newOptionsContainer, requiredCheckbox);
+                                    }
+                                } else if (optionsContainer) {
+                                    // Remove options container for non-option question types
+                                    optionsContainer.remove();
+                                }
+                                
+                                typesList.classList.add('hidden');
+                            });
+                        });
+                    } else {
+                        typesList.classList.add('hidden');
+                    }
+                }
+                
+                // Add option button
+                if (e.target.closest('.add-option-btn')) {
+                    const questionBuilder = e.target.closest('.question-builder');
+                    const optionsContainer = questionBuilder.querySelector('.options-container');
+                    const optionItems = optionsContainer.querySelectorAll('.option-item');
+                    const newIndex = optionItems.length;
+                    
+                    const newOption = document.createElement('div');
+                    newOption.className = 'option-item flex items-center gap-2';
+                    newOption.innerHTML = `
+                        <div class="flex-1">
+                            <input name="Questions[0].Options[${newIndex}]" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base" placeholder="Option ${newIndex + 1}">
+                        </div>
+                        <button type="button" class="delete-option bg-transparent p-2 rounded-md text-muted-foreground hover:text-red-500">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
+                    `;
+                    
+                    const addOptionBtn = optionsContainer.querySelector('.add-option-btn');
+                    optionsContainer.insertBefore(newOption, addOptionBtn);
+                    
+                    // Update all input names with correct indices
+                    updateQuestionIndices();
+                }
+                
+                // Delete option button
+                if (e.target.closest('.delete-option')) {
+                    const optionItem = e.target.closest('.option-item');
+                    const optionsContainer = optionItem.closest('.options-container');
+                    const optionItems = optionsContainer.querySelectorAll('.option-item');
+                    
+                    if (optionItems.length <= 2) {
+                        alert('You need at least 2 options');
+                        return;
+                    }
+                    
+                    optionItem.remove();
+                    
+                    // Update all input names with correct indices
+                    updateQuestionIndices();
+                }
+                
+                // Delete question button
+                if (e.target.closest('.delete-question')) {
+                    const questionBuilder = e.target.closest('.question-builder');
+                    const allQuestions = questionsContainer.querySelectorAll('.question-builder');
+                    
+                    if (allQuestions.length <= 1) {
+                        alert('You need at least one question');
+                        return;
+                    }
+                    
+                    questionBuilder.remove();
+                    
+                    // Update all input names with correct indices
+                    updateQuestionIndices();
+                }
+                
+                // Move question up
+                if (e.target.closest('.move-up-btn')) {
+                    const questionBuilder = e.target.closest('.question-builder');
+                    const prev = questionBuilder.previousElementSibling;
+                    
+                    if (prev) {
+                        questionsContainer.insertBefore(questionBuilder, prev);
+                        updateQuestionIndices();
+                    }
+                }
+                
+                // Move question down
+                if (e.target.closest('.move-down-btn')) {
+                    const questionBuilder = e.target.closest('.question-builder');
+                    const next = questionBuilder.nextElementSibling;
+                    
+                    if (next) {
+                        questionsContainer.insertBefore(next, questionBuilder);
+                        updateQuestionIndices();
+                    }
+                }
+            });
+            
+            // Add a new question
+            addQuestionBtn.addEventListener('click', function() {
+                const questionTemplate = document.querySelector('.question-builder').cloneNode(true);
+                const inputs = questionTemplate.querySelectorAll('input:not([type="checkbox"]), textarea');
+                
+                // Clear input values
+                inputs.forEach(input => {
+                    input.value = '';
+                });
+                
+                // Reset the question title
+                questionTemplate.querySelector('.question-title').textContent = 'Untitled Question';
+                
+                // Make sure content is visible
+                const content = questionTemplate.querySelector('.question-content');
+                content.classList.remove('hidden');
+                
+                questionsContainer.appendChild(questionTemplate);
+                
+                // Update all input names with correct indices
+                updateQuestionIndices();
+            });
+            
+            // Update indices for all questions and their inputs
+            function updateQuestionIndices() {
+                const questions = questionsContainer.querySelectorAll('.question-builder');
+                
+                questions.forEach((question, qIndex) => {
+                    // Update question title input
+                    const titleInput = question.querySelector('input[name^="Questions["][name$="].Title"]');
+                    if (titleInput) titleInput.name = `Questions[${qIndex}].Title`;
+                    
+                    // Update question description textarea
+                    const descInput = question.querySelector('textarea[name^="Questions["][name$="].Description"]');
+                    if (descInput) descInput.name = `Questions[${qIndex}].Description`;
+                    
+                    // Update question type input
+                    const typeInput = question.querySelector('input[name^="Questions["][name$="].Type"]');
+                    if (typeInput) typeInput.name = `Questions[${qIndex}].Type`;
+                    
+                    // Update question required checkbox
+                    const requiredInput = question.querySelector('input[name^="Questions["][name$="].Required"]');
+                    if (requiredInput) requiredInput.name = `Questions[${qIndex}].Required`;
+                    
+                    // Update question ID hidden input
+                    const idInput = question.querySelector('input[name^="Questions["][name$="].Id"]');
+                    if (idInput) {
+                        idInput.name = `Questions[${qIndex}].Id`;
+                        if (!idInput.value) {
+                            idInput.value = generateGuid();
+                        }
+                    }
+                    
+                    // Update options
+                    const options = question.querySelectorAll('.option-item input');
+                    options.forEach((option, oIndex) => {
+                        option.name = `Questions[${qIndex}].Options[${oIndex}]`;
+                        option.placeholder = `Option ${oIndex + 1}`;
+                    });
+                });
+            }
+            
+            // Generate a UUID for new questions
+            function generateGuid() {
+                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                    var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
+                });
+            }
+            
+            // Preview button
+            previewBtn.addEventListener('click', function() {
+                // Update preview with current survey data
+                const titleInput = document.getElementById('survey-title');
+                const descInput = document.getElementById('survey-description');
+                const previewTitle = document.getElementById('preview-title');
+                const previewDesc = document.getElementById('preview-description');
+                const previewQuestions = document.getElementById('preview-questions');
+                
+                previewTitle.textContent = titleInput.value || 'Untitled Survey';
+                previewDesc.textContent = descInput.value || '';
+                
+                // Generate preview questions
+                previewQuestions.innerHTML = '';
+                const questions = questionsContainer.querySelectorAll('.question-builder');
+                
+                questions.forEach((question, index) => {
+                    const titleInput = question.querySelector('input[name$="].Title"]');
+                    const descInput = question.querySelector('textarea[name$="].Description"]');
+                    const typeInput = question.querySelector('input[name$="].Type"]');
+                    const requiredInput = question.querySelector('input[name$="].Required"]');
+                    
+                    const title = titleInput.value || 'Untitled Question';
+                    const desc = descInput?.value || '';
+                    const type = typeInput.value || 'single-choice';
+                    const required = requiredInput?.checked || false;
+                    
+                    let optionsHtml = '';
+                    
+                    if (['single-choice', 'multiple-choice'].includes(type)) {
+                        const options = question.querySelectorAll('.option-item input');
+                        const inputType = type === 'single-choice' ? 'radio' : 'checkbox';
+                        
+                        optionsHtml = '<div class="space-y-2">';
+                        options.forEach((option, oIndex) => {
+                            optionsHtml += `
+                                <div class="flex items-center">
+                                    <input type="${inputType}" id="q${index}-o${oIndex}" name="question-${index}" class="mr-2">
+                                    <label for="q${index}-o${oIndex}">${option.value || `Option ${oIndex + 1}`}</label>
+                                </div>
+                            `;
+                        });
+                        optionsHtml += '</div>';
+                    } else if (type === 'text') {
+                        optionsHtml = `
+                            <textarea class="w-full rounded-md border border-input bg-background px-3 py-2 min-h-[100px]" placeholder="Your answer"></textarea>
+                        `;
+                    } else if (type === 'rating') {
+                        optionsHtml = `
+                            <div class="flex items-center gap-1">
+                                ${Array(5).fill().map((_, i) => `
+                                    <button type="button" class="p-1">
+                                        <svg class="h-8 w-8 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                                        </svg>
+                                    </button>
+                                `).join('')}
+                            </div>
+                        `;
+                    } else if (type === 'nps') {
+                        optionsHtml = `
+                            <div class="flex flex-wrap gap-2">
+                                ${Array(11).fill().map((_, i) => `
+                                    <button type="button" class="w-10 h-10 rounded-md border flex items-center justify-center">
+                                        ${i}
+                                    </button>
+                                `).join('')}
+                            </div>
+                            <div class="flex justify-between mt-1 text-sm text-muted-foreground">
+                                <span>Not likely</span>
+                                <span>Very likely</span>
+                            </div>
+                        `;
+                    }
+                    
+                    const questionHtml = `
+                        <div class="border-b pb-6 last:border-0">
+                            <div class="mb-3">
+                                <h3 class="text-lg font-medium">
+                                    ${index + 1}. ${title}
+                                    ${required ? '<span class="text-red-500 ml-1">*</span>' : ''}
+                                </h3>
+                                ${desc ? `<p class="text-sm text-muted-foreground mt-1">${desc}</p>` : ''}
+                            </div>
+                            
+                            <div class="mt-3">
+                                ${optionsHtml}
+                            </div>
+                        </div>
+                    `;
+                    
+                    previewQuestions.innerHTML += questionHtml;
+                });
+                
+                // Switch to the preview tab
+                switchTab('preview');
+            });
+            
+            // Back to editing button
+            backToDesignBtn.addEventListener('click', function() {
+                switchTab('design');
+            });
+            
+            // Email delivery tab functionality
+            const emailInput = document.querySelector('#email-recipients input[type="email"]');
+            const addEmailBtn = document.querySelector('.add-email-btn');
+            const emailList = document.getElementById('email-list');
+            const sendEmailsBtn = document.getElementById('send-emails-btn');
+            
+            addEmailBtn.addEventListener('click', function() {
+                if (emailInput.value && emailInput.checkValidity()) {
+                    const email = emailInput.value;
+                    
+                    // Create email chip
+                    const emailChip = document.createElement('div');
+                    emailChip.className = 'flex items-center justify-between bg-muted/50 rounded-md px-3 py-1';
+                    emailChip.innerHTML = `
+                        <span>${email}</span>
+                        <button type="button" class="ml-2 text-muted-foreground hover:text-destructive">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    `;
+                    
+                    emailList.appendChild(emailChip);
+                    emailInput.value = '';
+                    
+                    // Enable send button if we have at least one email
+                    sendEmailsBtn.disabled = false;
+                    
+                    // Add remove functionality to the chip
+                    const removeBtn = emailChip.querySelector('button');
+                    removeBtn.addEventListener('click', function() {
+                        emailChip.remove();
+                        
+                        // Disable send button if no emails
+                        if (emailList.children.length === 0) {
+                            sendEmailsBtn.disabled = true;
+                        }
+                    });
+                }
+            });
+            
+            // Initialize proper question indices on load
+            updateQuestionIndices();
+        });
+    </script>
+}

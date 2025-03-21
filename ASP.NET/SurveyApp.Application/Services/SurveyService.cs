@@ -3,6 +3,7 @@ using SurveyApp.Application.Interfaces;
 using SurveyApp.Domain.Models;
 using SurveyApp.Domain.Repositories;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace SurveyApp.Application.Services
@@ -39,6 +40,18 @@ namespace SurveyApp.Application.Services
         public async Task<bool> DeleteSurveyAsync(int id)
         {
             return await _surveyRepository.DeleteAsync(id);
+        }
+
+        public async Task<IEnumerable<Survey>> GetSurveysByStatusAsync(string status)
+        {
+            var surveys = await _surveyRepository.GetAllAsync();
+            return status.ToLower() switch
+            {
+                "active" => surveys.Where(s => s.Status == "active"),
+                "draft" => surveys.Where(s => s.Status == "draft"),
+                "archived" => surveys.Where(s => s.Status == "archived"),
+                _ => surveys
+            };
         }
     }
 }

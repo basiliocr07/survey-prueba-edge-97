@@ -19,12 +19,16 @@ namespace SurveyApp.Infrastructure.Repositories
 
         public async Task<IEnumerable<Survey>> GetAllAsync()
         {
-            return await _context.Surveys.ToListAsync();
+            return await _context.Surveys
+                .Include(s => s.Questions)
+                .ToListAsync();
         }
 
         public async Task<Survey?> GetByIdAsync(int id)
         {
-            return await _context.Surveys.FindAsync(id);
+            return await _context.Surveys
+                .Include(s => s.Questions)
+                .FirstOrDefaultAsync(s => s.Id == id);
         }
 
         public async Task<bool> AddAsync(Survey survey)

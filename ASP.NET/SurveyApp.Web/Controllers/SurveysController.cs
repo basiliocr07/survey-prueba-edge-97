@@ -1,6 +1,7 @@
 
 using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Application.Interfaces;
+using SurveyApp.Domain.Models;
 using SurveyApp.Web.Models;
 using System;
 using System.Collections.Generic;
@@ -47,21 +48,100 @@ namespace SurveyApp.Web.Controllers
         // GET: Surveys/Create
         public IActionResult Create()
         {
-            return RedirectToAction("Create", "Survey");
+            return View(new CreateSurveyViewModel
+            {
+                Questions = new List<QuestionViewModel>
+                {
+                    new QuestionViewModel
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        Type = "single-choice",
+                        Title = "",
+                        Required = true,
+                        Options = new List<string> { "Option 1", "Option 2", "Option 3" }
+                    }
+                }
+            });
+        }
+
+        // POST: Surveys/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(CreateSurveyViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var survey = new Survey
+                {
+                    Title = model.Title,
+                    Description = model.Description,
+                    CreatedAt = DateTime.Now,
+                    Status = model.Status,
+                    Questions = model.Questions.Select(q => new Question
+                    {
+                        Text = q.Title,
+                        Type = q.Type,
+                        Required = q.Required,
+                        Description = q.Description,
+                        Options = q.Options,
+                        Settings = q.Settings != null 
+                            ? new QuestionSettings 
+                            { 
+                                Min = q.Settings.Min, 
+                                Max = q.Settings.Max 
+                            } 
+                            : null
+                    }).ToList()
+                };
+
+                await _surveyService.CreateSurveyAsync(survey);
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(model);
         }
 
         // GET: Surveys/Edit/5
-        public IActionResult Edit(string id)
+        public async Task<IActionResult> Edit(int id)
         {
-            // In a real application, this would fetch the survey by ID
-            return View();
+            var survey = await _surveyService.GetSurveyByIdAsync(id);
+            if (survey == null)
+            {
+                return NotFound();
+            }
+
+            var model = new CreateSurveyViewModel
+            {
+                Title = survey.Title,
+                Description = survey.Description,
+                Status = survey.Status,
+                Questions = survey.Questions.Select(q => new QuestionViewModel
+                {
+                    Id = q.Id.ToString(),
+                    Title = q.Text,
+                    Type = q.Type,
+                    Required = q.Required,
+                    Description = q.Description,
+                    Options = q.Options,
+                    Settings = q.Settings != null 
+                        ? new QuestionSettingsViewModel
+                        {
+                            Min = q.Settings.Min,
+                            Max = q.Settings.Max
+                        }
+                        : null
+                }).ToList()
+            };
+
+            return View("Create", model);
         }
 
-        // GET: Surveys/Delete/5
-        [HttpPost]
-        public IActionResult Delete(string id)
+        // POST: Surveys/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            // In a real application, this would delete the survey by ID
+            await _surveyService.DeleteSurveyAsync(id);
             return RedirectToAction(nameof(Index));
         }
 

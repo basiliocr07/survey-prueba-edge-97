@@ -21,6 +21,15 @@ namespace SurveyApp.Domain.Models
         public int Id { get; set; }
         public string Text { get; set; } = string.Empty;
         public string Type { get; set; } = string.Empty;
+        public bool Required { get; set; } = true;
+        public string Description { get; set; } = string.Empty;
         public List<string> Options { get; set; } = new List<string>();
+        public QuestionSettings? Settings { get; set; }
+    }
+
+    public class QuestionSettings
+    {
+        public int? Min { get; set; }
+        public int? Max { get; set; }
     }
 }

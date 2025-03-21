@@ -12,5 +12,6 @@ namespace SurveyApp.Application.Interfaces
         Task<bool> CreateSurveyAsync(Survey survey);
         Task<bool> UpdateSurveyAsync(Survey survey);
         Task<bool> DeleteSurveyAsync(int id);
+        Task<IEnumerable<Survey>> GetSurveysByStatusAsync(string status);
     }
 }
