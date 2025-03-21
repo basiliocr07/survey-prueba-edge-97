@@ -184,10 +184,41 @@
                         <div class="space-y-2">
                             <label for="status" class="text-sm font-medium">Status</label>
                             <select id="status" name="status" class="form-select w-full rounded-md border">
-                                <option value="proposed" @(Model.Requirement.Status?.ToLower() == "proposed" ? "selected" : "")>Proposed</option>
-                                <option value="in-progress" @(Model.Requirement.Status?.ToLower() == "in-progress" ? "selected" : "")>In Progress</option>
-                                <option value="implemented" @(Model.Requirement.Status?.ToLower() == "implemented" ? "selected" : "")>Implemented</option>
-                                <option value="rejected" @(Model.Requirement.Status?.ToLower() == "rejected" ? "selected" : "")>Rejected</option>
+                                @if (Model.Requirement.Status?.ToLower() == "proposed")
+                                {
+                                    <option value="proposed" selected>Proposed</option>
+                                }
+                                else
+                                {
+                                    <option value="proposed">Proposed</option>
+                                }
+                                
+                                @if (Model.Requirement.Status?.ToLower() == "in-progress")
+                                {
+                                    <option value="in-progress" selected>In Progress</option>
+                                }
+                                else
+                                {
+                                    <option value="in-progress">In Progress</option>
+                                }
+                                
+                                @if (Model.Requirement.Status?.ToLower() == "implemented")
+                                {
+                                    <option value="implemented" selected>Implemented</option>
+                                }
+                                else
+                                {
+                                    <option value="implemented">Implemented</option>
+                                }
+                                
+                                @if (Model.Requirement.Status?.ToLower() == "rejected")
+                                {
+                                    <option value="rejected" selected>Rejected</option>
+                                }
+                                else
+                                {
+                                    <option value="rejected">Rejected</option>
+                                }
                             </select>
                         </div>
                         
