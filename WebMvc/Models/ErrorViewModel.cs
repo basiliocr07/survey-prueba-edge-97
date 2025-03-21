@@ -7,6 +7,8 @@ namespace SurveyApp.WebMvc.Models
     {
         public string RequestId { get; set; }
         public string Message { get; set; }
+        public Exception Exception { get; set; }
+        public string LogReference { get; set; }
         
         // User authentication and role information
         public bool IsAuthenticated { get; set; }
