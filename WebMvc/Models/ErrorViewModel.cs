@@ -22,5 +22,7 @@ namespace SurveyApp.WebMvc.Models
         public bool IsDatabaseError { get; set; }
         public string ErrorSource { get; set; }
         public DateTime ErrorTimestamp { get; set; } = DateTime.UtcNow;
+        
+        public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
     }
 }

@@ -7,6 +7,7 @@ using SurveyApp.WebMvc.Models;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace SurveyApp.WebMvc.Controllers
 {
@@ -28,8 +29,41 @@ namespace SurveyApp.WebMvc.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var surveys = await _surveyService.GetAllSurveysAsync();
-            return View(surveys);
+            try
+            {
+                var surveys = await _surveyService.GetAllSurveysAsync();
+                var viewModels = surveys.Select(MapToSurveyListItemViewModel).ToList();
+
+                // Set view bag properties for authentication status
+                ViewBag.IsAuthenticated = User.Identity.IsAuthenticated;
+                ViewBag.UserRole = User.IsInRole("Admin") ? "Admin" : "Client";
+                ViewBag.Username = User.Identity.Name;
+
+                return View(viewModels);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving surveys: {Message}", ex.Message);
+                TempData["ErrorMessage"] = "Error retrieving surveys: " + ex.Message;
+                return View(new List<SurveyListItemViewModel>());
+            }
+        }
+
+        private SurveyListItemViewModel MapToSurveyListItemViewModel(SurveyDto dto)
+        {
+            return new SurveyListItemViewModel
+            {
+                Id = dto.Id,
+                Title = dto.Title,
+                Description = dto.Description,
+                CreatedAt = dto.CreatedAt,
+                ResponseCount = dto.Responses,
+                CompletionRate = dto.CompletionRate,
+                Status = dto.Status ?? "Active",
+                DeliveryType = dto.DeliveryConfig?.Type ?? "Manual",
+                QuestionCount = dto.Questions?.Count ?? 0,
+                Responses = dto.Responses
+            };
         }
 
         public async Task<IActionResult> Details(Guid id)
