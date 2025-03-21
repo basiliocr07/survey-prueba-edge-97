@@ -44,6 +44,7 @@ namespace SurveyApp.WebMvc.Controllers
                     InProgressCount = requirements.Count(r => r.Status?.ToLower() == "in-progress"),
                     TestingCount = requirements.Count(r => r.Status?.ToLower() == "testing"),
                     CompletedCount = requirements.Count(r => r.Status?.ToLower() == "implemented"),
+                    ImplementedCount = requirements.Count(r => r.Status?.ToLower() == "implemented"), // Added this mapping
                     CriticalCount = requirements.Count(r => r.Priority?.ToLower() == "critical"),
                     HighCount = requirements.Count(r => r.Priority?.ToLower() == "high"),
                     MediumCount = requirements.Count(r => r.Priority?.ToLower() == "medium"),

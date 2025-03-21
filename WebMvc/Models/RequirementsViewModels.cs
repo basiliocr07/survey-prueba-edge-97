@@ -18,6 +18,7 @@ namespace SurveyApp.WebMvc.Models
         public int InProgressCount { get; set; }
         public int TestingCount { get; set; }
         public int CompletedCount { get; set; }
+        public int ImplementedCount { get; set; } // Added this property
         public int TotalCount { get; set; }
         
         // Additional properties for requirement priorities
@@ -25,6 +26,12 @@ namespace SurveyApp.WebMvc.Models
         public int HighCount { get; set; }
         public int MediumCount { get; set; }
         public int LowCount { get; set; }
+        
+        // Properties for form submission
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public string CustomerName { get; set; }
+        public string CustomerEmail { get; set; }
         
         // Distribuciones para reportes
         public Dictionary<string, int> CategoryDistribution { get; set; } = new Dictionary<string, int>();
