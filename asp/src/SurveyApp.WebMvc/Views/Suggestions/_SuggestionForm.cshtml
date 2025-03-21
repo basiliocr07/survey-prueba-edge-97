@@ -1,0 +1,111 @@
+
+@{
+    var categories = new[] { "UI/UX", "Features", "Performance", "Integrations", "Reporting", "Mobile App", "Other" };
+}
+
+<form method="post" action="/Suggestions/Create" class="space-y-6">
+    @Html.AntiForgeryToken()
+    
+    <div class="space-y-2">
+        <label for="content" class="block text-sm font-medium">Your Suggestion</label>
+        <textarea 
+            id="content" 
+            name="Content" 
+            placeholder="Describe your suggestion here..." 
+            class="form-textarea min-h-[120px] w-full rounded-md border border-input" 
+            required></textarea>
+    </div>
+    
+    <div id="similarItems" class="bg-muted p-4 rounded-md border border-border hidden">
+        <h4 class="font-medium flex items-center gap-2 mb-2">
+            <i class="fas fa-search h-4 w-4"></i>
+            Similar items found
+        </h4>
+        <div id="similarItemsContent"></div>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="space-y-2">
+            <label for="customerName" class="block text-sm font-medium">Your Name</label>
+            <input 
+                id="customerName" 
+                name="CustomerName" 
+                type="text"
+                placeholder="John Doe" 
+                class="form-input w-full rounded-md border border-input" 
+                required />
+        </div>
+        
+        <div class="space-y-2">
+            <label for="customerEmail" class="block text-sm font-medium">Email Address</label>
+            <input 
+                id="customerEmail" 
+                name="CustomerEmail" 
+                type="email" 
+                placeholder="john@example.com" 
+                class="form-input w-full rounded-md border border-input" 
+                required />
+        </div>
+    </div>
+    
+    <div class="space-y-2">
+        <label for="category" class="block text-sm font-medium">Category</label>
+        <select 
+            id="category"
+            name="Category"
+            class="form-select w-full rounded-md border border-input h-10 px-3 py-2">
+            <option value="">Select a category</option>
+            @foreach (var category in categories)
+            {
+                <option value="@category">@category</option>
+            }
+        </select>
+    </div>
+    
+    <div class="flex items-center space-x-2">
+        <input type="checkbox" id="isAnonymous" name="IsAnonymous" class="form-checkbox" />
+        <label for="isAnonymous" class="text-sm font-medium">Submit anonymously</label>
+    </div>
+    
+    <button type="submit" class="btn btn-primary w-full">Submit Suggestion</button>
+</form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const contentInput = document.getElementById('content');
+        const similarItems = document.getElementById('similarItems');
+        const similarItemsContent = document.getElementById('similarItemsContent');
+        
+        let typingTimer;
+        const doneTypingInterval = 1000;
+        
+        function findSimilarItems() {
+            const content = contentInput.value;
+            if (!content || content.length < 15) {
+                similarItems.classList.add('hidden');
+                return;
+            }
+            
+            // En una implementación real, esto haría una llamada a la API para buscar elementos similares
+            // Por ahora, simplemente mostramos un mensaje de demostración
+            
+            // Simulamos que no se encontraron elementos similares
+            similarItems.classList.add('hidden');
+            similarItemsContent.innerHTML = '';
+        }
+        
+        contentInput.addEventListener('keyup', function() {
+            clearTimeout(typingTimer);
+            if (contentInput.value.length > 15) {
+                typingTimer = setTimeout(findSimilarItems, doneTypingInterval);
+            }
+        });
+        
+        // También buscar al cambiar el foco
+        contentInput.addEventListener('blur', function() {
+            if (contentInput.value.length > 15) {
+                findSimilarItems();
+            }
+        });
+    });
+</script>

@@ -1,0 +1,124 @@
+
+@model List<SurveyApp.Application.DTOs.SuggestionDto>
+
+<div class="space-y-6">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Suggestions by Status</h3>
+        </div>
+        <div class="card-content h-[300px]">
+            <canvas id="statusChart"></canvas>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Top Categories</h3>
+        </div>
+        <div class="card-content h-[300px]">
+            <canvas id="categoryChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Procesamos los datos del modelo para los gráficos
+        const suggestions = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model));
+        
+        // Datos para el gráfico de estados
+        const statusCounts = {};
+        suggestions.forEach(suggestion => {
+            const status = suggestion.status;
+            statusCounts[status] = (statusCounts[status] || 0) + 1;
+        });
+        
+        const statusLabels = Object.keys(statusCounts).map(status => 
+            status.charAt(0).toUpperCase() + status.slice(1)
+        );
+        const statusData = Object.values(statusCounts);
+        
+        // Datos para el gráfico de categorías
+        const categoryCounts = {};
+        suggestions.forEach(suggestion => {
+            if (suggestion.category) {
+                categoryCounts[suggestion.category] = (categoryCounts[suggestion.category] || 0) + 1;
+            }
+        });
+        
+        // Ordenamos y tomamos las 5 categorías principales
+        const sortedCategories = Object.entries(categoryCounts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+        
+        const categoryLabels = sortedCategories.map(item => item[0]);
+        const categoryData = sortedCategories.map(item => item[1]);
+        
+        // Crear gráfico de estados
+        const statusCtx = document.getElementById('statusChart').getContext('2d');
+        new Chart(statusCtx, {
+            type: 'bar',
+            data: {
+                labels: statusLabels,
+                datasets: [{
+                    label: 'Number of Suggestions',
+                    data: statusData,
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 206, 86, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(255, 99, 132, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(255, 99, 132, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Crear gráfico de categorías
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        new Chart(categoryCtx, {
+            type: 'bar',
+            data: {
+                labels: categoryLabels,
+                datasets: [{
+                    label: 'Number of Suggestions',
+                    data: categoryData,
+                    backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>

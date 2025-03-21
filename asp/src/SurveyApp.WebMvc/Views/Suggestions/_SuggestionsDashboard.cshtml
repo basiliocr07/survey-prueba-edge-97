@@ -1,0 +1,111 @@
+
+@model SurveyApp.WebMvc.Controllers.SuggestionsViewModel
+@{
+    var isAdmin = (bool)ViewData["IsAdmin"];
+    var activeTab = isAdmin ? "view" : "submit";
+}
+
+<div class="space-y-6">
+    @if (isAdmin)
+    {
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="card">
+                <div class="card-content flex flex-col items-center justify-center pt-6">
+                    <div class="rounded-full bg-primary/10 p-3 mb-3">
+                        <i class="fas fa-clipboard-list h-6 w-6 text-primary"></i>
+                    </div>
+                    <div class="text-2xl font-bold">@Model.TotalCount</div>
+                    <p class="text-sm text-muted-foreground">Total Suggestions</p>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-content flex flex-col items-center justify-center pt-6">
+                    <div class="rounded-full bg-blue-100 p-3 mb-3">
+                        <i class="fas fa-clock h-6 w-6 text-blue-500"></i>
+                    </div>
+                    <div class="text-2xl font-bold">@Model.NewCount</div>
+                    <p class="text-sm text-muted-foreground">New</p>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-content flex flex-col items-center justify-center pt-6">
+                    <div class="rounded-full bg-yellow-100 p-3 mb-3">
+                        <i class="fas fa-comment h-6 w-6 text-yellow-500"></i>
+                    </div>
+                    <div class="text-2xl font-bold">@Model.InProgressCount</div>
+                    <p class="text-sm text-muted-foreground">In Progress</p>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-content flex flex-col items-center justify-center pt-6">
+                    <div class="rounded-full bg-green-100 p-3 mb-3">
+                        <i class="fas fa-check-circle h-6 w-6 text-green-500"></i>
+                    </div>
+                    <div class="text-2xl font-bold">@Model.CompletedCount</div>
+                    <p class="text-sm text-muted-foreground">Completed</p>
+                </div>
+            </div>
+        </div>
+    }
+    
+    <div class="tabs-container w-full">
+        <div class="tabs-list grid w-full grid-cols-3 mb-6">
+            <button class="tab-item @(activeTab == "view" ? "active" : "")" data-tab="view">View Suggestions</button>
+            <button class="tab-item @(activeTab == "submit" ? "active" : "")" data-tab="submit">Submit Suggestion</button>
+            <button class="tab-item @(activeTab == "reports" ? "active" : "")" data-tab="reports">Reports</button>
+        </div>
+        
+        <div class="tab-content" id="view-content" style="display: @(activeTab == "view" ? "block" : "none")">
+            @await Html.PartialAsync("_SuggestionsList", Model.Suggestions)
+        </div>
+        
+        <div class="tab-content" id="submit-content" style="display: @(activeTab == "submit" ? "block" : "none")">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title flex items-center gap-2">
+                        <i class="fas fa-comment"></i>
+                        New Suggestion
+                    </h3>
+                </div>
+                <div class="card-content">
+                    @await Html.PartialAsync("_SuggestionForm")
+                </div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="reports-content" style="display: @(activeTab == "reports" ? "block" : "none")">
+            @await Html.PartialAsync("_SuggestionReports", Model.Suggestions)
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabButtons = document.querySelectorAll('.tab-item');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const tabName = this.getAttribute('data-tab');
+                    
+                    // Update active tab
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Show selected content, hide others
+                    tabContents.forEach(content => {
+                        if (content.id === tabName + '-content') {
+                            content.style.display = 'block';
+                        } else {
+                            content.style.display = 'none';
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+}
