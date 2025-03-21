@@ -1,0 +1,133 @@
+
+@model SurveyApp.WebMvc.Controllers.ResultsViewModel
+
+<div class="space-y-6">
+    @if (Model.Responses.Count == 0)
+    {
+        <div class="text-center py-8 bg-muted/20 rounded-lg">
+            <p class="text-xl text-muted-foreground">No hay datos suficientes para mostrar visualizaciones</p>
+            <p class="text-muted-foreground mt-2">Las visualizaciones aparecerán cuando se reciban respuestas.</p>
+        </div>
+    }
+    else
+    {
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Distribución de Respuestas</div>
+                    <div class="card-description">Respuestas por tipo de pregunta</div>
+                </div>
+                <div class="card-content">
+                    <div class="h-64 flex items-center justify-center">
+                        <div class="text-center">
+                            <div class="w-full h-full" id="questionTypeChart">
+                                <!-- Aquí iría el gráfico generado con JavaScript -->
+                                <div class="text-muted-foreground">Gráfico de distribución</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Calificaciones Promedio</div>
+                    <div class="card-description">Promedio de preguntas tipo rating</div>
+                </div>
+                <div class="card-content">
+                    <div class="h-64 flex items-center justify-center">
+                        <div class="text-center">
+                            <div class="w-full h-full" id="ratingsChart">
+                                <!-- Aquí iría el gráfico generado con JavaScript -->
+                                <div class="text-muted-foreground">Gráfico de calificaciones</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Respuestas por Pregunta</div>
+                <div class="card-description">Análisis detallado por cada pregunta</div>
+            </div>
+            <div class="card-content">
+                <div class="space-y-6">
+                    @{
+                        var questionGroups = Model.Responses
+                            .SelectMany(r => r.Answers)
+                            .GroupBy(a => a.QuestionId)
+                            .Select(g => new {
+                                QuestionId = g.Key,
+                                QuestionTitle = g.First().QuestionTitle,
+                                QuestionType = g.First().QuestionType,
+                                Answers = g.ToList()
+                            });
+                    }
+                    
+                    @foreach (var group in questionGroups)
+                    {
+                        <div class="border rounded-md overflow-hidden">
+                            <div class="bg-muted/30 px-4 py-3">
+                                <h3 class="font-medium">@group.QuestionTitle</h3>
+                                <div class="text-xs text-muted-foreground">
+                                    Tipo: @GetQuestionTypeDisplay(group.QuestionType) | Respuestas: @group.Answers.Count
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                @if (group.QuestionType == "text")
+                                {
+                                    <div class="space-y-2">
+                                        @foreach (var answer in group.Answers.Take(5))
+                                        {
+                                            <div class="border-l-4 border-primary/20 pl-3 py-1">
+                                                <p class="text-sm">@answer.Answer</p>
+                                            </div>
+                                        }
+                                        
+                                        @if (group.Answers.Count > 5)
+                                        {
+                                            <div class="text-right">
+                                                <a href="#" class="text-sm text-primary hover:underline">Ver todas las @group.Answers.Count respuestas</a>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                else if (group.QuestionType == "single-choice" || group.QuestionType == "multiple-choice")
+                                {
+                                    <div class="h-48" id="chart-@group.QuestionId">
+                                        <!-- Aquí iría el gráfico generado con JavaScript -->
+                                        <div class="text-muted-foreground">Gráfico de distribución de opciones</div>
+                                    </div>
+                                }
+                                else if (group.QuestionType == "rating" || group.QuestionType == "nps")
+                                {
+                                    <div class="h-48" id="rating-@group.QuestionId">
+                                        <!-- Aquí iría el gráfico generado con JavaScript -->
+                                        <div class="text-muted-foreground">Gráfico de distribución de calificaciones</div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@functions {
+    string GetQuestionTypeDisplay(string type)
+    {
+        return type switch
+        {
+            "text" => "Texto",
+            "single-choice" => "Selección Única",
+            "multiple-choice" => "Selección Múltiple",
+            "rating" => "Calificación",
+            "nps" => "NPS",
+            _ => type
+        };
+    }
+}

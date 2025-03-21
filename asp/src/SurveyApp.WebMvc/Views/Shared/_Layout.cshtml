@@ -1,0 +1,119 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - SurveyApp</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/utility-fixes.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/tailwind-utilities.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+</head>
+<body>
+    <header>
+        <nav class="bg-white border-b border-border">
+            <div class="container mx-auto px-4">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center">
+                        <a class="flex-shrink-0 text-primary font-bold text-xl" href="/">
+                            SurveyApp
+                        </a>
+                        <div class="hidden md:block ml-6">
+                            <div class="flex items-center space-x-4">
+                                <a class="px-3 py-2 rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+                                <a class="px-3 py-2 rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors" asp-controller="Survey" asp-action="Index">Encuestas</a>
+                                <a class="px-3 py-2 rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors" asp-controller="Analytics" asp-action="Results">Resultados</a>
+                                <a class="px-3 py-2 rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors" asp-controller="Suggestions" asp-action="Index">Sugerencias</a>
+                                <a class="px-3 py-2 rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors" asp-controller="Requirements" asp-action="Index">Requerimientos</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hidden md:block">
+                        <div class="flex items-center ml-4 space-x-2">
+                            <partial name="_ClientAccessPartial" />
+                            <a class="btn btn-sm btn-outline" asp-controller="Account" asp-action="Profile">
+                                <i class="fas fa-user-circle mr-1"></i> Perfil
+                            </a>
+                        </div>
+                    </div>
+                    <div class="md:hidden flex items-center">
+                        <button type="button" class="bg-gray-100 p-1 rounded text-gray-500 hover:text-black focus:outline-none" id="mobile-menu-button">
+                            <span class="sr-only">Abrir menú</span>
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hidden md:hidden" id="mobile-menu">
+                <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                    <a class="block px-3 py-2 rounded-md text-base font-medium" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+                    <a class="block px-3 py-2 rounded-md text-base font-medium" asp-controller="Survey" asp-action="Index">Encuestas</a>
+                    <a class="block px-3 py-2 rounded-md text-base font-medium" asp-controller="Analytics" asp-action="Results">Resultados</a>
+                    <a class="block px-3 py-2 rounded-md text-base font-medium" asp-controller="Suggestions" asp-action="Index">Sugerencias</a>
+                    <a class="block px-3 py-2 rounded-md text-base font-medium" asp-controller="Requirements" asp-action="Index">Requerimientos</a>
+                </div>
+                <div class="pt-4 pb-3 border-t border-gray-200">
+                    <div class="flex items-center px-5">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-user-circle text-2xl text-gray-500"></i>
+                        </div>
+                        <div class="ml-3">
+                            <div class="text-base font-medium">Usuario</div>
+                            <div class="text-sm font-medium text-gray-500">usuario@ejemplo.com</div>
+                        </div>
+                    </div>
+                    <div class="mt-3 px-2 space-y-1">
+                        <a class="block px-3 py-2 rounded-md text-base font-medium" asp-controller="Account" asp-action="Profile">Perfil</a>
+                        <a class="block px-3 py-2 rounded-md text-base font-medium" asp-controller="Account" asp-action="Logout">Cerrar sesión</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div>
+        <main role="main">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-t border-border py-6 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <p class="text-muted-foreground text-sm">&copy; 2023 - SurveyApp - Todos los derechos reservados</p>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-muted-foreground hover:text-primary transition-colors">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="text-muted-foreground hover:text-primary transition-colors">
+                        <i class="fab fa-facebook"></i>
+                    </a>
+                    <a href="#" class="text-muted-foreground hover:text-primary transition-colors">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            const menu = document.getElementById('mobile-menu');
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+            } else {
+                menu.classList.add('hidden');
+            }
+        });
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

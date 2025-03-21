@@ -2,179 +2,98 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using SurveyApp.Application.DTOs;
 using SurveyApp.Application.Ports;
-using SurveyApp.Domain.Entities;
 
 namespace SurveyApp.Application.Services
 {
     public class SurveyResponseService : ISurveyResponseService
     {
-        private readonly ISurveyResponseRepository _responseRepository;
-        private readonly ISurveyRepository _surveyRepository;
-
-        public SurveyResponseService(
-            ISurveyResponseRepository responseRepository,
-            ISurveyRepository surveyRepository)
+        private readonly ISurveyResponseRepository _surveyResponseRepository;
+        
+        public SurveyResponseService(ISurveyResponseRepository surveyResponseRepository)
         {
-            _responseRepository = responseRepository;
-            _surveyRepository = surveyRepository;
+            _surveyResponseRepository = surveyResponseRepository;
         }
-
-        public async Task<IEnumerable<SurveyResponseDto>> GetAllResponsesAsync()
+        
+        public List<SurveyResponseDto> GetAllSurveyResponses()
         {
-            var responses = await _responseRepository.GetAllAsync();
-            return responses.Select(MapToDto);
+            var responses = _surveyResponseRepository.GetAll();
+            return responses.Select(MapToDto).ToList();
         }
-
-        public async Task<IEnumerable<SurveyResponseDto>> GetResponsesBySurveyIdAsync(Guid surveyId)
+        
+        public List<SurveyResponseDto> GetSurveyResponsesById(Guid surveyId)
         {
-            var responses = await _responseRepository.GetBySurveyIdAsync(surveyId);
-            return responses.Select(MapToDto);
+            var responses = _surveyResponseRepository.GetBySurveyId(surveyId);
+            return responses.Select(MapToDto).ToList();
         }
-
-        public async Task<SurveyResponseDto?> GetResponseByIdAsync(Guid id)
+        
+        public SurveyResponseDto GetSurveyResponseById(Guid id)
         {
-            var response = await _responseRepository.GetByIdAsync(id);
+            var response = _surveyResponseRepository.GetById(id);
             return response != null ? MapToDto(response) : null;
         }
-
-        public async Task<SurveyResponseDto> CreateResponseAsync(CreateSurveyResponseDto responseDto)
+        
+        public int GetSurveyResponseCount(Guid surveyId)
         {
-            var survey = await _surveyRepository.GetByIdAsync(responseDto.SurveyId);
-            if (survey == null)
-            {
-                throw new KeyNotFoundException($"Survey with id {responseDto.SurveyId} not found.");
-            }
-
-            var response = new SurveyResponse
-            {
-                SurveyId = responseDto.SurveyId,
-                RespondentName = responseDto.RespondentName,
-                RespondentEmail = responseDto.RespondentEmail,
-                RespondentPhone = responseDto.RespondentPhone,
-                RespondentCompany = responseDto.RespondentCompany,
-                IsExistingClient = responseDto.IsExistingClient,
-                ExistingClientId = responseDto.ExistingClientId
-            };
-
-            foreach (var question in survey.Questions)
-            {
-                if (responseDto.Answers.TryGetValue(question.Id.ToString(), out var answerObj))
-                {
-                    var answer = new QuestionResponse
-                    {
-                        QuestionId = question.Id,
-                        QuestionTitle = question.Title,
-                        QuestionType = question.Type
-                    };
-
-                    if (question.Type == "multiple-choice" || question.Type == "checkbox")
-                    {
-                        if (answerObj is List<string> multipleAnswers)
-                        {
-                            answer.MultipleAnswers = multipleAnswers;
-                        }
-                        else if (answerObj is string singleAnswer)
-                        {
-                            answer.Answer = singleAnswer;
-                        }
-                    }
-                    else if (question.Type == "rating" || question.Type == "nps")
-                    {
-                        answer.Answer = answerObj?.ToString() ?? string.Empty;
-                    }
-                    else
-                    {
-                        answer.Answer = answerObj?.ToString() ?? string.Empty;
-                    }
-
-                    response.Answers.Add(answer);
-                }
-            }
-
-            var createdResponse = await _responseRepository.CreateAsync(response);
-            
-            // Update survey statistics
-            survey.IncrementResponses();
-            await _surveyRepository.UpdateAsync(survey);
-            
-            return MapToDto(createdResponse);
+            return _surveyResponseRepository.GetCountBySurveyId(surveyId);
         }
-
-        public async Task<SurveyResponseAnalyticsDto> GetResponseAnalyticsAsync(Guid surveyId)
+        
+        public void AddSurveyResponse(SurveyResponseDto surveyResponseDto)
         {
-            var responses = await _responseRepository.GetBySurveyIdAsync(surveyId);
-            var analytics = new SurveyResponseAnalyticsDto
-            {
-                SurveyId = surveyId,
-                TotalResponses = responses.Count(),
-                AverageCompletionTime = responses.Any() ? responses.Average(r => r.CompletionTime) : 0,
-                CompletionRate = 100, // Asumimos que todas las respuestas están completas
-                ResponsesByDate = responses
-                    .GroupBy(r => r.SubmittedAt.Date)
-                    .Select(g => new { Date = g.Key, Count = g.Count() })
-                    .ToDictionary(x => x.Date.ToString("yyyy-MM-dd"), x => x.Count)
-            };
-
-            // Agregar análisis por tipo de dispositivo
-            var deviceCounts = responses
-                .GroupBy(r => string.IsNullOrEmpty(r.DeviceType) ? "Unknown" : r.DeviceType)
-                .Select(g => new { Device = g.Key, Count = g.Count() })
-                .ToDictionary(x => x.Device, x => x.Count);
-            
-            analytics.DeviceBreakdown = deviceCounts;
-
-            return analytics;
+            var response = MapFromDto(surveyResponseDto);
+            _surveyResponseRepository.Add(response);
         }
-
-        private SurveyResponseDto MapToDto(SurveyResponse response)
+        
+        public void UpdateSurveyResponse(SurveyResponseDto surveyResponseDto)
+        {
+            var response = MapFromDto(surveyResponseDto);
+            _surveyResponseRepository.Update(response);
+        }
+        
+        public void DeleteSurveyResponse(Guid id)
+        {
+            _surveyResponseRepository.Delete(id);
+        }
+        
+        private SurveyResponseDto MapToDto(Domain.Entities.SurveyResponse response)
         {
             return new SurveyResponseDto
             {
                 Id = response.Id,
                 SurveyId = response.SurveyId,
-                SurveyTitle = string.Empty, // This would need to be populated separately by joining with survey data
                 RespondentName = response.RespondentName,
                 RespondentEmail = response.RespondentEmail,
                 RespondentPhone = response.RespondentPhone,
                 RespondentCompany = response.RespondentCompany,
                 SubmittedAt = response.SubmittedAt,
-                Answers = response.Answers.Select(a => new QuestionResponseDto
-                {
-                    QuestionId = a.QuestionId,
-                    QuestionTitle = a.QuestionTitle,
-                    QuestionType = a.QuestionType,
-                    Answer = a.Answer,
-                    MultipleAnswers = a.MultipleAnswers
-                }).ToList(),
-                IsExistingClient = response.IsExistingClient,
-                ExistingClientId = response.ExistingClientId,
                 CompletionTime = response.CompletionTime,
-                DeviceType = response.DeviceType,
-                Browser = response.Browser,
-                Location = response.Location
+                Answers = response.QuestionResponses.Select(qr => new QuestionResponseDto
+                {
+                    QuestionId = qr.QuestionId,
+                    Answer = qr.Answer
+                }).ToList()
             };
         }
-
-        // Métodos para exportar respuestas que aún no se utilizan
-        /*
-        public async Task<byte[]> ExportResponsesAsCsvAsync(Guid surveyId)
+        
+        private Domain.Entities.SurveyResponse MapFromDto(SurveyResponseDto dto)
         {
-            var responses = await GetResponsesBySurveyIdAsync(surveyId);
-            // Aquí iría la lógica para convertir respuestas a CSV
-            // Pendiente de implementar cuando se necesite esta funcionalidad
-            return new byte[0];
+            return new Domain.Entities.SurveyResponse
+            {
+                Id = dto.Id != Guid.Empty ? dto.Id : Guid.NewGuid(),
+                SurveyId = dto.SurveyId,
+                RespondentName = dto.RespondentName,
+                RespondentEmail = dto.RespondentEmail,
+                RespondentPhone = dto.RespondentPhone,
+                RespondentCompany = dto.RespondentCompany,
+                SubmittedAt = dto.SubmittedAt,
+                CompletionTime = dto.CompletionTime,
+                QuestionResponses = dto.Answers.Select(a => new Domain.Entities.QuestionResponse
+                {
+                    QuestionId = a.QuestionId,
+                    Answer = a.Answer
+                }).ToList()
+            };
         }
-
-        public async Task<byte[]> ExportResponsesAsExcelAsync(Guid surveyId)
-        {
-            var responses = await GetResponsesBySurveyIdAsync(surveyId);
-            // Aquí iría la lógica para convertir respuestas a Excel
-            // Pendiente de implementar cuando se necesite esta funcionalidad
-            return new byte[0];
-        }
-        */
     }
 }

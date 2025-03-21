@@ -1,0 +1,158 @@
+
+@model SurveyApp.WebMvc.Models.SurveyResponseAnalyticsViewModel
+@{
+    ViewData["Title"] = "Detalle de Respuesta";
+}
+
+<div class="container mx-auto px-4 py-8 max-w-5xl">
+    <div class="mb-6 flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-bold mb-1">Detalle de Respuesta</h1>
+            <p class="text-muted-foreground">
+                Respuesta a la encuesta: @Model.SurveyTitle
+            </p>
+        </div>
+        <div>
+            <a href="@Url.Action("Results", new { surveyId = Model.SurveyId })" class="btn btn-outline">
+                <i class="fas fa-arrow-left mr-2"></i> Volver a Resultados
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg overflow-hidden mb-6">
+        <div class="p-6 border-b border-border">
+            <div class="flex flex-col md:flex-row justify-between">
+                <div>
+                    <h2 class="text-xl font-bold mb-2">Información del Respondente</h2>
+                    <div class="space-y-1">
+                        <div class="flex items-center text-sm">
+                            <i class="fas fa-user text-muted-foreground mr-2"></i>
+                            <span>@Model.RespondentName</span>
+                        </div>
+                        <div class="flex items-center text-sm">
+                            <i class="fas fa-envelope text-muted-foreground mr-2"></i>
+                            <span>@Model.RespondentEmail</span>
+                        </div>
+                        @if (!string.IsNullOrEmpty(Model.RespondentPhone))
+                        {
+                            <div class="flex items-center text-sm">
+                                <i class="fas fa-phone text-muted-foreground mr-2"></i>
+                                <span>@Model.RespondentPhone</span>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.RespondentCompany))
+                        {
+                            <div class="flex items-center text-sm">
+                                <i class="fas fa-building text-muted-foreground mr-2"></i>
+                                <span>@Model.RespondentCompany</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="mt-4 md:mt-0">
+                    <div class="text-sm text-muted-foreground mb-2">Enviado el</div>
+                    <div class="text-lg font-medium">@Model.SubmittedAt.ToLocalTime().ToString("dd/MM/yyyy")</div>
+                    <div class="text-sm">@Model.SubmittedAt.ToLocalTime().ToString("HH:mm:ss")</div>
+                    <div class="mt-2 text-sm text-muted-foreground">
+                        Tiempo de finalización: @FormatTime(Model.CompletionTime)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6">
+            <h2 class="text-xl font-bold mb-4">Respuestas</h2>
+            <div class="space-y-6">
+                @foreach (var answer in Model.Answers)
+                {
+                    <div class="border rounded-md overflow-hidden">
+                        <div class="bg-muted/20 px-4 py-3">
+                            <h3 class="font-medium">@answer.QuestionTitle</h3>
+                            <div class="text-xs text-muted-foreground">
+                                Tipo: @GetQuestionTypeDisplay(answer.QuestionType)
+                            </div>
+                        </div>
+                        <div class="p-4">
+                            @if (answer.QuestionType == "text")
+                            {
+                                <p class="text-gray-700">@answer.Answer</p>
+                            }
+                            else if (answer.QuestionType == "single-choice")
+                            {
+                                <div class="flex items-center">
+                                    <span class="inline-block w-3 h-3 rounded-full bg-primary mr-2"></span>
+                                    <span>@answer.Answer</span>
+                                </div>
+                            }
+                            else if (answer.QuestionType == "multiple-choice")
+                            {
+                                <div class="space-y-1">
+                                    @foreach (var option in answer.Answer.Split(','))
+                                    {
+                                        <div class="flex items-center">
+                                            <span class="inline-block w-3 h-3 rounded-full bg-primary mr-2"></span>
+                                            <span>@option.Trim()</span>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else if (answer.QuestionType == "rating")
+                            {
+                                <div class="flex items-center">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        if (i <= int.Parse(answer.Answer))
+                                        {
+                                            <i class="fas fa-star text-yellow-400 mr-1"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="far fa-star text-gray-300 mr-1"></i>
+                                        }
+                                    }
+                                    <span class="ml-2 text-sm text-muted-foreground">
+                                        (@answer.Answer de 5)
+                                    </span>
+                                </div>
+                            }
+                            else if (answer.QuestionType == "nps")
+                            {
+                                <div class="flex items-center">
+                                    <div class="bg-gradient-to-r from-red-400 via-yellow-400 to-green-400 h-2 rounded-full w-full mb-2"></div>
+                                    <div class="flex items-center">
+                                        <span class="text-lg font-bold">@answer.Answer</span>
+                                        <span class="ml-2 text-sm text-muted-foreground">
+                                            (de 10)
+                                        </span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string FormatTime(double seconds) {
+        var timeSpan = TimeSpan.FromSeconds(seconds);
+        int minutes = (int)timeSpan.TotalMinutes;
+        int remainingSeconds = timeSpan.Seconds;
+        return $"{minutes}m {remainingSeconds}s";
+    }
+    
+    string GetQuestionTypeDisplay(string type)
+    {
+        return type switch
+        {
+            "text" => "Texto",
+            "single-choice" => "Selección Única",
+            "multiple-choice" => "Selección Múltiple",
+            "rating" => "Calificación",
+            "nps" => "NPS",
+            _ => type
+        };
+    }
+}
