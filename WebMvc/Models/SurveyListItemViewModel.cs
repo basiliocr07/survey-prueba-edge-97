@@ -19,5 +19,8 @@ namespace SurveyApp.WebMvc.Models
         public int QuestionCount { get; set; }
         public string CreatedBy { get; set; }
         public DateTime? LastUpdated { get; set; }
+        
+        // Añadimos la propiedad Responses para solucionar el error en Dashboard/Index.cshtml
+        public int Responses { get; set; }
     }
 }

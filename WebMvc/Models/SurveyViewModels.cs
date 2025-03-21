@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -29,6 +28,11 @@ namespace SurveyApp.WebMvc.Models
         public string Status { get; set; } = "Active";
         
         public string Category { get; set; }
+        
+        // Propiedades adicionales para gestionar la autenticación y roles
+        public bool IsAuthenticated { get; set; }
+        public string UserRole { get; set; }
+        public string Username { get; set; }
     }
 
     public class SurveyCreateViewModel
