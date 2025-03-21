@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -137,7 +138,13 @@ namespace SurveyApp.WebMvc.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al cargar el dashboard");
-                return View("Error", new ErrorViewModel { RequestId = HttpContext.TraceIdentifier, Message = "Error al cargar el dashboard" });
+                return View("Error", new ErrorViewModel { 
+                    RequestId = HttpContext.TraceIdentifier, 
+                    Message = "Error al cargar el dashboard",
+                    IsAuthenticated = User.Identity.IsAuthenticated,
+                    Username = User.Identity.IsAuthenticated ? User.Identity.Name : string.Empty,
+                    UserRole = User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty
+                });
             }
         }
         
