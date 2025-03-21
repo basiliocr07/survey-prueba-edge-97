@@ -28,5 +28,12 @@ namespace SurveyApp.Application.DTOs
         public int PageViews { get; set; }
         public string ReferrerUrl { get; set; }
         public string ScreenResolution { get; set; }
+        public string Language { get; set; }
+        public string TimeZone { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime CompletionTime { get; set; }
+        public bool IsMobile { get; set; }
+        public List<string> QuestionVisitLog { get; set; } = new List<string>();
+        public Dictionary<string, double> QuestionResponseTimes { get; set; } = new Dictionary<string, double>();
     }
 }
