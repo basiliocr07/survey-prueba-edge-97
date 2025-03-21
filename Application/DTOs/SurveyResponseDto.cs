@@ -29,8 +29,19 @@ namespace SurveyApp.Application.DTOs
         public Guid SurveyId { get; set; }
         public string RespondentName { get; set; }
         public string RespondentEmail { get; set; }
+        public string RespondentPhone { get; set; }
+        public string RespondentCompany { get; set; }
         public Dictionary<string, object> Answers { get; set; }
+        public bool IsExistingClient { get; set; }
+        public Guid? ExistingClientId { get; set; }
     }
 
-    // Removed duplicate RecentResponseDto class
+    public class RecentResponseDto
+    {
+        public Guid Id { get; set; }
+        public Guid SurveyId { get; set; }
+        public string SurveyTitle { get; set; }
+        public string RespondentName { get; set; }
+        public DateTime SubmittedAt { get; set; }
+    }
 }

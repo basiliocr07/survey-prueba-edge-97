@@ -118,6 +118,19 @@ namespace SurveyApp.Application.Services
 
             return serviceUsage;
         }
+        
+        public async Task<List<CustomerDto>> GetCustomerByEmailAsync(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                throw new ArgumentException("Email cannot be null or empty", nameof(email));
+            }
+            
+            var customers = await _customerRepository.GetAllAsync();
+            var matchingCustomers = customers.Where(c => c.ContactEmail.Equals(email, StringComparison.OrdinalIgnoreCase)).ToList();
+            
+            return matchingCustomers.Select(MapToDto).ToList();
+        }
 
         private CustomerDto MapToDto(Customer customer)
         {
