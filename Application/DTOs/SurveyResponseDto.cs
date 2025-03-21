@@ -32,13 +32,5 @@ namespace SurveyApp.Application.DTOs
         public Dictionary<string, object> Answers { get; set; }
     }
 
-    // Added unified DTO for recent responses to avoid duplication
-    public class RecentResponseDto
-    {
-        public Guid Id { get; set; }
-        public Guid SurveyId { get; set; }
-        public string SurveyTitle { get; set; }
-        public string RespondentName { get; set; }
-        public DateTime SubmittedAt { get; set; }
-    }
+    // Removed duplicate RecentResponseDto class
 }
