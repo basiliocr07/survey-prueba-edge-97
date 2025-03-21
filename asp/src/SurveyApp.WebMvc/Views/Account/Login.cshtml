@@ -1,0 +1,180 @@
+
+@model SurveyApp.WebMvc.Models.LoginViewModel
+@{
+    ViewData["Title"] = "Iniciar Sesión";
+    Layout = "_ClientLayout";
+}
+
+<div class="w-full max-w-md mx-auto">
+    <div class="text-center mb-8">
+        <h2 class="text-3xl font-bold tracking-tight text-gray-900 mb-2">
+            Sistema de Encuestas
+        </h2>
+        <p class="text-sm text-gray-600">
+            Inicia sesión para acceder a tu cuenta o regístrate para crear una nueva
+        </p>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <div class="tabs border-b">
+            <div class="flex">
+                <a href="#login" class="tab-trigger px-4 py-2 border-b-2 border-transparent active" onclick="switchTab(event, 'login')">
+                    Iniciar Sesión
+                </a>
+                <a href="#register" class="tab-trigger px-4 py-2 border-b-2 border-transparent" onclick="switchTab(event, 'register')">
+                    Registrarse
+                </a>
+            </div>
+        </div>
+
+        <div id="login" class="tab-content block">
+            <form asp-action="Login" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" class="space-y-4">
+                <div asp-validation-summary="ModelOnly" class="text-red-500 text-sm p-3 bg-red-50 rounded-md border border-red-100"></div>
+                
+                <div class="space-y-2">
+                    <label asp-for="Username" class="block text-sm font-medium text-gray-700"></label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                            <i class="fas fa-user"></i>
+                        </span>
+                        <input asp-for="Username" class="form-input pl-10 w-full" placeholder="Nombre de usuario" />
+                    </div>
+                    <span asp-validation-for="Username" class="text-xs text-red-500"></span>
+                </div>
+                
+                <div class="space-y-2">
+                    <label asp-for="Password" class="block text-sm font-medium text-gray-700"></label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                            <i class="fas fa-lock"></i>
+                        </span>
+                        <input asp-for="Password" class="form-input pl-10 w-full" placeholder="Contraseña" />
+                    </div>
+                    <span asp-validation-for="Password" class="text-xs text-red-500"></span>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input asp-for="RememberMe" id="remember_me" class="form-checkbox h-4 w-4" />
+                        <label asp-for="RememberMe" class="ml-2 block text-sm text-gray-900"></label>
+                    </div>
+                    
+                    <div class="text-sm">
+                        <a href="#" class="text-primary hover:text-primary/80">
+                            ¿Olvidaste tu contraseña?
+                        </a>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 text-sm text-muted-foreground">
+                    <h3 class="font-medium text-gray-700 mb-2">Credenciales de prueba:</h3>
+                    <p class="mb-1"><span class="font-semibold">Administrador:</span> admin / adminpass</p>
+                    <p><span class="font-semibold">Cliente:</span> client / clientpass</p>
+                </div>
+                
+                <div>
+                    <button type="submit" class="btn btn-primary w-full">
+                        <i class="fas fa-sign-in-alt mr-2"></i> Iniciar Sesión
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div id="register" class="tab-content hidden">
+            <form asp-action="Register" method="post" class="space-y-4">
+                <div asp-validation-summary="ModelOnly" class="text-red-500 text-sm p-3 bg-red-50 rounded-md border border-red-100"></div>
+                
+                <div class="space-y-2">
+                    <label asp-for="RegisterModel.Username" class="block text-sm font-medium text-gray-700"></label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                            <i class="fas fa-user"></i>
+                        </span>
+                        <input asp-for="RegisterModel.Username" class="form-input pl-10 w-full" placeholder="Nombre de usuario" />
+                    </div>
+                    <span asp-validation-for="RegisterModel.Username" class="text-xs text-red-500"></span>
+                </div>
+                
+                <div class="space-y-2">
+                    <label asp-for="RegisterModel.Email" class="block text-sm font-medium text-gray-700"></label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                            <i class="fas fa-envelope"></i>
+                        </span>
+                        <input asp-for="RegisterModel.Email" class="form-input pl-10 w-full" placeholder="correo@ejemplo.com" />
+                    </div>
+                    <span asp-validation-for="RegisterModel.Email" class="text-xs text-red-500"></span>
+                </div>
+                
+                <div class="space-y-2">
+                    <label asp-for="RegisterModel.Password" class="block text-sm font-medium text-gray-700"></label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                            <i class="fas fa-lock"></i>
+                        </span>
+                        <input asp-for="RegisterModel.Password" class="form-input pl-10 w-full" placeholder="Contraseña" />
+                    </div>
+                    <span asp-validation-for="RegisterModel.Password" class="text-xs text-red-500"></span>
+                </div>
+                
+                <div class="space-y-2">
+                    <label asp-for="RegisterModel.ConfirmPassword" class="block text-sm font-medium text-gray-700"></label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                            <i class="fas fa-lock"></i>
+                        </span>
+                        <input asp-for="RegisterModel.ConfirmPassword" class="form-input pl-10 w-full" placeholder="Confirmar contraseña" />
+                    </div>
+                    <span asp-validation-for="RegisterModel.ConfirmPassword" class="text-xs text-red-500"></span>
+                </div>
+                
+                <div>
+                    <button type="submit" class="btn btn-primary w-full">
+                        <i class="fas fa-user-plus mr-2"></i> Registrarse
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Función para cambiar entre las pestañas de login y registro
+        function switchTab(event, tabId) {
+            event.preventDefault();
+            
+            // Ocultar todos los contenidos de pestañas
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => {
+                content.classList.add('hidden');
+                content.classList.remove('block');
+            });
+            
+            // Desactivar todas las pestañas
+            const tabTriggers = document.querySelectorAll('.tab-trigger');
+            tabTriggers.forEach(trigger => {
+                trigger.classList.remove('active');
+                trigger.classList.remove('border-primary');
+                trigger.classList.remove('text-primary');
+                trigger.classList.add('border-transparent');
+            });
+            
+            // Activar la pestaña seleccionada
+            document.getElementById(tabId).classList.remove('hidden');
+            document.getElementById(tabId).classList.add('block');
+            
+            // Actualizar el estilo de la pestaña activa
+            event.currentTarget.classList.add('active', 'border-primary', 'text-primary');
+        }
+        
+        // Autoseleccionar la primera pestaña al cargar
+        document.addEventListener('DOMContentLoaded', function() {
+            const firstTab = document.querySelector('.tab-trigger');
+            if (firstTab) {
+                firstTab.classList.add('active', 'border-primary', 'text-primary');
+            }
+        });
+    </script>
+}
