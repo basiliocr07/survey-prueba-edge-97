@@ -9,8 +9,9 @@ using Microsoft.Extensions.Hosting;
 using SurveyApp.Infrastructure.Data;
 using SurveyApp.Infrastructure.Repositories;
 using SurveyApp.Infrastructure.Services;
+using SurveyApp.Application.Services;
+using SurveyApp.Application.Ports;
 using System;
-using AuthService = SurveyApp.Application.Ports.IAuthenticationService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,7 +53,7 @@ builder.Services.AddScoped<ISurveyService, SurveyService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<AuthService, SurveyApp.Application.Services.AuthenticationService>();
+builder.Services.AddScoped<SurveyApp.Application.Ports.IAuthenticationService, SurveyApp.Application.Services.AuthenticationService>();
 
 // Register Infrastructure Services
 builder.Services.AddScoped<IKnowledgeBaseRepository, KnowledgeBaseRepository>();

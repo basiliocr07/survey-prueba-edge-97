@@ -4,8 +4,6 @@ using SurveyApp.Application.Ports;
 using SurveyApp.Application.Services;
 using SurveyApp.Infrastructure.Repositories;
 using SurveyApp.Infrastructure.Services;
-// Use alias for Application.Ports.IAuthenticationService
-using AuthService = SurveyApp.Application.Ports.IAuthenticationService;
 
 namespace SurveyApp.WebApi.DependencyInjection
 {
@@ -21,8 +19,7 @@ namespace SurveyApp.WebApi.DependencyInjection
             services.AddScoped<IKnowledgeBaseService, KnowledgeBaseService>();
             services.AddScoped<IAnalyticsService, AnalyticsService>();
             
-            // Register the authentication service with the correct interface
-            // Use the full interface name instead of the alias for proper generic resolution
+            // Register authentication service using full type names
             services.AddScoped<SurveyApp.Application.Ports.IAuthenticationService, SurveyApp.Application.Services.AuthenticationService>();
             
             return services;

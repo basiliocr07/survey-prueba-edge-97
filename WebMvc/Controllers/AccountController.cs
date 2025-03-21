@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
@@ -8,17 +9,17 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using SurveyApp.WebMvc.Models;
-using AuthService = SurveyApp.Application.Ports.IAuthenticationService;
+using SurveyApp.Application.Ports;
 
 namespace SurveyApp.WebMvc.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly AuthService _authService;
+        private readonly IAuthenticationService _authService;
         private readonly ILogger<AccountController> _logger;
 
         public AccountController(
-            AuthService authService,
+            IAuthenticationService authService,
             ILogger<AccountController> logger)
         {
             _authService = authService;

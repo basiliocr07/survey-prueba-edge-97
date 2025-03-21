@@ -9,7 +9,6 @@ using Swashbuckle.AspNetCore.SwaggerUI;
 using Swashbuckle.AspNetCore.Swagger;
 using System;
 using Microsoft.Extensions.Logging;
-using AuthService = SurveyApp.Application.Ports.IAuthenticationService;
 
 var builder = WebApplication.CreateBuilder(args);
 
