@@ -23,7 +23,7 @@ namespace SurveyApp.WebMvc.Models
         
         public bool IsAnonymous { get; set; } = false;
         
-        // Campos adicionales para clientes corporativos
+        // Additional fields for corporate clients
         public string Company { get; set; }
         
         public string Phone { get; set; }

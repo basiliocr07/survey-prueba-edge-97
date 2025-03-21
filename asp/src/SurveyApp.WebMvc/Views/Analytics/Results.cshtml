@@ -15,7 +15,7 @@
         
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div class="md:col-span-1">
-                <div class="sticky top-24">
+                <div class="results-sticky-nav">
                     <div class="card">
                         <div class="card-header">
                             <div class="card-title text-lg">Mis Encuestas</div>
@@ -25,9 +25,9 @@
                                 @foreach (var survey in Model.Surveys)
                                 {
                                     <a href="@Url.Action("Results", new { surveyId = survey.Id })" 
-                                       class="w-full text-left px-4 py-3 hover:bg-accent transition-colors block @(Model.SelectedSurveyId == survey.Id ? "bg-accent" : "")">
-                                        <div class="font-medium truncate">@survey.Title</div>
-                                        <div class="text-sm text-muted-foreground mt-1">
+                                       class="survey-card-item @(Model.SelectedSurveyId == survey.Id ? "active" : "")">
+                                        <div class="survey-card-title">@survey.Title</div>
+                                        <div class="survey-card-count">
                                             @survey.Responses respuestas
                                         </div>
                                     </a>
@@ -61,9 +61,9 @@
                     
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div class="card">
-                            <div class="card-content pt-6">
+                            <div class="card-content stat-card">
                                 <div class="flex items-start">
-                                    <div class="p-2 rounded-md bg-primary/10 text-primary mr-4">
+                                    <div class="stat-card-icon">
                                         <i class="fas fa-chart-bar h-6 w-6"></i>
                                     </div>
                                     <div>
@@ -75,9 +75,9 @@
                         </div>
                         
                         <div class="card">
-                            <div class="card-content pt-6">
+                            <div class="card-content stat-card">
                                 <div class="flex items-start">
-                                    <div class="p-2 rounded-md bg-primary/10 text-primary mr-4">
+                                    <div class="stat-card-icon">
                                         <i class="fas fa-chart-pie h-6 w-6"></i>
                                     </div>
                                     <div>
@@ -89,9 +89,9 @@
                         </div>
                         
                         <div class="card">
-                            <div class="card-content pt-6">
+                            <div class="card-content stat-card">
                                 <div class="flex items-start">
-                                    <div class="p-2 rounded-md bg-primary/10 text-primary mr-4">
+                                    <div class="stat-card-icon">
                                         <i class="fas fa-calendar h-6 w-6"></i>
                                     </div>
                                     <div>
@@ -116,7 +116,7 @@
                             </li>
                         </ul>
                         
-                        <div class="tab-content space-y-6 animate-fade-in" id="charts">
+                        <div class="tab-content animate-fade-in" id="charts">
                             <partial name="_DataVisualizationsPartial" model="Model" />
                         </div>
                         
@@ -136,30 +136,30 @@
                                         else
                                         {
                                             <div class="border rounded-md overflow-hidden">
-                                                <table class="w-full">
+                                                <table class="data-table">
                                                     <thead>
-                                                        <tr class="bg-muted/50">
-                                                            <th class="px-4 py-3 text-left font-medium text-muted-foreground">ID</th>
-                                                            <th class="px-4 py-3 text-left font-medium text-muted-foreground">Cliente</th>
-                                                            <th class="px-4 py-3 text-left font-medium text-muted-foreground">Enviado</th>
-                                                            <th class="px-4 py-3 text-left font-medium text-muted-foreground">Duración</th>
-                                                            <th class="px-4 py-3 text-left font-medium text-muted-foreground"></th>
+                                                        <tr>
+                                                            <th>ID</th>
+                                                            <th>Cliente</th>
+                                                            <th>Enviado</th>
+                                                            <th>Duración</th>
+                                                            <th></th>
                                                         </tr>
                                                     </thead>
-                                                    <tbody class="divide-y">
+                                                    <tbody>
                                                         @foreach (var response in Model.Responses)
                                                         {
-                                                            <tr class="hover:bg-muted/30 transition-colors">
-                                                                <td class="px-4 py-3">@response.Id.ToString().Substring(0, 8)...</td>
-                                                                <td class="px-4 py-3">
+                                                            <tr>
+                                                                <td>@response.Id.ToString().Substring(0, 8)...</td>
+                                                                <td>
                                                                     <div class="font-medium">@response.RespondentName</div>
                                                                     <div class="text-xs text-muted-foreground">@response.RespondentEmail</div>
                                                                 </td>
-                                                                <td class="px-4 py-3">
+                                                                <td>
                                                                     @response.SubmittedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
                                                                 </td>
-                                                                <td class="px-4 py-3">@FormatTime(response.CompletionTime)</td>
-                                                                <td class="px-4 py-3 text-right">
+                                                                <td>@FormatTime(response.CompletionTime)</td>
+                                                                <td class="text-right">
                                                                     <a href="@Url.Action("ResponseDetail", new { id = response.Id })" class="btn btn-ghost btn-sm">Ver Detalles</a>
                                                                 </td>
                                                             </tr>
@@ -192,9 +192,9 @@
                                         <div>
                                             <h3 class="text-lg font-medium mb-2">Hallazgos Clave</h3>
                                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div class="border rounded-md p-4">
-                                                    <div class="text-sm font-medium mb-1">Respuesta más seleccionada</div>
-                                                    <div class="text-muted-foreground">
+                                                <div class="insight-box">
+                                                    <div class="insight-title">Respuesta más seleccionada</div>
+                                                    <div class="insight-value">
                                                         @if (Model.Responses.Count > 0)
                                                         {
                                                             <text>Muy satisfecho</text>
@@ -206,9 +206,9 @@
                                                     </div>
                                                 </div>
                                                 
-                                                <div class="border rounded-md p-4">
-                                                    <div class="text-sm font-medium mb-1">Respuesta menos seleccionada</div>
-                                                    <div class="text-muted-foreground">
+                                                <div class="insight-box">
+                                                    <div class="insight-title">Respuesta menos seleccionada</div>
+                                                    <div class="insight-value">
                                                         @if (Model.Responses.Count > 0)
                                                         {
                                                             <text>Muy insatisfecho</text>
@@ -220,9 +220,9 @@
                                                     </div>
                                                 </div>
                                                 
-                                                <div class="border rounded-md p-4">
-                                                    <div class="text-sm font-medium mb-1">Calificación promedio</div>
-                                                    <div class="text-muted-foreground">
+                                                <div class="insight-box">
+                                                    <div class="insight-title">Calificación promedio</div>
+                                                    <div class="insight-value">
                                                         @if (Model.Responses.Count > 0)
                                                         {
                                                             <text>7.6 / 10</text>
@@ -234,9 +234,9 @@
                                                     </div>
                                                 </div>
                                                 
-                                                <div class="border rounded-md p-4">
-                                                    <div class="text-sm font-medium mb-1">Tasa de respuesta</div>
-                                                    <div class="text-muted-foreground">
+                                                <div class="insight-box">
+                                                    <div class="insight-title">Tasa de respuesta</div>
+                                                    <div class="insight-value">
                                                         @if (Model.Responses.Count > 0)
                                                         {
                                                             <text>32%</text>
@@ -264,20 +264,20 @@
     function activateTab(e, tabId) {
         e.preventDefault();
         
-        // Ocultar todos los contenidos de las pestañas
+        // Hide all tab contents
         document.querySelectorAll('.tab-content').forEach(tab => {
             tab.classList.add('hidden');
         });
         
-        // Mostrar el contenido de la pestaña seleccionada
+        // Show selected tab content
         document.getElementById(tabId).classList.remove('hidden');
         
-        // Desactivar todas las pestañas
+        // Deactivate all tabs
         document.querySelectorAll('.tab-item').forEach(tab => {
             tab.classList.remove('active');
         });
         
-        // Activar la pestaña seleccionada
+        // Activate selected tab
         e.target.classList.add('active');
     }
 </script>

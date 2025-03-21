@@ -149,3 +149,93 @@
 .block {
     display: block;
 }
+
+/* Chart and visualization styles for Results page */
+.chart-container {
+    @apply h-64 w-full rounded-md overflow-hidden;
+}
+
+.chart-placeholder {
+    @apply h-full w-full flex items-center justify-center bg-muted/30 rounded-md;
+}
+
+.results-sticky-nav {
+    @apply sticky top-24;
+}
+
+.survey-card-item {
+    @apply w-full text-left px-4 py-3 hover:bg-accent transition-colors;
+}
+
+.survey-card-item.active {
+    @apply bg-accent;
+}
+
+.survey-card-title {
+    @apply font-medium truncate;
+}
+
+.survey-card-count {
+    @apply text-sm text-muted-foreground mt-1;
+}
+
+.stat-card {
+    @apply pt-6;
+}
+
+.stat-card-icon {
+    @apply p-2 rounded-md bg-primary/10 text-primary mr-4;
+}
+
+.data-table {
+    @apply w-full;
+}
+
+.data-table thead tr {
+    @apply bg-muted/50;
+}
+
+.data-table thead th {
+    @apply px-4 py-3 text-left font-medium text-muted-foreground;
+}
+
+.data-table tbody {
+    @apply divide-y;
+}
+
+.data-table tbody tr {
+    @apply hover:bg-muted/30 transition-colors;
+}
+
+.data-table tbody td {
+    @apply px-4 py-3;
+}
+
+.answer-box {
+    @apply border-l-4 border-primary/20 pl-3 py-1;
+}
+
+.answer-text {
+    @apply text-sm;
+}
+
+.insight-box {
+    @apply border rounded-md p-4;
+}
+
+.insight-title {
+    @apply text-sm font-medium mb-1;
+}
+
+.insight-value {
+    @apply text-muted-foreground;
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}

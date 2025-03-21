@@ -18,11 +18,13 @@
                     <div class="card-description">Respuestas por tipo de pregunta</div>
                 </div>
                 <div class="card-content">
-                    <div class="h-64 flex items-center justify-center">
-                        <div class="text-center">
-                            <div class="w-full h-full" id="questionTypeChart">
-                                <!-- Aquí iría el gráfico generado con JavaScript -->
-                                <div class="text-muted-foreground">Gráfico de distribución</div>
+                    <div class="chart-container">
+                        <div class="chart-placeholder">
+                            <div class="text-center">
+                                <div class="w-full h-full" id="questionTypeChart">
+                                    <!-- Chart will be rendered with JavaScript -->
+                                    <div class="text-muted-foreground">Gráfico de distribución</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -35,11 +37,13 @@
                     <div class="card-description">Promedio de preguntas tipo rating</div>
                 </div>
                 <div class="card-content">
-                    <div class="h-64 flex items-center justify-center">
-                        <div class="text-center">
-                            <div class="w-full h-full" id="ratingsChart">
-                                <!-- Aquí iría el gráfico generado con JavaScript -->
-                                <div class="text-muted-foreground">Gráfico de calificaciones</div>
+                    <div class="chart-container">
+                        <div class="chart-placeholder">
+                            <div class="text-center">
+                                <div class="w-full h-full" id="ratingsChart">
+                                    <!-- Chart will be rendered with JavaScript -->
+                                    <div class="text-muted-foreground">Gráfico de calificaciones</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -81,8 +85,8 @@
                                     <div class="space-y-2">
                                         @foreach (var answer in group.Answers.Take(5))
                                         {
-                                            <div class="border-l-4 border-primary/20 pl-3 py-1">
-                                                <p class="text-sm">@answer.Answer</p>
+                                            <div class="answer-box">
+                                                <p class="answer-text">@answer.Answer</p>
                                             </div>
                                         }
                                         
@@ -96,16 +100,20 @@
                                 }
                                 else if (group.QuestionType == "single-choice" || group.QuestionType == "multiple-choice")
                                 {
-                                    <div class="h-48" id="chart-@group.QuestionId">
-                                        <!-- Aquí iría el gráfico generado con JavaScript -->
-                                        <div class="text-muted-foreground">Gráfico de distribución de opciones</div>
+                                    <div class="chart-container" id="chart-@group.QuestionId">
+                                        <!-- Chart will be rendered with JavaScript -->
+                                        <div class="chart-placeholder">
+                                            <div class="text-muted-foreground">Gráfico de distribución de opciones</div>
+                                        </div>
                                     </div>
                                 }
                                 else if (group.QuestionType == "rating" || group.QuestionType == "nps")
                                 {
-                                    <div class="h-48" id="rating-@group.QuestionId">
-                                        <!-- Aquí iría el gráfico generado con JavaScript -->
-                                        <div class="text-muted-foreground">Gráfico de distribución de calificaciones</div>
+                                    <div class="chart-container" id="rating-@group.QuestionId">
+                                        <!-- Chart will be rendered with JavaScript -->
+                                        <div class="chart-placeholder">
+                                            <div class="text-muted-foreground">Gráfico de distribución de calificaciones</div>
+                                        </div>
                                     </div>
                                 }
                             </div>
