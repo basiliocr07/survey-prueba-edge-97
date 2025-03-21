@@ -1,4 +1,3 @@
-
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -58,7 +57,15 @@ namespace SurveyApp.WebMvc.Controllers
                     MonthlyRequirements = requirements
                         .GroupBy(r => $"{r.CreatedAt.Year}-{r.CreatedAt.Month:D2}")
                         .OrderBy(g => g.Key)
-                        .ToDictionary(g => g.Key, g => g.Count())
+                        .ToDictionary(g => g.Key, g => g.Count()),
+                    TotalRequirements = requirements.Count,
+                    ProposedRequirements = requirements.Count(r => r.Status?.ToLower() == "proposed"),
+                    InProgressRequirements = requirements.Count(r => r.Status?.ToLower() == "in-progress"),
+                    ImplementedRequirements = requirements.Count(r => r.Status?.ToLower() == "implemented"),
+                    RejectedRequirements = requirements.Count(r => r.Status?.ToLower() == "rejected"),
+                    PriorityDistribution = requirements
+                        .GroupBy(r => r.Priority)
+                        .ToDictionary(g => g.Key ?? "Unspecified", g => g.Count())
                 };
 
                 if (!User.IsInRole("Admin"))
@@ -182,7 +189,21 @@ namespace SurveyApp.WebMvc.Controllers
             try
             {
                 var reportsData = await _requirementService.GetRequirementReportsAsync();
-                return View(reportsData);
+                
+                var viewModel = new RequirementsViewModel
+                {
+                    TotalRequirements = reportsData.TotalRequirements,
+                    ProposedRequirements = reportsData.ProposedRequirements,
+                    InProgressRequirements = reportsData.InProgressRequirements,
+                    ImplementedRequirements = reportsData.ImplementedRequirements,
+                    RejectedRequirements = reportsData.RejectedRequirements,
+                    CategoryDistribution = reportsData.CategoryDistribution,
+                    PriorityDistribution = reportsData.PriorityDistribution,
+                    ProjectAreaDistribution = reportsData.ProjectAreaDistribution,
+                    MonthlyRequirements = reportsData.MonthlyRequirements
+                };
+                
+                return View(viewModel);
             }
             catch (Exception ex)
             {
