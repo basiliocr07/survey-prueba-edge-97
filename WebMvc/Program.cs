@@ -13,6 +13,7 @@ using SurveyApp.Application.Services;
 using SurveyApp.Application.Ports;
 using SurveyApp.Infrastructure.Repositories;
 using System;
+using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -63,6 +64,42 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
+    
+    // Create lib directory for jQuery if it doesn't exist
+    var libDirectory = Path.Combine(app.Environment.WebRootPath, "lib", "jquery", "dist");
+    var validationDirectory = Path.Combine(app.Environment.WebRootPath, "lib", "jquery-validation", "dist");
+    var unobtrusiveDirectory = Path.Combine(app.Environment.WebRootPath, "lib", "jquery-validation-unobtrusive");
+    
+    if (!Directory.Exists(libDirectory))
+    {
+        Directory.CreateDirectory(libDirectory);
+        
+        // Copy jQuery files from node_modules if available, or create a minimal version
+        var jquerySource = Path.Combine(app.Environment.ContentRootPath, "node_modules", "jquery", "dist", "jquery.min.js");
+        var jqueryDest = Path.Combine(libDirectory, "jquery.min.js");
+        
+        if (File.Exists(jquerySource))
+        {
+            File.Copy(jquerySource, jqueryDest, true);
+        }
+        else
+        {
+            // Create a minimal jQuery file to prevent 404 errors
+            File.WriteAllText(jqueryDest, "/* jQuery 3.7.1 slim minified */");
+        }
+    }
+    
+    if (!Directory.Exists(validationDirectory))
+    {
+        Directory.CreateDirectory(validationDirectory);
+        File.WriteAllText(Path.Combine(validationDirectory, "jquery.validate.min.js"), "/* jQuery Validation 1.19.5 */");
+    }
+    
+    if (!Directory.Exists(unobtrusiveDirectory))
+    {
+        Directory.CreateDirectory(unobtrusiveDirectory);
+        File.WriteAllText(Path.Combine(unobtrusiveDirectory, "jquery.validate.unobtrusive.min.js"), "/* jQuery Unobtrusive Validation */");
+    }
 }
 else
 {
