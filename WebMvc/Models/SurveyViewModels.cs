@@ -28,12 +28,12 @@ namespace SurveyApp.WebMvc.Models
         
         public string Status { get; set; } = "Active";
         
-        public string Category { get; set; }
+        public string Category { get; set; } = "General";
         
         // Propiedades adicionales para gestionar la autenticación y roles
         public bool IsAuthenticated { get; set; }
-        public string UserRole { get; set; }
-        public string Username { get; set; }
+        public string UserRole { get; set; } = string.Empty;
+        public string Username { get; set; } = string.Empty;
     }
 
     public class SurveyCreateViewModel
@@ -42,10 +42,10 @@ namespace SurveyApp.WebMvc.Models
         
         [Required(ErrorMessage = "El título es obligatorio")]
         [StringLength(200, ErrorMessage = "El título no puede tener más de 200 caracteres")]
-        public string Title { get; set; }
+        public string Title { get; set; } = string.Empty;
 
         [StringLength(1000, ErrorMessage = "La descripción no puede tener más de 1000 caracteres")]
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         public List<QuestionViewModel> Questions { get; set; } = new List<QuestionViewModel>();
 
@@ -55,10 +55,10 @@ namespace SurveyApp.WebMvc.Models
         
         // Email specific properties
         public bool EnableEmailDelivery { get; set; }
-        public string SenderName { get; set; }
-        public string SenderEmail { get; set; }
-        public string EmailSubject { get; set; }
-        public string EmailBody { get; set; }
+        public string SenderName { get; set; } = string.Empty;
+        public string SenderEmail { get; set; } = string.Empty;
+        public string EmailSubject { get; set; } = string.Empty;
+        public string EmailBody { get; set; } = string.Empty;
         
         public DateTime? ExpiryDate { get; set; }
         public bool AllowAnonymousResponses { get; set; } = true;
@@ -100,5 +100,6 @@ namespace SurveyApp.WebMvc.Models
         
         public bool SendAutomatically { get; set; } = false;
         
-        public string EventName { get; set; }
+        public string EventName { get; set; } = string.Empty;
     }
+}
