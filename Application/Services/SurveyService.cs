@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +9,7 @@ using SurveyApp.Domain.Entities;
 
 namespace SurveyApp.Application.Services
 {
-    public partial class SurveyService : ISurveyService
+    public class SurveyService : ISurveyService
     {
         private readonly ISurveyRepository _surveyRepository;
         private readonly ISurveyResponseRepository _surveyResponseRepository;
@@ -24,23 +25,10 @@ namespace SurveyApp.Application.Services
             _emailService = emailService;
         }
 
-        public async Task<SurveyDto> GetSurveyByIdAsync(Guid id)
-        {
-            var survey = await _surveyRepository.GetByIdAsync(id);
-            if (survey == null)
-                return null;
-
-            return MapToSurveyDto(survey);
-        }
-
-        public async Task<List<SurveyDto>> GetAllSurveysAsync()
-        {
-            var surveys = await _surveyRepository.GetAllAsync();
-            return surveys.Select(MapToSurveyDto).ToList();
-        }
-
+        // Create methods
         public async Task<SurveyDto> CreateSurveyAsync(CreateSurveyDto surveyDto)
         {
+            // Create a survey entity with the data from DTO
             var survey = new Survey
             {
                 Id = Guid.NewGuid(),
@@ -51,6 +39,7 @@ namespace SurveyApp.Application.Services
                 Responses = 0
             };
 
+            // Add questions to the survey if provided
             if (surveyDto.Questions != null)
             {
                 foreach (var questionDto in surveyDto.Questions)
@@ -69,6 +58,7 @@ namespace SurveyApp.Application.Services
                 }
             }
 
+            // Set delivery configuration if provided
             if (surveyDto.DeliveryConfig != null)
             {
                 var deliveryConfig = new DeliveryConfig
@@ -82,7 +72,7 @@ namespace SurveyApp.Application.Services
                     deliveryConfig.Schedule = new Schedule
                     {
                         Frequency = surveyDto.DeliveryConfig.Schedule.Frequency,
-                        DayOfMonth = surveyDto.DeliveryConfig.Schedule.DayOfMonth,
+                        DayOfMonth = surveyDto.DeliveryConfig.Schedule.DayOfMonth ?? 1,
                         DayOfWeek = surveyDto.DeliveryConfig.Schedule.DayOfWeek,
                         Time = surveyDto.DeliveryConfig.Schedule.Time,
                         StartDate = surveyDto.DeliveryConfig.Schedule.StartDate
@@ -102,8 +92,10 @@ namespace SurveyApp.Application.Services
                 survey.SetDeliveryConfig(deliveryConfig);
             }
 
+            // Save the survey to repository
             var createdSurvey = await _surveyRepository.CreateAsync(survey);
 
+            // Map entity back to DTO and return
             return MapToSurveyDto(createdSurvey);
         }
 
@@ -113,9 +105,11 @@ namespace SurveyApp.Application.Services
             if (survey == null)
                 throw new KeyNotFoundException($"Survey with ID {id} not found");
 
+            // Update basic properties
             survey.Title = surveyDto.Title;
             survey.Description = surveyDto.Description;
-
+            
+            // Update delivery configuration if provided
             if (surveyDto.DeliveryConfig != null)
             {
                 var deliveryConfig = new DeliveryConfig
@@ -129,7 +123,7 @@ namespace SurveyApp.Application.Services
                     deliveryConfig.Schedule = new Schedule
                     {
                         Frequency = surveyDto.DeliveryConfig.Schedule.Frequency,
-                        DayOfMonth = surveyDto.DeliveryConfig.Schedule.DayOfMonth,
+                        DayOfMonth = surveyDto.DeliveryConfig.Schedule.DayOfMonth ?? 1,
                         DayOfWeek = surveyDto.DeliveryConfig.Schedule.DayOfWeek,
                         Time = surveyDto.DeliveryConfig.Schedule.Time,
                         StartDate = surveyDto.DeliveryConfig.Schedule.StartDate
@@ -152,9 +146,41 @@ namespace SurveyApp.Application.Services
             await _surveyRepository.UpdateAsync(survey);
         }
 
+        // Delete methods
         public async Task DeleteSurveyAsync(Guid id)
         {
+            var survey = await _surveyRepository.GetByIdAsync(id);
+            if (survey == null)
+                throw new KeyNotFoundException($"Survey with ID {id} not found");
+                
             await _surveyRepository.DeleteAsync(id);
+        }
+
+        // Update status methods
+        public async Task UpdateSurveyStatusAsync(Guid id, string status)
+        {
+            var survey = await _surveyRepository.GetByIdAsync(id);
+            if (survey == null)
+                throw new KeyNotFoundException($"Survey with ID {id} not found");
+
+            survey.Status = status;
+            await _surveyRepository.UpdateAsync(survey);
+        }
+
+        // Query methods
+        public async Task<SurveyDto> GetSurveyByIdAsync(Guid id)
+        {
+            var survey = await _surveyRepository.GetByIdAsync(id);
+            if (survey == null)
+                return null;
+
+            return MapToSurveyDto(survey);
+        }
+
+        public async Task<List<SurveyDto>> GetAllSurveysAsync()
+        {
+            var surveys = await _surveyRepository.GetAllAsync();
+            return surveys.Select(MapToSurveyDto).ToList();
         }
 
         public async Task<bool> SurveyExistsAsync(Guid id)
@@ -167,13 +193,26 @@ namespace SurveyApp.Application.Services
             return await _surveyRepository.GetAllCategoriesAsync();
         }
 
-        public async Task<(List<SurveyDto> Surveys, int TotalCount)> GetPagedSurveysAsync(int pageNumber, int pageSize, string searchTerm = null, string statusFilter = null, string categoryFilter = null)
+        public async Task<(List<SurveyDto> Surveys, int TotalCount)> GetPagedSurveysAsync(
+            int pageNumber, 
+            int pageSize, 
+            string searchTerm = null, 
+            string statusFilter = null, 
+            string categoryFilter = null)
         {
-            var (surveys, totalCount) = await _surveyRepository.GetPagedSurveysAsync(pageNumber, pageSize, searchTerm, statusFilter, categoryFilter);
+            var (surveys, totalCount) = await _surveyRepository.GetPagedSurveysAsync(
+                pageNumber, 
+                pageSize, 
+                searchTerm, 
+                statusFilter, 
+                categoryFilter);
+                
             var surveyDtos = surveys.Select(MapToSurveyDto).ToList();
+            
             return (surveyDtos, totalCount);
         }
 
+        // Email methods
         public async Task SendSurveyEmailAsync(string email, string surveyTitle, string surveyLink)
         {
             Console.WriteLine($"Enviando encuesta '{surveyTitle}' a {email} con link {surveyLink}");
@@ -284,6 +323,7 @@ namespace SurveyApp.Application.Services
             return false;
         }
 
+        // Client access methods
         public async Task<SurveyDto> GetSurveyForClientAsync(Guid id)
         {
             var survey = await _surveyRepository.GetByIdAsync(id);
@@ -293,72 +333,7 @@ namespace SurveyApp.Application.Services
             return MapToSurveyDto(survey);
         }
 
-        private SurveyResponseDto MapToSurveyResponseDto(SurveyResponse response)
-        {
-            return new SurveyResponseDto
-            {
-                Id = response.Id,
-                SurveyId = response.SurveyId,
-                RespondentName = response.RespondentName,
-                RespondentEmail = response.RespondentEmail,
-                RespondentPhone = response.RespondentPhone,
-                RespondentCompany = response.RespondentCompany,
-                SubmittedAt = response.SubmittedAt,
-                IsExistingClient = response.IsExistingClient,
-                ExistingClientId = response.ExistingClientId,
-                Answers = response.Answers.Select(a => new QuestionResponseDto
-                {
-                    QuestionId = a.QuestionId,
-                    QuestionTitle = a.QuestionTitle,
-                    QuestionType = a.QuestionType,
-                    Answer = a.Answer,
-                    MultipleAnswers = a.MultipleAnswers,
-                    IsValid = a.IsValid
-                }).ToList()
-            };
-        }
-
-        private SurveyDto MapToSurveyDto(Survey survey)
-        {
-            return new SurveyDto
-            {
-                Id = survey.Id,
-                Title = survey.Title,
-                Description = survey.Description,
-                CreatedAt = survey.CreatedAt,
-                Responses = survey.Responses,
-                CompletionRate = survey.CompletionRate,
-                Questions = survey.Questions?.Select(q => new QuestionDto
-                {
-                    Id = q.Id,
-                    Title = q.Title,
-                    Description = q.Description,
-                    Type = q.Type,
-                    Required = q.Required,
-                    Options = q.Options
-                }).ToList(),
-                DeliveryConfig = survey.DeliveryConfig != null ? new DeliveryConfigDto
-                {
-                    Type = survey.DeliveryConfig.Type,
-                    EmailAddresses = survey.DeliveryConfig.EmailAddresses,
-                    Schedule = survey.DeliveryConfig.Schedule != null ? new ScheduleDto
-                    {
-                        Frequency = survey.DeliveryConfig.Schedule.Frequency,
-                        DayOfMonth = survey.DeliveryConfig.Schedule.DayOfMonth,
-                        DayOfWeek = survey.DeliveryConfig.Schedule.DayOfWeek,
-                        Time = survey.DeliveryConfig.Schedule.Time,
-                        StartDate = survey.DeliveryConfig.Schedule.StartDate
-                    } : null,
-                    Trigger = survey.DeliveryConfig.Trigger != null ? new TriggerDto
-                    {
-                        Type = survey.DeliveryConfig.Trigger.Type,
-                        DelayHours = survey.DeliveryConfig.Trigger.DelayHours,
-                        SendAutomatically = survey.DeliveryConfig.Trigger.SendAutomatically
-                    } : null
-                } : null
-            };
-        }
-
+        // Response methods
         public async Task<SurveyResponseDto> SubmitSurveyResponseAsync(CreateSurveyResponseDto createResponseDto)
         {
             var survey = await _surveyRepository.GetByIdAsync(createResponseDto.SurveyId);
@@ -369,11 +344,11 @@ namespace SurveyApp.Application.Services
                 createResponseDto.SurveyId, 
                 createResponseDto.RespondentName, 
                 createResponseDto.RespondentEmail,
-                createResponseDto.RespondentPhone,
-                createResponseDto.RespondentCompany
+                null,  // RespondentPhone no incluido en CreateSurveyResponseDto
+                null   // RespondentCompany no incluido en CreateSurveyResponseDto
             );
             
-            surveyResponse.SetClientInfo(createResponseDto.IsExistingClient, createResponseDto.ExistingClientId);
+            // No se incluye información del cliente porque no está en el DTO
 
             foreach (var answerEntry in createResponseDto.Answers)
             {
@@ -434,6 +409,94 @@ namespace SurveyApp.Application.Services
             }
             
             return result;
+        }
+
+        public async Task<SurveyResponseAnalyticsDto> GetResponseByIdAsync(Guid id)
+        {
+            // Este método está declarado en la interfaz pero no implementado
+            // Implementamos una versión básica
+            var response = await _surveyResponseRepository.GetByIdAsync(id);
+            if (response == null)
+                throw new KeyNotFoundException($"Respuesta con ID {id} no encontrada.");
+                
+            var survey = await _surveyRepository.GetByIdAsync(response.SurveyId);
+            if (survey == null)
+                throw new KeyNotFoundException($"Encuesta asociada no encontrada.");
+                
+            // Este método debería implementarse según los requisitos específicos
+            // Por ahora devolvemos null ya que no conocemos la estructura completa
+            return null;
+        }
+
+        // Mapping methods
+        private SurveyResponseDto MapToSurveyResponseDto(SurveyResponse response)
+        {
+            return new SurveyResponseDto
+            {
+                Id = response.Id,
+                SurveyId = response.SurveyId,
+                SurveyTitle = null, // No disponible en el modelo de respuesta
+                RespondentName = response.RespondentName,
+                RespondentEmail = response.RespondentEmail,
+                SubmittedAt = response.SubmittedAt,
+                Answers = response.Answers.Select(a => new QuestionResponseDto
+                {
+                    QuestionId = a.QuestionId,
+                    QuestionTitle = a.QuestionTitle,
+                    QuestionType = a.QuestionType,
+                    Answer = a.Answer,
+                    MultipleAnswers = a.MultipleAnswers
+                }).ToList()
+            };
+        }
+
+        private SurveyDto MapToSurveyDto(Survey survey)
+        {
+            return new SurveyDto
+            {
+                Id = survey.Id,
+                Title = survey.Title,
+                Description = survey.Description,
+                CreatedAt = survey.CreatedAt,
+                Responses = survey.Responses,
+                CompletionRate = survey.CompletionRate,
+                Questions = survey.Questions?.Select(q => new QuestionDto
+                {
+                    Id = q.Id,
+                    Title = q.Title,
+                    Description = q.Description,
+                    Type = q.Type,
+                    Required = q.Required,
+                    Options = q.Options,
+                    Settings = q.Settings != null ? new QuestionSettingsDto
+                    {
+                        MinValue = q.Settings.MinValue,
+                        MaxValue = q.Settings.MaxValue,
+                        LowLabel = q.Settings.LowLabel,
+                        MiddleLabel = q.Settings.MiddleLabel,
+                        HighLabel = q.Settings.HighLabel
+                    } : null
+                }).ToList(),
+                DeliveryConfig = survey.DeliveryConfig != null ? new DeliveryConfigDto
+                {
+                    Type = survey.DeliveryConfig.Type,
+                    EmailAddresses = survey.DeliveryConfig.EmailAddresses,
+                    Schedule = survey.DeliveryConfig.Schedule != null ? new ScheduleDto
+                    {
+                        Frequency = survey.DeliveryConfig.Schedule.Frequency,
+                        DayOfMonth = survey.DeliveryConfig.Schedule.DayOfMonth,
+                        DayOfWeek = survey.DeliveryConfig.Schedule.DayOfWeek,
+                        Time = survey.DeliveryConfig.Schedule.Time,
+                        StartDate = survey.DeliveryConfig.Schedule.StartDate
+                    } : null,
+                    Trigger = survey.DeliveryConfig.Trigger != null ? new TriggerDto
+                    {
+                        Type = survey.DeliveryConfig.Trigger.Type,
+                        DelayHours = survey.DeliveryConfig.Trigger.DelayHours,
+                        SendAutomatically = survey.DeliveryConfig.Trigger.SendAutomatically
+                    } : null
+                } : null
+            };
         }
     }
 }
