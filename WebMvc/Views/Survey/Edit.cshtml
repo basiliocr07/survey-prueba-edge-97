@@ -439,5 +439,58 @@
             const requiredInput = document.getElementById(`Questions_${index}__Required`);
             requiredInput.value = checkbox.checked.toString().toLowerCase();
         }
+        
+        // Add the missing functions for Rating and NPS settings
+        function updateRatingMinValue(input, index) {
+            // Save the min value to a hidden field or directly use it in the form submission
+            console.log(`Setting min value for question ${index}: ${input.value}`);
+            // You can add a hidden field here if needed
+            
+            // Update the preview if necessary
+            updateRatingPreview(index);
+        }
+        
+        function updateRatingMaxValue(input, index) {
+            console.log(`Setting max value for question ${index}: ${input.value}`);
+            // You can add a hidden field here if needed
+            
+            // Update the preview
+            updateRatingPreview(index);
+            
+            // Recreate the star preview
+            const questionItem = input.closest('.question-item');
+            const previewContainer = questionItem.querySelector('.rating-preview .flex');
+            const maxValue = parseInt(input.value);
+            
+            previewContainer.innerHTML = '';
+            for (let i = 1; i <= maxValue; i++) {
+                const star = document.createElement('span');
+                star.className = `star-preview inline-block text-2xl cursor-default ${i <= Math.min(3, maxValue) ? 'text-yellow-400' : 'text-gray-300'}`;
+                star.textContent = '★';
+                previewContainer.appendChild(star);
+            }
+        }
+        
+        function updateRatingPreview(index) {
+            // Update the rating preview based on min and max values
+            // This is a placeholder - implement as needed
+        }
+        
+        function updateNPSLabel(input, index, position) {
+            console.log(`Setting ${position} label for NPS question ${index}: ${input.value}`);
+            // You can add a hidden field here if needed
+            
+            // Update the preview label
+            const questionItem = input.closest('.question-item');
+            const labelsContainer = questionItem.querySelector('.nps-preview .flex.justify-between');
+            
+            if (position === 'low') {
+                labelsContainer.children[0].textContent = input.value;
+            } else if (position === 'middle') {
+                labelsContainer.children[1].textContent = input.value;
+            } else if (position === 'high') {
+                labelsContainer.children[2].textContent = input.value;
+            }
+        }
     </script>
 }

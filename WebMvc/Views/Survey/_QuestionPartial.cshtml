@@ -40,11 +40,50 @@
             <label class="block text-sm font-medium mb-1">Question Type</label>
             <select class="question-type w-full px-3 py-2 border border-gray-300 rounded-md"
                     onchange="updateQuestionType(this, @index)">
-                <option value="Text" @(question.Type == "Text" ? "selected" : "")>Text</option>
-                <option value="SingleChoice" @(question.Type == "SingleChoice" ? "selected" : "")>Single Choice</option>
-                <option value="MultipleChoice" @(question.Type == "MultipleChoice" ? "selected" : "")>Multiple Choice</option>
-                <option value="Rating" @(question.Type == "Rating" ? "selected" : "")>Rating</option>
-                <option value="NPS" @(question.Type == "NPS" ? "selected" : "")>Net Promoter Score (NPS)</option>
+                @if (question.Type == "Text")
+                {
+                    <option value="Text" selected>Text</option>
+                }
+                else
+                {
+                    <option value="Text">Text</option>
+                }
+                
+                @if (question.Type == "SingleChoice")
+                {
+                    <option value="SingleChoice" selected>Single Choice</option>
+                }
+                else
+                {
+                    <option value="SingleChoice">Single Choice</option>
+                }
+                
+                @if (question.Type == "MultipleChoice")
+                {
+                    <option value="MultipleChoice" selected>Multiple Choice</option>
+                }
+                else
+                {
+                    <option value="MultipleChoice">Multiple Choice</option>
+                }
+                
+                @if (question.Type == "Rating")
+                {
+                    <option value="Rating" selected>Rating</option>
+                }
+                else
+                {
+                    <option value="Rating">Rating</option>
+                }
+                
+                @if (question.Type == "NPS")
+                {
+                    <option value="NPS" selected>Net Promoter Score (NPS)</option>
+                }
+                else
+                {
+                    <option value="NPS">Net Promoter Score (NPS)</option>
+                }
             </select>
         </div>
         
