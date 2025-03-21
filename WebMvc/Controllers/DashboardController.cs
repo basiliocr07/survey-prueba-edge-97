@@ -137,10 +137,10 @@ namespace SurveyApp.WebMvc.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al cargar el dashboard");
+                _logger.LogError(ex, "Error al cargar el dashboard: {Message}", ex.Message);
                 return View("Error", new ErrorViewModel { 
                     RequestId = HttpContext.TraceIdentifier, 
-                    Message = "Error al cargar el dashboard",
+                    Message = "Error al cargar el dashboard: " + ex.Message,
                     IsAuthenticated = User.Identity.IsAuthenticated,
                     Username = User.Identity.IsAuthenticated ? User.Identity.Name : string.Empty,
                     UserRole = User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty
@@ -188,7 +188,7 @@ namespace SurveyApp.WebMvc.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al actualizar el estado");
+                _logger.LogError(ex, "Error al actualizar el estado: {Message}", ex.Message);
                 return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
