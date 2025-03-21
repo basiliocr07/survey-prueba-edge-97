@@ -19,8 +19,8 @@ namespace SurveyApp.WebApi.DependencyInjection
             services.AddScoped<IKnowledgeBaseService, KnowledgeBaseService>();
             services.AddScoped<IAnalyticsService, AnalyticsService>();
             
-            // Registro del servicio de autenticación con la interfaz de Application.Ports
-            services.AddScoped<IAuthenticationService, AuthenticationService>();
+            // Registro del servicio de autenticación con referencia explícita al namespace
+            services.AddScoped<SurveyApp.Application.Ports.IAuthenticationService, SurveyApp.Application.Services.AuthenticationService>();
             
             return services;
         }
