@@ -1,0 +1,77 @@
+
+/* Tailwind classes we need to ensure are properly represented */
+.bg-primary\/10 {
+    background-color: rgba(var(--primary-rgb), 0.1);
+}
+
+.text-primary {
+    color: var(--primary-color);
+}
+
+.bg-primary {
+    background-color: var(--primary-color);
+}
+
+.text-primary-foreground {
+    color: var(--primary-foreground);
+}
+
+.bg-accent\/20 {
+    background-color: rgba(var(--accent-rgb), 0.2);
+}
+
+.hover\:bg-accent\/10:hover {
+    background-color: rgba(var(--accent-rgb), 0.1);
+}
+
+.hover\:bg-primary\/90:hover {
+    background-color: rgba(var(--primary-rgb), 0.9);
+}
+
+.hover\:bg-accent:hover {
+    background-color: var(--accent-color);
+}
+
+.hover\:text-accent-foreground:hover {
+    color: var(--accent-foreground);
+}
+
+.hover\:text-destructive:hover {
+    color: var(--destructive-color);
+}
+
+.text-destructive {
+    color: var(--destructive-color);
+}
+
+.line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.text-muted-foreground {
+    color: var(--muted-foreground);
+}
+
+.bg-card {
+    background-color: var(--card-background);
+}
+
+.text-card-foreground {
+    color: var(--card-foreground);
+}
+
+.bg-secondary {
+    background-color: var(--secondary-color);
+}
+
+.hover-lift {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
