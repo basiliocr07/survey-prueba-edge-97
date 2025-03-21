@@ -26,5 +26,7 @@ namespace SurveyApp.Application.DTOs
         public string UserAgent { get; set; }
         public bool WasAbandoned { get; set; }
         public int PageViews { get; set; }
+        public string ReferrerUrl { get; set; }
+        public string ScreenResolution { get; set; }
     }
 }

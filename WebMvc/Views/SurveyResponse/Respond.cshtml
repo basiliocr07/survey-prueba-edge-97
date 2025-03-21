@@ -3,126 +3,158 @@
 
 @{
     ViewData["Title"] = "Responder Encuesta";
+    Layout = "_ClientLayout";
 }
 
-<div class="container mx-auto px-4 py-8">
-    <div class="max-w-3xl mx-auto">
-        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
-            <h1 class="text-2xl font-bold mb-2">@Model.Title</h1>
-            @if (!string.IsNullOrEmpty(Model.Description))
-            {
-                <p class="text-gray-600 mb-6">@Model.Description</p>
-            }
+<div class="min-h-screen flex flex-col bg-background">
+    <div class="flex-1 w-full px-4 sm:px-6 lg:px-8 pt-24 pb-20 flex justify-center">
+        <div class="w-[900px] max-w-[900px] h-full bg-white p-6 animate-fade-in">
+            <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+                <h1 class="text-2xl font-bold mb-2">@Model.Title</h1>
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <p class="text-gray-600 mb-6">@Model.Description</p>
+                }
 
-            @if (TempData["ErrorMessage"] != null)
-            {
-                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                    <span class="block sm:inline">@TempData["ErrorMessage"]</span>
-                </div>
-            }
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                        <span class="block sm:inline">@TempData["ErrorMessage"]</span>
+                    </div>
+                }
 
-            <form method="post" asp-action="Submit" asp-route-id="@Model.SurveyId" id="surveyResponseForm">
-                <input type="hidden" name="SurveyId" value="@Model.SurveyId" />
-                
-                <div class="mb-6">
-                    <h2 class="text-lg font-semibold mb-4">Sus datos</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="mb-4">
-                            <label asp-for="RespondentName" class="block text-gray-700 font-medium mb-2">Nombre <span class="text-red-500">*</span></label>
-                            <input asp-for="RespondentName" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
-                            <span asp-validation-for="RespondentName" class="text-red-500 text-sm"></span>
+                <form method="post" asp-action="Submit" asp-route-id="@Model.SurveyId" id="surveyResponseForm">
+                    <input type="hidden" name="SurveyId" value="@Model.SurveyId" />
+                    
+                    <div class="space-y-6">
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-medium">Sus datos</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="space-y-2">
+                                    <label asp-for="RespondentName" class="block text-gray-700 font-medium mb-2">Nombre <span class="text-red-500">*</span></label>
+                                    <input asp-for="RespondentName" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                                    <span asp-validation-for="RespondentName" class="text-sm text-destructive"></span>
+                                </div>
+                                <div class="space-y-2">
+                                    <label asp-for="RespondentEmail" class="block text-gray-700 font-medium mb-2">Email <span class="text-red-500">*</span></label>
+                                    <input asp-for="RespondentEmail" type="email" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                                    <span asp-validation-for="RespondentEmail" class="text-sm text-destructive"></span>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="space-y-2">
+                                    <label asp-for="RespondentPhone" class="block text-gray-700 font-medium mb-2">Teléfono</label>
+                                    <input asp-for="RespondentPhone" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                    <span asp-validation-for="RespondentPhone" class="text-sm text-destructive"></span>
+                                </div>
+                                <div class="space-y-2">
+                                    <label asp-for="RespondentCompany" class="block text-gray-700 font-medium mb-2">Empresa</label>
+                                    <input asp-for="RespondentCompany" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                    <span asp-validation-for="RespondentCompany" class="text-sm text-destructive"></span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="mb-4">
-                            <label asp-for="RespondentEmail" class="block text-gray-700 font-medium mb-2">Email <span class="text-red-500">*</span></label>
-                            <input asp-for="RespondentEmail" type="email" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
-                            <span asp-validation-for="RespondentEmail" class="text-red-500 text-sm"></span>
+                        
+                        <div class="border-t border-gray-200 my-6"></div>
+                        
+                        <div class="space-y-8">
+                            <h3 class="text-lg font-medium">Preguntas</h3>
+
+                            @for (int i = 0; i < Model.Questions.Count; i++)
+                            {
+                                var question = Model.Questions[i];
+                                <div class="space-y-3 bg-gray-50 p-4 rounded-lg border border-gray-200" data-question-id="@question.Id">
+                                    <h4 class="font-medium">
+                                        <span class="mr-2">@(i + 1).</span>
+                                        @question.Title
+                                        @if (question.Required)
+                                        {
+                                            <span class="text-red-500 ml-1">*</span>
+                                        }
+                                    </h4>
+
+                                    @if (!string.IsNullOrEmpty(question.Description))
+                                    {
+                                        <p class="text-gray-600 mb-4 pl-6">@question.Description</p>
+                                    }
+
+                                    @if (question.Type == "text")
+                                    {
+                                        <div>
+                                            <textarea name="Answers[@question.Id]" rows="3" 
+                                                    class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                                    @(question.Required ? "required" : "")
+                                                    placeholder="Su respuesta"></textarea>
+                                        </div>
+                                    }
+                                    else if (question.Type == "single-choice" || question.Type == "rating")
+                                    {
+                                        <div class="flex space-x-6">
+                                            @foreach (var option in question.Options)
+                                            {
+                                                <div class="flex items-center space-x-2">
+                                                    <input type="radio" id="q@(question.Id)_@option.GetHashCode()" 
+                                                        name="Answers[@question.Id]" value="@option" 
+                                                        class="mr-2" 
+                                                        @(question.Required ? "required" : "") />
+                                                    <label for="q@(question.Id)_@option.GetHashCode()">@option</label>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                    else if (question.Type == "multiple-choice")
+                                    {
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            @foreach (var option in question.Options)
+                                            {
+                                                <div class="flex items-center space-x-2">
+                                                    <input type="checkbox" id="q@(question.Id)_@option.GetHashCode()" 
+                                                        name="Answers[@question.Id]" value="@option" 
+                                                        class="mr-2 checkbox-group-@question.Id rounded" />
+                                                    <label for="q@(question.Id)_@option.GetHashCode()">@option</label>
+                                                </div>
+                                            }
+                                        </div>
+                                        @if (question.Required)
+                                        {
+                                            <p id="error-@question.Id" class="text-sm text-destructive mt-1"></p>
+                                        }
+                                    }
+                                </div>
+                            }
                         </div>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="mb-4">
-                            <label asp-for="RespondentPhone" class="block text-gray-700 font-medium mb-2">Teléfono</label>
-                            <input asp-for="RespondentPhone" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                            <span asp-validation-for="RespondentPhone" class="text-red-500 text-sm"></span>
-                        </div>
-                        <div class="mb-4">
-                            <label asp-for="RespondentCompany" class="block text-gray-700 font-medium mb-2">Empresa</label>
-                            <input asp-for="RespondentCompany" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                            <span asp-validation-for="RespondentCompany" class="text-red-500 text-sm"></span>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="space-y-8">
-                    <h2 class="text-lg font-semibold mb-4">Preguntas</h2>
-
-                    @for (int i = 0; i < Model.Questions.Count; i++)
+                    @if (Model.RelatedKnowledgeItems.Any())
                     {
-                        var question = Model.Questions[i];
-                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200" data-question-id="@question.Id">
-                            <h3 class="font-medium mb-2">
-                                <span class="mr-2">@(i + 1).</span>
-                                @question.Title
-                                @if (question.Required)
+                        <div class="mt-8 bg-blue-50 p-4 rounded-lg border border-blue-200">
+                            <h3 class="text-blue-800 font-medium mb-2">Recursos relacionados que podrían interesarte:</h3>
+                            <ul class="list-disc pl-5 space-y-1">
+                                @foreach (var item in Model.RelatedKnowledgeItems)
                                 {
-                                    <span class="text-red-500">*</span>
+                                    <li>
+                                        <a href="/knowledge/@item.Id" class="text-blue-600 hover:underline">@item.Title</a>
+                                        <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded ml-2">@item.Category</span>
+                                    </li>
                                 }
-                            </h3>
-
-                            @if (!string.IsNullOrEmpty(question.Description))
-                            {
-                                <p class="text-gray-600 mb-4 pl-6">@question.Description</p>
-                            }
-
-                            @if (question.Type == "text")
-                            {
-                                <div class="mt-3">
-                                    <textarea name="Answers[@question.Id]" rows="3" 
-                                              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                                              @(question.Required ? "required" : "")></textarea>
-                                </div>
-                            }
-                            else if (question.Type == "single-choice" || question.Type == "rating")
-                            {
-                                <div class="mt-3 space-y-2">
-                                    @foreach (var option in question.Options)
-                                    {
-                                        <div class="flex items-center">
-                                            <input type="radio" id="q@(question.Id)_@option.GetHashCode()" 
-                                                   name="Answers[@question.Id]" value="@option" 
-                                                   class="mr-2" 
-                                                   @(question.Required ? "required" : "") />
-                                            <label for="q@(question.Id)_@option.GetHashCode()">@option</label>
-                                        </div>
-                                    }
-                                </div>
-                            }
-                            else if (question.Type == "multiple-choice")
-                            {
-                                <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    @foreach (var option in question.Options)
-                                    {
-                                        <div class="flex items-center">
-                                            <input type="checkbox" id="q@(question.Id)_@option.GetHashCode()" 
-                                                   name="Answers[@question.Id]" value="@option" 
-                                                   class="mr-2 checkbox-group-@question.Id" />
-                                            <label for="q@(question.Id)_@option.GetHashCode()">@option</label>
-                                        </div>
-                                    }
-                                </div>
-                            }
+                            </ul>
                         </div>
                     }
-                </div>
-
-                <div class="mt-8 flex justify-between">
-                    <button type="button" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-6 rounded" onclick="window.location.href='@Url.Action("Index", "Home")'">
-                        Cancelar
-                    </button>
-                    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded">
-                        Enviar Respuestas
-                    </button>
-                </div>
-            </form>
+                    
+                    <div class="mt-8 flex justify-between space-x-4">
+                        <button type="button" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-6 rounded" onclick="window.location.href='@Url.Action("Index", "Home")'">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded flex items-center">
+                            @(string.IsNullOrEmpty(Model.SubmitButtonText) ? "Enviar Respuestas" : Model.SubmitButtonText)
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
@@ -170,7 +202,7 @@
                 // Validar grupos de checkboxes requeridos
                 requiredCheckboxGroups.forEach(group => {
                     const questionId = group.getAttribute('data-question-id');
-                    const isRequired = group.querySelector('h3 span.text-red-500') !== null;
+                    const isRequired = group.querySelector('h4 span.text-red-500') !== null;
                     
                     if (isRequired) {
                         const checkboxes = group.querySelectorAll('.checkbox-group-' + questionId);
@@ -185,11 +217,22 @@
                 if (!isValid) {
                     e.preventDefault();
                     // Scroll to the first error
-                    const firstError = document.querySelector('.field-validation-error:not(:empty)');
+                    const firstError = document.querySelector('.text-destructive:not(:empty)');
                     if (firstError) {
                         firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
                 }
+            });
+            
+            // Capturar tiempo de completado
+            const startTime = new Date();
+            form.addEventListener('submit', function() {
+                const completionTime = (new Date() - startTime) / 1000; // en segundos
+                const completionTimeInput = document.createElement('input');
+                completionTimeInput.type = 'hidden';
+                completionTimeInput.name = 'CompletionTime';
+                completionTimeInput.value = completionTime.toString();
+                form.appendChild(completionTimeInput);
             });
         });
     </script>

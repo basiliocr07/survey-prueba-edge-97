@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,13 +14,16 @@ namespace SurveyApp.WebMvc.Controllers
     public class SurveyResponseController : Controller
     {
         private readonly ISurveyService _surveyService;
+        private readonly IKnowledgeBaseService _knowledgeBaseService;
         private readonly ILogger<SurveyResponseController> _logger;
 
         public SurveyResponseController(
             ISurveyService surveyService,
+            IKnowledgeBaseService knowledgeBaseService,
             ILogger<SurveyResponseController> logger)
         {
             _surveyService = surveyService;
+            _knowledgeBaseService = knowledgeBaseService;
             _logger = logger;
         }
 
@@ -48,8 +52,27 @@ namespace SurveyApp.WebMvc.Controllers
                         Type = q.Type,
                         Required = q.Required,
                         Options = q.Options
-                    }).ToList()
+                    }).ToList(),
+                    // Configuración UI desde el survey
+                    Theme = survey.Theme,
+                    BackgroundColor = survey.BackgroundColor,
+                    LogoUrl = survey.LogoUrl,
+                    ShowProgressBar = survey.ShowProgressBar,
+                    SubmitButtonText = survey.SubmitButtonText
                 };
+                
+                // Obtener artículos relacionados de la base de conocimientos
+                var relatedArticles = await _knowledgeBaseService.GetRelatedItemsAsync(survey.Category, 3);
+                viewModel.RelatedKnowledgeItems = relatedArticles.Select(a => new KnowledgeItemViewModel
+                {
+                    Id = a.Id,
+                    Title = a.Title,
+                    Content = a.Content,
+                    Category = a.Category,
+                    Tags = a.Tags,
+                    Summary = a.Summary,
+                    ImageUrl = a.ImageUrl
+                }).ToList();
                 
                 return View(viewModel);
             }
@@ -62,7 +85,7 @@ namespace SurveyApp.WebMvc.Controllers
         }
 
         [HttpPost("respond/{id}")]
-        public async Task<IActionResult> Submit(Guid id, [FromForm] SurveyResponseInputModel model)
+        public async Task<IActionResult> Submit(Guid id, [FromForm] SurveyResponseViewModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -95,6 +118,14 @@ namespace SurveyApp.WebMvc.Controllers
 
                 ProcessMultipleChoiceAnswers(model);
 
+                // Capturar información del cliente y navegador
+                var userAgent = Request.Headers["User-Agent"].ToString();
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                var referrer = Request.Headers["Referer"].ToString();
+                
+                // Extraer información del dispositivo
+                var deviceInfo = GetDeviceInfo(userAgent);
+
                 var responseDto = new CreateSurveyResponseDto
                 {
                     SurveyId = id,
@@ -104,12 +135,50 @@ namespace SurveyApp.WebMvc.Controllers
                     RespondentCompany = model.RespondentCompany,
                     Answers = model.Answers,
                     IsExistingClient = model.IsExistingClient,
-                    ExistingClientId = model.ExistingClientId
+                    ExistingClientId = model.ExistingClientId,
+                    CompletionTime = model.CompletionTime,
+                    DeviceType = deviceInfo.DeviceType,
+                    Browser = deviceInfo.Browser,
+                    OperatingSystem = deviceInfo.OperatingSystem,
+                    Location = GetLocationFromIp(ipAddress),
+                    IpAddress = ipAddress,
+                    Source = referrer,
+                    UserAgent = userAgent,
+                    PageViews = model.PageViews > 0 ? model.PageViews : 1,
+                    ReferrerUrl = referrer
                 };
 
-                await _surveyService.SubmitSurveyResponseAsync(responseDto);
+                var response = await _surveyService.SubmitSurveyResponseAsync(responseDto);
 
-                return RedirectToAction("ThankYou", new { id });
+                // Crear el modelo para la página de agradecimiento
+                var thankYouModel = new ThankYouViewModel
+                {
+                    SurveyTitle = survey.Title,
+                    RespondentName = model.RespondentName,
+                    ThankYouMessage = !string.IsNullOrEmpty(survey.ThankYouMessage) 
+                        ? survey.ThankYouMessage 
+                        : "¡Gracias por completar nuestra encuesta!",
+                    SurveyCategory = survey.Category,
+                    SubmittedAt = DateTime.UtcNow,
+                    ResponseCount = await _surveyService.GetResponseCountAsync(id)
+                };
+                
+                // Obtener encuestas relacionadas
+                var relatedSurveys = await _surveyService.GetRelatedSurveysAsync(survey.Category, id, 3);
+                thankYouModel.RelatedSurveys = relatedSurveys.Select(s => new SurveyListItemViewModel
+                {
+                    Id = s.Id,
+                    Title = s.Title,
+                    Description = s.Description?.Length > 100 
+                        ? s.Description.Substring(0, 97) + "..." 
+                        : s.Description,
+                    Category = s.Category,
+                    ResponseCount = s.ResponseCount,
+                    ImageUrl = s.ImageUrl,
+                    IsFeatured = s.IsFeatured
+                }).ToList();
+
+                return View("ThankYou", thankYouModel);
             }
             catch (Exception ex)
             {
@@ -119,7 +188,7 @@ namespace SurveyApp.WebMvc.Controllers
             }
         }
 
-        private void ProcessMultipleChoiceAnswers(SurveyResponseInputModel model)
+        private void ProcessMultipleChoiceAnswers(SurveyResponseViewModel model)
         {
             foreach (var key in Request.Form.Keys)
             {
@@ -139,88 +208,74 @@ namespace SurveyApp.WebMvc.Controllers
             }
         }
 
-        [HttpGet("respond/{id}/thankyou")]
-        public async Task<IActionResult> ThankYou(Guid id)
+        private (string DeviceType, string Browser, string OperatingSystem) GetDeviceInfo(string userAgent)
         {
-            try
+            string deviceType = "Desktop";
+            string browser = "Unknown";
+            string operatingSystem = "Unknown";
+            
+            // Detectar tipo de dispositivo
+            if (userAgent.Contains("Mobile") || userAgent.Contains("Android") && !userAgent.Contains("Tablet"))
             {
-                var survey = await _surveyService.GetSurveyByIdAsync(id);
-                ViewBag.SurveyTitle = survey.Title;
-                ViewBag.ThankYouMessage = "¡Gracias por completar nuestra encuesta!";
-                
-                return View();
+                deviceType = "Mobile";
             }
-            catch
+            else if (userAgent.Contains("iPad") || userAgent.Contains("Tablet"))
             {
-                return View(); // Mostrar un mensaje genérico si no se puede cargar la encuesta
+                deviceType = "Tablet";
             }
+            
+            // Detectar navegador
+            if (userAgent.Contains("Chrome") && !userAgent.Contains("Edg"))
+            {
+                browser = "Chrome";
+            }
+            else if (userAgent.Contains("Firefox"))
+            {
+                browser = "Firefox";
+            }
+            else if (userAgent.Contains("Safari") && !userAgent.Contains("Chrome"))
+            {
+                browser = "Safari";
+            }
+            else if (userAgent.Contains("Edge") || userAgent.Contains("Edg"))
+            {
+                browser = "Edge";
+            }
+            else if (userAgent.Contains("MSIE") || userAgent.Contains("Trident"))
+            {
+                browser = "Internet Explorer";
+            }
+            
+            // Detectar sistema operativo
+            if (userAgent.Contains("Windows"))
+            {
+                operatingSystem = "Windows";
+            }
+            else if (userAgent.Contains("Mac"))
+            {
+                operatingSystem = "macOS";
+            }
+            else if (userAgent.Contains("Linux") || userAgent.Contains("X11"))
+            {
+                operatingSystem = "Linux";
+            }
+            else if (userAgent.Contains("Android"))
+            {
+                operatingSystem = "Android";
+            }
+            else if (userAgent.Contains("iPhone") || userAgent.Contains("iPad") || userAgent.Contains("iPod"))
+            {
+                operatingSystem = "iOS";
+            }
+            
+            return (deviceType, browser, operatingSystem);
         }
         
-        [HttpGet("responses")]
-        public async Task<IActionResult> List()
+        private string GetLocationFromIp(string ipAddress)
         {
-            try
-            {
-                var recentResponses = await _surveyService.GetRecentResponsesAsync(20);
-                
-                return View(recentResponses);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al listar respuestas");
-                TempData["ErrorMessage"] = "Error al cargar las respuestas.";
-                return RedirectToAction("Index", "Dashboard");
-            }
-        }
-        
-        [HttpGet("responses/{id}")]
-        public async Task<IActionResult> Details(Guid id)
-        {
-            try
-            {
-                var response = await _surveyService.GetResponseByIdAsync(id);
-                
-                if (response == null)
-                {
-                    TempData["ErrorMessage"] = "La respuesta solicitada no existe.";
-                    return RedirectToAction(nameof(List));
-                }
-                
-                var viewModel = new SurveyResponseAnalyticsViewModel
-                {
-                    Id = response.Id,
-                    SurveyId = response.SurveyId,
-                    SurveyTitle = response.SurveyTitle,
-                    RespondentName = response.RespondentName,
-                    RespondentEmail = response.RespondentEmail,
-                    RespondentPhone = response.RespondentPhone,
-                    RespondentCompany = response.RespondentCompany,
-                    SubmittedAt = response.SubmittedAt,
-                    IsValidated = response.Answers.All(a => a.IsValid),
-                    CompletionTime = 0,
-                    QuestionCount = response.Answers.Count,
-                    ValidAnswersCount = response.Answers.Count(a => a.IsValid),
-                    Answers = response.Answers.Select(a => new QuestionAnswerViewModel
-                    {
-                        QuestionId = a.QuestionId,
-                        QuestionTitle = a.QuestionTitle,
-                        QuestionType = a.QuestionType,
-                        Answer = a.Answer,
-                        MultipleAnswers = a.MultipleAnswers,
-                        IsValid = a.IsValid,
-                        ScoreValue = 0,
-                        CompletionTimeSeconds = 0
-                    }).ToList()
-                };
-                
-                return View(viewModel);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener detalles de respuesta: {Message}", ex.Message);
-                TempData["ErrorMessage"] = "Ocurrió un error al cargar los detalles de la respuesta.";
-                return RedirectToAction(nameof(List));
-            }
+            // En una aplicación real, se usaría un servicio de geolocalización
+            // Para este ejemplo, devolvemos un valor predeterminado
+            return "Unknown";
         }
     }
 }
