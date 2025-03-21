@@ -7,21 +7,15 @@ namespace SurveyApp.Domain.Entities
     public class Survey
     {
         public Guid Id { get; set; }
-        public string Title { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
+        public string Title { get; set; }
+        public string Description { get; set; }
         public DateTime CreatedAt { get; set; }
         public int Responses { get; set; }
         public int CompletionRate { get; set; }
-        public string Status { get; set; } = string.Empty;
-        public string Category { get; set; } = "General"; // Default value for Category
-        public List<Question> Questions { get; set; } = new List<Question>();
-        public DeliveryConfig? DeliveryConfig { get; set; }
-        
-        // New properties to match SurveyCreateViewModel
-        public DateTime? ExpiryDate { get; set; }
-        public bool AllowAnonymousResponses { get; set; }
-        public bool LimitOneResponsePerUser { get; set; }
-        public string ThankYouMessage { get; set; } = string.Empty;
+        public string Status { get; set; }
+        public string Category { get; set; } // Added Category property
+        public List<Question> Questions { get; set; }
+        public DeliveryConfig DeliveryConfig { get; set; }
 
         public Survey()
         {
@@ -31,9 +25,6 @@ namespace SurveyApp.Domain.Entities
             Responses = 0;
             CompletionRate = 0;
             Questions = new List<Question>();
-            AllowAnonymousResponses = true;
-            LimitOneResponsePerUser = false;
-            ThankYouMessage = "¡Gracias por completar nuestra encuesta!";
         }
 
         public void AddQuestion(Question question)
@@ -49,11 +40,6 @@ namespace SurveyApp.Domain.Entities
         public void SetDeliveryConfig(DeliveryConfig config)
         {
             DeliveryConfig = config;
-        }
-
-        public void UpdateCategory(string category)
-        {
-            Category = !string.IsNullOrWhiteSpace(category) ? category : "General";
         }
     }
 }

@@ -148,8 +148,8 @@ namespace SurveyApp.WebMvc.Controllers
                 errorViewModel.ActionName = "Create";
                 errorViewModel.HttpMethod = Request.Method;
                 errorViewModel.QueryString = Request.QueryString.ToString();
-                errorViewModel.IsAuthenticated = User.Identity?.IsAuthenticated ?? false;
-                errorViewModel.Username = User.Identity?.Name ?? string.Empty;
+                errorViewModel.IsAuthenticated = User.Identity.IsAuthenticated;
+                errorViewModel.Username = User.Identity.Name ?? string.Empty;
                 errorViewModel.UserRole = User.IsInRole("Admin") ? "Admin" : "Client";
                 
                 return View("Error", errorViewModel);
@@ -168,19 +168,13 @@ namespace SurveyApp.WebMvc.Controllers
             {
                 formDataSummary.AppendLine($"{key}: {Request.Form[key]}");
             }
-            
             _logger.LogInformation("Form data: {FormData}", formDataSummary.ToString());
-            
-            // Debug log for incoming view model
-            _logger.LogInformation("ViewModel received: {@ViewModel}", 
-                JsonSerializer.Serialize(viewModel, new JsonSerializerOptions { WriteIndented = true }));
             
             try
             {
                 if (!ModelState.IsValid)
                 {
-                    _logger.LogWarning("ModelState is invalid. Errors follow:");
-                    
+                    // Log model state errors
                     var errorViewModel = new ErrorViewModel
                     {
                         Message = "El formulario contiene errores de validación",
@@ -188,8 +182,7 @@ namespace SurveyApp.WebMvc.Controllers
                         ActionName = "Create",
                         HttpMethod = Request.Method,
                         ErrorTimestamp = DateTime.UtcNow,
-                        FormDataSummary = formDataSummary.ToString(),
-                        ErrorType = "ValidationError"
+                        FormDataSummary = formDataSummary.ToString()
                     };
                     
                     foreach (var modelState in ModelState)
@@ -208,8 +201,6 @@ namespace SurveyApp.WebMvc.Controllers
                 // Check if Questions collection is null or empty
                 if (viewModel.Questions == null || !viewModel.Questions.Any())
                 {
-                    _logger.LogWarning("Questions collection is null or empty");
-                    
                     var errorViewModel = new ErrorViewModel
                     {
                         Message = "La encuesta debe contener al menos una pregunta",
@@ -217,8 +208,7 @@ namespace SurveyApp.WebMvc.Controllers
                         ActionName = "Create",
                         HttpMethod = Request.Method,
                         ErrorTimestamp = DateTime.UtcNow,
-                        FormDataSummary = formDataSummary.ToString(),
-                        ErrorType = "ValidationError"
+                        FormDataSummary = formDataSummary.ToString()
                     };
                     
                     errorViewModel.AddValidationError("Questions", "La encuesta debe contener al menos una pregunta");
@@ -270,17 +260,10 @@ namespace SurveyApp.WebMvc.Controllers
                     }
                 };
 
-                _logger.LogInformation("DTO preparado para crear encuesta: {@SurveyDto}", 
-                    JsonSerializer.Serialize(createSurveyDto, new JsonSerializerOptions { WriteIndented = true }));
+                _logger.LogInformation("Enviando DTO para crear encuesta: {@SurveyDto}", 
+                    JsonSerializer.Serialize(createSurveyDto));
                 
-                try {
-                    var result = await _surveyService.CreateSurveyAsync(createSurveyDto);
-                    _logger.LogInformation("Encuesta creada exitosamente con ID: {SurveyId}", result.Id);
-                }
-                catch (Exception ex) {
-                    _logger.LogError(ex, "Error específico al llamar a CreateSurveyAsync: {Message}", ex.Message);
-                    throw; // Re-throw to be caught by the outer catch
-                }
+                await _surveyService.CreateSurveyAsync(createSurveyDto);
                 
                 TempData["SuccessMessage"] = "Encuesta creada correctamente.";
                 return RedirectToAction("Index");
@@ -290,24 +273,16 @@ namespace SurveyApp.WebMvc.Controllers
                 _logger.LogError(ex, "Error al crear la encuesta: {Message}, StackTrace: {StackTrace}", 
                     ex.Message, ex.StackTrace);
                 
-                // Get inner exception details if available
-                var innerExMsg = ex.InnerException != null ? 
-                    $"Inner exception: {ex.InnerException.Message}" : "No inner exception";
-                _logger.LogError(innerExMsg);
-                
                 var errorViewModel = ErrorViewModel.CreateDetailedError(ex, Activity.Current?.Id?.ToString(),
                     "Error al crear la encuesta");
                 errorViewModel.ControllerName = "Survey";
                 errorViewModel.ActionName = "Create";
                 errorViewModel.HttpMethod = Request.Method;
                 errorViewModel.QueryString = Request.QueryString.ToString();
-                errorViewModel.IsAuthenticated = User.Identity?.IsAuthenticated ?? false;
-                errorViewModel.Username = User.Identity?.Name ?? string.Empty;
+                errorViewModel.IsAuthenticated = User.Identity.IsAuthenticated;
+                errorViewModel.Username = User.Identity.Name ?? string.Empty;
                 errorViewModel.UserRole = User.IsInRole("Admin") ? "Admin" : "Client";
                 errorViewModel.FormDataSummary = formDataSummary.ToString();
-                errorViewModel.ErrorType = ex.GetType().Name;
-                errorViewModel.IsDatabaseError = ex.Message.Contains("database") || 
-                                               (ex.InnerException?.Message?.Contains("database") ?? false);
                 
                 return View("Error", errorViewModel);
             }
