@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using SurveyApp.Application.Services;
 using SurveyApp.WebMvc.Models;
+using SurveyApp.Domain.Entities;
+using SurveyApp.Application.DTOs;
 
 namespace SurveyApp.WebMvc.Controllers
 {
@@ -152,10 +154,19 @@ namespace SurveyApp.WebMvc.Controllers
                         await _surveyService.UpdateSurveyStatusAsync(id, status);
                         break;
                     case "suggestion":
-                        await _suggestionService.UpdateSuggestionStatusAsync(id, status);
+                        // Convert the string status to SuggestionStatus enum
+                        var suggestionStatus = SuggestionStatusHelper.ParseStatus(status);
+                        await _suggestionService.UpdateSuggestionStatusAsync(id, suggestionStatus);
                         break;
                     case "requirement":
-                        await _requirementService.UpdateRequirementStatusAsync(id, status);
+                        // Create a new RequirementStatusUpdateDto to pass to the service
+                        var requirementStatusUpdate = new RequirementStatusUpdateDto
+                        {
+                            Status = status,
+                            Comment = "", // Default empty comment
+                            CompletionPercentage = null // Default null percentage
+                        };
+                        await _requirementService.UpdateRequirementStatusAsync(id, requirementStatusUpdate);
                         break;
                     default:
                         return BadRequest("Tipo de elemento no válido");
