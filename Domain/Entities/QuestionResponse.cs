@@ -58,5 +58,11 @@ namespace SurveyApp.Domain.Entities
         {
             IsValid = isValid;
         }
+        
+        // Método faltante que se utiliza en SurveyResponseRepository
+        public void SetValidationStatus(bool isValid)
+        {
+            IsValid = isValid;
+        }
     }
 }
