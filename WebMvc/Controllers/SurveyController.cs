@@ -217,8 +217,8 @@ namespace SurveyApp.WebMvc.Controllers
                     {
                         Type = deliveryConfig.Type,
                         EmailAddresses = deliveryConfig.EmailAddresses,
-                        Schedule = deliveryConfig.Schedule,
-                        Trigger = deliveryConfig.Trigger
+                        Schedule = ConvertToScheduleDto(deliveryConfig.Schedule),
+                        Trigger = ConvertToTriggerDto(deliveryConfig.Trigger)
                     }
                 };
         
@@ -273,6 +273,34 @@ namespace SurveyApp.WebMvc.Controllers
                 TempData["ErrorMessage"] = $"Error al enviar el email de prueba: {ex.Message}";
                 return RedirectToAction("Index");
             }
+        }
+
+        private ScheduleDto ConvertToScheduleDto(ScheduleViewModel schedule)
+        {
+            if (schedule == null)
+                return null;
+                
+            return new ScheduleDto
+            {
+                Frequency = schedule.Frequency,
+                DayOfMonth = schedule.DayOfMonth,
+                DayOfWeek = schedule.DayOfWeek,
+                Time = schedule.Time,
+                StartDate = schedule.StartDate
+            };
+        }
+        
+        private TriggerDto ConvertToTriggerDto(TriggerViewModel trigger)
+        {
+            if (trigger == null)
+                return null;
+                
+            return new TriggerDto
+            {
+                Type = trigger.Type,
+                DelayHours = trigger.DelayHours,
+                SendAutomatically = trigger.SendAutomatically
+            };
         }
     }
 }
