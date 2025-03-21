@@ -55,14 +55,14 @@ namespace SurveyApp.WebMvc.Models
         
         // Email specific properties
         public bool EnableEmailDelivery { get; set; }
-        public string SenderName { get; set; }
-        public string SenderEmail { get; set; }
-        public string EmailSubject { get; set; }
-        public string EmailBody { get; set; }
+        public string SenderName { get; set; } = "Sistema de Encuestas";
+        public string SenderEmail { get; set; } = "";
+        public string EmailSubject { get; set; } = "Nueva encuesta para completar";
+        public string EmailBody { get; set; } = "Por favor, complete nuestra encuesta. Su opinión es importante para nosotros.";
         
         public DateTime? ExpiryDate { get; set; }
         public bool AllowAnonymousResponses { get; set; } = true;
-        public bool LimitOneResponsePerUser { get; set; }
+        public bool LimitOneResponsePerUser { get; set; } = false;
         public string ThankYouMessage { get; set; } = "¡Gracias por completar nuestra encuesta!";
     }
 
@@ -102,3 +102,4 @@ namespace SurveyApp.WebMvc.Models
         
         public string EventName { get; set; }
     }
+}

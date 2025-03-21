@@ -1,5 +1,6 @@
 
 using System;
+using System.Collections.Generic;
 
 namespace SurveyApp.WebMvc.Models
 {
@@ -34,14 +35,20 @@ namespace SurveyApp.WebMvc.Models
         public string HttpMethod { get; set; }
         public string QueryString { get; set; }
         
-        // Form data summary - NEW
+        // Form data summary
         public string FormDataSummary { get; set; }
         
-        // Error type classification - NEW
+        // Error type classification
         public string ErrorType { get; set; }
         
-        // Model validation errors - NEW
+        // Model validation errors
         public Dictionary<string, List<string>> ValidationErrors { get; set; } = new Dictionary<string, List<string>>();
+        
+        // Request body content (for API debugging)
+        public string RequestBody { get; set; }
+        
+        // Response status code
+        public int? StatusCode { get; set; }
         
         public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
         
@@ -60,7 +67,7 @@ namespace SurveyApp.WebMvc.Models
             };
         }
         
-        // New helper method to add validation errors
+        // Helper method to add validation errors
         public void AddValidationError(string key, string errorMessage)
         {
             if (!ValidationErrors.ContainsKey(key))
@@ -69,6 +76,12 @@ namespace SurveyApp.WebMvc.Models
             }
             
             ValidationErrors[key].Add(errorMessage);
+        }
+        
+        // New helper method to summarize the error
+        public string GetErrorSummary()
+        {
+            return $"[{ErrorType}] {Message}";
         }
     }
 }

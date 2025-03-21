@@ -16,6 +16,12 @@ namespace SurveyApp.Domain.Entities
         public string Category { get; set; } // Added Category property
         public List<Question> Questions { get; set; }
         public DeliveryConfig DeliveryConfig { get; set; }
+        
+        // New properties to match SurveyCreateViewModel
+        public DateTime? ExpiryDate { get; set; }
+        public bool AllowAnonymousResponses { get; set; }
+        public bool LimitOneResponsePerUser { get; set; }
+        public string ThankYouMessage { get; set; }
 
         public Survey()
         {
@@ -25,6 +31,9 @@ namespace SurveyApp.Domain.Entities
             Responses = 0;
             CompletionRate = 0;
             Questions = new List<Question>();
+            AllowAnonymousResponses = true;
+            LimitOneResponsePerUser = false;
+            ThankYouMessage = "¡Gracias por completar nuestra encuesta!";
         }
 
         public void AddQuestion(Question question)
