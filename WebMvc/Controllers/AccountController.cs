@@ -46,7 +46,7 @@ namespace SurveyApp.WebMvc.Controllers
 
             try
             {
-                var isValid = await _authService.ValidateUserCredentialsAsync(model.Username, model.Password);
+                var isValid = await _authService.ValidateUserAsync(model.Username, model.Password);
                 
                 if (isValid)
                 {
@@ -123,7 +123,7 @@ namespace SurveyApp.WebMvc.Controllers
                     }
                     
                     // Asignar el rol predeterminado (Cliente)
-                    var success = await _authService.CreateUserAsync(model.Username, model.Email, model.Password, "Client");
+                    var success = await _authService.RegisterUserAsync(model.Username, model.Email, model.Password, "Client");
                     
                     if (success)
                     {
