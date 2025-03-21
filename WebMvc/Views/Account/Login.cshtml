@@ -2,78 +2,84 @@
 @model SurveyApp.WebMvc.Models.LoginViewModel
 @{
     ViewData["Title"] = "Iniciar Sesión";
+    Layout = "_ClientLayout";
 }
 
-<div class="flex h-screen w-full items-center justify-center bg-gray-50">
-    <div class="w-full max-w-md">
-        <div class="card">
-            <div class="tabs">
-                <div class="grid w-full grid-cols-2 mb-6">
-                    <div class="tab-trigger active text-center py-3 border-b-2 border-primary font-medium">Iniciar Sesión</div>
-                    <a asp-action="Register" class="tab-trigger text-center py-3 border-b-2 border-gray-200 text-gray-500 hover:text-primary transition-colors">Registrarse</a>
-                </div>
-                
-                <div class="tab-content">
-                    <form id="loginForm" class="space-y-6" method="post" asp-action="Login" asp-route-returnurl="@ViewData["ReturnUrl"]">
-                        <div asp-validation-summary="ModelOnly" class="text-red-500 text-sm mb-4 rounded bg-red-50 p-2 border border-red-200" role="alert"></div>
-                        
-                        <div class="space-y-2">
-                            <label asp-for="Username" class="block text-sm font-medium text-gray-700">Usuario</label>
-                            <div class="relative">
-                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
-                                    <i class="fas fa-user"></i>
-                                </span>
-                                <input asp-for="Username" class="form-input pl-10 w-full rounded-md border border-gray-300 shadow-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Nombre de usuario" />
-                            </div>
-                            <span asp-validation-for="Username" class="text-xs text-red-500"></span>
+<div class="flex min-h-full items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="w-full max-w-md space-y-8">
+        <div class="text-center">
+            <h2 class="text-center text-3xl font-bold tracking-tight text-gray-900">
+                Iniciar Sesión
+            </h2>
+            <p class="mt-2 text-center text-sm text-gray-600">
+                <span>¿No tienes una cuenta? </span>
+                <a asp-action="Register" class="font-medium text-primary hover:text-primary/80">
+                    Regístrate aquí
+                </a>
+            </p>
+        </div>
+        
+        <div class="mt-8">
+            <div class="bg-white p-8 shadow rounded-lg">
+                <form id="loginForm" class="space-y-6" method="post" asp-action="Login" asp-route-returnurl="@ViewData["ReturnUrl"]">
+                    <div asp-validation-summary="ModelOnly" class="text-red-500 text-sm mb-4 rounded bg-red-50 p-2 border border-red-200" role="alert"></div>
+                    
+                    <div class="space-y-2">
+                        <label asp-for="Username" class="block text-sm font-medium text-gray-700">Usuario</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                                <i class="fas fa-user"></i>
+                            </span>
+                            <input asp-for="Username" class="form-input pl-10 w-full rounded-md border border-gray-300 shadow-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Nombre de usuario" />
+                        </div>
+                        <span asp-validation-for="Username" class="text-xs text-red-500"></span>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <label asp-for="Password" class="block text-sm font-medium text-gray-700">Contraseña</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                                <i class="fas fa-lock"></i>
+                            </span>
+                            <input asp-for="Password" type="password" class="form-input pl-10 w-full rounded-md border border-gray-300 shadow-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Contraseña" />
+                        </div>
+                        <span asp-validation-for="Password" class="text-xs text-red-500"></span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <input asp-for="RememberMe" id="remember_me" type="checkbox" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded" />
+                            <label for="remember_me" class="ml-2 block text-sm text-gray-900">
+                                Recordarme
+                            </label>
                         </div>
                         
-                        <div class="space-y-2">
-                            <label asp-for="Password" class="block text-sm font-medium text-gray-700">Contraseña</label>
-                            <div class="relative">
-                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
-                                    <i class="fas fa-lock"></i>
-                                </span>
-                                <input asp-for="Password" type="password" class="form-input pl-10 w-full rounded-md border border-gray-300 shadow-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Contraseña" />
-                            </div>
-                            <span asp-validation-for="Password" class="text-xs text-red-500"></span>
-                        </div>
-                        
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <input asp-for="RememberMe" id="remember_me" type="checkbox" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded" />
-                                <label for="remember_me" class="ml-2 block text-sm text-gray-900">
-                                    Recordarme
-                                </label>
-                            </div>
-                            
-                            <div class="text-sm">
-                                <a href="#" class="text-primary hover:text-primary/80 font-medium">
-                                    ¿Olvidaste tu contraseña?
-                                </a>
-                            </div>
-                        </div>
-
-                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 text-sm text-muted-foreground">
-                            <h3 class="font-medium text-gray-700 mb-2">Credenciales de prueba:</h3>
-                            <p class="mb-1"><span class="font-semibold">Administrador:</span> admin / adminpass</p>
-                            <p><span class="font-semibold">Cliente:</span> client / clientpass</p>
-                        </div>
-                        
-                        <div>
-                            <button type="submit" id="loginButton" class="btn btn-primary w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                                <i class="fas fa-sign-in-alt mr-2"></i> Iniciar Sesión
-                            </button>
-                        </div>
-                        
-                        <div class="text-center text-sm">
-                            <span class="text-gray-600">¿No tienes una cuenta?</span>
-                            <a asp-action="Register" class="text-primary font-medium hover:underline">
-                                Regístrate aquí
+                        <div class="text-sm">
+                            <a href="#" class="text-primary hover:text-primary/80 font-medium">
+                                ¿Olvidaste tu contraseña?
                             </a>
                         </div>
-                    </form>
-                </div>
+                    </div>
+
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 text-sm text-muted-foreground">
+                        <h3 class="font-medium text-gray-700 mb-2">Credenciales de prueba:</h3>
+                        <p class="mb-1"><span class="font-semibold">Administrador:</span> admin / adminpass</p>
+                        <p><span class="font-semibold">Cliente:</span> client / clientpass</p>
+                    </div>
+                    
+                    <div>
+                        <button type="submit" id="loginButton" class="btn btn-primary w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                            <i class="fas fa-sign-in-alt mr-2"></i> Iniciar Sesión
+                        </button>
+                    </div>
+                    
+                    <div class="text-center text-sm">
+                        <span class="text-gray-600">¿No tienes una cuenta?</span>
+                        <a asp-action="Register" class="text-primary font-medium hover:underline">
+                            Regístrate aquí
+                        </a>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -92,39 +98,6 @@
                     submitButton.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> Procesando...';
                     submitButton.disabled = true;
                 });
-            }
-            
-            // Si hay errores de validación, resaltarlos
-            const validationErrors = document.querySelectorAll('[data-valmsg-for]');
-            validationErrors.forEach(error => {
-                if (error.textContent.trim() !== '') {
-                    const inputId = error.getAttribute('data-valmsg-for');
-                    const input = document.getElementById(inputId);
-                    if (input) {
-                        input.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
-                    }
-                }
-            });
-            
-            // Añadir notificación toast si hay mensaje en TempData
-            if (typeof tempDataSuccessMessage !== 'undefined' && tempDataSuccessMessage) {
-                // Aquí iría el código para mostrar un toast, similar al componente toast de React
-                const toastContainer = document.createElement('div');
-                toastContainer.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg animate-fade-in';
-                toastContainer.innerHTML = `
-                    <div class="flex items-center">
-                        <i class="fas fa-check-circle mr-2"></i>
-                        <span>${tempDataSuccessMessage}</span>
-                    </div>
-                `;
-                document.body.appendChild(toastContainer);
-                
-                setTimeout(() => {
-                    toastContainer.classList.add('animate-fade-out');
-                    setTimeout(() => {
-                        document.body.removeChild(toastContainer);
-                    }, 300);
-                }, 5000);
             }
         });
     </script>

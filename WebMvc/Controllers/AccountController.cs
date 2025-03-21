@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
@@ -71,8 +72,11 @@ namespace SurveyApp.WebMvc.Controllers
                     {
                         // Si no es un usuario predefinido, obtener información del usuario real
                         var user = await _authService.GetUserByUsernameAsync(model.Username);
-                        userRole = user.Role;
-                        userEmail = user.Email;
+                        if (user != null)
+                        {
+                            userRole = user.Role;
+                            userEmail = user.Email;
+                        }
                     }
                     
                     var claims = new List<Claim>
