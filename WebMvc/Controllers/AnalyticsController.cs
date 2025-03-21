@@ -153,7 +153,11 @@ namespace SurveyApp.WebMvc.Controllers
                     {
                         Id = s.Id,
                         Title = s.Title,
-                        ResponseCount = s.Responses
+                        ResponseCount = s.Responses,
+                        Description = s.Description ?? "",
+                        CreatedAt = s.CreatedAt,
+                        Status = s.Status ?? "Active",
+                        Responses = s.Responses
                     }).ToList(),
                     SelectedSurveyId = surveyId,
                     Responses = responses
@@ -342,5 +346,9 @@ namespace SurveyApp.WebMvc.Controllers
         public Guid Id { get; set; }
         public string Title { get; set; }
         public int ResponseCount { get; set; }
+        public string Description { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public string Status { get; set; }
+        public int Responses { get; set; }
     }
 }
