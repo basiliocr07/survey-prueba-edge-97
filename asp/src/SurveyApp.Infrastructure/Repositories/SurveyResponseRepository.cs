@@ -22,7 +22,7 @@ namespace SurveyApp.Infrastructure.Repositories
         public async Task<IEnumerable<SurveyResponse>> GetAllAsync()
         {
             return await _dbContext.SurveyResponses
-                .Include(r => r.Answers)
+                .OrderByDescending(r => r.SubmittedAt)
                 .ToListAsync();
         }
 
@@ -30,14 +30,13 @@ namespace SurveyApp.Infrastructure.Repositories
         {
             return await _dbContext.SurveyResponses
                 .Where(r => r.SurveyId == surveyId)
-                .Include(r => r.Answers)
+                .OrderByDescending(r => r.SubmittedAt)
                 .ToListAsync();
         }
 
         public async Task<SurveyResponse?> GetByIdAsync(Guid id)
         {
             return await _dbContext.SurveyResponses
-                .Include(r => r.Answers)
                 .FirstOrDefaultAsync(r => r.Id == id);
         }
 

@@ -1,9 +1,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using SurveyApp.Application.DTOs;
+using Microsoft.Extensions.Logging;
 using SurveyApp.Application.Ports;
 using SurveyApp.Domain.Entities;
 
@@ -12,261 +11,139 @@ namespace SurveyApp.Application.Services
     public class SurveyService : ISurveyService
     {
         private readonly ISurveyRepository _surveyRepository;
+        private readonly ILogger<SurveyService> _logger;
 
-        public SurveyService(ISurveyRepository surveyRepository)
+        public SurveyService(ISurveyRepository surveyRepository, ILogger<SurveyService> logger)
         {
             _surveyRepository = surveyRepository;
+            _logger = logger;
         }
 
-        public async Task<IEnumerable<SurveyDto>> GetAllSurveysAsync()
+        public async Task<IEnumerable<Survey>> GetAllSurveysAsync()
         {
-            var surveys = await _surveyRepository.GetAllAsync();
-            return surveys.Select(MapToDto);
+            try
+            {
+                return await _surveyRepository.GetAllAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while getting all surveys");
+                throw;
+            }
         }
 
-        public async Task<SurveyDto?> GetSurveyByIdAsync(Guid id)
+        public async Task<Survey> GetSurveyByIdAsync(Guid id)
         {
-            var survey = await _surveyRepository.GetByIdAsync(id);
-            return survey != null ? MapToDto(survey) : null;
+            try
+            {
+                var survey = await _surveyRepository.GetByIdAsync(id);
+                if (survey == null)
+                {
+                    throw new Exception($"Survey with ID {id} not found");
+                }
+                return survey;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error occurred while getting survey with ID {id}");
+                throw;
+            }
         }
 
-        public async Task<SurveyDto> CreateSurveyAsync(CreateSurveyDto surveyDto)
+        public async Task<Survey> CreateSurveyAsync(string title, string description, string category)
         {
-            var survey = new Survey
+            try
             {
-                Title = surveyDto.Title,
-                Description = surveyDto.Description,
-                Category = !string.IsNullOrWhiteSpace(surveyDto.Category) ? surveyDto.Category : "General",
-                ExpiryDate = surveyDto.ExpiryDate,
-                AllowAnonymousResponses = surveyDto.AllowAnonymousResponses,
-                LimitOneResponsePerUser = surveyDto.LimitOneResponsePerUser,
-                ThankYouMessage = !string.IsNullOrWhiteSpace(surveyDto.ThankYouMessage) 
-                    ? surveyDto.ThankYouMessage 
-                    : "¡Gracias por completar nuestra encuesta!"
-            };
-
-            // Add questions
-            if (surveyDto.Questions != null)
-            {
-                foreach (var questionDto in surveyDto.Questions)
-                {
-                    var question = new Question
-                    {
-                        Type = questionDto.Type,
-                        Title = questionDto.Title,
-                        Description = questionDto.Description,
-                        Required = questionDto.Required,
-                        Options = questionDto.Options?.ToList() ?? new List<string>()
-                    };
-
-                    if (questionDto.Settings != null)
-                    {
-                        question.Settings = new QuestionSettings
-                        {
-                            MinValue = questionDto.Settings.MinValue,
-                            MaxValue = questionDto.Settings.MaxValue,
-                            LowLabel = questionDto.Settings.LowLabel,
-                            MiddleLabel = questionDto.Settings.MiddleLabel,
-                            HighLabel = questionDto.Settings.HighLabel
-                        };
-                    }
-
-                    survey.AddQuestion(question);
-                }
+                var survey = new Survey(title, description, category);
+                return await _surveyRepository.CreateAsync(survey);
             }
-
-            // Set delivery config
-            if (surveyDto.DeliveryConfig != null)
+            catch (Exception ex)
             {
-                var deliveryConfig = new DeliveryConfig
-                {
-                    Type = surveyDto.DeliveryConfig.Type,
-                    EmailAddresses = surveyDto.DeliveryConfig.EmailAddresses?.ToList() ?? new List<string>()
-                };
-
-                if (surveyDto.DeliveryConfig.Schedule != null)
-                {
-                    deliveryConfig.Schedule = new Schedule
-                    {
-                        Frequency = surveyDto.DeliveryConfig.Schedule.Frequency,
-                        DayOfMonth = surveyDto.DeliveryConfig.Schedule.DayOfMonth,
-                        DayOfWeek = surveyDto.DeliveryConfig.Schedule.DayOfWeek,
-                        Time = surveyDto.DeliveryConfig.Schedule.Time,
-                        StartDate = surveyDto.DeliveryConfig.Schedule.StartDate,
-                        EndDate = surveyDto.DeliveryConfig.Schedule.EndDate
-                    };
-                }
-
-                if (surveyDto.DeliveryConfig.Trigger != null)
-                {
-                    deliveryConfig.Trigger = new Trigger
-                    {
-                        Type = surveyDto.DeliveryConfig.Trigger.Type,
-                        DelayHours = surveyDto.DeliveryConfig.Trigger.DelayHours,
-                        SendAutomatically = surveyDto.DeliveryConfig.Trigger.SendAutomatically,
-                        EventName = surveyDto.DeliveryConfig.Trigger.EventName
-                    };
-                }
-
-                survey.SetDeliveryConfig(deliveryConfig);
+                _logger.LogError(ex, "Error occurred while creating a new survey");
+                throw;
             }
-
-            var createdSurvey = await _surveyRepository.CreateAsync(survey);
-            return MapToDto(createdSurvey);
         }
 
-        public async Task UpdateSurveyAsync(Guid id, CreateSurveyDto surveyDto)
+        public async Task UpdateSurveyAsync(Guid id, string title, string description, string category)
         {
-            var existingSurvey = await _surveyRepository.GetByIdAsync(id);
-            if (existingSurvey == null)
+            try
             {
-                throw new KeyNotFoundException($"Survey with id {id} not found.");
-            }
-
-            existingSurvey.Title = surveyDto.Title;
-            existingSurvey.Description = surveyDto.Description;
-            existingSurvey.UpdateCategory(surveyDto.Category);
-            existingSurvey.ExpiryDate = surveyDto.ExpiryDate;
-            existingSurvey.AllowAnonymousResponses = surveyDto.AllowAnonymousResponses;
-            existingSurvey.LimitOneResponsePerUser = surveyDto.LimitOneResponsePerUser;
-            existingSurvey.ThankYouMessage = !string.IsNullOrWhiteSpace(surveyDto.ThankYouMessage) 
-                ? surveyDto.ThankYouMessage 
-                : "¡Gracias por completar nuestra encuesta!";
-
-            // Replace questions
-            existingSurvey.Questions.Clear();
-            if (surveyDto.Questions != null)
-            {
-                foreach (var questionDto in surveyDto.Questions)
+                var survey = await _surveyRepository.GetByIdAsync(id);
+                if (survey == null)
                 {
-                    var question = new Question
-                    {
-                        Type = questionDto.Type,
-                        Title = questionDto.Title,
-                        Description = questionDto.Description,
-                        Required = questionDto.Required,
-                        Options = questionDto.Options?.ToList() ?? new List<string>()
-                    };
-
-                    if (questionDto.Settings != null)
-                    {
-                        question.Settings = new QuestionSettings
-                        {
-                            MinValue = questionDto.Settings.MinValue,
-                            MaxValue = questionDto.Settings.MaxValue,
-                            LowLabel = questionDto.Settings.LowLabel,
-                            MiddleLabel = questionDto.Settings.MiddleLabel,
-                            HighLabel = questionDto.Settings.HighLabel
-                        };
-                    }
-
-                    existingSurvey.AddQuestion(question);
-                }
-            }
-
-            // Update delivery config
-            if (surveyDto.DeliveryConfig != null)
-            {
-                var deliveryConfig = new DeliveryConfig
-                {
-                    Type = surveyDto.DeliveryConfig.Type,
-                    EmailAddresses = surveyDto.DeliveryConfig.EmailAddresses?.ToList() ?? new List<string>()
-                };
-
-                if (surveyDto.DeliveryConfig.Schedule != null)
-                {
-                    deliveryConfig.Schedule = new Schedule
-                    {
-                        Frequency = surveyDto.DeliveryConfig.Schedule.Frequency,
-                        DayOfMonth = surveyDto.DeliveryConfig.Schedule.DayOfMonth,
-                        DayOfWeek = surveyDto.DeliveryConfig.Schedule.DayOfWeek,
-                        Time = surveyDto.DeliveryConfig.Schedule.Time,
-                        StartDate = surveyDto.DeliveryConfig.Schedule.StartDate,
-                        EndDate = surveyDto.DeliveryConfig.Schedule.EndDate
-                    };
+                    throw new Exception($"Survey with ID {id} not found");
                 }
 
-                if (surveyDto.DeliveryConfig.Trigger != null)
-                {
-                    deliveryConfig.Trigger = new Trigger
-                    {
-                        Type = surveyDto.DeliveryConfig.Trigger.Type,
-                        DelayHours = surveyDto.DeliveryConfig.Trigger.DelayHours,
-                        SendAutomatically = surveyDto.DeliveryConfig.Trigger.SendAutomatically,
-                        EventName = surveyDto.DeliveryConfig.Trigger.EventName
-                    };
-                }
+                survey.UpdateTitle(title);
+                survey.UpdateDescription(description);
+                survey.UpdateCategory(category);
 
-                existingSurvey.SetDeliveryConfig(deliveryConfig);
+                await _surveyRepository.UpdateAsync(survey);
             }
-            else
+            catch (Exception ex)
             {
-                existingSurvey.DeliveryConfig = null;
+                _logger.LogError(ex, $"Error occurred while updating survey with ID {id}");
+                throw;
             }
-
-            await _surveyRepository.UpdateAsync(existingSurvey);
         }
 
         public async Task DeleteSurveyAsync(Guid id)
         {
-            await _surveyRepository.DeleteAsync(id);
+            try
+            {
+                var survey = await _surveyRepository.GetByIdAsync(id);
+                if (survey == null)
+                {
+                    throw new Exception($"Survey with ID {id} not found");
+                }
+
+                await _surveyRepository.DeleteAsync(id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error occurred while deleting survey with ID {id}");
+                throw;
+            }
         }
 
-        private SurveyDto MapToDto(Survey survey)
+        public async Task AddQuestionToSurveyAsync(Guid surveyId, Question question)
         {
-            return new SurveyDto
+            try
             {
-                Id = survey.Id,
-                Title = survey.Title,
-                Description = survey.Description,
-                CreatedAt = survey.CreatedAt,
-                Responses = survey.Responses,
-                CompletionRate = survey.CompletionRate,
-                Status = survey.Status,
-                Category = survey.Category,
-                ExpiryDate = survey.ExpiryDate,
-                AllowAnonymousResponses = survey.AllowAnonymousResponses,
-                LimitOneResponsePerUser = survey.LimitOneResponsePerUser,
-                ThankYouMessage = survey.ThankYouMessage,
-                Questions = survey.Questions.Select(q => new QuestionDto
+                var survey = await _surveyRepository.GetByIdAsync(surveyId);
+                if (survey == null)
                 {
-                    Id = q.Id,
-                    Type = q.Type,
-                    Title = q.Title,
-                    Description = q.Description,
-                    Required = q.Required,
-                    Options = q.Options,
-                    Settings = q.Settings != null ? new QuestionSettingsDto
-                    {
-                        MinValue = q.Settings.MinValue,
-                        MaxValue = q.Settings.MaxValue,
-                        LowLabel = q.Settings.LowLabel,
-                        MiddleLabel = q.Settings.MiddleLabel,
-                        HighLabel = q.Settings.HighLabel
-                    } : null
-                }).ToList(),
-                DeliveryConfig = survey.DeliveryConfig != null ? new DeliveryConfigDto
+                    throw new Exception($"Survey with ID {surveyId} not found");
+                }
+
+                survey.AddQuestion(question);
+                await _surveyRepository.UpdateAsync(survey);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error occurred while adding question to survey with ID {surveyId}");
+                throw;
+            }
+        }
+
+        public async Task PublishSurveyAsync(Guid id)
+        {
+            try
+            {
+                var survey = await _surveyRepository.GetByIdAsync(id);
+                if (survey == null)
                 {
-                    Type = survey.DeliveryConfig.Type,
-                    EmailAddresses = survey.DeliveryConfig.EmailAddresses,
-                    Schedule = survey.DeliveryConfig.Schedule != null ? new ScheduleDto
-                    {
-                        Frequency = survey.DeliveryConfig.Schedule.Frequency,
-                        DayOfMonth = survey.DeliveryConfig.Schedule.DayOfMonth,
-                        DayOfWeek = survey.DeliveryConfig.Schedule.DayOfWeek,
-                        Time = survey.DeliveryConfig.Schedule.Time,
-                        StartDate = survey.DeliveryConfig.Schedule.StartDate,
-                        EndDate = survey.DeliveryConfig.Schedule.EndDate
-                    } : null,
-                    Trigger = survey.DeliveryConfig.Trigger != null ? new TriggerDto
-                    {
-                        Type = survey.DeliveryConfig.Trigger.Type,
-                        DelayHours = survey.DeliveryConfig.Trigger.DelayHours,
-                        SendAutomatically = survey.DeliveryConfig.Trigger.SendAutomatically,
-                        EventName = survey.DeliveryConfig.Trigger.EventName
-                    } : null
-                } : null
-            };
+                    throw new Exception($"Survey with ID {id} not found");
+                }
+
+                survey.PublishSurvey();
+                await _surveyRepository.UpdateAsync(survey);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error occurred while publishing survey with ID {id}");
+                throw;
+            }
         }
     }
 }

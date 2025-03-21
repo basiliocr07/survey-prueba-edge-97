@@ -6,38 +6,37 @@ namespace SurveyApp.Domain.Entities
 {
     public class SurveyResponse
     {
-        public Guid Id { get; set; }
-        public Guid SurveyId { get; set; }
-        public string RespondentName { get; set; } = string.Empty;
-        public string RespondentEmail { get; set; } = string.Empty;
-        public string RespondentPhone { get; set; } = string.Empty;
-        public string RespondentCompany { get; set; } = string.Empty;
-        public DateTime SubmittedAt { get; set; }
-        public List<QuestionResponse> Answers { get; set; } = new List<QuestionResponse>();
-        public bool IsExistingClient { get; set; }
-        public Guid? ExistingClientId { get; set; }
-        
-        public SurveyResponse()
+        public Guid Id { get; private set; }
+        public Guid SurveyId { get; private set; }
+        public string ResponseDate { get; private set; }
+        public List<QuestionResponse> Answers { get; private set; } = new List<QuestionResponse>();
+        public DateTime SubmittedAt { get; private set; }
+
+        // For EF Core
+        private SurveyResponse() { }
+
+        public SurveyResponse(Guid surveyId, string responseDate)
         {
             Id = Guid.NewGuid();
+            SurveyId = surveyId;
+            ResponseDate = responseDate;
             SubmittedAt = DateTime.UtcNow;
-            Answers = new List<QuestionResponse>();
+        }
+
+        public void AddAnswer(Guid questionId, string answer)
+        {
+            Answers.Add(new QuestionResponse { QuestionId = questionId, Answer = answer });
+        }
+
+        public void AddRangeOfAnswers(List<QuestionResponse> answers)
+        {
+            Answers.AddRange(answers);
         }
     }
 
     public class QuestionResponse
     {
-        public Guid Id { get; set; }
         public Guid QuestionId { get; set; }
-        public string QuestionTitle { get; set; } = string.Empty;
-        public string QuestionType { get; set; } = string.Empty;
-        public string Answer { get; set; } = string.Empty;
-        public List<string> MultipleAnswers { get; set; } = new List<string>();
-        
-        public QuestionResponse()
-        {
-            Id = Guid.NewGuid();
-            MultipleAnswers = new List<string>();
-        }
+        public string Answer { get; set; }
     }
 }

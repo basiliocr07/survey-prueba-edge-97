@@ -2,16 +2,18 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using SurveyApp.Application.DTOs;
+using SurveyApp.Domain.Entities;
 
 namespace SurveyApp.Application.Services
 {
     public interface ISurveyService
     {
-        Task<IEnumerable<SurveyDto>> GetAllSurveysAsync();
-        Task<SurveyDto?> GetSurveyByIdAsync(Guid id);
-        Task<SurveyDto> CreateSurveyAsync(CreateSurveyDto surveyDto);
-        Task UpdateSurveyAsync(Guid id, CreateSurveyDto surveyDto);
+        Task<IEnumerable<Survey>> GetAllSurveysAsync();
+        Task<Survey> GetSurveyByIdAsync(Guid id);
+        Task<Survey> CreateSurveyAsync(string title, string description, string category);
+        Task UpdateSurveyAsync(Guid id, string title, string description, string category);
         Task DeleteSurveyAsync(Guid id);
+        Task AddQuestionToSurveyAsync(Guid surveyId, Question question);
+        Task PublishSurveyAsync(Guid id);
     }
 }

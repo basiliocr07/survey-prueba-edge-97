@@ -6,28 +6,87 @@ namespace SurveyApp.Domain.Entities
 {
     public class Question
     {
-        public Guid Id { get; set; }
-        public string Type { get; set; } = string.Empty;
-        public string Title { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public bool Required { get; set; }
-        public List<string> Options { get; set; } = new List<string>();
-        public QuestionSettings? Settings { get; set; }
-        
-        public Question()
+        public Guid Id { get; private set; }
+        public string Title { get; private set; }
+        public string Description { get; private set; }
+        public QuestionType Type { get; private set; }
+        public bool IsRequired { get; private set; }
+        public List<string> Options { get; private set; } = new List<string>();
+        public QuestionSettings Settings { get; private set; }
+
+        // For EF Core
+        private Question() { }
+
+        public Question(string title, QuestionType type, string description = null, bool isRequired = false)
         {
             Id = Guid.NewGuid();
-            Required = false;
-            Options = new List<string>();
+            Title = title;
+            Description = description;
+            Type = type;
+            IsRequired = isRequired;
+            Settings = new QuestionSettings();
         }
+
+        public void UpdateTitle(string title)
+        {
+            Title = title;
+        }
+
+        public void UpdateDescription(string description)
+        {
+            Description = description;
+        }
+
+        public void UpdateType(QuestionType type)
+        {
+            Type = type;
+        }
+
+        public void SetRequired(bool isRequired)
+        {
+            IsRequired = isRequired;
+        }
+
+        public void SetOptions(List<string> options)
+        {
+            if (Type == QuestionType.MultipleChoice || 
+                Type == QuestionType.Dropdown || 
+                Type == QuestionType.Checkbox)
+            {
+                Options.Clear();
+                Options.AddRange(options);
+            }
+        }
+
+        public void UpdateSettings(QuestionSettings settings)
+        {
+            Settings = settings;
+        }
+    }
+
+    public enum QuestionType
+    {
+        ShortAnswer,
+        LongAnswer,
+        MultipleChoice,
+        Checkbox,
+        Dropdown,
+        Rating,
+        Date,
+        Time,
+        File,
+        Email,
+        Phone,
+        Number
     }
 
     public class QuestionSettings
     {
         public int? MinValue { get; set; }
         public int? MaxValue { get; set; }
-        public string LowLabel { get; set; } = string.Empty;
-        public string MiddleLabel { get; set; } = string.Empty;
-        public string HighLabel { get; set; } = string.Empty;
+        public bool AllowMultipleSelections { get; set; }
+        public int? MaxFileSize { get; set; }
+        public string[] AllowedFileTypes { get; set; }
+        public string Placeholder { get; set; }
     }
 }

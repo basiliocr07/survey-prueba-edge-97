@@ -6,34 +6,27 @@ namespace SurveyApp.Domain.Entities
 {
     public class Survey
     {
-        public Guid Id { get; set; }
-        public string Title { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public DateTime CreatedAt { get; set; }
-        public int Responses { get; set; }
-        public int CompletionRate { get; set; }
-        public string Status { get; set; } = string.Empty;
-        public string Category { get; set; } = "General"; // Default value for Category
-        public List<Question> Questions { get; set; } = new List<Question>();
-        public DeliveryConfig? DeliveryConfig { get; set; }
-        
-        // Additional properties
-        public DateTime? ExpiryDate { get; set; }
-        public bool AllowAnonymousResponses { get; set; }
-        public bool LimitOneResponsePerUser { get; set; }
-        public string ThankYouMessage { get; set; } = string.Empty;
+        public Guid Id { get; private set; }
+        public string Title { get; private set; }
+        public string Description { get; private set; }
+        public DateTime CreatedAt { get; private set; }
+        public bool IsPublished { get; private set; }
+        public string Category { get; set; }
+        public List<Question> Questions { get; private set; } = new List<Question>();
+        public SurveyDeliveryConfig DeliveryConfig { get; private set; }
 
-        public Survey()
+        // For EF Core
+        private Survey() { }
+
+        public Survey(string title, string description, string category = "General")
         {
             Id = Guid.NewGuid();
+            Title = title;
+            Description = description;
+            Category = category;
             CreatedAt = DateTime.UtcNow;
-            Status = "Active";
-            Responses = 0;
-            CompletionRate = 0;
-            Questions = new List<Question>();
-            AllowAnonymousResponses = true;
-            LimitOneResponsePerUser = false;
-            ThankYouMessage = "¡Gracias por completar nuestra encuesta!";
+            IsPublished = false;
+            DeliveryConfig = new SurveyDeliveryConfig();
         }
 
         public void AddQuestion(Question question)
@@ -41,19 +34,82 @@ namespace SurveyApp.Domain.Entities
             Questions.Add(question);
         }
 
-        public void IncrementResponses()
+        public void PublishSurvey()
         {
-            Responses++;
+            IsPublished = true;
         }
 
-        public void SetDeliveryConfig(DeliveryConfig config)
+        public void UnpublishSurvey()
         {
-            DeliveryConfig = config;
+            IsPublished = false;
+        }
+
+        public void UpdateTitle(string title)
+        {
+            Title = title;
+        }
+
+        public void UpdateDescription(string description)
+        {
+            Description = description;
         }
 
         public void UpdateCategory(string category)
         {
-            Category = !string.IsNullOrWhiteSpace(category) ? category : "General";
+            Category = category;
         }
+
+        public void ConfigureDelivery(DeliveryType type, string[] emailAddresses = null, DeliverySchedule schedule = null, DeliveryTrigger trigger = null)
+        {
+            DeliveryConfig.UpdateDeliveryConfig(type, emailAddresses, schedule, trigger);
+        }
+    }
+
+    public class SurveyDeliveryConfig
+    {
+        public DeliveryType Type { get; private set; }
+        public List<string> EmailAddresses { get; private set; } = new List<string>();
+        public DeliverySchedule Schedule { get; private set; }
+        public DeliveryTrigger Trigger { get; private set; }
+
+        public SurveyDeliveryConfig()
+        {
+            Type = DeliveryType.Manual;
+        }
+
+        public void UpdateDeliveryConfig(DeliveryType type, string[] emailAddresses = null, DeliverySchedule schedule = null, DeliveryTrigger trigger = null)
+        {
+            Type = type;
+            
+            if (emailAddresses != null)
+            {
+                EmailAddresses.Clear();
+                EmailAddresses.AddRange(emailAddresses);
+            }
+
+            Schedule = schedule;
+            Trigger = trigger;
+        }
+    }
+
+    public enum DeliveryType
+    {
+        Manual,
+        Automated,
+        Scheduled,
+        Triggered
+    }
+
+    public class DeliverySchedule
+    {
+        public DateTime StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public string RecurrencePattern { get; set; }
+    }
+
+    public class DeliveryTrigger
+    {
+        public string EventType { get; set; }
+        public Dictionary<string, string> EventParameters { get; set; } = new Dictionary<string, string>();
     }
 }
