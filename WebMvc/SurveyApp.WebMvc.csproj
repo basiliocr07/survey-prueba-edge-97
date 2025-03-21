@@ -10,7 +10,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Application\SurveyApp.Application.csproj" />
     <ProjectReference Include="..\Infrastructure\SurveyApp.Infrastructure.csproj" />
-    <ProjectReference Include="..\WebApi\SurveyApp.WebApi.csproj" />
+    <!-- Remove WebApi reference as it shouldn't be directly referenced by WebMvc -->
   </ItemGroup>
 
   <ItemGroup>
