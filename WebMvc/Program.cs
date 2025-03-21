@@ -53,8 +53,8 @@ builder.Services.AddScoped<ISurveyService, SurveyService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 
-// Registro del servicio de autenticación con la interfaz de Application.Ports
-builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+// Registro explícito del servicio de autenticación usando nombre completo para evitar ambigüedades
+builder.Services.AddScoped<SurveyApp.Application.Ports.IAuthenticationService, SurveyApp.Application.Services.AuthenticationService>();
 
 // Register Infrastructure Services
 builder.Services.AddScoped<IUserRepository, UserRepository>();
