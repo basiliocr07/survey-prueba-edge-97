@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,22 +29,7 @@ namespace SurveyApp.WebMvc.Controllers
             try
             {
                 var survey = await _surveyService.GetSurveyByIdAsync(id);
-                var viewModel = new SurveyResponseViewModel
-                {
-                    SurveyId = survey.Id,
-                    Title = survey.Title,
-                    Description = survey.Description,
-                    Questions = survey.Questions.Select(q => new QuestionViewModel
-                    {
-                        Id = q.Id,
-                        Title = q.Title,
-                        Description = q.Description,
-                        Type = q.Type,
-                        Required = q.Required,
-                        Options = q.Options
-                    }).ToList()
-                };
-
+                var viewModel = MapSurveyToResponseViewModel(survey);
                 return View(viewModel);
             }
             catch (KeyNotFoundException)
@@ -59,6 +43,25 @@ namespace SurveyApp.WebMvc.Controllers
                 TempData["ErrorMessage"] = "Ocurrió un error al cargar la encuesta.";
                 return RedirectToAction("Index", "Home");
             }
+        }
+
+        private SurveyResponseViewModel MapSurveyToResponseViewModel(SurveyDto survey)
+        {
+            return new SurveyResponseViewModel
+            {
+                SurveyId = survey.Id,
+                Title = survey.Title,
+                Description = survey.Description,
+                Questions = survey.Questions.Select(q => new QuestionViewModel
+                {
+                    Id = q.Id,
+                    Title = q.Title,
+                    Description = q.Description,
+                    Type = q.Type,
+                    Required = q.Required,
+                    Options = q.Options
+                }).ToList()
+            };
         }
 
         [HttpPost("respond/{id}")]
@@ -97,26 +100,9 @@ namespace SurveyApp.WebMvc.Controllers
                 }
 
                 // Procesar formulario para preguntas de opción múltiple
-                foreach (var key in Request.Form.Keys)
-                {
-                    if (key.StartsWith("Answers[") && key.EndsWith("]") && Request.Form[key].Count > 1)
-                    {
-                        // Extraer ID de pregunta
-                        var questionIdStr = key.Substring(8, key.Length - 9);
-                        var values = Request.Form[key].ToList();
-                        
-                        // Añadir al diccionario como lista
-                        model.Answers[questionIdStr] = values;
-                    }
-                    else if (key.StartsWith("Answers[") && key.EndsWith("]") && !model.Answers.ContainsKey(key.Substring(8, key.Length - 9)))
-                    {
-                        var questionIdStr = key.Substring(8, key.Length - 9);
-                        var value = Request.Form[key].ToString();
-                        model.Answers[questionIdStr] = value;
-                    }
-                }
+                ProcessMultipleChoiceAnswers(model);
 
-                // Crear el DTO para enviar al servicio
+                // Crear el DTO para enviar al servicio - simplificado para no duplicar propiedades
                 var responseDto = new CreateSurveyResponseDto
                 {
                     SurveyId = id,
@@ -140,6 +126,28 @@ namespace SurveyApp.WebMvc.Controllers
                 _logger.LogError(ex, "Error al enviar respuesta de encuesta: {Message}", ex.Message);
                 TempData["ErrorMessage"] = "Ocurrió un error al procesar su respuesta.";
                 return RedirectToAction(nameof(Respond), new { id });
+            }
+        }
+
+        private void ProcessMultipleChoiceAnswers(SurveyResponseInputModel model)
+        {
+            foreach (var key in Request.Form.Keys)
+            {
+                if (key.StartsWith("Answers[") && key.EndsWith("]") && Request.Form[key].Count > 1)
+                {
+                    // Extraer ID de pregunta
+                    var questionIdStr = key.Substring(8, key.Length - 9);
+                    var values = Request.Form[key].ToList();
+                    
+                    // Añadir al diccionario como lista
+                    model.Answers[questionIdStr] = values;
+                }
+                else if (key.StartsWith("Answers[") && key.EndsWith("]") && !model.Answers.ContainsKey(key.Substring(8, key.Length - 9)))
+                {
+                    var questionIdStr = key.Substring(8, key.Length - 9);
+                    var value = Request.Form[key].ToString();
+                    model.Answers[questionIdStr] = value;
+                }
             }
         }
 

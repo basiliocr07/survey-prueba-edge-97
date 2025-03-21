@@ -140,7 +140,6 @@ namespace SurveyApp.WebMvc.Controllers
             }
         }
 
-        // Método para enviar encuestas por email a un destinatario específico
         [HttpPost]
         public async Task<IActionResult> SendSurveyEmail(Guid id, string email)
         {
@@ -163,7 +162,6 @@ namespace SurveyApp.WebMvc.Controllers
         
                 _logger.LogInformation($"Enviando encuesta '{survey.Title}' a {email} con enlace {surveyLink}");
                 
-                // Enviar la encuesta al email proporcionado
                 await _surveyService.SendSurveyEmailAsync(email, survey.Title, surveyLink);
         
                 TempData["SuccessMessage"] = $"La encuesta ha sido enviada correctamente a {email}.";
@@ -177,7 +175,6 @@ namespace SurveyApp.WebMvc.Controllers
             }
         }
 
-        // Método para enviar encuestas a todos los destinatarios configurados
         [HttpPost]
         public async Task<IActionResult> SendSurveyToAllRecipients(Guid id)
         {
@@ -196,13 +193,13 @@ namespace SurveyApp.WebMvc.Controllers
             }
         }
 
-        // Método para configurar el envío automático
         [HttpPost]
         public async Task<IActionResult> ConfigureAutomaticDelivery(Guid id, DeliveryConfigViewModel deliveryConfig)
         {
             try
             {
                 var survey = await _surveyService.GetSurveyByIdAsync(id);
+                
                 var updateDto = new UpdateSurveyDto
                 {
                     Title = survey.Title,
@@ -220,20 +217,8 @@ namespace SurveyApp.WebMvc.Controllers
                     {
                         Type = deliveryConfig.Type,
                         EmailAddresses = deliveryConfig.EmailAddresses,
-                        Schedule = new ScheduleDto
-                        {
-                            Frequency = deliveryConfig.Schedule.Frequency,
-                            DayOfMonth = deliveryConfig.Schedule.DayOfMonth,
-                            DayOfWeek = deliveryConfig.Schedule.DayOfWeek,
-                            Time = deliveryConfig.Schedule.Time,
-                            StartDate = deliveryConfig.Schedule.StartDate
-                        },
-                        Trigger = new TriggerDto
-                        {
-                            Type = deliveryConfig.Trigger.Type,
-                            DelayHours = deliveryConfig.Trigger.DelayHours,
-                            SendAutomatically = deliveryConfig.Trigger.SendAutomatically
-                        }
+                        Schedule = deliveryConfig.Schedule,
+                        Trigger = deliveryConfig.Trigger
                     }
                 };
         
@@ -250,63 +235,42 @@ namespace SurveyApp.WebMvc.Controllers
             }
         }
 
-        // Método para enviar prueba de email específico
         [HttpPost]
-        public async Task<IActionResult> SendTestEmail(string email)
+        public async Task<IActionResult> SendTestEmail(string email = "ubcruz2@gmail.com")
         {
-            // Si no se proporciona email, usamos ubcruz2@gmail.com
-            if (string.IsNullOrEmpty(email))
-            {
-                email = "ubcruz2@gmail.com"; // Email específico para pruebas
-                _logger.LogInformation($"No se proporcionó email, usando el predeterminado: {email}");
-            }
-    
             try
             {
                 _logger.LogInformation($"Iniciando prueba de envío de email a {email}");
                 
-                // Primero hacemos una prueba directa del servicio de email
                 var testResult = await _emailService.TestEmailServiceAsync(email);
                 
                 if (!testResult)
                 {
                     _logger.LogError($"La prueba directa del servicio de email falló para {email}");
-                    TempData["ErrorMessage"] = $"Prueba directa del servicio de email falló para {email}.";
+                    TempData["ErrorMessage"] = $"Prueba del servicio de email falló para {email}.";
                     return RedirectToAction("Index");
                 }
                 
-                // Si la prueba directa es exitosa, enviamos una encuesta de prueba
                 var surveys = await _surveyService.GetAllSurveysAsync();
                 var survey = surveys.FirstOrDefault();
         
                 if (survey == null)
                 {
-                    _logger.LogError("No se encontró ninguna encuesta para la prueba");
-                    TempData["ErrorMessage"] = "No se encontró ninguna encuesta para la prueba.";
+                    _logger.LogWarning("No se encontró ninguna encuesta para la prueba");
+                    TempData["SuccessMessage"] = $"Se envió un correo de prueba básico a {email} exitosamente.";
                     return RedirectToAction("Index");
                 }
         
                 var surveyLink = $"{Request.Scheme}://{Request.Host}/survey/{survey.Id}";
-                _logger.LogInformation($"Enviando encuesta de prueba '{survey.Title}' a {email} con enlace {surveyLink}");
-                
                 await _surveyService.SendSurveyEmailAsync(email, survey.Title, surveyLink);
         
-                _logger.LogInformation($"Correo de prueba enviado exitosamente a {email}");
                 TempData["SuccessMessage"] = $"Se ha enviado un correo de prueba a {email} exitosamente.";
-                
                 return RedirectToAction("Index");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error al enviar el email de prueba a {email}: {ex.Message}");
                 TempData["ErrorMessage"] = $"Error al enviar el email de prueba: {ex.Message}";
-                
-                if (ex.InnerException != null)
-                {
-                    _logger.LogError($"Excepción interna: {ex.InnerException.Message}");
-                    TempData["ErrorMessage"] += $" Detalle: {ex.InnerException.Message}";
-                }
-                
                 return RedirectToAction("Index");
             }
         }

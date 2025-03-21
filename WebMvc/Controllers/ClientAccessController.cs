@@ -29,6 +29,7 @@ namespace SurveyApp.WebMvc.Controllers
                     return NotFound();
                 }
 
+                // Mapeado simplificado
                 var viewModel = new SurveyViewModel
                 {
                     Id = survey.Id,
@@ -58,17 +59,9 @@ namespace SurveyApp.WebMvc.Controllers
         [HttpGet("thank-you")]
         public IActionResult ThankYou()
         {
-            if (TempData["SurveyTitle"] != null)
-            {
-                ViewBag.SurveyTitle = TempData["SurveyTitle"];
-                ViewBag.ThankYouMessage = TempData["ThankYouMessage"] ?? "Gracias por completar nuestra encuesta.";
-            }
-            else
-            {
-                // Valores predeterminados si no hay datos en TempData
-                ViewBag.SurveyTitle = "Encuesta";
-                ViewBag.ThankYouMessage = "Gracias por completar nuestra encuesta.";
-            }
+            // Simplificado: utilizando operador de coalescencia nula
+            ViewBag.SurveyTitle = TempData["SurveyTitle"] ?? "Encuesta";
+            ViewBag.ThankYouMessage = TempData["ThankYouMessage"] ?? "Gracias por completar nuestra encuesta.";
             
             return View();
         }
