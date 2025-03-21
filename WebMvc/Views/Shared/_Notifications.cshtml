@@ -1,7 +1,7 @@
 
 @if (TempData["SuccessMessage"] != null)
 {
-    <div id="notification" class="fixed top-4 right-4 z-50 bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded shadow-md max-w-md transition-opacity duration-300 ease-in-out opacity-100">
+    <div id="notification" class="fixed top-4 right-4 z-50 bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded shadow-md max-w-md transition-all duration-300 ease-in-out opacity-0 transform translate-y-[-1rem]">
         <div class="flex">
             <div class="flex-shrink-0">
                 <i class="fas fa-check-circle"></i>
@@ -20,21 +20,25 @@
     </div>
     
     <script>
-        // Auto-hide notification after 5 seconds
+        // Mejorar la animación del toast para que sea como React
         setTimeout(function() {
             var notification = document.getElementById('notification');
             if (notification) {
-                notification.classList.replace('opacity-100', 'opacity-0');
+                notification.classList.replace('opacity-0', 'opacity-100');
+                notification.classList.replace('translate-y-[-1rem]', 'translate-y-0');
+                
                 setTimeout(function() {
-                    notification.remove();
-                }, 300);
+                    closeNotification();
+                }, 5000);
             }
-        }, 5000);
+        }, 100);
         
         function closeNotification() {
             var notification = document.getElementById('notification');
             if (notification) {
                 notification.classList.replace('opacity-100', 'opacity-0');
+                notification.classList.replace('translate-y-0', 'translate-y-[-1rem]');
+                
                 setTimeout(function() {
                     notification.remove();
                 }, 300);
@@ -45,7 +49,7 @@
 
 @if (TempData["ErrorMessage"] != null)
 {
-    <div id="errorNotification" class="fixed top-4 right-4 z-50 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-md max-w-md transition-opacity duration-300 ease-in-out opacity-100">
+    <div id="errorNotification" class="fixed top-4 right-4 z-50 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-md max-w-md transition-all duration-300 ease-in-out opacity-0 transform translate-y-[-1rem]">
         <div class="flex">
             <div class="flex-shrink-0">
                 <i class="fas fa-exclamation-circle"></i>
@@ -64,21 +68,25 @@
     </div>
     
     <script>
-        // Auto-hide notification after 5 seconds
+        // Mejorar la animación del toast para que sea como React
         setTimeout(function() {
             var notification = document.getElementById('errorNotification');
             if (notification) {
-                notification.classList.replace('opacity-100', 'opacity-0');
+                notification.classList.replace('opacity-0', 'opacity-100');
+                notification.classList.replace('translate-y-[-1rem]', 'translate-y-0');
+                
                 setTimeout(function() {
-                    notification.remove();
-                }, 300);
+                    closeErrorNotification();
+                }, 5000);
             }
-        }, 5000);
+        }, 100);
         
         function closeErrorNotification() {
             var notification = document.getElementById('errorNotification');
             if (notification) {
                 notification.classList.replace('opacity-100', 'opacity-0');
+                notification.classList.replace('translate-y-0', 'translate-y-[-1rem]');
+                
                 setTimeout(function() {
                     notification.remove();
                 }, 300);
