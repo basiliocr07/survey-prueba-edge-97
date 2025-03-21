@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -424,13 +423,11 @@ namespace SurveyApp.Application.Services
             foreach (var response in recentResponses)
             {
                 var survey = await _surveyRepository.GetByIdAsync(response.SurveyId);
-                string surveyTitle = survey?.Title ?? "Encuesta sin título";
-                
                 result.Add(new RecentResponseDto
                 {
                     Id = response.Id,
                     SurveyId = response.SurveyId,
-                    SurveyTitle = surveyTitle,
+                    SurveyTitle = survey?.Title ?? "Encuesta sin título",
                     RespondentName = response.RespondentName,
                     SubmittedAt = response.SubmittedAt
                 });

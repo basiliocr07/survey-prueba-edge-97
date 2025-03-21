@@ -29,7 +29,7 @@ namespace SurveyApp.WebMvc.Controllers
                     return NotFound();
                 }
 
-                // Mapeado simplificado
+                // Map to view model
                 var viewModel = new SurveyViewModel
                 {
                     Id = survey.Id,
@@ -59,7 +59,7 @@ namespace SurveyApp.WebMvc.Controllers
         [HttpGet("thank-you")]
         public IActionResult ThankYou()
         {
-            // Simplificado: utilizando operador de coalescencia nula
+            // Using nullish coalescing operator
             ViewBag.SurveyTitle = TempData["SurveyTitle"] ?? "Encuesta";
             ViewBag.ThankYouMessage = TempData["ThankYouMessage"] ?? "Gracias por completar nuestra encuesta.";
             

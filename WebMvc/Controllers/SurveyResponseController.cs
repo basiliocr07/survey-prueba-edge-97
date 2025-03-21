@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,13 +30,29 @@ namespace SurveyApp.WebMvc.Controllers
             try
             {
                 var survey = await _surveyService.GetSurveyByIdAsync(id);
-                var viewModel = MapSurveyToResponseViewModel(survey);
+                if (survey == null)
+                {
+                    TempData["ErrorMessage"] = "La encuesta solicitada no existe.";
+                    return RedirectToAction("Index", "Home");
+                }
+                
+                var viewModel = new SurveyResponseViewModel
+                {
+                    SurveyId = survey.Id,
+                    Title = survey.Title,
+                    Description = survey.Description,
+                    Questions = survey.Questions.Select(q => new QuestionViewModel
+                    {
+                        Id = q.Id,
+                        Title = q.Title,
+                        Description = q.Description,
+                        Type = q.Type,
+                        Required = q.Required,
+                        Options = q.Options
+                    }).ToList()
+                };
+                
                 return View(viewModel);
-            }
-            catch (KeyNotFoundException)
-            {
-                TempData["ErrorMessage"] = "La encuesta solicitada no existe.";
-                return RedirectToAction("Index", "Home");
             }
             catch (Exception ex)
             {
@@ -43,25 +60,6 @@ namespace SurveyApp.WebMvc.Controllers
                 TempData["ErrorMessage"] = "Ocurrió un error al cargar la encuesta.";
                 return RedirectToAction("Index", "Home");
             }
-        }
-
-        private SurveyResponseViewModel MapSurveyToResponseViewModel(SurveyDto survey)
-        {
-            return new SurveyResponseViewModel
-            {
-                SurveyId = survey.Id,
-                Title = survey.Title,
-                Description = survey.Description,
-                Questions = survey.Questions.Select(q => new QuestionViewModel
-                {
-                    Id = q.Id,
-                    Title = q.Title,
-                    Description = q.Description,
-                    Type = q.Type,
-                    Required = q.Required,
-                    Options = q.Options
-                }).ToList()
-            };
         }
 
         [HttpPost("respond/{id}")]
@@ -102,7 +100,7 @@ namespace SurveyApp.WebMvc.Controllers
                 // Procesar formulario para preguntas de opción múltiple
                 ProcessMultipleChoiceAnswers(model);
 
-                // Crear el DTO para enviar al servicio - simplificado para no duplicar propiedades
+                // Crear el DTO para enviar al servicio
                 var responseDto = new CreateSurveyResponseDto
                 {
                     SurveyId = id,

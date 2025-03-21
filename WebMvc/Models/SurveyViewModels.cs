@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -121,6 +120,7 @@ namespace SurveyApp.WebMvc.Models
         
         public bool IsFeatured { get; set; }
         
+        // Email specific properties
         public bool EnableEmailDelivery { get; set; }
         public string SenderName { get; set; }
         public string SenderEmail { get; set; }
@@ -132,7 +132,7 @@ namespace SurveyApp.WebMvc.Models
         public bool LimitOneResponsePerUser { get; set; }
         public string ThankYouMessage { get; set; } = "Thank you for completing our survey!";
         
-        // User authentication and role properties
+        // Authentication properties
         public bool IsAuthenticated { get; set; }
         public string UserRole { get; set; } = string.Empty;
         public string Username { get; set; } = string.Empty;
@@ -173,5 +173,16 @@ namespace SurveyApp.WebMvc.Models
         public bool SendAutomatically { get; set; } = false;
         
         public string EventName { get; set; }
+    }
+
+    public class SurveyResponseInputModel
+    {
+        public string RespondentName { get; set; }
+        public string RespondentEmail { get; set; }
+        public string RespondentPhone { get; set; }
+        public string RespondentCompany { get; set; }
+        public Dictionary<string, object> Answers { get; set; }
+        public bool IsExistingClient { get; set; }
+        public Guid? ExistingClientId { get; set; }
     }
 }
