@@ -1,3 +1,4 @@
+
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -44,6 +45,7 @@ namespace SurveyApp.WebMvc.Controllers
                     BrandName = c.BrandName,
                     ContactEmail = c.ContactEmail,
                     ContactPhone = c.ContactPhone,
+                    ContactName = c.ContactName,
                     AcquiredServices = c.AcquiredServices,
                     CreatedAt = c.CreatedAt,
                     GrowthMetrics = c.GrowthMetrics?.Select(m => new GrowthMetricViewModel
@@ -77,6 +79,7 @@ namespace SurveyApp.WebMvc.Controllers
                     BrandName = c.BrandName,
                     ContactEmail = c.ContactEmail,
                     ContactPhone = c.ContactPhone,
+                    ContactName = c.ContactName,
                     AcquiredServices = c.AcquiredServices,
                     CreatedAt = c.CreatedAt,
                     GrowthMetrics = c.GrowthMetrics?.Select(m => new GrowthMetricViewModel
@@ -122,6 +125,7 @@ namespace SurveyApp.WebMvc.Controllers
                 BrandName = viewModel.BrandName,
                 ContactEmail = viewModel.ContactEmail,
                 ContactPhone = viewModel.ContactPhone,
+                ContactName = viewModel.ContactName,
                 AcquiredServices = viewModel.SelectedServices
             };
 
@@ -144,6 +148,7 @@ namespace SurveyApp.WebMvc.Controllers
                     BrandName = customer.BrandName,
                     ContactEmail = customer.ContactEmail,
                     ContactPhone = customer.ContactPhone,
+                    ContactName = customer.ContactName,
                     SelectedServices = customer.AcquiredServices,
                     AvailableServices = _availableServices
                 };
@@ -170,6 +175,7 @@ namespace SurveyApp.WebMvc.Controllers
                 BrandName = viewModel.BrandName,
                 ContactEmail = viewModel.ContactEmail,
                 ContactPhone = viewModel.ContactPhone,
+                ContactName = viewModel.ContactName,
                 AcquiredServices = viewModel.SelectedServices
             };
 

@@ -18,6 +18,7 @@ namespace SurveyApp.WebMvc.Models
         public string BrandName { get; set; }
         public string ContactEmail { get; set; }
         public string ContactPhone { get; set; }
+        public string ContactName { get; set; }
         public List<string> AcquiredServices { get; set; } = new List<string>();
         public DateTime CreatedAt { get; set; }
         public List<GrowthMetricViewModel> GrowthMetrics { get; set; } = new List<GrowthMetricViewModel>();
@@ -50,6 +51,10 @@ namespace SurveyApp.WebMvc.Models
         [Required(ErrorMessage = "Phone number is required")]
         [Display(Name = "Contact Phone")]
         public string ContactPhone { get; set; }
+
+        [Required(ErrorMessage = "Contact name is required")]
+        [Display(Name = "Contact Name")]
+        public string ContactName { get; set; }
 
         [Display(Name = "Services")]
         public List<string> SelectedServices { get; set; } = new List<string>();

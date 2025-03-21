@@ -10,6 +10,7 @@ namespace SurveyApp.Domain.Entities
         public string BrandName { get; private set; }
         public string ContactEmail { get; private set; }
         public string ContactPhone { get; private set; }
+        public string ContactName { get; private set; }
         public List<string> AcquiredServices { get; private set; } = new List<string>();
         public DateTime CreatedAt { get; private set; }
         public List<GrowthMetric> GrowthMetrics { get; private set; } = new List<GrowthMetric>();
@@ -21,6 +22,12 @@ namespace SurveyApp.Domain.Entities
             ContactEmail = contactEmail;
             ContactPhone = contactPhone;
             CreatedAt = DateTime.UtcNow;
+        }
+
+        public Customer(string brandName, string contactEmail, string contactPhone, string contactName) 
+            : this(brandName, contactEmail, contactPhone)
+        {
+            ContactName = contactName;
         }
 
         public void UpdateBrandName(string brandName)
@@ -36,6 +43,11 @@ namespace SurveyApp.Domain.Entities
         public void UpdateContactPhone(string contactPhone)
         {
             ContactPhone = contactPhone;
+        }
+
+        public void UpdateContactName(string contactName)
+        {
+            ContactName = contactName;
         }
 
         public void AddService(string service)

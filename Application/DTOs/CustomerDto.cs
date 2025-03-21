@@ -10,6 +10,7 @@ namespace SurveyApp.Application.DTOs
         public string BrandName { get; set; }
         public string ContactEmail { get; set; }
         public string ContactPhone { get; set; }
+        public string ContactName { get; set; }
         public List<string> AcquiredServices { get; set; } = new List<string>();
         public DateTime CreatedAt { get; set; }
         public List<GrowthMetricDto> GrowthMetrics { get; set; } = new List<GrowthMetricDto>();
@@ -27,6 +28,7 @@ namespace SurveyApp.Application.DTOs
         public string BrandName { get; set; }
         public string ContactEmail { get; set; }
         public string ContactPhone { get; set; }
+        public string ContactName { get; set; }
         public List<string> AcquiredServices { get; set; } = new List<string>();
     }
 }

@@ -39,7 +39,8 @@ namespace SurveyApp.Application.Services
             var customer = new Customer(
                 createCustomerDto.BrandName,
                 createCustomerDto.ContactEmail,
-                createCustomerDto.ContactPhone
+                createCustomerDto.ContactPhone,
+                createCustomerDto.ContactName
             );
 
             foreach (var service in createCustomerDto.AcquiredServices)
@@ -62,6 +63,7 @@ namespace SurveyApp.Application.Services
             customer.UpdateBrandName(updateCustomerDto.BrandName);
             customer.UpdateContactEmail(updateCustomerDto.ContactEmail);
             customer.UpdateContactPhone(updateCustomerDto.ContactPhone);
+            customer.UpdateContactName(updateCustomerDto.ContactName);
 
             // Update services
             var currentServices = new List<string>(customer.AcquiredServices);
@@ -125,6 +127,7 @@ namespace SurveyApp.Application.Services
                 BrandName = customer.BrandName,
                 ContactEmail = customer.ContactEmail,
                 ContactPhone = customer.ContactPhone,
+                ContactName = customer.ContactName,
                 AcquiredServices = customer.AcquiredServices,
                 CreatedAt = customer.CreatedAt,
                 GrowthMetrics = customer.GrowthMetrics.Select(m => new GrowthMetricDto

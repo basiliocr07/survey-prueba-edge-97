@@ -14,5 +14,6 @@ namespace SurveyApp.Application.Services
         Task UpdateCustomerAsync(Guid id, CreateCustomerDto updateCustomerDto);
         Task DeleteCustomerAsync(Guid id);
         Task<Dictionary<string, int>> GetServiceUsageAnalyticsAsync();
+        Task<List<CustomerDto>> GetCustomerByEmailAsync(string email);
     }
 }
