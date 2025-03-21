@@ -1,0 +1,100 @@
+
+@model List<SurveyApp.Web.Models.FeatureViewModel>
+@{
+    ViewData["Title"] = "SurveyMaster - Survey creation & analytics made simple";
+}
+
+<div class="min-h-screen flex flex-col bg-background">
+    <!-- Hero Section -->
+    <section class="w-full pt-32 pb-20 px-6">
+        <div class="max-w-7xl mx-auto flex flex-col items-center text-center">
+            <div class="animate-slide-down">
+                <div class="inline-block px-3 py-1 mb-6 rounded-full bg-primary/10 text-primary text-sm font-medium">
+                    The future of surveys is here
+                </div>
+                <h1 class="text-4xl md:text-6xl font-bold tracking-tight mb-6">
+                    Survey creation & analytics made <span class="text-primary">simple</span>
+                </h1>
+                <p class="text-xl text-muted-foreground max-w-3xl mx-auto mb-10">
+                    Build beautiful surveys, collect responses, and analyze results with our intuitive platform. No coding required.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a asp-controller="Home" asp-action="Create" 
+                       class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 animate-slide-up transition-all duration-300">
+                        <svg class="mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                        Create a Survey
+                    </a>
+                    <a asp-controller="Home" asp-action="Results"
+                       class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 animate-slide-up transition-all duration-300 delay-100">
+                        <svg class="mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"></rect><line x1="8" y1="17" x2="8" y2="12"></line><line x1="12" y1="17" x2="12" y2="8"></line><line x1="16" y1="17" x2="16" y2="13"></line></svg>
+                        Explore Analytics
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="w-full py-20 px-6 bg-accent/50">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold mb-4">Powerful Features</h2>
+                <p class="text-lg text-muted-foreground max-w-2xl mx-auto">
+                    Everything you need to create professional surveys and gain valuable insights
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                @foreach (var feature in Model)
+                {
+                    <div class="rounded-lg border bg-card text-card-foreground shadow-sm hover:border-primary/20 hover:bg-accent/70 hover-lift overflow-hidden transition-all duration-300">
+                        <div class="p-6 flex flex-col items-start">
+                            <div class="p-3 rounded-lg bg-primary/10 text-primary mb-4">
+                                @if (feature.IconName == "FileText")
+                                {
+                                    <svg class="w-8 h-8" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
+                                }
+                                @if (feature.IconName == "BarChart3")
+                                {
+                                    <svg class="w-8 h-8" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg>
+                                }
+                                @if (feature.IconName == "CheckSquare")
+                                {
+                                    <svg class="w-8 h-8" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="m9 12 2 2 4-4"></path></svg>
+                                }
+                                @if (feature.IconName == "Star")
+                                {
+                                    <svg class="w-8 h-8" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                }
+                                @if (feature.IconName == "MoveVertical")
+                                {
+                                    <svg class="w-8 h-8" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 18 12 22 16 18"></polyline><polyline points="8 6 12 2 16 6"></polyline><line x1="12" x2="12" y1="2" y2="22"></line></svg>
+                                }
+                                @if (feature.IconName == "PlusCircle")
+                                {
+                                    <svg class="w-8 h-8" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                                }
+                            </div>
+                            <h3 class="text-xl font-semibold mb-2">@feature.Title</h3>
+                            <p class="text-muted-foreground">@feature.Description</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="w-full py-24 px-6">
+        <div class="max-w-6xl mx-auto text-center">
+            <h2 class="text-3xl md:text-4xl font-bold mb-6">Ready to create your first survey?</h2>
+            <p class="text-lg text-muted-foreground max-w-3xl mx-auto mb-10">
+                Join thousands of users who are already collecting valuable insights with our platform.
+            </p>
+            <a asp-controller="Home" asp-action="Create"
+               class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 animate-pulse-slow">
+                Get Started Now
+            </a>
+        </div>
+    </section>
+</div>
