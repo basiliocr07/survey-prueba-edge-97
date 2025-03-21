@@ -7,33 +7,56 @@ using SurveyApp.Domain.Entities;
 using SurveyApp.Infrastructure.Data;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Extensions.Logging;
 
 namespace SurveyApp.Infrastructure.Repositories
 {
     public class UserRepository : IUserRepository
     {
         private readonly AppDbContext _context;
+        private readonly ILogger<UserRepository> _logger;
 
-        public UserRepository(AppDbContext context)
+        public UserRepository(AppDbContext context, ILogger<UserRepository> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         public async Task<bool> ValidateUserCredentialsAsync(string username, string password)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
-            if (user == null)
+            try
             {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+                if (user == null)
+                {
+                    _logger.LogWarning($"User validation failed: Username {username} not found");
+                    return false;
+                }
+
+                var hashedPassword = HashPassword(password);
+                var isValid = user.PasswordHash == hashedPassword;
+                
+                _logger.LogInformation($"User validation for {username}: {(isValid ? "successful" : "failed")}");
+                return isValid;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error validating credentials for user {username}");
                 return false;
             }
-
-            var hashedPassword = HashPassword(password);
-            return user.PasswordHash == hashedPassword;
         }
 
         public async Task<User> GetUserByUsernameAsync(string username)
         {
-            return await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+            try
+            {
+                return await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error retrieving user {username}");
+                return null;
+            }
         }
 
         public async Task<bool> CreateUserAsync(string username, string email, string password, string role)
@@ -45,17 +68,28 @@ namespace SurveyApp.Infrastructure.Repositories
                 
                 await _context.Users.AddAsync(user);
                 await _context.SaveChangesAsync();
+                
+                _logger.LogInformation($"User {username} created successfully");
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, $"Error creating user {username}");
                 return false;
             }
         }
 
         public async Task<bool> UserExistsAsync(string username)
         {
-            return await _context.Users.AnyAsync(u => u.Username == username);
+            try
+            {
+                return await _context.Users.AnyAsync(u => u.Username == username);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error checking if user {username} exists");
+                return false;
+            }
         }
 
         private string HashPassword(string password)

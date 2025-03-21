@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
@@ -46,38 +45,19 @@ namespace SurveyApp.WebMvc.Controllers
 
             try
             {
-                // Verificación de usuarios predefinidos (similar a la versión React)
-                bool isAdmin = (model.Username == "admin" && model.Password == "adminpass");
-                bool isClient = (model.Username == "client" && model.Password == "clientpass");
+                _logger.LogInformation($"Attempting login for user: {model.Username}");
                 
-                // Si es un usuario predefinido o si las credenciales son válidas en la base de datos
-                bool isValid = isAdmin || isClient || await _authService.ValidateUserAsync(model.Username, model.Password);
+                // Validar credenciales 
+                bool isValid = await _authService.ValidateUserAsync(model.Username, model.Password);
                 
                 if (isValid)
                 {
-                    // Determinar el rol en función del usuario
-                    string userRole = "Client"; // Rol predeterminado
-                    string userEmail = $"{model.Username}@example.com"; // Email predeterminado
+                    // Obtener información del usuario
+                    var user = await _authService.GetUserByUsernameAsync(model.Username);
+                    string userRole = user?.Role ?? "Client";
+                    string userEmail = user?.Email ?? $"{model.Username}@example.com";
                     
-                    if (isAdmin)
-                    {
-                        userRole = "Admin";
-                        userEmail = "admin@example.com";
-                    }
-                    else if (isClient)
-                    {
-                        userEmail = "client@example.com";
-                    }
-                    else
-                    {
-                        // Si no es un usuario predefinido, obtener información del usuario real
-                        var user = await _authService.GetUserByUsernameAsync(model.Username);
-                        if (user != null)
-                        {
-                            userRole = user.Role;
-                            userEmail = user.Email;
-                        }
-                    }
+                    _logger.LogInformation($"User {model.Username} authenticated successfully with role: {userRole}");
                     
                     var claims = new List<Claim>
                     {
@@ -114,12 +94,13 @@ namespace SurveyApp.WebMvc.Controllers
                     return RedirectToAction("Index", "Home");
                 }
                 
+                _logger.LogWarning($"Invalid login attempt for user {model.Username}");
                 ModelState.AddModelError(string.Empty, "Nombre de usuario o contraseña incorrectos");
                 return View(model);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error durante el inicio de sesión");
+                _logger.LogError(ex, $"Error durante el inicio de sesión para usuario {model.Username}");
                 ModelState.AddModelError(string.Empty, "Ocurrió un error durante el inicio de sesión. Por favor, inténtelo de nuevo.");
                 return View(model);
             }
