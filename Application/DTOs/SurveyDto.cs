@@ -13,6 +13,7 @@ namespace SurveyApp.Application.DTOs
         public int Responses { get; set; }
         public int CompletionRate { get; set; }
         public DeliveryConfigDto DeliveryConfig { get; set; }
+        public string Status { get; set; } = "Active";
     }
 
     public class CreateSurveyDto
