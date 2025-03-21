@@ -1,16 +1,22 @@
 
-<nav class="bg-blue-600">
+<nav class="bg-primary">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
             <div class="flex items-center">
                 <div class="flex-shrink-0">
-                    <a href="/" class="text-white font-bold text-xl">Sistema de Encuestas</a>
+                    <a href="/" class="text-white font-bold text-xl">SurveyMaster</a>
                 </div>
                 <div class="hidden md:block">
                     <div class="ml-10 flex items-baseline space-x-4">
-                        <a href="/" class="px-3 py-2 rounded-md text-sm font-medium text-white hover:bg-blue-500">Inicio</a>
-                        <a href="/Requirements/Create" class="px-3 py-2 rounded-md text-sm font-medium text-white hover:bg-blue-500">Requerimientos</a>
-                        <a href="/Suggestions/Create" class="px-3 py-2 rounded-md text-sm font-medium text-white hover:bg-blue-500">Sugerencias</a>
+                        <a href="/" class="px-3 py-2 rounded-md text-sm font-medium text-white hover:bg-primary-dark">
+                            <i class="fas fa-home mr-2"></i>Home
+                        </a>
+                        <a href="/Suggestions/Create" class="px-3 py-2 rounded-md text-sm font-medium text-white hover:bg-primary-dark">
+                            <i class="fas fa-lightbulb mr-2"></i>Sugerencias
+                        </a>
+                        <a href="/Requirements/Create" class="px-3 py-2 rounded-md text-sm font-medium text-white hover:bg-primary-dark">
+                            <i class="fas fa-file-alt mr-2"></i>Requerimientos
+                        </a>
                     </div>
                 </div>
             </div>
@@ -20,22 +26,80 @@
                     {
                         <span class="text-gray-100 mr-4">@User.Identity.Name</span>
                         <form asp-controller="Account" asp-action="Logout" method="post">
-                            <button type="submit" class="px-3 py-2 rounded-md text-sm font-medium text-white bg-blue-700 hover:bg-blue-800">
-                                Cerrar Sesión
+                            <button type="submit" class="flex items-center px-3 py-2 rounded-md text-sm font-medium text-white hover:bg-primary-dark">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
                             </button>
                         </form>
                     }
                     else
                     {
-                        <a href="/Account/Login" class="px-3 py-2 rounded-md text-sm font-medium text-white hover:bg-blue-500">
-                            Iniciar Sesión
+                        <a href="/Account/Login" class="flex items-center px-3 py-2 rounded-md text-sm font-medium text-white hover:bg-primary-dark">
+                            <i class="fas fa-sign-in-alt mr-2"></i>Iniciar Sesión
                         </a>
-                        <a href="/Account/Register" class="ml-3 px-3 py-2 rounded-md text-sm font-medium text-white bg-blue-700 hover:bg-blue-800">
-                            Registrarse
+                        <a href="/Account/Register" class="flex items-center ml-3 px-3 py-2 rounded-md text-sm font-medium text-white bg-primary-dark hover:bg-opacity-90">
+                            <i class="fas fa-user-plus mr-2"></i>Registrarse
                         </a>
                     }
                 </div>
             </div>
+            
+            <!-- Mobile menu button -->
+            <div class="md:hidden">
+                <button type="button" id="mobile-menu-button" class="p-2 rounded-md text-white hover:bg-primary-dark focus:outline-none">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Mobile menu, show/hide based on menu state -->
+        <div id="mobile-menu" class="hidden md:hidden">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="/" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-primary-dark">
+                    <i class="fas fa-home mr-2"></i>Home
+                </a>
+                <a href="/Suggestions/Create" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-primary-dark">
+                    <i class="fas fa-lightbulb mr-2"></i>Sugerencias
+                </a>
+                <a href="/Requirements/Create" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-primary-dark">
+                    <i class="fas fa-file-alt mr-2"></i>Requerimientos
+                </a>
+                
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <div class="border-t border-primary-dark mt-2 pt-2">
+                        <span class="block px-3 py-2 text-base font-medium text-gray-200">@User.Identity.Name</span>
+                        <form asp-controller="Account" asp-action="Logout" method="post">
+                            <button type="submit" class="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-primary-dark">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
+                            </button>
+                        </form>
+                    </div>
+                }
+                else
+                {
+                    <div class="border-t border-primary-dark mt-2 pt-2">
+                        <a href="/Account/Login" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-primary-dark">
+                            <i class="fas fa-sign-in-alt mr-2"></i>Iniciar Sesión
+                        </a>
+                        <a href="/Account/Register" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-primary-dark">
+                            <i class="fas fa-user-plus mr-2"></i>Registrarse
+                        </a>
+                    </div>
+                }
+            </div>
         </div>
     </div>
 </nav>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        if (mobileMenuButton && mobileMenu) {
+            mobileMenuButton.addEventListener('click', function() {
+                mobileMenu.classList.toggle('hidden');
+            });
+        }
+    });
+</script>
