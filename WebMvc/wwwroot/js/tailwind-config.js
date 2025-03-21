@@ -6,7 +6,8 @@ tailwind.config = {
             colors: {
                 primary: {
                     DEFAULT: 'hsl(215, 25%, 27%)',
-                    foreground: 'hsl(210, 40%, 98%)'
+                    foreground: 'hsl(210, 40%, 98%)',
+                    dark: 'hsl(215, 25%, 22%)'
                 },
                 secondary: {
                     DEFAULT: 'hsl(210, 40%, 96.1%)',
@@ -62,6 +63,8 @@ tailwind.config = {
         'bg-secondary', 'text-secondary', 'border-secondary',
         'bg-accent', 'text-accent', 'border-accent',
         'bg-muted', 'text-muted-foreground',
-        'hover:bg-primary', 'hover:text-primary', 'hover:border-primary'
+        'hover:bg-primary', 'hover:text-primary', 'hover:border-primary',
+        'bg-primary-dark', 'hover:bg-primary-dark', 'bg-primary/10', 'bg-primary/90',
+        'hover:bg-accent/70', 'hover:border-primary/20'
     ]
 }
