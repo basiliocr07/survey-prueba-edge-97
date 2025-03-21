@@ -22,7 +22,8 @@ namespace SurveyApp.WebApi.DependencyInjection
             services.AddScoped<IAnalyticsService, AnalyticsService>();
             
             // Register the authentication service with the correct interface
-            services.AddScoped<AuthService, Application.Services.AuthenticationService>();
+            // Use the full interface name instead of the alias for proper generic resolution
+            services.AddScoped<SurveyApp.Application.Ports.IAuthenticationService, SurveyApp.Application.Services.AuthenticationService>();
             
             return services;
         }
