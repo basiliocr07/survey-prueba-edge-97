@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
@@ -45,17 +46,41 @@ namespace SurveyApp.WebMvc.Controllers
 
             try
             {
-                var isValid = await _authService.ValidateUserAsync(model.Username, model.Password);
+                // Verificación de usuarios predefinidos (similar a la versión React)
+                bool isAdmin = (model.Username == "admin" && model.Password == "adminpass");
+                bool isClient = (model.Username == "client" && model.Password == "clientpass");
+                
+                // Si es un usuario predefinido o si las credenciales son válidas en la base de datos
+                bool isValid = isAdmin || isClient || await _authService.ValidateUserAsync(model.Username, model.Password);
                 
                 if (isValid)
                 {
-                    var user = await _authService.GetUserByUsernameAsync(model.Username);
+                    // Determinar el rol en función del usuario
+                    string userRole = "Client"; // Rol predeterminado
+                    string userEmail = $"{model.Username}@example.com"; // Email predeterminado
+                    
+                    if (isAdmin)
+                    {
+                        userRole = "Admin";
+                        userEmail = "admin@example.com";
+                    }
+                    else if (isClient)
+                    {
+                        userEmail = "client@example.com";
+                    }
+                    else
+                    {
+                        // Si no es un usuario predefinido, obtener información del usuario real
+                        var user = await _authService.GetUserByUsernameAsync(model.Username);
+                        userRole = user.Role;
+                        userEmail = user.Email;
+                    }
                     
                     var claims = new List<Claim>
                     {
-                        new Claim(ClaimTypes.Name, user.Username),
-                        new Claim(ClaimTypes.Email, user.Email),
-                        new Claim(ClaimTypes.Role, user.Role)
+                        new Claim(ClaimTypes.Name, model.Username),
+                        new Claim(ClaimTypes.Email, userEmail),
+                        new Claim(ClaimTypes.Role, userRole)
                     };
 
                     var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -72,12 +97,18 @@ namespace SurveyApp.WebMvc.Controllers
 
                     _logger.LogInformation($"Usuario {model.Username} ha iniciado sesión correctamente");
                     
+                    // Dirigir al usuario a la página adecuada según su rol
+                    if (userRole == "Admin")
+                    {
+                        return RedirectToAction("Index", "Dashboard");
+                    }
+                    
                     if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                     {
                         return Redirect(returnUrl);
                     }
                     
-                    return RedirectToAction("Index", "Dashboard");
+                    return RedirectToAction("Index", "Home");
                 }
                 
                 ModelState.AddModelError(string.Empty, "Nombre de usuario o contraseña incorrectos");
@@ -96,6 +127,10 @@ namespace SurveyApp.WebMvc.Controllers
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            
+            // Agregamos un mensaje de éxito similar al toast de React
+            TempData["SuccessMessage"] = "Has cerrado sesión correctamente";
+            
             return RedirectToAction("Index", "Home");
         }
 
@@ -113,6 +148,13 @@ namespace SurveyApp.WebMvc.Controllers
             {
                 try
                 {
+                    // Verificar si se intenta registrar con uno de los usuarios predefinidos
+                    if (model.Username == "admin" || model.Username == "client")
+                    {
+                        ModelState.AddModelError(string.Empty, "Este nombre de usuario está reservado");
+                        return View(model);
+                    }
+                    
                     var userExists = await _authService.UserExistsAsync(model.Username);
                     
                     if (userExists)
@@ -126,6 +168,10 @@ namespace SurveyApp.WebMvc.Controllers
                     if (success)
                     {
                         _logger.LogInformation($"Usuario {model.Username} registrado correctamente");
+                        
+                        // Agregar mensaje de éxito
+                        TempData["SuccessMessage"] = "Su cuenta ha sido creada correctamente";
+                        
                         return RedirectToAction("Login");
                     }
                     
@@ -152,7 +198,8 @@ namespace SurveyApp.WebMvc.Controllers
             {
                 Username = username,
                 Email = userEmail,
-                Role = userRole
+                Role = userRole,
+                LastLogin = DateTime.Now.AddDays(-1) // Simulamos última conexión
             };
             
             return View(model);
