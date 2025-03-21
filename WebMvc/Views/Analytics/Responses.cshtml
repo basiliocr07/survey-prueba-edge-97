@@ -20,9 +20,18 @@
                         <option value="">All Surveys</option>
                         @foreach (var survey in Model.Surveys)
                         {
-                            <option value="@survey.Id" @(Model.SelectedSurveyId == survey.Id ? "selected" : "")>
-                                @survey.Title (@survey.ResponseCount)
-                            </option>
+                            @if (Model.SelectedSurveyId == survey.Id)
+                            {
+                                <option value="@survey.Id" selected>
+                                    @survey.Title (@survey.ResponseCount)
+                                </option>
+                            }
+                            else
+                            {
+                                <option value="@survey.Id">
+                                    @survey.Title (@survey.ResponseCount)
+                                </option>
+                            }
                         }
                     </select>
                     <button type="submit" class="btn btn-primary btn-sm">
