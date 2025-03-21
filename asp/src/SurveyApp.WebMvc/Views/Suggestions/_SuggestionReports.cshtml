@@ -1,124 +1,204 @@
 
 @model List<SurveyApp.Application.DTOs.SuggestionDto>
+@{
+    var monthsRange = 3;
+    
+    // Generate monthly reports
+    var now = DateTime.UtcNow;
+    var monthlyReports = new List<object>();
+    
+    for (int i = 0; i < monthsRange; i++)
+    {
+        var month = now.AddMonths(-i);
+        var monthStart = new DateTime(month.Year, month.Month, 1);
+        var monthEnd = monthStart.AddMonths(1).AddDays(-1);
+        
+        // Filter suggestions for this month
+        var monthlySuggestions = Model.Where(s => s.CreatedAt >= monthStart && s.CreatedAt <= monthEnd).ToList();
+        
+        // Count implementations
+        var implementedCount = monthlySuggestions.Count(s => s.Status.ToLower() == "implemented");
+        
+        // Get top categories
+        var categoryCounts = new Dictionary<string, int>();
+        foreach (var suggestion in monthlySuggestions.Where(s => !string.IsNullOrEmpty(s.Category)))
+        {
+            if (categoryCounts.ContainsKey(suggestion.Category))
+                categoryCounts[suggestion.Category]++;
+            else
+                categoryCounts[suggestion.Category] = 1;
+        }
+        
+        // Sort categories by count and take top 3
+        var topCategories = categoryCounts
+            .OrderByDescending(kv => kv.Value)
+            .Take(3)
+            .Select(kv => new { category = kv.Key, count = kv.Value })
+            .ToList();
+        
+        monthlyReports.Add(new
+        {
+            month = month.ToString("MMMM"),
+            year = month.Year,
+            totalSuggestions = monthlySuggestions.Count,
+            implementedSuggestions = implementedCount,
+            topCategories = topCategories,
+            suggestions = monthlySuggestions
+        });
+    }
+    
+    // Prepare chart data for JavaScript
+    var chartData = monthlyReports.Select(m => new
+    {
+        name = $"{((dynamic)m).month} {((dynamic)m).year}",
+        total = ((dynamic)m).totalSuggestions,
+        implemented = ((dynamic)m).implementedSuggestions
+    });
+    
+    var chartDataJson = System.Text.Json.JsonSerializer.Serialize(chartData);
+}
 
-<div class="space-y-6">
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Suggestions by Status</h3>
+<div class="card">
+    <div class="card-header">
+        <div class="card-title flex items-center gap-2">
+            <i class="fas fa-chart-bar h-5 w-5"></i>
+            Suggestion Reports
         </div>
-        <div class="card-content h-[300px]">
-            <canvas id="statusChart"></canvas>
+        <div class="card-description">
+            View monthly reports and trends of customer suggestions
+        </div>
+        
+        <div class="flex justify-end mt-4">
+            <div class="form-select-container relative w-[180px]">
+                <select id="timeRange" class="form-select" onchange="updateTimeRange()">
+                    <option value="3">Last 3 months</option>
+                    <option value="6">Last 6 months</option>
+                    <option value="12">Last 12 months</option>
+                </select>
+            </div>
         </div>
     </div>
-
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Top Categories</h3>
-        </div>
-        <div class="card-content h-[300px]">
-            <canvas id="categoryChart"></canvas>
+    
+    <div class="card-content">
+        <div class="tabs-container">
+            <div class="tabs-list mb-4">
+                <div class="flex">
+                    <button class="tab-item active" onclick="toggleReportTab('chart')">Chart View</button>
+                    <button class="tab-item" onclick="toggleReportTab('monthly')">Monthly Breakdown</button>
+                </div>
+            </div>
+            
+            <div class="tabs-content">
+                <div id="chartTab" class="tab-panel block">
+                    <div class="h-[300px] w-full">
+                        <canvas id="suggestionsChart"></canvas>
+                    </div>
+                </div>
+                
+                <div id="monthlyTab" class="tab-panel hidden">
+                    <div class="space-y-6">
+                        @foreach (dynamic report in monthlyReports)
+                        {
+                            <div class="border rounded-lg p-4">
+                                <h3 class="text-lg font-medium flex items-center gap-2">
+                                    <i class="fas fa-calendar h-4 w-4"></i>
+                                    @report.month @report.year
+                                </h3>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                                    <div class="bg-muted rounded-md p-3">
+                                        <p class="text-sm text-muted-foreground">Total Suggestions</p>
+                                        <p class="text-2xl font-bold">@report.totalSuggestions</p>
+                                    </div>
+                                    
+                                    <div class="bg-muted rounded-md p-3">
+                                        <p class="text-sm text-muted-foreground">Implementation Rate</p>
+                                        <p class="text-2xl font-bold">
+                                            @(report.totalSuggestions > 0 
+                                                ? Math.Round((double)report.implementedSuggestions / report.totalSuggestions * 100)
+                                                : 0)%
+                                        </p>
+                                    </div>
+                                    
+                                    <div class="bg-muted rounded-md p-3">
+                                        <p class="text-sm text-muted-foreground">Top Categories</p>
+                                        <div class="flex flex-wrap gap-1 mt-1">
+                                            @foreach (var cat in report.topCategories)
+                                            {
+                                                <span class="status-badge">
+                                                    @cat.category (@cat.count)
+                                                </span>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Procesamos los datos del modelo para los gráficos
-        const suggestions = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model));
-        
-        // Datos para el gráfico de estados
-        const statusCounts = {};
-        suggestions.forEach(suggestion => {
-            const status = suggestion.status;
-            statusCounts[status] = (statusCounts[status] || 0) + 1;
-        });
-        
-        const statusLabels = Object.keys(statusCounts).map(status => 
-            status.charAt(0).toUpperCase() + status.slice(1)
-        );
-        const statusData = Object.values(statusCounts);
-        
-        // Datos para el gráfico de categorías
-        const categoryCounts = {};
-        suggestions.forEach(suggestion => {
-            if (suggestion.category) {
-                categoryCounts[suggestion.category] = (categoryCounts[suggestion.category] || 0) + 1;
-            }
-        });
-        
-        // Ordenamos y tomamos las 5 categorías principales
-        const sortedCategories = Object.entries(categoryCounts)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 5);
-        
-        const categoryLabels = sortedCategories.map(item => item[0]);
-        const categoryData = sortedCategories.map(item => item[1]);
-        
-        // Crear gráfico de estados
-        const statusCtx = document.getElementById('statusChart').getContext('2d');
-        new Chart(statusCtx, {
-            type: 'bar',
-            data: {
-                labels: statusLabels,
-                datasets: [{
-                    label: 'Number of Suggestions',
-                    data: statusData,
-                    backgroundColor: [
-                        'rgba(54, 162, 235, 0.7)',
-                        'rgba(255, 206, 86, 0.7)',
-                        'rgba(75, 192, 192, 0.7)',
-                        'rgba(255, 99, 132, 0.7)'
-                    ],
-                    borderColor: [
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(255, 99, 132, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            precision: 0
-                        }
-                    }
+    // Chart initialization
+    var ctx = document.getElementById('suggestionsChart').getContext('2d');
+    var chartData = @Html.Raw(chartDataJson);
+    
+    var suggestionsChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: chartData.map(item => item.name),
+            datasets: [
+                {
+                    label: 'Total Suggestions',
+                    data: chartData.map(item => item.total),
+                    backgroundColor: '#8884d8',
+                },
+                {
+                    label: 'Implemented',
+                    data: chartData.map(item => item.implemented),
+                    backgroundColor: '#82ca9d',
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
                 }
             }
-        });
-        
-        // Crear gráfico de categorías
-        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-        new Chart(categoryCtx, {
-            type: 'bar',
-            data: {
-                labels: categoryLabels,
-                datasets: [{
-                    label: 'Number of Suggestions',
-                    data: categoryData,
-                    backgroundColor: 'rgba(75, 192, 192, 0.7)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            precision: 0
-                        }
-                    }
-                }
-            }
-        });
+        }
     });
+    
+    function toggleReportTab(tabName) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-panel').forEach(tab => {
+            tab.classList.add('hidden');
+            tab.classList.remove('block');
+        });
+        
+        // Show selected tab
+        document.getElementById(tabName + 'Tab').classList.remove('hidden');
+        document.getElementById(tabName + 'Tab').classList.add('block');
+        
+        // Update active tabs
+        document.querySelectorAll('.tab-item').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Set active tab
+        event.target.classList.add('active');
+    }
+    
+    function updateTimeRange() {
+        // This would typically trigger an AJAX call to refresh the data
+        // For demo purposes, we'll just reload the page with the new range
+        var timeRange = document.getElementById('timeRange').value;
+        window.location.href = '@Url.Action("Reports", "Suggestions")?months=' + timeRange;
+    }
 </script>

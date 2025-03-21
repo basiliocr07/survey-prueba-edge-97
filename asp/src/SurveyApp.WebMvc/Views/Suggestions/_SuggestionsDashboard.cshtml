@@ -51,61 +51,62 @@
         </div>
     }
     
-    <div class="tabs-container w-full">
-        <div class="tabs-list grid w-full grid-cols-3 mb-6">
-            <button class="tab-item @(activeTab == "view" ? "active" : "")" data-tab="view">View Suggestions</button>
-            <button class="tab-item @(activeTab == "submit" ? "active" : "")" data-tab="submit">Submit Suggestion</button>
-            <button class="tab-item @(activeTab == "reports" ? "active" : "")" data-tab="reports">Reports</button>
-        </div>
-        
-        <div class="tab-content" id="view-content" style="display: @(activeTab == "view" ? "block" : "none")">
-            @await Html.PartialAsync("_SuggestionsList", Model.Suggestions)
-        </div>
-        
-        <div class="tab-content" id="submit-content" style="display: @(activeTab == "submit" ? "block" : "none")">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title flex items-center gap-2">
-                        <i class="fas fa-comment"></i>
-                        New Suggestion
-                    </h3>
-                </div>
-                <div class="card-content">
-                    @await Html.PartialAsync("_SuggestionForm")
-                </div>
+    <div class="tabs-container">
+        <div class="tabs-list mb-6 border-b">
+            <div class="grid grid-cols-3 w-full">
+                <button class="tab-item @(activeTab == "view" ? "active" : "")" 
+                        onclick="changeTab('view')">View Suggestions</button>
+                <button class="tab-item @(activeTab == "submit" ? "active" : "")" 
+                        onclick="changeTab('submit')">Submit Suggestion</button>
+                <button class="tab-item @(activeTab == "reports" ? "active" : "")" 
+                        onclick="changeTab('reports')">Reports</button>
             </div>
         </div>
         
-        <div class="tab-content" id="reports-content" style="display: @(activeTab == "reports" ? "block" : "none")">
-            @await Html.PartialAsync("_SuggestionReports", Model.Suggestions)
+        <div class="tabs-content">
+            <div id="viewTab" class="tab-panel @(activeTab == "view" ? "block" : "hidden")">
+                @await Html.PartialAsync("_SuggestionsList", Model.Suggestions)
+            </div>
+            
+            <div id="submitTab" class="tab-panel @(activeTab == "submit" ? "block" : "hidden")">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title flex items-center gap-2">
+                            <i class="fas fa-comment h-5 w-5"></i>
+                            New Suggestion
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        @await Html.PartialAsync("_SuggestionForm")
+                    </div>
+                </div>
+            </div>
+            
+            <div id="reportsTab" class="tab-panel @(activeTab == "reports" ? "block" : "hidden")">
+                @await Html.PartialAsync("_SuggestionReports", Model.Suggestions)
+            </div>
         </div>
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const tabButtons = document.querySelectorAll('.tab-item');
-            const tabContents = document.querySelectorAll('.tab-content');
-            
-            tabButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const tabName = this.getAttribute('data-tab');
-                    
-                    // Update active tab
-                    tabButtons.forEach(btn => btn.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    // Show selected content, hide others
-                    tabContents.forEach(content => {
-                        if (content.id === tabName + '-content') {
-                            content.style.display = 'block';
-                        } else {
-                            content.style.display = 'none';
-                        }
-                    });
-                });
-            });
+<script>
+    function changeTab(tabName) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-panel').forEach(tab => {
+            tab.classList.add('hidden');
+            tab.classList.remove('block');
         });
-    </script>
-}
+        
+        // Show selected tab
+        document.getElementById(tabName + 'Tab').classList.remove('hidden');
+        document.getElementById(tabName + 'Tab').classList.add('block');
+        
+        // Update active tabs
+        document.querySelectorAll('.tab-item').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Set active tab
+        event.target.classList.add('active');
+    }
+</script>
