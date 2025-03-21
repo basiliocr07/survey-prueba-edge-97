@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -235,6 +234,11 @@ namespace SurveyApp.Infrastructure.Repositories
             // Corregimos la comparación con el método SaveChangesAsync()
             // El método SaveChangesAsync() retorna un int, y necesitamos compararlo con 0
             return (await _dbContext.SaveChangesAsync()) > 0;
+        }
+
+        public async Task<int> GetTotalSurveyCountAsync()
+        {
+            return await _dbContext.Surveys.CountAsync();
         }
     }
 }
