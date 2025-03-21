@@ -5,13 +5,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SurveyApp.WebMvc.Models
 {
-    public class SurveyResponseViewModel
+    public class SurveyResponseInputModel
     {
-        public Guid SurveyId { get; set; }
-        public string Title { get; set; }
-        public string Description { get; set; }
-        public List<QuestionViewModel> Questions { get; set; } = new List<QuestionViewModel>();
-        
         [Required(ErrorMessage = "El nombre es obligatorio")]
         [StringLength(100, ErrorMessage = "El nombre no puede superar los 100 caracteres")]
         [Display(Name = "Nombre")]
@@ -31,7 +26,7 @@ namespace SurveyApp.WebMvc.Models
         [Display(Name = "Compañía")]
         public string RespondentCompany { get; set; }
         
-        // Propiedad para almacenar las respuestas
+        public Guid SurveyId { get; set; }
         public Dictionary<string, object> Answers { get; set; } = new Dictionary<string, object>();
         
         // Flag para indicar si es un cliente existente
@@ -39,12 +34,5 @@ namespace SurveyApp.WebMvc.Models
         
         // ID del cliente si ya existe
         public Guid? ExistingClientId { get; set; }
-        
-        // Fecha de envío de la respuesta
-        public DateTime SubmittedAt { get; set; } = DateTime.UtcNow;
-        
-        // Propiedades para la visualización en el dashboard
-        public string RespondentInfo => $"{RespondentName} ({RespondentEmail})";
-        public string CompanyInfo => !string.IsNullOrEmpty(RespondentCompany) ? RespondentCompany : "No especificado";
     }
 }

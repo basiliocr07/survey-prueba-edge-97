@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -28,63 +29,6 @@ namespace SurveyApp.WebMvc.Models
         public string Status { get; set; } = "Active";
         
         public string Category { get; set; }
-    }
-
-    public class SurveyListViewModel
-    {
-        public List<SurveyListItemViewModel> Surveys { get; set; } = new List<SurveyListItemViewModel>();
-        public string SearchTerm { get; set; }
-        public string StatusFilter { get; set; }
-        public string CategoryFilter { get; set; }
-        public int TotalCount { get; set; }
-        public int PageNumber { get; set; } = 1;
-        public int PageSize { get; set; } = 10;
-        public List<string> Categories { get; set; } = new List<string>();
-        public List<string> Statuses { get; set; } = new List<string>() { "Active", "Draft", "Archived", "Completed" };
-    }
-
-    public class QuestionViewModel
-    {
-        public Guid Id { get; set; }
-        
-        [Required(ErrorMessage = "Title is required")]
-        public string Title { get; set; }
-        
-        public string Description { get; set; }
-        
-        [Required(ErrorMessage = "Question type is required")]
-        public string Type { get; set; }
-        
-        public bool Required { get; set; }
-        
-        public List<string> Options { get; set; } = new List<string>();
-        
-        public int Order { get; set; }
-        
-        public ValidationRulesViewModel ValidationRules { get; set; } = new ValidationRulesViewModel();
-        
-        public QuestionSettingsViewModel Settings { get; set; } = new QuestionSettingsViewModel();
-    }
-
-    public class QuestionSettingsViewModel
-    {
-        // Para preguntas tipo Rating
-        public int? MinValue { get; set; }
-        public int? MaxValue { get; set; }
-        
-        // Para preguntas tipo NPS
-        public string LowLabel { get; set; } = "No es probable";
-        public string MiddleLabel { get; set; } = "Neutral";
-        public string HighLabel { get; set; } = "Muy probable";
-    }
-
-    public class ValidationRulesViewModel
-    {
-        public int? MinLength { get; set; }
-        public int? MaxLength { get; set; }
-        public string Pattern { get; set; }
-        public int? MinValue { get; set; }
-        public int? MaxValue { get; set; }
     }
 
     public class SurveyCreateViewModel
@@ -151,16 +95,5 @@ namespace SurveyApp.WebMvc.Models
         public bool SendAutomatically { get; set; } = false;
         
         public string EventName { get; set; }
-    }
-
-    public class SurveyResponseInputModel
-    {
-        public string RespondentName { get; set; }
-        public string RespondentEmail { get; set; }
-        public string RespondentPhone { get; set; }
-        public string RespondentCompany { get; set; }
-        public Dictionary<string, object> Answers { get; set; }
-        public bool IsExistingClient { get; set; }
-        public Guid? ExistingClientId { get; set; }
     }
 }
