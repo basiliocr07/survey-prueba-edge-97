@@ -147,9 +147,9 @@ namespace SurveyApp.WebMvc.Controllers
                     {
                         Id = s.Id,
                         Title = s.Title,
-                        ResponseCount = s.Responses,
                         Description = s.Description ?? "",
                         CreatedAt = s.CreatedAt,
+                        ResponseCount = s.Responses,
                         Status = s.Status ?? "Active",
                         Responses = s.Responses
                     }).ToList(),
