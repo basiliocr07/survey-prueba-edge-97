@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using SurveyApp.Infrastructure.Data;
 using SurveyApp.Infrastructure.Repositories;
 using SurveyApp.Infrastructure.Services;
@@ -52,7 +53,7 @@ builder.Services.AddScoped<ISurveyService, SurveyService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 
-// Registro explícito del servicio de autenticación usando nombre completo para evitar ambigüedades
+// Register Authentication Service explicitly with full namespace to avoid ambiguity
 builder.Services.AddScoped<SurveyApp.Application.Ports.IAuthenticationService, SurveyApp.Application.Services.AuthenticationService>();
 
 // Register Infrastructure Services
