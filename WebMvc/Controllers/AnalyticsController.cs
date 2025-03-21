@@ -56,7 +56,6 @@ namespace SurveyApp.WebMvc.Controllers
                         CreatedAt = s.CreatedAt
                     }).ToList(),
                 
-                // Map additional properties from the DTO
                 SurveyGrowthRate = analyticsData.SurveyGrowthRate,
                 ResponseGrowthRate = analyticsData.ResponseGrowthRate,
                 AvgCompletionRate = analyticsData.AvgCompletionRate,
@@ -64,7 +63,6 @@ namespace SurveyApp.WebMvc.Controllers
                 AvgResponseTime = analyticsData.AvgResponseTime,
                 ResponseTimeChange = analyticsData.ResponseTimeChange,
                 
-                // Map survey performance data
                 SurveyPerformance = analyticsData.SurveyPerformance.Select(sp => new SurveyPerformanceViewModel
                 {
                     Title = sp.Title,
@@ -73,14 +71,12 @@ namespace SurveyApp.WebMvc.Controllers
                     AverageTimeMinutes = sp.AverageTimeMinutes
                 }).ToList(),
                 
-                // Map demographic data
                 Demographics = analyticsData.Demographics.Select(d => new DemographicViewModel
                 {
                     Category = d.Category,
                     Percentage = d.Percentage
                 }).ToList(),
                 
-                // Map device distribution data
                 DeviceDistribution = analyticsData.DeviceDistribution.Select(dd => new DeviceDistributionViewModel
                 {
                     DeviceType = dd.DeviceType,
@@ -94,7 +90,6 @@ namespace SurveyApp.WebMvc.Controllers
         [HttpPost]
         public async Task<IActionResult> RefreshAnalytics()
         {
-            // Add a small delay to make the animation more noticeable (similar to React)
             await Task.Delay(TimeSpan.FromMilliseconds(800));
             await _analyticsService.RefreshAnalyticsDataAsync();
             TempData["SuccessMessage"] = "Los datos de análisis se han actualizado correctamente.";
@@ -104,7 +99,6 @@ namespace SurveyApp.WebMvc.Controllers
         [HttpGet]
         public IActionResult AnimatedPartial()
         {
-            // This method is for demonstrating animations with partial views
             return PartialView("_AnimatedPartial");
         }
         
