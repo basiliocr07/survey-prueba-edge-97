@@ -226,6 +226,23 @@
   .table-cell {
     @apply px-4 py-3 text-sm;
   }
+  
+  /* Tabs Components para Login/Register */
+  .tabs {
+    @apply w-full;
+  }
+  
+  .tab-trigger {
+    @apply transition-all duration-200;
+  }
+  
+  .tab-trigger.active {
+    @apply border-primary text-primary font-semibold;
+  }
+  
+  .tab-content {
+    @apply p-6;
+  }
 }
 
 @layer utilities {
@@ -237,6 +254,10 @@
   /* Animations */
   .animate-fade-in {
     animation: fadeIn 0.5s ease-out;
+  }
+  
+  .animate-fade-out {
+    animation: fadeOut 0.3s ease-out forwards;
   }
 
   .animate-slide-up {
@@ -283,6 +304,11 @@
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 @keyframes slideUp {
