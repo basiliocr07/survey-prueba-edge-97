@@ -19,6 +19,12 @@ namespace SurveyApp.Application.DTOs
         public double CompletionTime { get; set; }
         public string DeviceType { get; set; }
         public string Browser { get; set; }
+        public string OperatingSystem { get; set; }
         public string Location { get; set; }
+        public string IpAddress { get; set; }
+        public string Source { get; set; }
+        public string UserAgent { get; set; }
+        public bool WasAbandoned { get; set; }
+        public int PageViews { get; set; }
     }
 }

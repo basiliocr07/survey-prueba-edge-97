@@ -46,5 +46,8 @@ namespace SurveyApp.WebMvc.Models
         // Propiedades para la visualización en el dashboard
         public string RespondentInfo => $"{RespondentName} ({RespondentEmail})";
         public string CompanyInfo => !string.IsNullOrEmpty(RespondentCompany) ? RespondentCompany : "No especificado";
+        
+        // Knowledge base items relacionados
+        public List<KnowledgeItemViewModel> RelatedKnowledgeItems { get; set; } = new List<KnowledgeItemViewModel>();
     }
 }
