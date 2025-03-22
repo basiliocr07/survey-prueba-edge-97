@@ -1,6 +1,6 @@
 
 /* Import Tailwind CSS */
-@import url('tailwind_custom.css');
+@import url('tailwind.min.css');
 
 :root {
     /* Base colors */
