@@ -1,0 +1,158 @@
+
+@model SurveyApp.Web.Models.SurveyDetailViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="min-h-screen bg-gray-50">
+    <div class="container mx-auto px-4 py-12">
+        <div class="max-w-3xl mx-auto">
+            <div class="bg-white shadow-md rounded-lg overflow-hidden">
+                <div class="px-6 py-4 border-b">
+                    <h1 class="text-xl font-bold">@Model.Title</h1>
+                    <p class="text-gray-600 mt-1">@Model.Description</p>
+                </div>
+
+                <form id="surveyForm" asp-action="Submit" asp-route-surveyId="@Model.Id" method="post" class="p-6">
+                    @Html.AntiForgeryToken()
+
+                    <div class="space-y-6">
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-medium">Your Information</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="Name" class="block text-sm font-medium text-gray-700">Name <span class="text-red-500">*</span></label>
+                                    <input id="Name" name="Name" type="text" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" />
+                                </div>
+                                <div>
+                                    <label for="Email" class="block text-sm font-medium text-gray-700">Email <span class="text-red-500">*</span></label>
+                                    <input id="Email" name="Email" type="email" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" />
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="Phone" class="block text-sm font-medium text-gray-700">Phone</label>
+                                    <input id="Phone" name="Phone" type="text" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" />
+                                </div>
+                                <div>
+                                    <label for="Company" class="block text-sm font-medium text-gray-700">Company</label>
+                                    <input id="Company" name="Company" type="text" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="border-gray-200" />
+
+                        <div class="space-y-8">
+                            <h3 class="text-lg font-medium">Survey Questions</h3>
+
+                            @for (int i = 0; i < Model.Questions.Count; i++)
+                            {
+                                var question = Model.Questions[i];
+                                <div class="space-y-3">
+                                    <h4 class="font-medium">
+                                        @(i + 1). @question.Question
+                                        @if (question.Required)
+                                        {
+                                            <span class="text-red-500 ml-1">*</span>
+                                        }
+                                    </h4>
+
+                                    @if (question.Type == "text")
+                                    {
+                                        <div>
+                                            <textarea name="Answers[@question.Id]" rows="3" @(question.Required ? "required" : "")
+                                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                                placeholder="Your answer"></textarea>
+                                        </div>
+                                    }
+                                    else if (question.Type == "rating")
+                                    {
+                                        <div class="flex space-x-6">
+                                            @for (int rating = 1; rating <= 5; rating++)
+                                            {
+                                                <div class="flex items-center space-x-2">
+                                                    <input type="radio" id="@($"rating-{question.Id}-{rating}")" name="Answers[@question.Id]"
+                                                        value="@rating" @(question.Required ? "required" : "")
+                                                        class="h-4 w-4 text-indigo-600 focus:ring-indigo-500" />
+                                                    <label for="@($"rating-{question.Id}-{rating}")" class="block text-sm text-gray-700">@rating</label>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                    else if (question.Type == "single-choice")
+                                    {
+                                        <div class="space-y-2">
+                                            @foreach (var option in question.Options)
+                                            {
+                                                <div class="flex items-center space-x-2">
+                                                    <input type="radio" id="@($"option-{question.Id}-{option}")" name="Answers[@question.Id]"
+                                                        value="@option" @(question.Required ? "required" : "")
+                                                        class="h-4 w-4 text-indigo-600 focus:ring-indigo-500" />
+                                                    <label for="@($"option-{question.Id}-{option}")" class="block text-sm text-gray-700">@option</label>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                    else if (question.Type == "multiple-choice")
+                                    {
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            @foreach (var option in question.Options)
+                                            {
+                                                <div class="flex items-center space-x-2">
+                                                    <input type="checkbox" id="@($"option-{question.Id}-{option}")" name="Answers[@question.Id]"
+                                                        value="@option" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500" />
+                                                    <label for="@($"option-{question.Id}-{option}")" class="block text-sm text-gray-700">@option</label>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="mt-8 flex justify-end space-x-4">
+                        <a href="@Url.Action("Index", "Home")" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Cancel
+                        </a>
+                        <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Submit Response
+                            <svg xmlns="http://www.w3.org/2000/svg" class="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                            </svg>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('surveyForm');
+            if (form) {
+                form.addEventListener('submit', function(event) {
+                    const requiredFields = form.querySelectorAll('[required]');
+                    let isValid = true;
+                    
+                    requiredFields.forEach(function(field) {
+                        if (!field.value.trim()) {
+                            isValid = false;
+                            field.classList.add('border-red-500');
+                        } else {
+                            field.classList.remove('border-red-500');
+                        }
+                    });
+                    
+                    if (!isValid) {
+                        event.preventDefault();
+                        alert('Please fill out all required fields');
+                    }
+                });
+            }
+        });
+    </script>
+}

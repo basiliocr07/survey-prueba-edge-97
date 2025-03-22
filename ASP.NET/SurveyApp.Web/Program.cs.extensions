@@ -4,15 +4,10 @@ builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
-builder.Services.AddScoped<ISurveyRepository, SurveyRepository>();
-builder.Services.AddScoped<ISurveyService, SurveyService>();
+builder.Services.AddScoped<ISurveyResponseRepository, SurveyResponseRepository>();
+builder.Services.AddScoped<ISurveyResponseService, SurveyResponseService>();
 
 // Agregar esto antes de app.Run()
-app.MapControllerRoute(
-    name: "surveys",
-    pattern: "surveys/{action=Index}/{id?}",
-    defaults: new { controller = "Surveys" });
-
 app.MapControllerRoute(
     name: "customers",
     pattern: "customers/{action=Index}/{id?}",
@@ -22,3 +17,9 @@ app.MapControllerRoute(
     name: "analytics",
     pattern: "analytics/{action=Index}/{id?}",
     defaults: new { controller = "Analytics" });
+
+app.MapControllerRoute(
+    name: "surveyResponses",
+    pattern: "survey-responses/{action=Index}/{id?}",
+    defaults: new { controller = "SurveyResponses" });
+
