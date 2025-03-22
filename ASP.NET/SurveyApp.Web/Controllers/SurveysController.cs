@@ -22,7 +22,7 @@ namespace SurveyApp.Web.Controllers
         // GET: Surveys
         public async Task<IActionResult> Index()
         {
-            var surveys = await GetSampleSurveys();
+            var surveys = await GetSurveys();
             ViewBag.FilterActive = "all"; // Default filter
             
             return View(surveys);
@@ -32,7 +32,7 @@ namespace SurveyApp.Web.Controllers
         [HttpGet]
         public async Task<ActionResult> Filter(string filter)
         {
-            var allSurveys = await GetSampleSurveys();
+            var allSurveys = await GetSurveys();
             var filteredSurveys = filter switch
             {
                 "active" => allSurveys.Where(s => s.Status == "active").ToList(),
@@ -50,6 +50,7 @@ namespace SurveyApp.Web.Controllers
         {
             return View(new CreateSurveyViewModel
             {
+                Id = 0, // New survey
                 Questions = new List<QuestionViewModel>
                 {
                     new QuestionViewModel
@@ -122,8 +123,27 @@ namespace SurveyApp.Web.Controllers
                     }
                 };
 
-                await _surveyService.CreateSurveyAsync(survey);
-                return RedirectToAction(nameof(Index));
+                bool success;
+                if (model.Id > 0)
+                {
+                    survey.Id = model.Id;
+                    success = await _surveyService.UpdateSurveyAsync(survey);
+                    if (success)
+                        TempData["SuccessMessage"] = "Survey updated successfully.";
+                    else
+                        TempData["ErrorMessage"] = "Failed to update survey.";
+                }
+                else
+                {
+                    success = await _surveyService.CreateSurveyAsync(survey);
+                    if (success)
+                        TempData["SuccessMessage"] = "Survey created successfully.";
+                    else
+                        TempData["ErrorMessage"] = "Failed to create survey.";
+                }
+
+                if (success)
+                    return RedirectToAction(nameof(Index));
             }
 
             return View(model);
@@ -140,6 +160,7 @@ namespace SurveyApp.Web.Controllers
 
             var model = new CreateSurveyViewModel
             {
+                Id = survey.Id,
                 Title = survey.Title,
                 Description = survey.Description,
                 Status = survey.Status,
@@ -176,7 +197,7 @@ namespace SurveyApp.Web.Controllers
                             ? new TriggerSettingsViewModel
                             {
                                 Type = survey.DeliveryConfig.Trigger.Type,
-                                DelayHours = survey.DeliveryConfig.Trigger.DelayHours,
+                                DelayHours = survey.DeliveyConfig.Trigger.DelayHours,
                                 SendAutomatically = survey.DeliveryConfig.Trigger.SendAutomatically
                             }
                             : new TriggerSettingsViewModel()
@@ -192,7 +213,12 @@ namespace SurveyApp.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            await _surveyService.DeleteSurveyAsync(id);
+            var result = await _surveyService.DeleteSurveyAsync(id);
+            if (result)
+                TempData["SuccessMessage"] = "Survey deleted successfully.";
+            else
+                TempData["ErrorMessage"] = "Failed to delete survey.";
+                
             return RedirectToAction(nameof(Index));
         }
 
@@ -214,8 +240,35 @@ namespace SurveyApp.Web.Controllers
             return RedirectToAction(nameof(Edit), new { id = surveyId });
         }
 
+        // Helper method to get real surveys from database
+        private async Task<List<SurveyViewModel>> GetSurveys()
+        {
+            try
+            {
+                var surveys = await _surveyService.GetAllSurveysAsync();
+                return surveys.Select(s => new SurveyViewModel
+                {
+                    Id = s.Id.ToString(),
+                    Title = s.Title,
+                    Description = s.Description,
+                    CreatedAt = s.CreatedAt,
+                    Responses = s.ResponseCount, 
+                    CompletionRate = s.CompletionRate,
+                    Status = s.Status
+                }).ToList();
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                Console.WriteLine($"Error getting surveys: {ex.Message}");
+                
+                // If there's an error, return sample data temporarily
+                return GetSampleSurveys();
+            }
+        }
+
         // Helper method to get sample surveys while we're developing
-        private async Task<List<SurveyViewModel>> GetSampleSurveys()
+        private List<SurveyViewModel> GetSampleSurveys()
         {
             // This would normally come from the database via the service
             // For now, we're creating sample data that matches the React version
