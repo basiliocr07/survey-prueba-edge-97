@@ -1,11 +1,138 @@
+
 @model SurveyApp.Web.Models.CreateSurveyViewModel
 @{
     ViewData["Title"] = "Create Survey";
 }
 
-<link rel="stylesheet" href="~/css/surveys.css" />
-
-<div class="min-h-screen flex flex-col bg-background">
+<div class="min-h-screen flex flex-col bg-background" 
+     x-data="{
+        surveyTitle: '',
+        surveyDescription: '',
+        questions: [{
+            id: uuidv4(),
+            type: 'single-choice',
+            title: '',
+            required: true,
+            options: ['Option 1', 'Option 2', 'Option 3'],
+            description: ''
+        }],
+        activeTab: 'design',
+        surveyId: '',
+        dialogOpen: false,
+        deliveryConfig: {
+            type: 'manual',
+            emailAddresses: [],
+            schedule: {
+                frequency: 'monthly',
+                dayOfMonth: 1,
+                time: '09:00'
+            },
+            trigger: {
+                type: 'ticket-closed',
+                delayHours: 24,
+                sendAutomatically: false
+            }
+        },
+        newEmail: '',
+        
+        addQuestion() {
+            this.questions.push({
+                id: uuidv4(),
+                type: 'single-choice',
+                title: '',
+                required: true,
+                options: ['Option 1', 'Option 2', 'Option 3'],
+                description: ''
+            });
+        },
+        
+        deleteQuestion(index) {
+            if (this.questions.length <= 1) {
+                alert('Your survey must have at least one question');
+                return;
+            }
+            this.questions.splice(index, 1);
+        },
+        
+        moveQuestionUp(index) {
+            if (index === 0) return;
+            const temp = this.questions[index];
+            this.questions[index] = this.questions[index - 1];
+            this.questions[index - 1] = temp;
+        },
+        
+        moveQuestionDown(index) {
+            if (index === this.questions.length - 1) return;
+            const temp = this.questions[index];
+            this.questions[index] = this.questions[index + 1];
+            this.questions[index + 1] = temp;
+        },
+        
+        addOption(questionIndex) {
+            this.questions[questionIndex].options.push('New option');
+        },
+        
+        removeOption(questionIndex, optionIndex) {
+            if (this.questions[questionIndex].options.length <= 2) {
+                return;
+            }
+            this.questions[questionIndex].options.splice(optionIndex, 1);
+        },
+        
+        saveSurvey() {
+            if (!this.surveyTitle.trim()) {
+                alert('Please provide a title for your survey');
+                return;
+            }
+            
+            const hasEmptyQuestionTitles = this.questions.some(q => !q.title.trim());
+            if (hasEmptyQuestionTitles) {
+                alert('Please provide a title for all questions');
+                return;
+            }
+            
+            const newSurveyId = this.surveyId || uuidv4();
+            this.surveyId = newSurveyId;
+            
+            console.log('Survey saved:', {
+                id: newSurveyId,
+                title: this.surveyTitle,
+                description: this.surveyDescription,
+                questions: this.questions,
+                deliveryConfig: this.deliveryConfig
+            });
+            
+            this.dialogOpen = true;
+        },
+        
+        addEmail() {
+            if (this.newEmail && this.newEmail.includes('@')) {
+                this.deliveryConfig.emailAddresses.push(this.newEmail);
+                this.newEmail = '';
+            }
+        },
+        
+        removeEmail(index) {
+            this.deliveryConfig.emailAddresses.splice(index, 1);
+        },
+        
+        sendSurveyEmails() {
+            if (this.deliveryConfig.emailAddresses.length === 0) {
+                alert('Please add at least one email address');
+                return;
+            }
+            
+            console.log('Sending survey to:', this.deliveryConfig.emailAddresses);
+            alert('Survey will be sent to ' + this.deliveryConfig.emailAddresses.length + ' recipient(s)');
+        },
+        
+        copySurveyLink() {
+            const surveyLink = window.location.origin + '/SurveyResponses/Take/' + this.surveyId;
+            navigator.clipboard.writeText(surveyLink);
+            alert('Survey link copied to clipboard!');
+        }
+     }">
+    
     <main class="flex-1 w-full max-w-7xl mx-auto pt-24 px-6 pb-16">
         <div class="mb-8">
             <h1 class="text-3xl font-bold mb-2">Create a New Survey</h1>
@@ -14,17 +141,37 @@
             </p>
         </div>
         
-        <div class="tabs-container" x-data="{ activeTab: 'design' }">
-            <div class="grid w-full grid-cols-4 mb-8 tabs-list">
-                <button x-on:click="activeTab = 'design'" x-bind:class="{ 'active': activeTab === 'design' }" class="tab-trigger">Design Survey</button>
-                <button x-on:click="activeTab = 'delivery'" x-bind:class="{ 'active': activeTab === 'delivery' }" class="tab-trigger">Email Delivery</button>
-                <button x-on:click="activeTab = 'settings'" x-bind:class="{ 'active': activeTab === 'settings' }" class="tab-trigger">Settings</button>
-                <button x-on:click="activeTab = 'preview'" x-bind:class="{ 'active': activeTab === 'preview' }" class="tab-trigger">Preview</button>
-            </div>
-            
-            <div x-show="activeTab === 'design'" class="tab-content animate-fade-in">
-                <div class="grid gap-8">
-                    <form asp-action="Create" method="post">
+        <div class="w-full">
+            <div class="tabs-container">
+                <div class="tabs-list">
+                    <button 
+                        class="tab-trigger" 
+                        x-bind:class="{ 'active': activeTab === 'design' }"
+                        x-on:click="activeTab = 'design'">
+                        Design Survey
+                    </button>
+                    <button 
+                        class="tab-trigger" 
+                        x-bind:class="{ 'active': activeTab === 'delivery' }"
+                        x-on:click="activeTab = 'delivery'">
+                        Email Delivery
+                    </button>
+                    <button 
+                        class="tab-trigger" 
+                        x-bind:class="{ 'active': activeTab === 'settings' }"
+                        x-on:click="activeTab = 'settings'">
+                        Settings
+                    </button>
+                    <button 
+                        class="tab-trigger" 
+                        x-bind:class="{ 'active': activeTab === 'preview' }"
+                        x-on:click="activeTab = 'preview'">
+                        Preview
+                    </button>
+                </div>
+                
+                <div class="tab-content" x-show="activeTab === 'design'">
+                    <div class="grid gap-8">
                         <div class="card">
                             <div class="card-header">
                                 <h2 class="card-title">Survey Details</h2>
@@ -34,397 +181,651 @@
                                     <label for="survey-title" class="block text-sm font-medium mb-1">
                                         Survey Title
                                     </label>
-                                    <input asp-for="Title" id="survey-title" class="w-full px-4 py-2 border rounded-md" placeholder="Enter survey title" />
-                                    <span asp-validation-for="Title" class="text-destructive text-sm"></span>
+                                    <input
+                                        id="survey-title"
+                                        x-model="surveyTitle"
+                                        placeholder="Enter survey title"
+                                        class="w-full"
+                                    />
                                 </div>
                                 <div>
                                     <label for="survey-description" class="block text-sm font-medium mb-1">
                                         Description (optional)
                                     </label>
-                                    <textarea asp-for="Description" id="survey-description" class="min-h-[100px] w-full px-4 py-2 border rounded-md" placeholder="Enter a description for your survey"></textarea>
+                                    <textarea
+                                        id="survey-description"
+                                        x-model="surveyDescription"
+                                        placeholder="Enter a description for your survey"
+                                        class="min-h-[100px] w-full"
+                                    ></textarea>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="mt-8">
+                        <div>
                             <div class="flex items-center justify-between mb-4">
                                 <h2 class="text-xl font-semibold">Questions</h2>
-                                <button type="button" id="add-question" class="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md flex items-center">
-                                    <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <button 
+                                    class="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors flex items-center" 
+                                    x-on:click="addQuestion()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
                                     </svg>
                                     Add Question
                                 </button>
                             </div>
                             
-                            <div id="questions-container" class="space-y-4">
-                                @for (var i = 0; i < Model.Questions.Count; i++)
-                                {
-                                    <div class="question-builder card">
-                                        <div class="card-header flex justify-between">
-                                            <div class="flex items-center">
-                                                <input type="hidden" asp-for="Questions[i].Id" />
-                                                <select asp-for="Questions[i].Type" class="bg-muted p-2 rounded-md mr-2">
-                                                    <option value="single-choice">Single Choice</option>
-                                                    <option value="multiple-choice">Multiple Choice</option>
-                                                    <option value="text">Text Input</option>
-                                                    <option value="rating">Star Rating</option>
-                                                    <option value="nps">NPS Rating</option>
-                                                </select>
-                                                <div class="flex items-center ml-4">
-                                                    <label class="text-sm mr-2">Required</label>
-                                                    <input type="checkbox" asp-for="Questions[i].Required" class="h-4 w-4" />
-                                                </div>
+                            <div class="space-y-4">
+                                <template x-for="(question, questionIndex) in questions" :key="question.id">
+                                    <div class="question-builder">
+                                        <div class="flex items-center px-4 py-3 border-b bg-muted/30">
+                                            <div class="mr-2 text-muted-foreground">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 cursor-grab" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
+                                                </svg>
                                             </div>
-                                            <div class="flex items-center space-x-2">
-                                                <button type="button" class="move-up bg-secondary p-2 rounded-md">
-                                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M12 19V5M12 5L5 12M12 5L19 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <div class="flex-1 font-medium truncate" x-text="question.title || 'Untitled Question'"></div>
+                                            <div class="flex items-center gap-1">
+                                                <button 
+                                                    class="text-muted-foreground hover:text-foreground p-1 rounded-md"
+                                                    x-on:click="moveQuestionUp(questionIndex)"
+                                                    x-show="questionIndex > 0">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fill-rule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
                                                     </svg>
                                                 </button>
-                                                <button type="button" class="move-down bg-secondary p-2 rounded-md">
-                                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M12 5V19M12 19L5 12M12 19L19 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <button 
+                                                    class="text-muted-foreground hover:text-foreground p-1 rounded-md"
+                                                    x-on:click="moveQuestionDown(questionIndex)"
+                                                    x-show="questionIndex < questions.length - 1">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fill-rule="evenodd" d="M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l2.293-2.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                                                     </svg>
                                                 </button>
-                                                <button type="button" class="delete-question bg-secondary p-2 rounded-md hover:text-destructive">
-                                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M3 6H5H21M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <button 
+                                                    class="text-muted-foreground hover:text-destructive p-1 rounded-md"
+                                                    x-on:click="deleteQuestion(questionIndex)">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
                                                     </svg>
                                                 </button>
                                             </div>
                                         </div>
-                                        <div class="card-content space-y-4">
-                                            <div>
-                                                <label class="block text-sm font-medium mb-1">Question Title</label>
-                                                <input asp-for="Questions[i].Title" class="w-full px-4 py-2 border rounded-md" placeholder="Enter your question" />
-                                            </div>
-                                            <div>
-                                                <label class="block text-sm font-medium mb-1">Description (optional)</label>
-                                                <input asp-for="Questions[i].Description" class="w-full px-4 py-2 border rounded-md" placeholder="Add a description for your question" />
+                                        
+                                        <div class="p-4 space-y-4">
+                                            <div class="space-y-2">
+                                                <div>
+                                                    <label class="block text-sm font-medium mb-1">Question</label>
+                                                    <input
+                                                        x-model="question.title"
+                                                        placeholder="Enter your question"
+                                                        class="w-full"
+                                                    />
+                                                </div>
+                                                
+                                                <div>
+                                                    <label class="block text-sm font-medium mb-1">Description (optional)</label>
+                                                    <textarea
+                                                        x-model="question.description"
+                                                        placeholder="Add a description to provide more context"
+                                                        class="min-h-[80px] w-full"
+                                                    ></textarea>
+                                                </div>
                                             </div>
                                             
-                                            <div class="options-container" data-question-type="single-choice">
-                                                <div class="flex items-center justify-between mb-2">
-                                                    <label class="text-sm font-medium">Options</label>
-                                                    <button type="button" class="add-option text-sm text-primary flex items-center">
-                                                        <svg class="w-4 h-4 mr-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                                        </svg>
-                                                        Add Option
-                                                    </button>
-                                                </div>
-                                                <div class="space-y-2 options-list">
-                                                    @for (var j = 0; j < Model.Questions[i].Options.Count; j++)
-                                                    {
-                                                        <div class="flex items-center option-item">
-                                                            <input type="text" name="Questions[@i].Options[@j]" value="@Model.Questions[i].Options[j]" class="flex-1 px-4 py-2 border rounded-md" />
-                                                            <button type="button" class="delete-option ml-2 text-destructive">
-                                                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                    <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                                                </svg>
-                                                            </button>
+                                            <div>
+                                                <label class="block text-sm font-medium mb-1">Question Type</label>
+                                                <select x-model="question.type" class="w-full">
+                                                    <option value="single-choice">Single Choice</option>
+                                                    <option value="multiple-choice">Multiple Choice</option>
+                                                    <option value="text">Text Answer</option>
+                                                    <option value="rating">Star Rating</option>
+                                                    <option value="nps">NPS Rating (0-10)</option>
+                                                    <option value="dropdown">Dropdown</option>
+                                                </select>
+                                            </div>
+                                            
+                                            <div x-show="['multiple-choice', 'single-choice', 'dropdown'].includes(question.type)" class="space-y-3 mt-4">
+                                                <label class="block text-sm font-medium mb-1">Options</label>
+                                                <template x-for="(option, optionIndex) in question.options" :key="optionIndex">
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="flex-1">
+                                                            <input
+                                                                x-model="question.options[optionIndex]"
+                                                                placeholder="Option"
+                                                                class="w-full"
+                                                            />
                                                         </div>
-                                                    }
+                                                        <button
+                                                            class="text-muted-foreground hover:text-destructive p-1 rounded-md"
+                                                            x-on:click="removeOption(questionIndex, optionIndex)"
+                                                            x-bind:disabled="question.options.length <= 2">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                </template>
+                                                <button
+                                                    class="border border-gray-300 bg-gray-50 hover:bg-gray-100 text-sm px-3 py-1 mt-2 rounded-md inline-flex items-center"
+                                                    x-on:click="addOption(questionIndex)">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+                                                    </svg>
+                                                    Add Option
+                                                </button>
+                                            </div>
+                                            
+                                            <div x-show="question.type === 'rating'" class="mt-4 border rounded-md p-4 bg-muted/20">
+                                                <label class="mb-2 block">Preview</label>
+                                                <div class="star-rating">
+                                                    <template x-for="i in 5" :key="i">
+                                                        <label class="star-rating-label">
+                                                            <input type="radio" name="rating-preview" class="sr-only" :value="i">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 cursor-pointer text-gray-300 hover:text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                            </svg>
+                                                        </label>
+                                                    </template>
                                                 </div>
+                                            </div>
+                                            
+                                            <div x-show="question.type === 'nps'" class="mt-4 border rounded-md p-4 bg-muted/20">
+                                                <label class="mb-2 block">Preview</label>
+                                                <div class="rating-scale">
+                                                    <template x-for="i in 11" :key="i - 1">
+                                                        <label class="nps-rating-label">
+                                                            <input type="radio" name="nps-preview" class="sr-only" :value="i - 1">
+                                                            <div class="rating-button cursor-pointer" x-text="i - 1"></div>
+                                                        </label>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="flex items-center space-x-2 pt-2">
+                                                <input 
+                                                    type="checkbox"
+                                                    x-model="question.required"
+                                                    id="required"
+                                                    class="rounded-sm"
+                                                />
+                                                <label for="required" class="text-sm">Required question</label>
                                             </div>
                                         </div>
                                     </div>
-                                }
-                            </div>
-                            
-                            <div class="flex justify-end space-x-4 mt-8">
-                                <button type="button" class="preview-button bg-secondary text-secondary-foreground hover:bg-accent hover:text-accent-foreground px-4 py-2 rounded-md">
-                                    Preview
-                                </button>
-                                <button type="submit" class="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md flex items-center">
-                                    <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16L21 8V19C21 20.1046 20.1046 21 19 21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M17 21V13H7V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M7 3V8H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                    Save Survey
-                                </button>
-                                @if (!string.IsNullOrEmpty(Model.Id))
-                                {
-                                    <button type="button" class="share-button bg-secondary text-secondary-foreground hover:bg-accent hover:text-accent-foreground px-4 py-2 rounded-md flex items-center">
-                                        <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M18 8C19.6569 8 21 6.65685 21 5C21 3.34315 19.6569 2 18 2C16.3431 2 15 3.34315 15 5C15 6.65685 16.3431 8 18 8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            <path d="M6 15C7.65685 15 9 13.6569 9 12C9 10.3431 7.65685 9 6 9C4.34315 9 3 10.3431 3 12C3 13.6569 4.34315 15 6 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            <path d="M18 22C19.6569 22 21 20.6569 21 19C21 17.3431 19.6569 16 18 16C16.3431 16 15 17.3431 15 19C15 20.6569 16.3431 22 18 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            <path d="M8.59 13.51L15.42 17.49" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            <path d="M15.41 6.51L8.59 10.49" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                        Share Survey
-                                    </button>
-                                }
+                                </template>
                             </div>
                         </div>
-                    </form>
+                        
+                        <div class="flex justify-end space-x-4 mt-8">
+                            <button 
+                                class="border border-gray-300 bg-white hover:bg-gray-50 px-4 py-2 rounded-md"
+                                x-on:click="activeTab = 'preview'">
+                                Preview
+                            </button>
+                            <button 
+                                class="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors flex items-center"
+                                x-on:click="saveSurvey()">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z" />
+                                </svg>
+                                Save Survey
+                            </button>
+                            <button 
+                                x-show="surveyId"
+                                class="bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors flex items-center"
+                                x-on:click="dialogOpen = true">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+                                </svg>
+                                Share Survey
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            
-            <div x-show="activeTab === 'delivery'" class="tab-content animate-fade-in">
-                <div class="grid gap-8">
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Email Delivery Configuration</h2>
-                        </div>
-                        <div class="card-content space-y-6">
-                            <div>
-                                <h3 class="text-lg font-medium mb-4">Delivery Method</h3>
-                                <div class="space-y-3">
-                                    <div class="flex items-start space-x-2">
-                                        <input type="radio" id="manual-delivery" name="delivery-type" value="manual" class="mt-1" checked />
-                                        <div class="grid gap-1.5">
-                                            <label for="manual-delivery" class="font-medium">Manual Sending</label>
-                                            <p class="text-sm text-muted-foreground">
-                                                Send surveys manually when needed
-                                            </p>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="flex items-start space-x-2">
-                                        <input type="radio" id="scheduled-delivery" name="delivery-type" value="scheduled" class="mt-1" />
-                                        <div class="grid gap-1.5">
-                                            <label for="scheduled-delivery" class="font-medium">Scheduled</label>
-                                            <p class="text-sm text-muted-foreground">
-                                                Send surveys on a regular schedule (daily, weekly, monthly)
-                                            </p>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="flex items-start space-x-2">
-                                        <input type="radio" id="triggered-delivery" name="delivery-type" value="triggered" class="mt-1" />
-                                        <div class="grid gap-1.5">
-                                            <label for="triggered-delivery" class="font-medium">Event Triggered</label>
-                                            <p class="text-sm text-muted-foreground">
-                                                Send surveys when specific events occur (ticket closed, purchase completed)
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
+                
+                <div class="tab-content" x-show="activeTab === 'delivery'">
+                    <div class="grid gap-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">Email Delivery Configuration</h2>
                             </div>
-                            
-                            <hr class="border-t border-border" />
-                            
-                            <div>
-                                <h3 class="text-lg font-medium mb-4">Recipient Emails</h3>
-                                <div class="flex space-x-2 mb-4">
-                                    <input type="email" id="email-input" placeholder="Add email address" class="flex-1 px-4 py-2 border rounded-md" />
-                                    <button type="button" id="add-email" class="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md">Add</button>
-                                </div>
-
-                                <div class="flex space-x-2 mb-4">
-                                    <button type="button" id="toggle-customers" class="border border-input bg-background hover:bg-accent hover:text-accent-foreground px-4 py-2 rounded-md flex-1 flex items-center justify-center">
-                                        <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            <path d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            <path d="M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            <path d="M16 3.13C16.8604 3.35031 17.623 3.85071 18.1676 4.55232C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89318 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                        Select from Customers
-                                    </button>
-                                </div>
-                                
-                                <div id="customer-selector" class="hidden border rounded-md p-4 mb-4 bg-background">
-                                    <div class="flex justify-between items-center mb-3">
-                                        <h4 class="font-medium">Customer Selection</h4>
-                                        <div class="flex space-x-2">
-                                            <button type="button" id="select-all" class="text-xs border border-input bg-background hover:bg-accent hover:text-accent-foreground px-2 py-1 rounded-md flex items-center">
-                                                <svg class="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                                </svg>
-                                                Select All
-                                            </button>
-                                            <button type="button" id="deselect-all" class="text-xs border border-input bg-background hover:bg-accent hover:text-accent-foreground px-2 py-1 rounded-md flex items-center">
-                                                <svg class="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                                </svg>
-                                                Deselect All
-                                            </button>
+                            <div class="card-content space-y-6">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Delivery Method</label>
+                                    <div class="space-y-3">
+                                        <div class="flex items-start space-x-3">
+                                            <input 
+                                                type="radio" 
+                                                id="delivery-manual" 
+                                                value="manual" 
+                                                x-model="deliveryConfig.type"
+                                                class="mt-1" 
+                                            />
+                                            <div>
+                                                <label for="delivery-manual" class="block font-medium">Manual</label>
+                                                <p class="text-sm text-muted-foreground">Send surveys only when you click "Send Now"</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-start space-x-3">
+                                            <input 
+                                                type="radio" 
+                                                id="delivery-scheduled" 
+                                                value="scheduled" 
+                                                x-model="deliveryConfig.type"
+                                                class="mt-1" 
+                                            />
+                                            <div>
+                                                <label for="delivery-scheduled" class="block font-medium">Scheduled</label>
+                                                <p class="text-sm text-muted-foreground">Send surveys on a recurring schedule</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-start space-x-3">
+                                            <input 
+                                                type="radio" 
+                                                id="delivery-trigger" 
+                                                value="trigger" 
+                                                x-model="deliveryConfig.type"
+                                                class="mt-1" 
+                                            />
+                                            <div>
+                                                <label for="delivery-trigger" class="block font-medium">Event Triggered</label>
+                                                <p class="text-sm text-muted-foreground">Send surveys when specific events occur</p>
+                                            </div>
                                         </div>
                                     </div>
-                                    
-                                    <input type="text" id="customer-filter" placeholder="Filter customers..." class="w-full px-4 py-2 border rounded-md mb-3" />
-                                    
-                                    <div class="max-h-60 overflow-auto border rounded-md" id="customer-list">
-                                        <!-- Customer list will be populated by JavaScript -->
-                                    </div>
                                 </div>
                                 
-                                <div id="email-recipients" class="border rounded-md p-4 mb-4 bg-background hidden">
-                                    <button type="button" id="toggle-recipients" class="w-full flex justify-between items-center mb-3 border border-input bg-background hover:bg-accent hover:text-accent-foreground px-4 py-2 rounded-md">
-                                        <span class="font-medium">Selected Recipients (<span id="recipient-count">0</span>)</span>
-                                        <svg id="recipients-chevron" class="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                    </button>
-                                    
-                                    <div id="recipients-list" class="space-y-2 mt-4 max-h-60 overflow-auto hidden">
-                                        <!-- Recipients will be populated by JavaScript -->
-                                    </div>
-                                </div>
-                                
-                                <p id="no-recipients" class="text-sm text-muted-foreground mb-4">No recipients added yet</p>
-                            </div>
-                            
-                            <div id="schedule-config" class="hidden">
-                                <hr class="border-t border-border" />
-                                
-                                <div class="space-y-4">
-                                    <h3 class="text-lg font-medium">Schedule Configuration</h3>
-                                    
-                                    <div class="space-y-4">
+                                <div x-show="deliveryConfig.type === 'scheduled'">
+                                    <label class="block text-sm font-medium mb-2">Schedule Settings</label>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label for="frequency" class="block text-sm font-medium mb-1">Frequency</label>
-                                            <select id="frequency" class="w-full px-4 py-2 border rounded-md">
+                                            <label class="block text-sm mb-1">Frequency</label>
+                                            <select 
+                                                x-model="deliveryConfig.schedule.frequency"
+                                                class="w-full">
                                                 <option value="daily">Daily</option>
                                                 <option value="weekly">Weekly</option>
-                                                <option value="monthly" selected>Monthly</option>
+                                                <option value="monthly">Monthly</option>
                                             </select>
                                         </div>
-                                        
-                                        <div id="day-of-week-container" class="hidden">
-                                            <label for="day-of-week" class="block text-sm font-medium mb-1">Day of Week</label>
-                                            <select id="day-of-week" class="w-full px-4 py-2 border rounded-md">
-                                                <option value="1">Monday</option>
-                                                <option value="2">Tuesday</option>
-                                                <option value="3">Wednesday</option>
-                                                <option value="4">Thursday</option>
-                                                <option value="5">Friday</option>
-                                                <option value="6">Saturday</option>
-                                                <option value="0">Sunday</option>
+                                        <div x-show="deliveryConfig.schedule.frequency === 'monthly'">
+                                            <label class="block text-sm mb-1">Day of Month</label>
+                                            <select 
+                                                x-model="deliveryConfig.schedule.dayOfMonth"
+                                                class="w-full">
+                                                <template x-for="i in 31" :key="i">
+                                                    <option x-bind:value="i" x-text="i"></option>
+                                                </template>
                                             </select>
                                         </div>
-                                        
-                                        <div id="day-of-month-container">
-                                            <label for="day-of-month" class="block text-sm font-medium mb-1">Day of Month</label>
-                                            <select id="day-of-month" class="w-full px-4 py-2 border rounded-md">
-                                                @for (int day = 1; day <= 31; day++)
-                                                {
-                                                    <option value="@day">@day</option>
-                                                }
-                                            </select>
-                                        </div>
-                                        
                                         <div>
-                                            <label for="time" class="block text-sm font-medium mb-1">Time of Day</label>
-                                            <input type="time" id="time" value="09:00" class="w-full px-4 py-2 border rounded-md" />
+                                            <label class="block text-sm mb-1">Time</label>
+                                            <input 
+                                                type="time" 
+                                                x-model="deliveryConfig.schedule.time"
+                                                class="w-full"
+                                            />
                                         </div>
-                                        
+                                    </div>
+                                </div>
+                                
+                                <div x-show="deliveryConfig.type === 'trigger'">
+                                    <label class="block text-sm font-medium mb-2">Trigger Settings</label>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label class="block text-sm font-medium mb-1">Start Date</label>
-                                            <button type="button" id="date-picker" class="w-full flex justify-start items-center border border-input bg-background hover:bg-accent hover:text-accent-foreground px-4 py-2 rounded-md">
-                                                <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                                    <path d="M16 2V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                                    <path d="M8 2V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                                    <path d="M3 10H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                                </svg>
-                                                <span id="selected-date">Pick a date</span>
+                                            <label class="block text-sm mb-1">Trigger Event</label>
+                                            <select 
+                                                x-model="deliveryConfig.trigger.type"
+                                                class="w-full">
+                                                <option value="ticket-closed">Ticket Closed</option>
+                                                <option value="new-customer">New Customer</option>
+                                                <option value="purchase-complete">Purchase Complete</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm mb-1">Delay (Hours)</label>
+                                            <input 
+                                                type="number" 
+                                                x-model="deliveryConfig.trigger.delayHours"
+                                                min="0"
+                                                class="w-full"
+                                            />
+                                        </div>
+                                        <div class="col-span-2">
+                                            <div class="flex items-center space-x-2">
+                                                <input 
+                                                    type="checkbox"
+                                                    x-model="deliveryConfig.trigger.sendAutomatically"
+                                                    id="send-automatically"
+                                                    class="rounded-sm"
+                                                />
+                                                <label for="send-automatically">
+                                                    Send automatically when triggered (without review)
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Recipients</label>
+                                    <div class="space-y-3">
+                                        <div class="flex">
+                                            <input 
+                                                type="email" 
+                                                x-model="newEmail"
+                                                placeholder="Enter email address"
+                                                class="rounded-l-md w-full"
+                                            />
+                                            <button 
+                                                class="bg-primary text-white px-4 py-2 rounded-r-md hover:bg-primary/90"
+                                                x-on:click="addEmail()">
+                                                Add
                                             </button>
                                         </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div id="trigger-config" class="hidden">
-                                <hr class="border-t border-border" />
-                                
-                                <div class="space-y-4">
-                                    <h3 class="text-lg font-medium">Trigger Configuration</h3>
-                                    
-                                    <div>
-                                        <label for="trigger-type" class="block text-sm font-medium mb-1">Trigger Event</label>
-                                        <select id="trigger-type" class="w-full px-4 py-2 border rounded-md">
-                                            <option value="ticket-closed">Ticket Closed</option>
-                                            <option value="purchase-completed">Purchase Completed</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <div>
-                                        <label for="delay" class="block text-sm font-medium mb-1">Delay (hours)</label>
-                                        <input type="number" id="delay" value="24" min="0" class="w-full px-4 py-2 border rounded-md" placeholder="24" />
-                                        <p class="text-xs text-muted-foreground mt-1">
-                                            Time to wait after the trigger event before sending the survey
-                                        </p>
-                                    </div>
-
-                                    <div class="flex items-center space-x-2">
-                                        <input type="checkbox" id="auto-send" class="h-4 w-4" />
-                                        <label for="auto-send" class="cursor-pointer">
-                                            <div class="font-medium">Send automatically</div>
-                                            <p class="text-xs text-muted-foreground">
-                                                Automatically send surveys when the ticket is closed
-                                            </p>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="flex justify-end mt-4">
-                                <button type="button" id="send-emails" class="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md flex items-center" disabled>
-                                    <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M22 6L12 13L2 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                    Send Now
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div x-show="activeTab === 'settings'" class="tab-content animate-fade-in">
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">Survey Settings</h2>
-                    </div>
-                    <div class="card-content space-y-6">
-                        <div>
-                            <h3 class="text-lg font-medium mb-4">Data Collection</h3>
-                            <div class="space-y-4">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <h4 class="font-medium">Allow anonymous responses</h4>
-                                        <p class="text-sm text-muted-foreground">Respondents can submit without identifying themselves</p>
-                                    </div>
-                                    <div class="flex items-center h-6">
-                                        <input type="checkbox" id="anonymous" class="mr-2" checked />
-                                        <label for="anonymous">Enable</label>
-                                    </div>
-                                </div>
-                                
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <h4 class="font-medium">Multiple submissions</h4>
-                                        <p class="text-sm text-muted-foreground">Allow respondents to submit multiple times</p>
-                                    </div>
-                                    <div class="flex items-center h-6">
-                                        <input type="checkbox" id="multiple" class="mr-2" />
-                                        <label for="multiple">Enable</label>
+                                        
+                                        <div x-show="deliveryConfig.emailAddresses.length > 0" class="border rounded-md overflow-hidden">
+                                            <div class="max-h-40 overflow-y-auto">
+                                                <template x-for="(email, index) in deliveryConfig.emailAddresses" :key="index">
+                                                    <div class="flex items-center justify-between px-3 py-2 border-b last:border-0">
+                                                        <span x-text="email"></span>
+                                                        <button 
+                                                            class="text-gray-500 hover:text-destructive"
+                                                            x-on:click="removeEmail(index)">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         
-                        <div>
-                            <h3 class="text-lg font-medium mb-4">Display Options</h3>
-                            <div class="space-y-4">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <h4 class="font-medium">Show progress bar</h4>
-                                        <p class="text-sm text-muted-foreground">Display completion progress to respondents</p>
+                        <div class="flex justify-end">
+                            <button 
+                                class="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors flex items-center"
+                                x-on:click="sendSurveyEmails()"
+                                x-bind:disabled="deliveryConfig.emailAddresses.length === 0">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                                </svg>
+                                Send Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-content" x-show="activeTab === 'settings'">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Survey Settings</h2>
+                        </div>
+                        <div class="card-content space-y-6">
+                            <div>
+                                <h3 class="text-lg font-medium mb-4">Data Collection</h3>
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h4 class="font-medium">Allow anonymous responses</h4>
+                                            <p class="text-sm text-muted-foreground">Respondents can submit without identifying themselves</p>
+                                        </div>
+                                        <div class="flex items-center h-6">
+                                            <input type="checkbox" id="anonymous" class="mr-2" checked />
+                                            <label for="anonymous">Enable</label>
+                                        </div>
                                     </div>
-                                    <div class="flex items-center h-6">
-                                        <input type="checkbox" id="progress" class="mr-2" checked />
-                                        <label for="progress">Enable</label>
+                                    
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h4 class="font-medium">Multiple submissions</h4>
+                                            <p class="text-sm text-muted-foreground">Allow respondents to submit multiple times</p>
+                                        </div>
+                                        <div class="flex items-center h-6">
+                                            <input type="checkbox" id="multiple" class="mr-2" />
+                                            <label for="multiple">Enable</label>
+                                        </div>
                                     </div>
                                 </div>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-lg font-medium mb-4">Display Options</h3>
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h4 class="font-medium">Show progress bar</h4>
+                                            <p class="text-sm text-muted-foreground">Display completion progress to respondents</p>
+                                        </div>
+                                        <div class="flex items-center h-6">
+                                            <input type="checkbox" id="progress" class="mr-2" checked />
+                                            <label for="progress">Enable</label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h4 class="font-medium">Show question numbers</h4>
+                                            <p class="text-sm text-muted-foreground">Display question numbers to respondents</p>
+                                        </div>
+                                        <div class="flex items-center h-6">
+                                            <input type="checkbox" id="numbers" class="mr-2" checked />
+                                            <label for="numbers">Enable</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-content" x-show="activeTab === 'preview'">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Preview Your Survey</h2>
+                        </div>
+                        <div class="card-content">
+                            <div class="max-w-3xl mx-auto border rounded-lg p-6 bg-white shadow-sm">
+                                <div class="mb-8">
+                                    <h2 class="text-2xl font-bold mb-2" x-text="surveyTitle || 'Untitled Survey'"></h2>
+                                    <p class="text-muted-foreground" x-show="surveyDescription" x-text="surveyDescription"></p>
+                                </div>
                                 
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <h4 class="font-medium">Show question numbers</h4>
-                                        <p class="text-
+                                <div class="space-y-8">
+                                    <template x-for="(question, index) in questions" :key="question.id">
+                                        <div class="border-b pb-6 last:border-0">
+                                            <div class="mb-3">
+                                                <h3 class="text-lg font-medium">
+                                                    <span x-text="index + 1 + '. '"></span>
+                                                    <span x-text="question.title || 'Untitled Question'"></span>
+                                                    <span x-show="question.required" class="text-red-500 ml-1">*</span>
+                                                </h3>
+                                                <p x-show="question.description" class="text-sm text-muted-foreground mt-1" x-text="question.description"></p>
+                                            </div>
+                                            
+                                            <div class="mt-3">
+                                                <div x-show="question.type === 'single-choice'" class="space-y-2">
+                                                    <template x-for="(option, optIndex) in question.options" :key="optIndex">
+                                                        <div class="flex items-center">
+                                                            <input 
+                                                                type="radio" 
+                                                                x-bind:name="'q' + index" 
+                                                                x-bind:id="'q' + index + '-o' + optIndex" 
+                                                                class="mr-2"
+                                                            />
+                                                            <label x-bind:for="'q' + index + '-o' + optIndex" x-text="option"></label>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                                
+                                                <div x-show="question.type === 'multiple-choice'" class="space-y-2">
+                                                    <template x-for="(option, optIndex) in question.options" :key="optIndex">
+                                                        <div class="flex items-center">
+                                                            <input 
+                                                                type="checkbox" 
+                                                                x-bind:id="'q' + index + '-o' + optIndex" 
+                                                                class="mr-2"
+                                                            />
+                                                            <label x-bind:for="'q' + index + '-o' + optIndex" x-text="option"></label>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                                
+                                                <div x-show="question.type === 'text'">
+                                                    <textarea 
+                                                        class="w-full rounded-md border border-input bg-background px-3 py-2 min-h-[100px]" 
+                                                        placeholder="Your answer"
+                                                    ></textarea>
+                                                </div>
+                                                
+                                                <div x-show="question.type === 'rating'" class="mt-4">
+                                                    <div class="star-rating">
+                                                        <template x-for="i in 5" :key="i">
+                                                            <label class="star-rating-label">
+                                                                <input type="radio" x-bind:name="'rating-' + index" class="sr-only" :value="i">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 cursor-pointer text-gray-300 hover:text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                                </svg>
+                                                            </label>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div x-show="question.type === 'nps'" class="mt-4">
+                                                    <div class="rating-scale">
+                                                        <template x-for="i in 11" :key="i - 1">
+                                                            <label class="nps-rating-label">
+                                                                <input type="radio" x-bind:name="'nps-' + index" class="sr-only" :value="i - 1">
+                                                                <div class="rating-button cursor-pointer" x-text="i - 1"></div>
+                                                            </label>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div x-show="question.type === 'dropdown'" class="mt-2">
+                                                    <select class="w-full p-2 border rounded-md">
+                                                        <option value="">Select an option</option>
+                                                        <template x-for="(option, optIndex) in question.options" :key="optIndex">
+                                                            <option x-bind:value="optIndex" x-text="option"></option>
+                                                        </template>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                                
+                                <div class="mt-8 flex justify-end">
+                                    <button class="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90">
+                                        Submit Responses
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end mt-6">
+                        <button 
+                            class="border border-gray-300 bg-white hover:bg-gray-50 px-4 py-2 rounded-md"
+                            x-on:click="activeTab = 'design'">
+                            Return to Editing
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Share Dialog -->
+    <div id="share-dialog" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 transition-opacity duration-300" 
+         x-bind:class="{ 'hidden': !dialogOpen }">
+        <div class="bg-white rounded-lg max-w-md w-full p-6" @click.outside="dialogOpen = false">
+            <div class="mb-4">
+                <h3 class="text-lg font-semibold">Share Survey</h3>
+                <p class="text-muted-foreground text-sm">
+                    Your survey is ready to be shared with respondents. Use the link below.
+                </p>
+            </div>
+            <div class="flex items-center space-x-2 mt-4">
+                <div class="bg-muted p-2 rounded-md flex-1 overflow-hidden">
+                    <p class="text-sm font-mono truncate" x-text="window.location.origin + '/SurveyResponses/Take/' + surveyId"></p>
+                </div>
+                <button 
+                    class="border border-gray-300 bg-white hover:bg-gray-50 p-2 rounded-md"
+                    x-on:click="copySurveyLink()">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M8 2a1 1 0 000 2h2a1 1 0 100-2H8z" />
+                        <path d="M3 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6h-4.586l1.293-1.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L10.414 13H15v3a2 2 0 01-2 2H5a2 2 0 01-2-2V5zM15 11h2a1 1 0 110 2h-2v-2z" />
+                    </svg>
+                </button>
+            </div>
+            <div class="mt-6 flex justify-end space-x-3">
+                <a href="#" 
+                   x-bind:href="'/SurveyResponses/Take/' + surveyId"
+                   class="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90">
+                    Open Survey
+                </a>
+                <button 
+                    class="border border-gray-300 bg-white hover:bg-gray-50 px-4 py-2 rounded-md"
+                    x-on:click="dialogOpen = false">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add star rating functionality
+            const starLabels = document.querySelectorAll('.star-rating-label');
+            starLabels.forEach(label => {
+                const input = label.querySelector('input');
+                const svg = label.querySelector('svg');
+                
+                input.addEventListener('change', function() {
+                    // Update all stars up to the selected one
+                    const rating = parseInt(this.value);
+                    const allStars = this.closest('.star-rating').querySelectorAll('.star-rating-label');
+                    
+                    allStars.forEach((star, index) => {
+                        star.querySelector('svg').classList.remove('text-yellow-400');
+                        star.querySelector('svg').classList.add('text-gray-300');
+                        
+                        if (index < rating) {
+                            star.querySelector('svg').classList.remove('text-gray-300');
+                            star.querySelector('svg').classList.add('text-yellow-400');
+                        }
+                    });
+                });
+            });
+            
+            // Add NPS rating functionality
+            const npsLabels = document.querySelectorAll('.nps-rating-label');
+            npsLabels.forEach(label => {
+                const input = label.querySelector('input');
+                const div = label.querySelector('div');
+                
+                input.addEventListener('change', function() {
+                    // Update the selected rating button
+                    const rating = parseInt(this.value);
+                    const allButtons = this.closest('.rating-scale').querySelectorAll('.nps-rating-label');
+                    
+                    allButtons.forEach((btn, index) => {
+                        btn.querySelector('div').classList.remove('bg-primary', 'text-white', 'border-primary');
+                        
+                        if (index === rating) {
+                            btn.querySelector('div').classList.add('bg-primary', 'text-white', 'border-primary');
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+}

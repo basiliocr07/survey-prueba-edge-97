@@ -25,7 +25,7 @@ namespace SurveyApp.Web.Models
         public bool Required { get; set; } = true;
         public string Description { get; set; }
         public List<string> Options { get; set; } = new List<string>();
-        public QuestionSettingsViewModel Settings { get; set; }
+        public QuestionSettingsViewModel Settings { get; set; } = new QuestionSettingsViewModel();
     }
 
     public class QuestionSettingsViewModel

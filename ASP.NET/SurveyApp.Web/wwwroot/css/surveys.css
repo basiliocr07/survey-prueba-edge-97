@@ -244,3 +244,98 @@ input:focus, select:focus, textarea:focus {
 #share-dialog:not(.hidden) {
     opacity: 1;
 }
+
+/* Alpine.js animations */
+.animate-slide-down {
+    animation: slideDown 0.2s ease-out;
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Additional CSS for Survey Components */
+.question-card {
+    border: 1px solid rgb(229, 231, 235);
+    border-radius: 0.5rem;
+    background-color: white;
+    margin-bottom: 1rem;
+    transition: box-shadow 0.2s ease;
+}
+
+.question-card:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.question-card-header {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgb(229, 231, 235);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.question-card-body {
+    padding: 1rem;
+}
+
+.rating-scale {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.rating-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.rating-button {
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgb(209, 213, 219);
+    border-radius: 0.375rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.rating-button:hover, .rating-button.selected {
+    background-color: rgb(59, 130, 246);
+    color: white;
+    border-color: rgb(59, 130, 246);
+}
+
+.star-rating {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.star-button {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: rgb(209, 213, 219);
+    transition: color 0.2s ease;
+}
+
+.star-button:hover, .star-button.selected {
+    color: rgb(250, 204, 21);
+}
