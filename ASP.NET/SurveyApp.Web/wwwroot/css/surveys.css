@@ -91,3 +91,156 @@
     background-color: rgba(100, 116, 139, 0.1);
     color: rgb(100, 116, 139);
 }
+
+/* Card Styles */
+.card {
+    background-color: white;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    padding: 1.5rem 1.5rem 0.75rem 1.5rem;
+    border-bottom: none;
+}
+
+.card-content {
+    padding: 1.5rem;
+}
+
+.card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: rgb(17, 24, 39);
+}
+
+/* Tab Styles */
+.tabs-container {
+    width: 100%;
+}
+
+.tabs-list {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-bottom: 2rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.tab-trigger {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-align: center;
+    color: rgb(107, 114, 128);
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.tab-trigger:hover {
+    color: rgb(17, 24, 39);
+}
+
+.tab-trigger.active {
+    color: rgb(17, 24, 39);
+    border-bottom-color: rgb(59, 130, 246);
+}
+
+.tab-content {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Button Styles */
+button {
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.bg-primary {
+    background-color: rgb(59, 130, 246);
+    color: white;
+}
+
+.bg-primary:hover {
+    background-color: rgb(37, 99, 235);
+}
+
+.bg-secondary {
+    background-color: rgb(243, 244, 246);
+    color: rgb(31, 41, 55);
+}
+
+.bg-secondary:hover {
+    background-color: rgb(229, 231, 235);
+}
+
+/* Form Elements */
+input, select, textarea {
+    width: 100%;
+    padding: 0.5rem 1rem;
+    border: 1px solid rgb(209, 213, 219);
+    border-radius: 0.375rem;
+    background-color: white;
+    color: rgb(17, 24, 39);
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: rgb(59, 130, 246);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Question Builder */
+.question-builder {
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 0.75rem;
+    background-color: white;
+    margin-bottom: 1rem;
+}
+
+/* Star Rating */
+.star-rating-label svg {
+    transition: all 0.2s ease;
+}
+
+.star-rating-label input:checked + svg {
+    color: rgb(250, 204, 21) !important;
+}
+
+/* NPS Rating */
+.nps-rating-label div {
+    transition: all 0.2s ease;
+}
+
+.nps-rating-label input:checked + div {
+    background-color: rgb(59, 130, 246);
+    color: white;
+    border-color: rgb(59, 130, 246);
+}
+
+/* Dialog Styles */
+#share-dialog {
+    transition: opacity 0.3s ease;
+}
+
+#share-dialog.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#share-dialog:not(.hidden) {
+    opacity: 1;
+}
