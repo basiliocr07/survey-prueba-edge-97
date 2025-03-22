@@ -1,8 +1,4 @@
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 /* Tailwind classes we need to ensure are properly represented */
 .bg-primary\/10 {
     background-color: rgba(var(--primary-rgb), 0.1);

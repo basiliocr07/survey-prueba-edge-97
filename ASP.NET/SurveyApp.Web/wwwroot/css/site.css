@@ -1,7 +1,6 @@
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Import Tailwind CSS */
+@import url('tailwind_custom.css');
 
 :root {
     /* Base colors */
@@ -135,6 +134,3 @@ html, body {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
-
-/* Import surveys specific styles */
-@import url('surveys.css');
