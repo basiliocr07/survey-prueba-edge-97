@@ -11,10 +11,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container
 builder.Services.AddControllersWithViews();
 
-// Configure DbContext with SQLite
+// Configure DbContext with SQL Server
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(
-        builder.Configuration.GetConnectionString("SqliteConnection") ?? "Data Source=surveyapp.db"));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection") ?? "Server=(localdb)\\mssqllocaldb;Database=surveyappdb;Trusted_Connection=True;MultipleActiveResultSets=true"));
 
 // Register application and infrastructure services
 builder.Services.AddApplicationServices();
