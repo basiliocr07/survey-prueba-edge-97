@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Application.Interfaces;
 using SurveyApp.Domain.Models;
@@ -197,7 +196,7 @@ namespace SurveyApp.Web.Controllers
                             ? new TriggerSettingsViewModel
                             {
                                 Type = survey.DeliveryConfig.Trigger.Type,
-                                DelayHours = survey.DeliveyConfig.Trigger.DelayHours,
+                                DelayHours = survey.DeliveryConfig.Trigger.DelayHours,
                                 SendAutomatically = survey.DeliveryConfig.Trigger.SendAutomatically
                             }
                             : new TriggerSettingsViewModel()
