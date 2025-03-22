@@ -1,52 +1,91 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { FilePlus, BarChart3, Trash2, Edit, Eye } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { FilePlus, Edit, Eye, Trash2 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/layout/Navbar";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
-// Sample data - in a real app this would come from an API
-const fetchSurveys = async () => {
-  // This would be an API call in a real application
-  return [
-    {
-      id: "1",
-      title: "Customer Satisfaction Survey",
-      description: "Gather feedback about our customer service quality",
-      createdAt: "2023-10-15T12:00:00Z",
-      responses: 42,
-      completionRate: 78
-    },
-    {
-      id: "2",
-      title: "Product Feedback Survey",
-      description: "Help us improve our product offerings",
-      createdAt: "2023-09-22T15:30:00Z",
-      responses: 103,
-      completionRate: 89
-    },
-    {
-      id: "3",
-      title: "Website Usability Survey",
-      description: "Evaluate the user experience of our new website",
-      createdAt: "2023-11-05T09:15:00Z",
-      responses: 28,
-      completionRate: 65
-    }
-  ];
+// Define the Survey interface based on what we know exists in Supabase
+interface Survey {
+  id: string;
+  title: string;
+  description?: string;
+  questions: any[];
+  created_at: string;
+  responses?: number;
+  completionRate?: number;
+}
+
+// Function to fetch surveys from Supabase
+const fetchSurveys = async (): Promise<Survey[]> => {
+  const { data, error } = await supabase
+    .from('surveys')
+    .select('*');
+  
+  if (error) {
+    throw new Error(error.message);
+  }
+  
+  // Transform the data to include response metrics (this would be calculated from actual responses in a real app)
+  return data.map(survey => ({
+    ...survey,
+    responses: Math.floor(Math.random() * 100), // Placeholder for demo
+    completionRate: Math.floor(Math.random() * 100) // Placeholder for demo
+  }));
+};
+
+// Function to delete a survey
+const deleteSurvey = async (id: string) => {
+  const { error } = await supabase
+    .from('surveys')
+    .delete()
+    .eq('id', id);
+  
+  if (error) {
+    throw new Error(error.message);
+  }
+  
+  return true;
 };
 
 export default function Surveys() {
   const [filterActive, setFilterActive] = useState<string>("all");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   const { data: surveys = [], isLoading } = useQuery({
     queryKey: ['surveys'],
     queryFn: fetchSurveys
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteSurvey,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['surveys'] });
+      toast({
+        title: "Survey deleted",
+        description: "The survey has been successfully deleted.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to delete survey: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleDeleteSurvey = (id: string) => {
+    if (window.confirm("Are you sure you want to delete this survey?")) {
+      deleteMutation.mutate(id);
+    }
+  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -133,7 +172,7 @@ export default function Surveys() {
                             {survey.description}
                           </p>
                           <div className="flex items-center text-xs text-muted-foreground">
-                            <span>Created {formatDate(survey.createdAt)}</span>
+                            <span>Created {formatDate(survey.created_at)}</span>
                             <span className="mx-2">•</span>
                             <div className="flex items-center">
                               <div className="w-16 bg-secondary rounded-full h-1.5 mr-1">
@@ -147,13 +186,23 @@ export default function Surveys() {
                           </div>
                         </div>
                         <div className="flex space-x-1 ml-4">
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                          <Link to={`/survey/${survey.id}`}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                          <Link to={`/create?edit=${survey.id}`}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => handleDeleteSurvey(survey.id)}
+                            disabled={deleteMutation.isPending}
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
