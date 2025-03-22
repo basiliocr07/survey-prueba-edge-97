@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -15,6 +16,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Survey, SurveyResponseSubmission } from '@/types/surveyTypes';
 import StarRating from '@/components/survey/StarRating';
 import NPSRating from '@/components/survey/NPSRating';
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation } from "@tanstack/react-query";
 
 const formSchema = z.object({
   answers: z.record(z.union([
@@ -30,9 +33,6 @@ export default function TakeSurvey() {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const [survey, setSurvey] = useState<Survey | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userData, setUserData] = useState({
@@ -66,50 +66,82 @@ export default function TakeSurvey() {
         company
       });
     }
-    
-    const loadSurvey = () => {
-      try {
-        console.log("Loading survey with ID:", surveyId);
-        const savedSurveys = JSON.parse(localStorage.getItem('surveys') || '[]');
-        console.log("All surveys:", savedSurveys);
+  }, []);
+  
+  // Fetch survey from Supabase
+  const { data: survey, isLoading, error } = useQuery({
+    queryKey: ['survey', surveyId],
+    queryFn: async () => {
+      if (!surveyId) throw new Error('Survey ID is required');
+      
+      const { data, error } = await supabase
+        .from('surveys')
+        .select('*')
+        .eq('id', surveyId)
+        .single();
         
-        const foundSurvey = savedSurveys.find((s: Survey) => s.id === surveyId);
-        console.log("Found survey:", foundSurvey);
-        
-        if (foundSurvey) {
-          setSurvey(foundSurvey);
-          
-          const initialAnswers: Record<string, any> = {};
-          foundSurvey.questions.forEach(question => {
-            if (question.type === 'multiple-choice') {
-              initialAnswers[question.id] = [];
-            } else {
-              initialAnswers[question.id] = '';
-            }
-          });
-          
-          form.reset({ answers: initialAnswers });
+      if (error) throw error;
+      if (!data) throw new Error('Survey not found');
+      
+      return data as Survey;
+    },
+    onSuccess: (data) => {
+      // Initialize form with empty answers
+      const initialAnswers: Record<string, any> = {};
+      data.questions.forEach((question: any) => {
+        if (question.type === 'multiple-choice') {
+          initialAnswers[question.id] = [];
         } else {
-          console.error("Survey not found with ID:", surveyId);
-          setError('Survey not found');
+          initialAnswers[question.id] = '';
         }
+      });
+      
+      form.reset({ answers: initialAnswers });
+    }
+  });
+  
+  // Submit response mutation
+  const submitResponseMutation = useMutation({
+    mutationFn: async (responseData: SurveyResponseSubmission) => {
+      const { data, error } = await supabase
+        .from('survey_responses')
+        .insert([
+          {
+            survey_id: responseData.surveyId,
+            respondent_name: responseData.respondentName,
+            respondent_email: responseData.respondentEmail,
+            respondent_phone: responseData.respondentPhone,
+            respondent_company: responseData.respondentCompany,
+            answers: responseData.answers,
+            submitted_at: new Date().toISOString()
+          }
+        ])
+        .select();
         
-        setLoading(false);
-      } catch (err) {
-        console.error("Error loading survey:", err);
-        setError('Failed to load survey');
-        setLoading(false);
-      }
-    };
-    
-    loadSurvey();
-  }, [surveyId, form]);
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Thank you!",
+        description: "Your response has been submitted successfully",
+      });
+      setSubmitted(true);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to submit response: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive"
+      });
+    }
+  });
   
   const onSubmit = (data: FormValues) => {
     if (!survey) return;
     
-    const requiredQuestions = survey.questions.filter(q => q.required);
-    const missingRequiredAnswers = requiredQuestions.filter(q => {
+    const requiredQuestions = survey.questions.filter((q: any) => q.required);
+    const missingRequiredAnswers = requiredQuestions.filter((q: any) => {
       const answer = data.answers[q.id];
       if (Array.isArray(answer)) {
         return answer.length === 0;
@@ -136,20 +168,10 @@ export default function TakeSurvey() {
       submittedAt: new Date().toISOString()
     };
     
-    console.log('Saving survey response:', submission);
-    
-    const savedResponses = JSON.parse(localStorage.getItem('surveyResponses') || '[]');
-    localStorage.setItem('surveyResponses', JSON.stringify([...savedResponses, submission]));
-    
-    toast({
-      title: "Thank you!",
-      description: "Your response has been submitted successfully",
-    });
-    
-    setSubmitted(true);
+    submitResponseMutation.mutate(submission);
   };
   
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Navbar />
@@ -219,6 +241,13 @@ export default function TakeSurvey() {
     );
   }
   
+  // Process questions from the survey data format
+  const questions = Array.isArray(survey.questions) 
+    ? survey.questions 
+    : typeof survey.questions === 'object' 
+      ? Object.values(survey.questions) 
+      : [];
+  
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
@@ -226,8 +255,8 @@ export default function TakeSurvey() {
       <main className="flex-1 w-full max-w-4xl mx-auto pt-24 px-6 pb-16">
         <Card className="w-full mb-8">
           <CardHeader>
-            <CardTitle className="text-2xl">{survey?.title}</CardTitle>
-            {survey?.description && (
+            <CardTitle className="text-2xl">{survey.title}</CardTitle>
+            {survey.description && (
               <p className="text-muted-foreground mt-2">{survey.description}</p>
             )}
           </CardHeader>
@@ -236,7 +265,7 @@ export default function TakeSurvey() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="space-y-6">
-              {survey?.questions.map((question, index) => (
+              {questions.map((question: any, index) => (
                 <Card key={question.id} className="w-full">
                   <CardHeader>
                     <CardTitle className="text-base font-medium flex items-start">
@@ -270,7 +299,7 @@ export default function TakeSurvey() {
                               
                               {question.type === 'single-choice' && question.options && (
                                 <div className="space-y-2">
-                                  {question.options.map((option, i) => (
+                                  {question.options.map((option: string, i: number) => (
                                     <div key={i} className="flex items-center">
                                       <input
                                         type="radio"
@@ -289,7 +318,7 @@ export default function TakeSurvey() {
                               
                               {question.type === 'multiple-choice' && question.options && (
                                 <div className="space-y-2">
-                                  {question.options.map((option, i) => {
+                                  {question.options.map((option: string, i: number) => {
                                     const values = field.value as string[] || [];
                                     return (
                                       <div key={i} className="flex items-center">
@@ -343,10 +372,10 @@ export default function TakeSurvey() {
             
             <div className="mt-8 flex justify-end">
               <Button variant="outline" type="button" className="mr-4" onClick={() => navigate('/')}>
-                Cancel
+                Cancelar
               </Button>
-              <Button type="submit">
-                Submit Responses
+              <Button type="submit" disabled={submitResponseMutation.isPending}>
+                {submitResponseMutation.isPending ? 'Enviando...' : 'Enviar Respuestas'}
               </Button>
             </div>
           </form>
