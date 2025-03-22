@@ -13,7 +13,7 @@ import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Survey, SurveyResponseSubmission } from '@/types/surveyTypes';
+import { Survey, SurveyQuestion, SurveyResponseSubmission } from '@/types/surveyTypes';
 import StarRating from '@/components/survey/StarRating';
 import NPSRating from '@/components/survey/NPSRating';
 import { supabase } from "@/integrations/supabase/client";
@@ -85,15 +85,35 @@ export default function TakeSurvey() {
       if (!data) throw new Error('Survey not found');
       
       // Transform Supabase data to match Survey interface
+      // Parse the questions from Json to SurveyQuestion[]
+      const parsedQuestions: SurveyQuestion[] = 
+        Array.isArray(data.questions) 
+          ? data.questions.map((q: any) => ({
+              id: q.id || '',
+              title: q.title || '',
+              description: q.description,
+              type: q.type || '',
+              required: q.required || false,
+              options: q.options,
+              settings: q.settings
+            }))
+          : typeof data.questions === 'object' 
+            ? Object.values(data.questions).map((q: any) => ({
+                id: q.id || '',
+                title: q.title || '',
+                description: q.description,
+                type: q.type || '',
+                required: q.required || false,
+                options: q.options,
+                settings: q.settings
+              }))
+            : [];
+      
       const transformedData: Survey = {
         id: data.id,
         title: data.title,
         description: data.description || undefined,
-        questions: Array.isArray(data.questions) 
-          ? data.questions 
-          : typeof data.questions === 'object' 
-            ? Object.values(data.questions) 
-            : [],
+        questions: parsedQuestions,
         createdAt: data.created_at
       };
       
@@ -106,7 +126,7 @@ export default function TakeSurvey() {
     if (survey) {
       // Initialize form with empty answers
       const initialAnswers: Record<string, any> = {};
-      survey.questions.forEach((question: any) => {
+      survey.questions.forEach((question: SurveyQuestion) => {
         if (question.type === 'multiple-choice') {
           initialAnswers[question.id] = [];
         } else {
@@ -260,11 +280,7 @@ export default function TakeSurvey() {
   }
   
   // Process questions from the survey data format
-  const questions = Array.isArray(survey.questions) 
-    ? survey.questions 
-    : typeof survey.questions === 'object' 
-      ? Object.values(survey.questions) 
-      : [];
+  const questions = survey?.questions || [];
   
   return (
     <div className="min-h-screen flex flex-col bg-background">
