@@ -18,6 +18,7 @@ import StarRating from '@/components/survey/StarRating';
 import NPSRating from '@/components/survey/NPSRating';
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { Json } from '@/integrations/supabase/types';
 
 const formSchema = z.object({
   answers: z.record(z.union([
@@ -83,12 +84,29 @@ export default function TakeSurvey() {
       if (error) throw error;
       if (!data) throw new Error('Survey not found');
       
-      return data as Survey;
-    },
-    onSuccess: (data) => {
+      // Transform Supabase data to match Survey interface
+      const transformedData: Survey = {
+        id: data.id,
+        title: data.title,
+        description: data.description || undefined,
+        questions: Array.isArray(data.questions) 
+          ? data.questions 
+          : typeof data.questions === 'object' 
+            ? Object.values(data.questions) 
+            : [],
+        createdAt: data.created_at
+      };
+      
+      return transformedData;
+    }
+  });
+  
+  // Initialize form when survey data is loaded
+  useEffect(() => {
+    if (survey) {
       // Initialize form with empty answers
       const initialAnswers: Record<string, any> = {};
-      data.questions.forEach((question: any) => {
+      survey.questions.forEach((question: any) => {
         if (question.type === 'multiple-choice') {
           initialAnswers[question.id] = [];
         } else {
@@ -98,7 +116,7 @@ export default function TakeSurvey() {
       
       form.reset({ answers: initialAnswers });
     }
-  });
+  }, [survey, form]);
   
   // Submit response mutation
   const submitResponseMutation = useMutation({
