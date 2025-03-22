@@ -24,6 +24,8 @@ import {
 import { useNavigate } from 'react-router-dom';
 import StarRating from '@/components/survey/StarRating';
 import NPSRating from '@/components/survey/NPSRating';
+import { supabase } from "@/integrations/supabase/client";
+import { useMutation } from "@tanstack/react-query";
 
 export default function CreateSurvey() {
   const { toast } = useToast();
@@ -55,6 +57,48 @@ export default function CreateSurvey() {
       type: 'ticket-closed',
       delayHours: 24,
       sendAutomatically: false
+    }
+  });
+
+  // Create a mutation for saving surveys
+  const saveSurveyMutation = useMutation({
+    mutationFn: async (surveyData: any) => {
+      if (surveyId) {
+        // Update existing survey
+        const { data, error } = await supabase
+          .from('surveys')
+          .update(surveyData)
+          .eq('id', surveyId)
+          .select();
+          
+        if (error) throw error;
+        return data[0];
+      } else {
+        // Insert new survey
+        const { data, error } = await supabase
+          .from('surveys')
+          .insert(surveyData)
+          .select();
+          
+        if (error) throw error;
+        return data[0];
+      }
+    },
+    onSuccess: (data) => {
+      setSurveyId(data.id);
+      setDialogOpen(true);
+      
+      toast({
+        title: "Encuesta guardada",
+        description: "Tu encuesta ha sido guardada exitosamente"
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `No se pudo guardar la encuesta: ${error instanceof Error ? error.message : 'Error desconocido'}`,
+        variant: "destructive"
+      });
     }
   });
 
@@ -107,8 +151,8 @@ export default function CreateSurvey() {
   const saveSurvey = () => {
     if (!surveyTitle.trim()) {
       toast({
-        title: "Missing title",
-        description: "Please provide a title for your survey",
+        title: "Título requerido",
+        description: "Por favor proporciona un título para tu encuesta",
         variant: "destructive"
       });
       return;
@@ -117,40 +161,21 @@ export default function CreateSurvey() {
     const hasEmptyQuestionTitles = questions.some(q => !q.title.trim());
     if (hasEmptyQuestionTitles) {
       toast({
-        title: "Incomplete questions",
-        description: "Please provide a title for all questions",
+        title: "Preguntas incompletas",
+        description: "Por favor proporciona un título para todas las preguntas",
         variant: "destructive"
       });
       return;
     }
     
-    const newSurveyId = surveyId || uuidv4();
-    setSurveyId(newSurveyId);
-    
-    const survey = {
-      id: newSurveyId,
+    const surveyData = {
       title: surveyTitle,
       description: surveyDescription,
-      questions,
-      deliveryConfig,
-      createdAt: new Date().toISOString()
+      questions: questions,
+      delivery_config: deliveryConfig
     };
     
-    const savedSurveys = JSON.parse(localStorage.getItem('surveys') || '[]');
-    const updatedSurveys = surveyId 
-      ? savedSurveys.map((s: any) => s.id === surveyId ? survey : s)
-      : [...savedSurveys, survey];
-    
-    localStorage.setItem('surveys', JSON.stringify(updatedSurveys));
-    
-    toast({
-      title: "Survey saved!",
-      description: "Your survey has been created successfully"
-    });
-    
-    console.log(survey);
-    
-    setDialogOpen(true);
+    saveSurveyMutation.mutate(surveyData);
   };
 
   const shareSurvey = () => {
@@ -202,48 +227,48 @@ export default function CreateSurvey() {
       
       <main className="flex-1 w-full max-w-7xl mx-auto pt-24 px-6 pb-16">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Create a New Survey</h1>
+          <h1 className="text-3xl font-bold mb-2">Crear una Nueva Encuesta</h1>
           <p className="text-muted-foreground">
-            Design your survey, add questions, and customize settings
+            Diseña tu encuesta, añade preguntas y personaliza la configuración
           </p>
         </div>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4 mb-8">
-            <TabsTrigger value="design">Design Survey</TabsTrigger>
-            <TabsTrigger value="delivery">Email Delivery</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
-            <TabsTrigger value="preview">Preview</TabsTrigger>
+            <TabsTrigger value="design">Diseñar Encuesta</TabsTrigger>
+            <TabsTrigger value="delivery">Envío por Email</TabsTrigger>
+            <TabsTrigger value="settings">Configuración</TabsTrigger>
+            <TabsTrigger value="preview">Vista Previa</TabsTrigger>
           </TabsList>
           
           <TabsContent value="design" className="animate-fade-in">
             <div className="grid gap-8">
               <Card>
                 <CardHeader>
-                  <CardTitle>Survey Details</CardTitle>
+                  <CardTitle>Detalles de la Encuesta</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
                     <label htmlFor="survey-title" className="block text-sm font-medium mb-1">
-                      Survey Title
+                      Título de la Encuesta
                     </label>
                     <Input
                       id="survey-title"
                       value={surveyTitle}
                       onChange={(e) => setSurveyTitle(e.target.value)}
-                      placeholder="Enter survey title"
+                      placeholder="Ingresa el título de la encuesta"
                       className="w-full"
                     />
                   </div>
                   <div>
                     <label htmlFor="survey-description" className="block text-sm font-medium mb-1">
-                      Description (optional)
+                      Descripción (opcional)
                     </label>
                     <Textarea
                       id="survey-description"
                       value={surveyDescription}
                       onChange={(e) => setSurveyDescription(e.target.value)}
-                      placeholder="Enter a description for your survey"
+                      placeholder="Ingresa una descripción para tu encuesta"
                       className="min-h-[100px]"
                     />
                   </div>
@@ -252,9 +277,9 @@ export default function CreateSurvey() {
               
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold">Questions</h2>
+                  <h2 className="text-xl font-semibold">Preguntas</h2>
                   <Button onClick={addQuestion}>
-                    <Plus className="mr-2 h-4 w-4" /> Add Question
+                    <Plus className="mr-2 h-4 w-4" /> Añadir Pregunta
                   </Button>
                 </div>
                 
@@ -276,14 +301,18 @@ export default function CreateSurvey() {
               
               <div className="flex justify-end space-x-4 mt-8">
                 <Button variant="outline" onClick={previewSurvey}>
-                  Preview
+                  Vista Previa
                 </Button>
-                <Button onClick={saveSurvey}>
-                  <Save className="mr-2 h-4 w-4" /> Save Survey
+                <Button 
+                  onClick={saveSurvey}
+                  disabled={saveSurveyMutation.isPending}
+                >
+                  <Save className="mr-2 h-4 w-4" /> 
+                  {saveSurveyMutation.isPending ? 'Guardando...' : 'Guardar Encuesta'}
                 </Button>
                 {surveyId && (
                   <Button variant="secondary" onClick={shareSurvey}>
-                    <Share2 className="mr-2 h-4 w-4" /> Share Survey
+                    <Share2 className="mr-2 h-4 w-4" /> Compartir Encuesta
                   </Button>
                 )}
               </div>
@@ -299,7 +328,7 @@ export default function CreateSurvey() {
               
               <div className="flex justify-end mt-4">
                 <Button onClick={sendSurveyEmails} disabled={deliveryConfig.emailAddresses.length === 0}>
-                  <Mail className="mr-2 h-4 w-4" /> Send Now
+                  <Mail className="mr-2 h-4 w-4" /> Enviar Ahora
                 </Button>
               </div>
             </div>
@@ -308,58 +337,58 @@ export default function CreateSurvey() {
           <TabsContent value="settings" className="animate-fade-in">
             <Card>
               <CardHeader>
-                <CardTitle>Survey Settings</CardTitle>
+                <CardTitle>Configuración de la Encuesta</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-medium mb-4">Data Collection</h3>
+                  <h3 className="text-lg font-medium mb-4">Recolección de Datos</h3>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h4 className="font-medium">Allow anonymous responses</h4>
-                        <p className="text-sm text-muted-foreground">Respondents can submit without identifying themselves</p>
+                        <h4 className="font-medium">Permitir respuestas anónimas</h4>
+                        <p className="text-sm text-muted-foreground">Los encuestados pueden enviar sin identificarse</p>
                       </div>
                       <div className="flex items-center h-6">
                         <input type="checkbox" id="anonymous" className="mr-2" defaultChecked />
-                        <label htmlFor="anonymous">Enable</label>
+                        <label htmlFor="anonymous">Habilitar</label>
                       </div>
                     </div>
                     
                     <div className="flex items-center justify-between">
                       <div>
-                        <h4 className="font-medium">Multiple submissions</h4>
-                        <p className="text-sm text-muted-foreground">Allow respondents to submit multiple times</p>
+                        <h4 className="font-medium">Múltiples envíos</h4>
+                        <p className="text-sm text-muted-foreground">Permitir que los encuestados envíen varias veces</p>
                       </div>
                       <div className="flex items-center h-6">
                         <input type="checkbox" id="multiple" className="mr-2" />
-                        <label htmlFor="multiple">Enable</label>
+                        <label htmlFor="multiple">Habilitar</label>
                       </div>
                     </div>
                   </div>
                 </div>
                 
                 <div>
-                  <h3 className="text-lg font-medium mb-4">Display Options</h3>
+                  <h3 className="text-lg font-medium mb-4">Opciones de Visualización</h3>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h4 className="font-medium">Show progress bar</h4>
-                        <p className="text-sm text-muted-foreground">Display completion progress to respondents</p>
+                        <h4 className="font-medium">Mostrar barra de progreso</h4>
+                        <p className="text-sm text-muted-foreground">Mostrar el progreso de finalización a los encuestados</p>
                       </div>
                       <div className="flex items-center h-6">
                         <input type="checkbox" id="progress" className="mr-2" defaultChecked />
-                        <label htmlFor="progress">Enable</label>
+                        <label htmlFor="progress">Habilitar</label>
                       </div>
                     </div>
                     
                     <div className="flex items-center justify-between">
                       <div>
-                        <h4 className="font-medium">Show question numbers</h4>
-                        <p className="text-sm text-muted-foreground">Display question numbers to respondents</p>
+                        <h4 className="font-medium">Mostrar números de pregunta</h4>
+                        <p className="text-sm text-muted-foreground">Mostrar los números de pregunta a los encuestados</p>
                       </div>
                       <div className="flex items-center h-6">
                         <input type="checkbox" id="numbers" className="mr-2" defaultChecked />
-                        <label htmlFor="numbers">Enable</label>
+                        <label htmlFor="numbers">Habilitar</label>
                       </div>
                     </div>
                   </div>
@@ -371,12 +400,12 @@ export default function CreateSurvey() {
           <TabsContent value="preview" className="animate-fade-in">
             <Card>
               <CardHeader>
-                <CardTitle>Preview Your Survey</CardTitle>
+                <CardTitle>Vista Previa de tu Encuesta</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="max-w-3xl mx-auto border rounded-lg p-6 bg-white shadow-sm">
                   <div className="mb-8">
-                    <h2 className="text-2xl font-bold mb-2">{surveyTitle || "Untitled Survey"}</h2>
+                    <h2 className="text-2xl font-bold mb-2">{surveyTitle || "Encuesta sin título"}</h2>
                     {surveyDescription && <p className="text-muted-foreground">{surveyDescription}</p>}
                   </div>
                   
@@ -385,7 +414,7 @@ export default function CreateSurvey() {
                       <div key={question.id} className="border-b pb-6 last:border-0">
                         <div className="mb-3">
                           <h3 className="text-lg font-medium">
-                            {index + 1}. {question.title || "Untitled Question"}
+                            {index + 1}. {question.title || "Pregunta sin título"}
                             {question.required && <span className="text-red-500 ml-1">*</span>}
                           </h3>
                           {question.description && (
@@ -429,7 +458,7 @@ export default function CreateSurvey() {
                           {question.type === 'text' && (
                             <textarea 
                               className="w-full rounded-md border border-input bg-background px-3 py-2 min-h-[100px]" 
-                              placeholder="Your answer"
+                              placeholder="Tu respuesta"
                             />
                           )}
                           
@@ -456,7 +485,7 @@ export default function CreateSurvey() {
                   </div>
                   
                   <div className="mt-8 flex justify-end">
-                    <Button>Submit Responses</Button>
+                    <Button>Enviar Respuestas</Button>
                   </div>
                 </div>
               </CardContent>
@@ -464,7 +493,7 @@ export default function CreateSurvey() {
             
             <div className="flex justify-end mt-6">
               <Button variant="outline" onClick={() => setActiveTab('design')}>
-                Return to Editing
+                Volver a Editar
               </Button>
             </div>
           </TabsContent>
@@ -474,9 +503,9 @@ export default function CreateSurvey() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Share Survey</DialogTitle>
+            <DialogTitle>Compartir Encuesta</DialogTitle>
             <DialogDescription>
-              Your survey is ready to be shared with respondents. Use the link below.
+              Tu encuesta está lista para ser compartida con los encuestados. Usa el enlace a continuación.
             </DialogDescription>
           </DialogHeader>
           <div className="flex items-center space-x-2 mt-4">
@@ -491,10 +520,10 @@ export default function CreateSurvey() {
           </div>
           <DialogFooter className="sm:justify-start mt-4">
             <Button variant="default" onClick={navigateToSurvey}>
-              Open Survey
+              Abrir Encuesta
             </Button>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Close
+              Cerrar
             </Button>
           </DialogFooter>
         </DialogContent>
