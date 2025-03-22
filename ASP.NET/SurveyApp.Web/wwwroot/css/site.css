@@ -1,7 +1,5 @@
 
-/* Import Tailwind CSS */
-@import url('tailwind.min.css');
-
+/* Base colors */
 :root {
     /* Base colors */
     --primary-color: #3b82f6;
