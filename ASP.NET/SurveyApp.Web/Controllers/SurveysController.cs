@@ -60,6 +60,13 @@ namespace SurveyApp.Web.Controllers
                         Required = true,
                         Options = new List<string> { "Option 1", "Option 2", "Option 3" }
                     }
+                },
+                DeliveryConfig = new DeliveryConfigViewModel
+                {
+                    Type = "manual",
+                    EmailAddresses = new List<string>(),
+                    Schedule = new ScheduleSettingsViewModel(),
+                    Trigger = new TriggerSettingsViewModel()
                 }
             });
         }
@@ -91,7 +98,28 @@ namespace SurveyApp.Web.Controllers
                                 Max = q.Settings.Max 
                             } 
                             : null
-                    }).ToList()
+                    }).ToList(),
+                    DeliveryConfig = new DeliveryConfiguration
+                    {
+                        Type = model.DeliveryConfig.Type,
+                        EmailAddresses = model.DeliveryConfig.EmailAddresses,
+                        Schedule = model.DeliveryConfig.Schedule != null 
+                            ? new ScheduleSettings
+                            {
+                                Frequency = model.DeliveryConfig.Schedule.Frequency,
+                                DayOfMonth = model.DeliveryConfig.Schedule.DayOfMonth,
+                                Time = model.DeliveryConfig.Schedule.Time
+                            }
+                            : null,
+                        Trigger = model.DeliveryConfig.Trigger != null
+                            ? new TriggerSettings
+                            {
+                                Type = model.DeliveryConfig.Trigger.Type,
+                                DelayHours = model.DeliveryConfig.Trigger.DelayHours,
+                                SendAutomatically = model.DeliveryConfig.Trigger.SendAutomatically
+                            }
+                            : null
+                    }
                 };
 
                 await _surveyService.CreateSurveyAsync(survey);
@@ -130,7 +158,30 @@ namespace SurveyApp.Web.Controllers
                             Max = q.Settings.Max
                         }
                         : null
-                }).ToList()
+                }).ToList(),
+                DeliveryConfig = survey.DeliveryConfig != null
+                    ? new DeliveryConfigViewModel
+                    {
+                        Type = survey.DeliveryConfig.Type,
+                        EmailAddresses = survey.DeliveryConfig.EmailAddresses,
+                        Schedule = survey.DeliveryConfig.Schedule != null
+                            ? new ScheduleSettingsViewModel
+                            {
+                                Frequency = survey.DeliveryConfig.Schedule.Frequency,
+                                DayOfMonth = survey.DeliveryConfig.Schedule.DayOfMonth,
+                                Time = survey.DeliveryConfig.Schedule.Time
+                            }
+                            : new ScheduleSettingsViewModel(),
+                        Trigger = survey.DeliveryConfig.Trigger != null
+                            ? new TriggerSettingsViewModel
+                            {
+                                Type = survey.DeliveryConfig.Trigger.Type,
+                                DelayHours = survey.DeliveryConfig.Trigger.DelayHours,
+                                SendAutomatically = survey.DeliveryConfig.Trigger.SendAutomatically
+                            }
+                            : new TriggerSettingsViewModel()
+                    }
+                    : new DeliveryConfigViewModel()
             };
 
             return View("Create", model);
@@ -143,6 +194,24 @@ namespace SurveyApp.Web.Controllers
         {
             await _surveyService.DeleteSurveyAsync(id);
             return RedirectToAction(nameof(Index));
+        }
+
+        // POST: Surveys/SendEmails
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SendEmails(int surveyId, List<string> emailAddresses)
+        {
+            var success = await _surveyService.SendSurveyEmailsAsync(surveyId, emailAddresses);
+            if (success)
+            {
+                TempData["SuccessMessage"] = "Survey emails have been queued for delivery.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Failed to send survey emails. Please try again.";
+            }
+            
+            return RedirectToAction(nameof(Edit), new { id = surveyId });
         }
 
         // Helper method to get sample surveys while we're developing

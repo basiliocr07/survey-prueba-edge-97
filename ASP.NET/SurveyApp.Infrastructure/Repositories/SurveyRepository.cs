@@ -21,6 +21,11 @@ namespace SurveyApp.Infrastructure.Repositories
         {
             return await _context.Surveys
                 .Include(s => s.Questions)
+                .ThenInclude(q => q.Settings)
+                .Include(s => s.DeliveryConfig)
+                .ThenInclude(d => d.Schedule)
+                .Include(s => s.DeliveryConfig)
+                .ThenInclude(d => d.Trigger)
                 .ToListAsync();
         }
 
@@ -28,6 +33,11 @@ namespace SurveyApp.Infrastructure.Repositories
         {
             return await _context.Surveys
                 .Include(s => s.Questions)
+                .ThenInclude(q => q.Settings)
+                .Include(s => s.DeliveryConfig)
+                .ThenInclude(d => d.Schedule)
+                .Include(s => s.DeliveryConfig)
+                .ThenInclude(d => d.Trigger)
                 .FirstOrDefaultAsync(s => s.Id == id);
         }
 

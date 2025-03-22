@@ -53,5 +53,17 @@ namespace SurveyApp.Application.Services
                 _ => surveys
             };
         }
+
+        public async Task<bool> SendSurveyEmailsAsync(int surveyId, List<string> emailAddresses)
+        {
+            // In a real implementation, this would connect to an email service
+            // For now, we just return true to simulate success
+            var survey = await _surveyRepository.GetByIdAsync(surveyId);
+            if (survey == null || emailAddresses.Count == 0)
+                return false;
+
+            // Email sending logic would go here
+            return true;
+        }
     }
 }

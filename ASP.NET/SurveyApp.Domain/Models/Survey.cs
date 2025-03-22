@@ -14,6 +14,7 @@ namespace SurveyApp.Domain.Models
         public int ResponseCount { get; set; }
         public int CompletionRate { get; set; }
         public List<Question> Questions { get; set; } = new List<Question>();
+        public DeliveryConfiguration? DeliveryConfig { get; set; }
     }
 
     public class Question
@@ -31,5 +32,27 @@ namespace SurveyApp.Domain.Models
     {
         public int? Min { get; set; }
         public int? Max { get; set; }
+    }
+
+    public class DeliveryConfiguration
+    {
+        public string Type { get; set; } = "manual"; // Can be "manual", "scheduled", or "trigger"
+        public List<string> EmailAddresses { get; set; } = new List<string>();
+        public ScheduleSettings? Schedule { get; set; }
+        public TriggerSettings? Trigger { get; set; }
+    }
+
+    public class ScheduleSettings
+    {
+        public string Frequency { get; set; } = "monthly"; // Can be "daily", "weekly", "monthly"
+        public int DayOfMonth { get; set; } = 1;
+        public string Time { get; set; } = "09:00";
+    }
+
+    public class TriggerSettings
+    {
+        public string Type { get; set; } = "ticket-closed"; 
+        public int DelayHours { get; set; } = 24;
+        public bool SendAutomatically { get; set; } = false;
     }
 }
