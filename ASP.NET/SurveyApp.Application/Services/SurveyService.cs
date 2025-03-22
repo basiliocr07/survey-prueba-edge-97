@@ -65,5 +65,36 @@ namespace SurveyApp.Application.Services
             // Email sending logic would go here
             return true;
         }
+
+        // NEW: Get survey response statistics
+        public async Task<SurveyStatistics> GetSurveyStatisticsAsync(int surveyId)
+        {
+            var survey = await _surveyRepository.GetByIdAsync(surveyId);
+            if (survey == null)
+                return new SurveyStatistics { SurveyId = surveyId };
+
+            // In a real implementation, this would calculate statistics
+            // from actual response data in the database
+            return new SurveyStatistics
+            {
+                SurveyId = surveyId,
+                TotalResponses = survey.ResponseCount,
+                CompletionRate = survey.CompletionRate,
+                AverageCompletionTime = 120, // 2 minutes (sample data)
+                StartDate = survey.CreatedAt,
+                EndDate = null // Ongoing survey
+            };
+        }
+    }
+
+    // NEW: Class to hold survey statistics
+    public class SurveyStatistics
+    {
+        public int SurveyId { get; set; }
+        public int TotalResponses { get; set; }
+        public int CompletionRate { get; set; }
+        public int AverageCompletionTime { get; set; } // In seconds
+        public System.DateTime StartDate { get; set; }
+        public System.DateTime? EndDate { get; set; }
     }
 }

@@ -1,4 +1,5 @@
 
+using SurveyApp.Application.Services;
 using SurveyApp.Domain.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -14,5 +15,6 @@ namespace SurveyApp.Application.Interfaces
         Task<bool> DeleteSurveyAsync(int id);
         Task<IEnumerable<Survey>> GetSurveysByStatusAsync(string status);
         Task<bool> SendSurveyEmailsAsync(int surveyId, List<string> emailAddresses);
+        Task<SurveyStatistics> GetSurveyStatisticsAsync(int surveyId);
     }
 }

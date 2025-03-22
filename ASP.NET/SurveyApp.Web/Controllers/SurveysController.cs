@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Application.Interfaces;
 using SurveyApp.Domain.Models;
@@ -237,6 +238,71 @@ namespace SurveyApp.Web.Controllers
             }
             
             return RedirectToAction(nameof(Edit), new { id = surveyId });
+        }
+
+        // NEW: API endpoint to check if a survey exists
+        [HttpGet]
+        [Route("api/surveys/{id}/exists")]
+        public async Task<IActionResult> SurveyExists(int id)
+        {
+            var survey = await _surveyService.GetSurveyByIdAsync(id);
+            return Json(new { exists = survey != null });
+        }
+
+        // NEW: Preview Survey
+        [HttpGet]
+        public async Task<IActionResult> Preview(int id)
+        {
+            var survey = await _surveyService.GetSurveyByIdAsync(id);
+            if (survey == null)
+            {
+                return NotFound();
+            }
+
+            // Create a view model for the preview
+            var model = new SurveyPreviewViewModel
+            {
+                Id = survey.Id,
+                Title = survey.Title,
+                Description = survey.Description,
+                Questions = survey.Questions.Select(q => new QuestionViewModel
+                {
+                    Id = q.Id.ToString(),
+                    Title = q.Text,
+                    Type = q.Type,
+                    Required = q.Required,
+                    Description = q.Description,
+                    Options = q.Options,
+                    Settings = q.Settings != null 
+                        ? new QuestionSettingsViewModel
+                        {
+                            Min = q.Settings.Min,
+                            Max = q.Settings.Max
+                        }
+                        : null
+                }).ToList()
+            };
+
+            return View(model);
+        }
+
+        // NEW: Share Survey
+        [HttpGet]
+        public async Task<IActionResult> Share(int id)
+        {
+            var survey = await _surveyService.GetSurveyByIdAsync(id);
+            if (survey == null)
+            {
+                return NotFound();
+            }
+
+            // Create sharing URL
+            string surveyUrl = Url.Action("Take", "SurveyResponses", new { id = survey.Id }, Request.Scheme);
+            
+            ViewBag.SurveyUrl = surveyUrl;
+            ViewBag.SurveyTitle = survey.Title;
+
+            return View();
         }
 
         // Helper method to get real surveys from database
