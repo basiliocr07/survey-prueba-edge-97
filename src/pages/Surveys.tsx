@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,16 +9,19 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/layout/Navbar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Json } from "@/integrations/supabase/types";
 
-// Define the Survey interface based on what we know exists in Supabase
+// Define the Survey interface based on the Supabase schema
 interface Survey {
   id: string;
   title: string;
-  description?: string;
-  questions: any[];
+  description?: string | null;
+  questions: Json; // Changed from any[] to Json to match Supabase schema
   created_at: string;
-  responses?: number;
-  completionRate?: number;
+  updated_at: string;
+  delivery_config?: Json | null;
+  responses?: number; // Client-side calculated metric
+  completionRate?: number; // Client-side calculated metric
 }
 
 // Function to fetch surveys from Supabase
@@ -31,7 +34,7 @@ const fetchSurveys = async (): Promise<Survey[]> => {
     throw new Error(error.message);
   }
   
-  // Transform the data to include response metrics (this would be calculated from actual responses in a real app)
+  // Transform the data to include response metrics
   return data.map(survey => ({
     ...survey,
     responses: Math.floor(Math.random() * 100), // Placeholder for demo
