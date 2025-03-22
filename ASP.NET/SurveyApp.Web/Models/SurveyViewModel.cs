@@ -36,6 +36,7 @@ namespace SurveyApp.Web.Models
 
     public class CreateSurveyViewModel
     {
+        public string Id { get; set; }
         [Required(ErrorMessage = "Survey title is required")]
         public string Title { get; set; }
         public string Description { get; set; }
