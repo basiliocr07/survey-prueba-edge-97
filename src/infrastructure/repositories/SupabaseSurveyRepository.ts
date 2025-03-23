@@ -79,21 +79,18 @@ export class SupabaseSurveyRepository implements SurveyRepository {
   }
 
   async getSurveyStatistics(surveyId: string): Promise<SurveyStatistics> {
-    // Define a simplified type for survey responses to avoid type recursion
-    type SimpleAnswer = string | string[] | number | boolean | null;
-    
-    interface SimpleResponse {
-      survey_id: string;
+    // Define our own simple types instead of using complex nested types
+    type SimpleResponseRecord = {
       id: string;
+      survey_id: string;
       respondent_name: string;
       respondent_email: string | null;
       respondent_company: string | null;
       respondent_phone: string | null;
       submitted_at: string;
-      completion_time?: number;
-      answers: Record<string, SimpleAnswer>;
-    }
-
+      answers: Record<string, unknown>;
+    };
+    
     // Fetch the survey responses
     const { data, error } = await supabase
       .from('survey_responses')
@@ -103,14 +100,14 @@ export class SupabaseSurveyRepository implements SurveyRepository {
     if (error) throw error;
 
     // Transform the data to match our simplified type
-    const responses: SimpleResponse[] = [];
+    const responses: Array<SimpleResponseRecord & { completion_time?: number }> = [];
     
     if (data) {
       for (const item of data) {
         // Create a new response object with our simplified structure
-        const responseData: SimpleResponse = {
-          survey_id: item.survey_id,
+        const responseData: SimpleResponseRecord & { completion_time?: number } = {
           id: item.id,
+          survey_id: item.survey_id,
           respondent_name: item.respondent_name,
           respondent_email: item.respondent_email,
           respondent_company: item.respondent_company,
@@ -120,18 +117,19 @@ export class SupabaseSurveyRepository implements SurveyRepository {
         };
         
         // Safely handle completion_time which may not exist in the type
-        // Access it using bracket notation to avoid TypeScript errors
-        const completionTime = (item as any)['completion_time'];
-        if (typeof completionTime === 'number') {
+        const completionTime = typeof (item as any).completion_time === 'number' 
+          ? (item as any).completion_time
+          : typeof (item as any).completion_time === 'string'
+            ? Number((item as any).completion_time)
+            : undefined;
+            
+        if (completionTime !== undefined) {
           responseData.completion_time = completionTime;
-        } else if (typeof completionTime === 'string') {
-          responseData.completion_time = Number(completionTime);
         }
         
         // Safely handle answers
         if (item.answers && typeof item.answers === 'object') {
-          // Use a type assertion to handle complex JSON types
-          responseData.answers = item.answers as Record<string, SimpleAnswer>;
+          responseData.answers = item.answers as Record<string, unknown>;
         }
         
         responses.push(responseData);
