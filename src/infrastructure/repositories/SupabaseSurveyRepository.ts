@@ -30,6 +30,7 @@ export class SupabaseSurveyRepository implements SurveyRepository {
   }
 
   async createSurvey(survey: Omit<Survey, 'id' | 'createdAt'>): Promise<Survey> {
+    // Convert SurveyQuestion[] to Json for Supabase
     const { data, error } = await supabase
       .from('surveys')
       .insert({
@@ -99,9 +100,11 @@ export class SupabaseSurveyRepository implements SurveyRepository {
     const completionTimes: number[] = [];
     
     responses.forEach(response => {
-      const completionTime = (response as any).completion_time;
-      if (typeof completionTime === 'number') {
-        completionTimes.push(completionTime);
+      if (response && typeof response === 'object' && 'completion_time' in response) {
+        const completionTime = (response as any).completion_time;
+        if (typeof completionTime === 'number') {
+          completionTimes.push(completionTime);
+        }
       }
     });
     
@@ -118,7 +121,7 @@ export class SupabaseSurveyRepository implements SurveyRepository {
           const answers = response.answers as Record<string, any>;
           const answer = answers[question.id];
           if (answer) {
-            const answerKey = Array.isArray(answer) ? answer.join(', ') : answer.toString();
+            const answerKey = Array.isArray(answer) ? answer.join(', ') : String(answer);
             questionResponses[answerKey] = (questionResponses[answerKey] || 0) + 1;
           }
         }

@@ -52,7 +52,7 @@ export default function SurveyExample() {
       });
       
       // Navigate to the created survey
-      if (createdSurvey && createdSurvey.id) {
+      if (createdSurvey && typeof createdSurvey === 'object' && 'id' in createdSurvey) {
         navigate(`/survey/${createdSurvey.id}`);
       }
     } catch (error) {
