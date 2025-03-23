@@ -75,12 +75,12 @@ serve(async (req) => {
     }
 
     // Get SMTP settings from environment variables
-    const smtpServer = Deno.env.get("SMTP_SERVER") || "";
+    const smtpServer = Deno.env.get("SMTP_SERVER") || "smtp.gmail.com";
     const smtpPort = parseInt(Deno.env.get("SMTP_PORT") || "587", 10);
-    const smtpUsername = Deno.env.get("SMTP_USERNAME") || "";
-    const smtpPassword = Deno.env.get("SMTP_PASSWORD") || "";
-    const senderEmail = Deno.env.get("SENDER_EMAIL") || "";
-    const senderName = Deno.env.get("SENDER_NAME") || "Survey System";
+    const smtpUsername = Deno.env.get("SMTP_USERNAME") || "crisant231@gmail.com";
+    const smtpPassword = Deno.env.get("SMTP_PASSWORD") || "zhme oltz utuh djbyo";
+    const senderEmail = Deno.env.get("SENDER_EMAIL") || "crisant231@gmail.com";
+    const senderName = Deno.env.get("SENDER_NAME") || "Sistema de Encuestas";
     const frontendUrl = Deno.env.get("FRONTEND_URL") || "http://localhost:5173";
 
     console.log("SMTP Configuration:", { 
@@ -92,17 +92,6 @@ serve(async (req) => {
       senderName,
       frontendUrl
     });
-
-    if (!smtpServer || !smtpUsername || !smtpPassword || !senderEmail) {
-      console.error("SMTP configuration is missing");
-      return new Response(
-        JSON.stringify({ success: false, error: "SMTP configuration is missing" }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 500,
-        }
-      );
-    }
 
     try {
       // Create an SMTP client
@@ -129,7 +118,7 @@ serve(async (req) => {
           await client.send({
             from: `${senderName} <${senderEmail}>`,
             to: email,
-            subject: `Survey: ${survey.title}`,
+            subject: `Encuesta: ${survey.title}`,
             content: `
 <!DOCTYPE html>
 <html>
@@ -137,7 +126,7 @@ serve(async (req) => {
   <style>
     body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
     .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+    .header { background-color: #4a56e2; color: white; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
     .button { display: inline-block; background-color: #4a56e2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }
     .footer { margin-top: 30px; font-size: 12px; color: #666; }
   </style>
@@ -145,22 +134,22 @@ serve(async (req) => {
 <body>
   <div class="container">
     <div class="header">
-      <h2>You've been invited to take a survey</h2>
+      <h2>Te han invitado a responder una encuesta</h2>
     </div>
     
-    <p>Hello,</p>
-    <p>You've been invited to participate in the survey: <strong>${survey.title}</strong></p>
+    <p>Hola,</p>
+    <p>Has sido invitado a participar en la encuesta: <strong>${survey.title}</strong></p>
     
     ${survey.description ? `<p>${survey.description}</p>` : ''}
     
-    <p>Your feedback is important to us. Please click the button below to start the survey:</p>
+    <p>Tu opinión es muy importante para nosotros. Por favor haz clic en el botón de abajo para comenzar la encuesta:</p>
     
-    <p><a href="${surveyUrl}" class="button">Take Survey</a></p>
+    <p><a href="${surveyUrl}" class="button">Responder Encuesta</a></p>
     
-    <p>Or copy and paste this URL into your browser: ${surveyUrl}</p>
+    <p>O copia y pega este enlace en tu navegador: ${surveyUrl}</p>
     
     <div class="footer">
-      <p>If you received this email by mistake, please disregard it.</p>
+      <p>Si recibiste este correo por error, por favor ignóralo.</p>
     </div>
   </div>
 </body>

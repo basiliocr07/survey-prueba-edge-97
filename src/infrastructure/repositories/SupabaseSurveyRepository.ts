@@ -242,7 +242,7 @@ export class SupabaseSurveyRepository implements SurveyRepository {
           type: configData.type || 'manual',
           emailAddresses: Array.isArray(configData.emailAddresses) ? configData.emailAddresses : [],
         };
-        
+
         if (configData.schedule) {
           deliveryConfig.schedule = {
             frequency: configData.schedule.frequency || 'monthly',
