@@ -80,13 +80,16 @@ export class SupabaseSurveyRepository implements SurveyRepository {
   }
 
   async getSurveyStatistics(surveyId: string): Promise<SurveyStatistics> {
-    // Fetch survey responses
-    const { data: responses, error } = await supabase
+    // Fetch survey responses - use explicit typing for responses
+    const { data, error } = await supabase
       .from('survey_responses')
       .select('*')
       .eq('survey_id', surveyId);
 
     if (error) throw error;
+
+    // Use a simple array type without complex nesting
+    const responses = data || [];
 
     // Get survey to access questions
     const survey = await this.getSurveyById(surveyId);
@@ -95,55 +98,60 @@ export class SupabaseSurveyRepository implements SurveyRepository {
     // Calculate statistics
     const totalResponses = responses.length;
     
-    // Safely handle completion time calculation
+    // Simplified completion time calculation
     let averageCompletionTime = 0;
     const completionTimes: number[] = [];
     
-    responses.forEach(response => {
-      // Handle completion time if it exists as a property
-      const completionTime = typeof response === 'object' && 
-                             response !== null && 
-                             'completion_time' in response ? 
-                             (response as any).completion_time : null;
-                             
-      if (typeof completionTime === 'number') {
-        completionTimes.push(completionTime);
+    for (const response of responses) {
+      // Use simple property access with type guard
+      if (
+        response && 
+        typeof response === 'object' && 
+        'completion_time' in response && 
+        typeof response.completion_time === 'number'
+      ) {
+        completionTimes.push(response.completion_time);
       }
-    });
+    }
     
     if (completionTimes.length > 0) {
       averageCompletionTime = completionTimes.reduce((sum, time) => sum + time, 0) / completionTimes.length;
     }
     
-    // Create question statistics with simplified type handling
+    // Process question statistics with simpler type handling
     const questionStats = survey.questions.map(question => {
-      // Create a simple object to count answers
+      // Use a simple accumulator object with string keys
       const answerCounts: Record<string, number> = {};
       
-      // Process each response
       for (const response of responses) {
-        if (!response.answers || typeof response.answers !== 'object') {
+        // Use simple type guards to avoid complex type inference
+        if (!response || typeof response !== 'object' || !response.answers) {
           continue;
         }
         
-        // Safely access the answer
-        const answers = response.answers as Record<string, any>;
+        // Force cast to any to simplify type handling
+        const answers = response.answers as any;
+        
+        // Skip if no answer for this question
+        if (!answers || !answers[question.id]) {
+          continue;
+        }
+        
+        // Get the answer and convert to string representation
         const answer = answers[question.id];
+        let answerKey: string;
         
-        if (answer === undefined) {
-          continue;
+        if (Array.isArray(answer)) {
+          answerKey = answer.join(', ');
+        } else {
+          answerKey = String(answer);
         }
         
-        // Convert to string consistently
-        const answerKey = Array.isArray(answer) 
-          ? answer.join(', ') 
-          : String(answer);
-          
-        // Increment the count
+        // Count the answer
         answerCounts[answerKey] = (answerCounts[answerKey] || 0) + 1;
       }
       
-      // Convert to the expected format
+      // Transform counts to the required format
       return {
         questionId: question.id,
         questionTitle: question.title,
@@ -155,12 +163,17 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       };
     });
 
+    // Calculate completion rate
+    const completedResponsesCount = responses.filter(r => {
+      return r && typeof r === 'object' && r.answers && Object.keys(r.answers).length > 0;
+    }).length;
+    
+    const completionRate = totalResponses ? (completedResponsesCount / totalResponses) * 100 : 0;
+    
     return {
       totalResponses,
       averageCompletionTime,
-      completionRate: responses.length 
-        ? (responses.filter(r => r.answers && Object.keys(r.answers).length > 0).length / responses.length) * 100 
-        : 0,
+      completionRate,
       questionStats
     };
   }
