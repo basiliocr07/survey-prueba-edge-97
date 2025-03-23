@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -5,12 +6,26 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Question, QuestionType } from "@/utils/sampleData";
+import { QuestionType } from "@/types/surveyTypes";
 import { ChevronDown, ChevronUp, Trash2, Plus, GripVertical, Star } from "lucide-react";
 import QuestionTypes from "./QuestionTypes";
 import { cn } from "@/lib/utils";
 import StarRating from './StarRating';
 import NPSRating from './NPSRating';
+
+// Update the Question interface to use the QuestionType from types/surveyTypes.ts
+export interface Question {
+  id: string;
+  title: string;
+  description?: string;
+  type: QuestionType;
+  required: boolean;
+  options?: string[];
+  settings?: {
+    min?: number;
+    max?: number;
+  };
+}
 
 interface QuestionBuilderProps {
   question: Question;

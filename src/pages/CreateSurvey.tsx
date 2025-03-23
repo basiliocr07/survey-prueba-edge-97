@@ -13,12 +13,20 @@ import Footer from '@/components/layout/Footer';
 import QuestionBuilder from '@/components/survey/QuestionBuilder';
 import EmailDeliverySettings from '@/components/survey/EmailDeliverySettings';
 import { useSurvey } from '@/application/hooks/useSurvey';
-import { Survey, SurveyQuestion, DeliveryConfig } from '@/domain/models/Survey';
+import { Survey, SurveyQuestion, DeliveryConfig, QuestionType } from '@/types/surveyTypes';
 import { FilePlus, Save, Send, Settings } from 'lucide-react';
-import { QuestionType } from '@/utils/sampleData';
 
-type Question = Omit<SurveyQuestion, 'type'> & {
-  type: string;
+type Question = {
+  id: string;
+  title: string;
+  description?: string;
+  type: QuestionType;
+  required: boolean;
+  options?: string[];
+  settings?: {
+    min?: number;
+    max?: number;
+  };
 };
 
 export default function CreateSurvey() {
@@ -44,7 +52,10 @@ export default function CreateSurvey() {
     if (survey) {
       setTitle(survey.title);
       setDescription(survey.description || '');
-      setQuestions(survey.questions as Question[]);
+      setQuestions(survey.questions.map(q => ({
+        ...q,
+        type: q.type as QuestionType
+      })));
       
       if (survey.deliveryConfig) {
         setDeliveryConfig(survey.deliveryConfig);
@@ -140,10 +151,20 @@ export default function CreateSurvey() {
     }
     
     try {
+      const surveyQuestions: SurveyQuestion[] = questions.map(q => ({
+        id: q.id,
+        title: q.title,
+        description: q.description,
+        type: q.type,
+        required: q.required,
+        options: q.options,
+        settings: q.settings
+      }));
+      
       const surveyData = {
         title,
         description: description || undefined,
-        questions,
+        questions: surveyQuestions,
         deliveryConfig
       };
       

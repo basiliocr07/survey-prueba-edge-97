@@ -72,3 +72,7 @@ export interface DeliveryConfig {
     sendAutomatically: boolean;
   };
 }
+
+// Define QuestionType to match the one in utils/sampleData.ts
+export type QuestionType = 'multiple-choice' | 'single-choice' | 'text' | 'rating' | 'dropdown' | 'matrix' | 'ranking' | 'nps' | 'date' | 'file-upload';
+

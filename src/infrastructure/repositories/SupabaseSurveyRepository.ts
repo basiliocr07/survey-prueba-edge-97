@@ -234,26 +234,36 @@ export class SupabaseSurveyRepository implements SurveyRepository {
     
     try {
       if (data.delivery_config) {
+        // Safely parse the delivery_config to avoid deep recursion
         const config = typeof data.delivery_config === 'string' 
           ? JSON.parse(data.delivery_config) 
           : data.delivery_config;
           
+        // Create a new object instead of using the potentially recursive one
         deliveryConfig = {
           type: config.type || 'manual',
           emailAddresses: Array.isArray(config.emailAddresses) ? config.emailAddresses : [],
-          schedule: config.schedule ? {
+        };
+        
+        // Conditionally add schedule if it exists
+        if (config.schedule) {
+          deliveryConfig.schedule = {
             frequency: config.schedule.frequency || 'monthly',
             dayOfMonth: config.schedule.dayOfMonth,
             dayOfWeek: config.schedule.dayOfWeek,
             time: config.schedule.time || '09:00',
             startDate: config.schedule.startDate ? new Date(config.schedule.startDate) : undefined
-          } : undefined,
-          trigger: config.trigger ? {
+          };
+        }
+        
+        // Conditionally add trigger if it exists
+        if (config.trigger) {
+          deliveryConfig.trigger = {
             type: config.trigger.type || 'ticket-closed',
             delayHours: config.trigger.delayHours || 24,
-            sendAutomatically: !!config.trigger.sendAutomatically
-          } : undefined
-        };
+            sendAutomatically: Boolean(config.trigger.sendAutomatically)
+          };
+        }
       }
     } catch (e) {
       console.error('Error parsing delivery config:', e);

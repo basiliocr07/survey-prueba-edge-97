@@ -13,7 +13,60 @@ import {
   Upload 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { QuestionType, getQuestionTypeInfo } from "@/utils/sampleData";
+import { QuestionType } from "@/types/surveyTypes";
+
+interface QuestionTypeInfo {
+  name: string;
+  description: string;
+}
+
+// Function to get question type information
+export const getQuestionTypeInfo = (type: QuestionType): QuestionTypeInfo => {
+  const types: Record<QuestionType, QuestionTypeInfo> = {
+    'multiple-choice': {
+      name: 'Multiple Choice',
+      description: 'Allow respondents to select multiple options'
+    },
+    'single-choice': {
+      name: 'Single Choice',
+      description: 'Allow respondents to select only one option'
+    },
+    'text': {
+      name: 'Text Input',
+      description: 'Collect open-ended responses'
+    },
+    'rating': {
+      name: 'Rating Scale',
+      description: 'Collect feedback on a numeric scale'
+    },
+    'dropdown': {
+      name: 'Dropdown',
+      description: 'Allow selection from a dropdown menu'
+    },
+    'matrix': {
+      name: 'Matrix / Likert Scale',
+      description: 'Collect responses across multiple criteria'
+    },
+    'ranking': {
+      name: 'Ranking',
+      description: 'Allow respondents to rank options in order'
+    },
+    'nps': {
+      name: 'Net Promoter Score',
+      description: 'Measure customer satisfaction on a 0-10 scale'
+    },
+    'date': {
+      name: 'Date',
+      description: 'Collect date information'
+    },
+    'file-upload': {
+      name: 'File Upload',
+      description: 'Allow respondents to upload files'
+    }
+  };
+  
+  return types[type];
+};
 
 interface QuestionTypesProps {
   onSelectType: (type: QuestionType) => void;
