@@ -14,4 +14,13 @@ export class CreateSurvey {
       throw error;
     }
   }
+
+  async sendEmails(surveyId: string, emailAddresses: string[]): Promise<boolean> {
+    try {
+      return await this.surveyRepository.sendSurveyEmails(surveyId, emailAddresses);
+    } catch (error) {
+      console.error('Error sending survey emails:', error);
+      throw error;
+    }
+  }
 }

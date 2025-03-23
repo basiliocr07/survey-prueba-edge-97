@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,33 +8,44 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import QuestionBuilder from "@/components/survey/QuestionBuilder";
 import { Plus, Send, Share2, Save, Copy, Mail } from "lucide-react";
-import { Question } from "@/utils/sampleData";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import EmailDeliverySettings, { DeliveryConfig } from '@/components/survey/EmailDeliverySettings';
+import EmailDeliverySettings from '@/components/survey/EmailDeliverySettings';
 import { 
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  DialogTitle
 } from "@/components/ui/dialog";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import StarRating from '@/components/survey/StarRating';
 import NPSRating from '@/components/survey/NPSRating';
-import { supabase } from "@/integrations/supabase/client";
-import { useMutation } from "@tanstack/react-query";
+import { useSurvey } from "@/application/hooks/useSurvey";
+import { DeliveryConfig, SurveyQuestion } from "@/domain/models/Survey";
+import { Loader2 } from "lucide-react";
 
 export default function CreateSurvey() {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { id: urlSurveyId } = useParams<{ id: string }>();
+  
+  const { 
+    survey, 
+    isLoading, 
+    createSurvey, 
+    isCreating, 
+    updateSurvey, 
+    isUpdating,
+    sendSurveyEmails,
+    isSendingEmails
+  } = useSurvey(urlSurveyId);
   
   const [surveyTitle, setSurveyTitle] = useState<string>('');
   const [surveyDescription, setSurveyDescription] = useState<string>('');
-  const [questions, setQuestions] = useState<Question[]>([
+  const [questions, setQuestions] = useState<SurveyQuestion[]>([
     {
       id: uuidv4(),
       type: 'single-choice',
@@ -43,7 +55,7 @@ export default function CreateSurvey() {
     }
   ]);
   const [activeTab, setActiveTab] = useState<string>('design');
-  const [surveyId, setSurveyId] = useState<string>('');
+  const [surveyId, setSurveyId] = useState<string>(urlSurveyId || '');
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   const [deliveryConfig, setDeliveryConfig] = useState<DeliveryConfig>({
     type: 'manual',
@@ -60,50 +72,20 @@ export default function CreateSurvey() {
     }
   });
 
-  // Create a mutation for saving surveys
-  const saveSurveyMutation = useMutation({
-    mutationFn: async (surveyData: any) => {
-      if (surveyId) {
-        // Update existing survey
-        const { data, error } = await supabase
-          .from('surveys')
-          .update(surveyData)
-          .eq('id', surveyId)
-          .select();
-          
-        if (error) throw error;
-        return data[0];
-      } else {
-        // Insert new survey
-        const { data, error } = await supabase
-          .from('surveys')
-          .insert(surveyData)
-          .select();
-          
-        if (error) throw error;
-        return data[0];
+  // Load survey data if editing
+  useEffect(() => {
+    if (survey) {
+      setSurveyTitle(survey.title);
+      setSurveyDescription(survey.description || '');
+      setQuestions(survey.questions);
+      if (survey.deliveryConfig) {
+        setDeliveryConfig(survey.deliveryConfig);
       }
-    },
-    onSuccess: (data) => {
-      setSurveyId(data.id);
-      setDialogOpen(true);
-      
-      toast({
-        title: "Encuesta guardada",
-        description: "Tu encuesta ha sido guardada exitosamente"
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: `No se pudo guardar la encuesta: ${error instanceof Error ? error.message : 'Error desconocido'}`,
-        variant: "destructive"
-      });
     }
-  });
+  }, [survey]);
 
   const addQuestion = () => {
-    const newQuestion: Question = {
+    const newQuestion: SurveyQuestion = {
       id: uuidv4(),
       type: 'single-choice',
       title: '',
@@ -114,7 +96,7 @@ export default function CreateSurvey() {
     setQuestions([...questions, newQuestion]);
   };
 
-  const updateQuestion = (index: number, updatedQuestion: Question) => {
+  const updateQuestion = (index: number, updatedQuestion: SurveyQuestion) => {
     const newQuestions = [...questions];
     newQuestions[index] = updatedQuestion;
     setQuestions(newQuestions);
@@ -148,7 +130,7 @@ export default function CreateSurvey() {
     setQuestions(newQuestions);
   };
 
-  const saveSurvey = () => {
+  const saveSurvey = async () => {
     if (!surveyTitle.trim()) {
       toast({
         title: "Título requerido",
@@ -172,10 +154,40 @@ export default function CreateSurvey() {
       title: surveyTitle,
       description: surveyDescription,
       questions: questions,
-      delivery_config: deliveryConfig
+      deliveryConfig: deliveryConfig
     };
     
-    saveSurveyMutation.mutate(surveyData);
+    try {
+      if (surveyId) {
+        // Update existing survey
+        await updateSurvey({
+          ...surveyData,
+          id: surveyId,
+          createdAt: survey?.createdAt || new Date().toISOString()
+        });
+        toast({
+          title: "Encuesta actualizada",
+          description: "Tu encuesta ha sido actualizada exitosamente"
+        });
+      } else {
+        // Create new survey
+        const result = await createSurvey(surveyData);
+        if (result && result.id) {
+          setSurveyId(result.id);
+          setDialogOpen(true);
+          toast({
+            title: "Encuesta guardada",
+            description: "Tu encuesta ha sido guardada exitosamente"
+          });
+        }
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `No se pudo guardar la encuesta: ${error instanceof Error ? error.message : 'Error desconocido'}`,
+        variant: "destructive"
+      });
+    }
   };
 
   const shareSurvey = () => {
@@ -201,7 +213,16 @@ export default function CreateSurvey() {
     setDialogOpen(false);
   };
 
-  const sendSurveyEmails = () => {
+  const sendSurveyEmailsHandler = async () => {
+    if (!surveyId) {
+      toast({
+        title: "Save first",
+        description: "Please save your survey before sending emails",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     if (deliveryConfig.emailAddresses.length === 0) {
       toast({
         title: "No recipients",
@@ -211,15 +232,38 @@ export default function CreateSurvey() {
       return;
     }
 
-    // In a real app, this would connect to a backend service
-    // For demo purposes, we'll just show a success toast
-    toast({
-      title: "Emails queued",
-      description: `Survey will be sent to ${deliveryConfig.emailAddresses.length} recipient(s) according to your delivery settings`,
-    });
-
-    console.log("Email delivery configuration:", deliveryConfig);
+    try {
+      const success = await sendSurveyEmails(surveyId, deliveryConfig.emailAddresses);
+      
+      if (success) {
+        toast({
+          title: "Emails sent",
+          description: `Survey has been sent to ${deliveryConfig.emailAddresses.length} recipient(s)`,
+        });
+      } else {
+        toast({
+          title: "Error sending emails",
+          description: "There was a problem sending your emails. Please try again.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to send emails: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive"
+      });
+    }
   };
+
+  if (isLoading && urlSurveyId) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="mt-4 text-lg">Cargando encuesta...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -227,7 +271,7 @@ export default function CreateSurvey() {
       
       <main className="flex-1 w-full max-w-7xl mx-auto pt-24 px-6 pb-16">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Crear una Nueva Encuesta</h1>
+          <h1 className="text-3xl font-bold mb-2">{surveyId ? 'Editar Encuesta' : 'Crear una Nueva Encuesta'}</h1>
           <p className="text-muted-foreground">
             Diseña tu encuesta, añade preguntas y personaliza la configuración
           </p>
@@ -305,10 +349,10 @@ export default function CreateSurvey() {
                 </Button>
                 <Button 
                   onClick={saveSurvey}
-                  disabled={saveSurveyMutation.isPending}
+                  disabled={isCreating || isUpdating}
                 >
                   <Save className="mr-2 h-4 w-4" /> 
-                  {saveSurveyMutation.isPending ? 'Guardando...' : 'Guardar Encuesta'}
+                  {isCreating || isUpdating ? 'Guardando...' : (surveyId ? 'Actualizar Encuesta' : 'Guardar Encuesta')}
                 </Button>
                 {surveyId && (
                   <Button variant="secondary" onClick={shareSurvey}>
@@ -327,8 +371,19 @@ export default function CreateSurvey() {
               />
               
               <div className="flex justify-end mt-4">
-                <Button onClick={sendSurveyEmails} disabled={deliveryConfig.emailAddresses.length === 0}>
-                  <Mail className="mr-2 h-4 w-4" /> Enviar Ahora
+                <Button 
+                  onClick={sendSurveyEmailsHandler} 
+                  disabled={isSendingEmails || deliveryConfig.emailAddresses.length === 0 || !surveyId}
+                >
+                  {isSendingEmails ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enviando...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="mr-2 h-4 w-4" /> Enviar Ahora
+                    </>
+                  )}
                 </Button>
               </div>
             </div>

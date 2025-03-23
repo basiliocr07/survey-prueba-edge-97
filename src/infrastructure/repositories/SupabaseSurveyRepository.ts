@@ -1,5 +1,5 @@
 
-import { Survey, SurveyStatistics } from '../../domain/models/Survey';
+import { Survey, SurveyStatistics, DeliveryConfig } from '../../domain/models/Survey';
 import { SurveyRepository } from '../../domain/repositories/SurveyRepository';
 import { supabase } from '../../integrations/supabase/client';
 import { Json } from '../../integrations/supabase/types';
@@ -157,7 +157,11 @@ export class SupabaseSurveyRepository implements SurveyRepository {
         const answer = response.answers[question.id];
         if (answer === undefined || answer === null) continue;
         
-        const answerKey = Array.isArray(answer) ? answer.join(', ') : String(answer);
+        // Convert answers to strings for counting
+        const answerKey = Array.isArray(answer) 
+          ? answer.join(', ') 
+          : String(answer);
+          
         answerCounts[answerKey] = (answerCounts[answerKey] || 0) + 1;
       }
       
@@ -228,12 +232,19 @@ export class SupabaseSurveyRepository implements SurveyRepository {
     }
 
     // Parse the delivery_config if it exists
-    let deliveryConfig = undefined;
+    let deliveryConfig: DeliveryConfig | undefined = undefined;
     try {
       if (data.delivery_config) {
-        deliveryConfig = typeof data.delivery_config === 'string' 
+        const config = typeof data.delivery_config === 'string' 
           ? JSON.parse(data.delivery_config) 
           : data.delivery_config;
+          
+        deliveryConfig = {
+          type: config.type || 'manual',
+          emailAddresses: Array.isArray(config.emailAddresses) ? config.emailAddresses : [],
+          schedule: config.schedule,
+          trigger: config.trigger
+        };
       }
     } catch (e) {
       console.error('Error parsing delivery config:', e);
