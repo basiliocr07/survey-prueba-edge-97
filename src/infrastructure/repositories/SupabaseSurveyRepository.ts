@@ -114,13 +114,16 @@ export class SupabaseSurveyRepository implements SurveyRepository {
     
     // Create question statistics
     const questionStats = survey.questions.map(question => {
+      // Define a specific type for the questionResponses to avoid deep type instantiation
       const questionResponses: Record<string, number> = {};
       
       responses.forEach(response => {
         if (response.answers && typeof response.answers === 'object') {
-          const answers = response.answers as Record<string, any>;
+          // Use type assertion to simplify the type checking
+          const answers = response.answers as Record<string, unknown>;
           const answer = answers[question.id];
-          if (answer) {
+          if (answer !== undefined) {
+            // Ensure answer is converted to string properly
             const answerKey = Array.isArray(answer) ? answer.join(', ') : String(answer);
             questionResponses[answerKey] = (questionResponses[answerKey] || 0) + 1;
           }
