@@ -213,6 +213,7 @@ export class SupabaseSurveyRepository implements SurveyRepository {
   }
 
   private mapToSurvey(data: any): Survey {
+    // Parse questions with explicit typing to avoid deep inference
     let parsedQuestions;
     try {
       parsedQuestions = Array.isArray(data.questions) 
@@ -231,38 +232,39 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       parsedQuestions = [];
     }
 
-    // Create DeliveryConfig directly to avoid deep type instantiation issues
+    // Create a simplified DeliveryConfig with explicit typing
     let deliveryConfig: DeliveryConfig | undefined = undefined;
     
     try {
       if (data.delivery_config) {
-        const configData = typeof data.delivery_config === 'string' 
+        // Normalize data to simple object to avoid deep type inference
+        const rawConfig = typeof data.delivery_config === 'string' 
           ? JSON.parse(data.delivery_config) 
           : data.delivery_config;
-        
-        // Create a simple object that satisfies the DeliveryConfig interface
+          
+        // Create a flat, simplified object with only the required fields
         deliveryConfig = {
-          type: configData.type || 'manual',
-          emailAddresses: Array.isArray(configData.emailAddresses) ? configData.emailAddresses : []
+          type: (rawConfig.type as 'manual' | 'scheduled' | 'triggered') || 'manual',
+          emailAddresses: Array.isArray(rawConfig.emailAddresses) ? rawConfig.emailAddresses : []
         };
 
-        // Add schedule if present
-        if (configData.schedule) {
+        // Only add schedule if present, with explicit types
+        if (rawConfig.schedule) {
           deliveryConfig.schedule = {
-            frequency: configData.schedule.frequency || 'monthly',
-            dayOfMonth: configData.schedule.dayOfMonth,
-            dayOfWeek: configData.schedule.dayOfWeek,
-            time: configData.schedule.time || '09:00',
-            startDate: configData.schedule.startDate ? new Date(configData.schedule.startDate) : undefined
+            frequency: (rawConfig.schedule.frequency as 'daily' | 'weekly' | 'monthly') || 'monthly',
+            dayOfMonth: typeof rawConfig.schedule.dayOfMonth === 'number' ? rawConfig.schedule.dayOfMonth : undefined,
+            dayOfWeek: typeof rawConfig.schedule.dayOfWeek === 'number' ? rawConfig.schedule.dayOfWeek : undefined,
+            time: rawConfig.schedule.time || '09:00',
+            startDate: rawConfig.schedule.startDate ? new Date(rawConfig.schedule.startDate) : undefined
           };
         }
         
-        // Add trigger if present
-        if (configData.trigger) {
+        // Only add trigger if present, with explicit types
+        if (rawConfig.trigger) {
           deliveryConfig.trigger = {
-            type: configData.trigger.type || 'ticket-closed',
-            delayHours: configData.trigger.delayHours || 24,
-            sendAutomatically: Boolean(configData.trigger.sendAutomatically)
+            type: (rawConfig.trigger.type as 'ticket-closed' | 'purchase-completed') || 'ticket-closed',
+            delayHours: typeof rawConfig.trigger.delayHours === 'number' ? rawConfig.trigger.delayHours : 24,
+            sendAutomatically: Boolean(rawConfig.trigger.sendAutomatically)
           };
         }
       }
@@ -270,12 +272,13 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       console.error('Error parsing delivery config:', e);
     }
 
+    // Return a simpler object with explicit typing to avoid deep inference
     return {
-      id: data.id,
-      title: data.title,
+      id: data.id || '',
+      title: data.title || '',
       description: data.description || undefined,
       questions: parsedQuestions,
-      createdAt: data.created_at,
+      createdAt: data.created_at || '',
       deliveryConfig: deliveryConfig
     };
   }
