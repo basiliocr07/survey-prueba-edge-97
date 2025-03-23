@@ -1,4 +1,3 @@
-
 import { Survey, SurveyStatistics } from '../../domain/models/Survey';
 import { SurveyRepository } from '../../domain/repositories/SurveyRepository';
 import { supabase } from '../../integrations/supabase/client';
@@ -79,7 +78,8 @@ export class SupabaseSurveyRepository implements SurveyRepository {
   }
 
   async getSurveyStatistics(surveyId: string): Promise<SurveyStatistics> {
-    // Define a simple interface with only the properties we need
+    type SimpleAnswers = Record<string, unknown>;
+    
     interface ResponseData {
       survey_id: string;
       id: string;
@@ -89,8 +89,7 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       respondent_phone: string | null;
       submitted_at: string;
       completion_time?: number;
-      // Use a simple Record type instead of Json to avoid deep type inference
-      answers: Record<string, unknown>;
+      answers: SimpleAnswers;
     }
 
     const { data, error } = await supabase
@@ -100,12 +99,10 @@ export class SupabaseSurveyRepository implements SurveyRepository {
 
     if (error) throw error;
 
-    // Create a new array and manually populate it to avoid type inference issues
     const responses: ResponseData[] = [];
     
     if (data) {
       for (const item of data) {
-        // Create a properly typed object for each response
         const responseData: ResponseData = {
           survey_id: item.survey_id,
           id: item.id,
@@ -114,18 +111,15 @@ export class SupabaseSurveyRepository implements SurveyRepository {
           respondent_company: item.respondent_company,
           respondent_phone: item.respondent_phone,
           submitted_at: item.submitted_at,
-          // Cast answers to the simpler type
           answers: {}
         };
         
-        // Handle completion_time if it exists
         if ('completion_time' in item && item.completion_time !== null) {
           responseData.completion_time = Number(item.completion_time);
         }
         
-        // Handle answers safely
         if (item.answers && typeof item.answers === 'object') {
-          responseData.answers = item.answers as Record<string, unknown>;
+          responseData.answers = item.answers as SimpleAnswers;
         }
         
         responses.push(responseData);
