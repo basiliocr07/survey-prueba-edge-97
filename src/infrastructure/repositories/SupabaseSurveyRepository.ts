@@ -100,11 +100,14 @@ export class SupabaseSurveyRepository implements SurveyRepository {
     const completionTimes: number[] = [];
     
     responses.forEach(response => {
-      if (response && typeof response === 'object' && 'completion_time' in response) {
-        const completionTime = (response as any).completion_time;
-        if (typeof completionTime === 'number') {
-          completionTimes.push(completionTime);
-        }
+      // Handle completion time if it exists as a property
+      const completionTime = typeof response === 'object' && 
+                             response !== null && 
+                             'completion_time' in response ? 
+                             (response as any).completion_time : null;
+                             
+      if (typeof completionTime === 'number') {
+        completionTimes.push(completionTime);
       }
     });
     
@@ -112,28 +115,39 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       averageCompletionTime = completionTimes.reduce((sum, time) => sum + time, 0) / completionTimes.length;
     }
     
-    // Create question statistics
+    // Create question statistics with simplified type handling
     const questionStats = survey.questions.map(question => {
-      // Define a specific type for the questionResponses to avoid deep type instantiation
-      const questionResponses: Record<string, number> = {};
+      // Create a simple object to count answers
+      const answerCounts: Record<string, number> = {};
       
-      responses.forEach(response => {
-        if (response.answers && typeof response.answers === 'object') {
-          // Use type assertion to simplify the type checking
-          const answers = response.answers as Record<string, unknown>;
-          const answer = answers[question.id];
-          if (answer !== undefined) {
-            // Ensure answer is converted to string properly
-            const answerKey = Array.isArray(answer) ? answer.join(', ') : String(answer);
-            questionResponses[answerKey] = (questionResponses[answerKey] || 0) + 1;
-          }
+      // Process each response
+      for (const response of responses) {
+        if (!response.answers || typeof response.answers !== 'object') {
+          continue;
         }
-      });
+        
+        // Safely access the answer
+        const answers = response.answers as Record<string, any>;
+        const answer = answers[question.id];
+        
+        if (answer === undefined) {
+          continue;
+        }
+        
+        // Convert to string consistently
+        const answerKey = Array.isArray(answer) 
+          ? answer.join(', ') 
+          : String(answer);
+          
+        // Increment the count
+        answerCounts[answerKey] = (answerCounts[answerKey] || 0) + 1;
+      }
       
+      // Convert to the expected format
       return {
         questionId: question.id,
         questionTitle: question.title,
-        responses: Object.entries(questionResponses).map(([answer, count]) => ({
+        responses: Object.entries(answerCounts).map(([answer, count]) => ({
           answer,
           count,
           percentage: totalResponses ? (count / totalResponses) * 100 : 0
@@ -144,7 +158,9 @@ export class SupabaseSurveyRepository implements SurveyRepository {
     return {
       totalResponses,
       averageCompletionTime,
-      completionRate: responses.length ? (responses.filter(r => r.answers && Object.keys(r.answers).length > 0).length / responses.length) * 100 : 0,
+      completionRate: responses.length 
+        ? (responses.filter(r => r.answers && Object.keys(r.answers).length > 0).length / responses.length) * 100 
+        : 0,
       questionStats
     };
   }
