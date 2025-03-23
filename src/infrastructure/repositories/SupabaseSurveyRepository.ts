@@ -79,17 +79,18 @@ export class SupabaseSurveyRepository implements SurveyRepository {
   }
 
   async getSurveyStatistics(surveyId: string): Promise<SurveyStatistics> {
-    // Use primitive types rather than complex type inference
+    // Define a simple interface with only the properties we need
     interface ResponseData {
       survey_id: string;
-      answers: Record<string, unknown>;
-      completion_time?: number;
       id: string;
-      respondent_company: string | null;
-      respondent_email: string | null;
       respondent_name: string;
+      respondent_email: string | null;
+      respondent_company: string | null;
       respondent_phone: string | null;
       submitted_at: string;
+      completion_time?: number;
+      // Use a simple Record type instead of Json to avoid deep type inference
+      answers: Record<string, unknown>;
     }
 
     const { data, error } = await supabase
@@ -99,13 +100,13 @@ export class SupabaseSurveyRepository implements SurveyRepository {
 
     if (error) throw error;
 
-    // Transform data to our explicit interface to avoid recursive type inference
+    // Create a new array and manually populate it to avoid type inference issues
     const responses: ResponseData[] = [];
     
-    // Use for loop instead of map to avoid type inference issues
     if (data) {
       for (const item of data) {
-        responses.push({
+        // Create a properly typed object for each response
+        const responseData: ResponseData = {
           survey_id: item.survey_id,
           id: item.id,
           respondent_name: item.respondent_name,
@@ -113,10 +114,21 @@ export class SupabaseSurveyRepository implements SurveyRepository {
           respondent_company: item.respondent_company,
           respondent_phone: item.respondent_phone,
           submitted_at: item.submitted_at,
-          completion_time: item.completion_time,
-          // Safely cast the answers to the right type
-          answers: typeof item.answers === 'object' ? (item.answers as Record<string, unknown>) : {}
-        });
+          // Cast answers to the simpler type
+          answers: {}
+        };
+        
+        // Handle completion_time if it exists
+        if ('completion_time' in item && item.completion_time !== null) {
+          responseData.completion_time = Number(item.completion_time);
+        }
+        
+        // Handle answers safely
+        if (item.answers && typeof item.answers === 'object') {
+          responseData.answers = item.answers as Record<string, unknown>;
+        }
+        
+        responses.push(responseData);
       }
     }
 
