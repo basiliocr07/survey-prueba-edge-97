@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,67 +7,53 @@ import { Badge } from "@/components/ui/badge";
 import { FilePlus, Edit, Eye, Trash2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/layout/Navbar";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Json } from "@/integrations/supabase/types";
+import { SupabaseSurveyRepository } from "@/infrastructure/repositories/SupabaseSurveyRepository";
+import { Survey } from "@/domain/models/Survey";
 
-// Define the Survey interface based on the Supabase schema
-interface Survey {
-  id: string;
-  title: string;
-  description?: string | null;
-  questions: Json; // Changed from any[] to Json to match Supabase schema
-  created_at: string;
-  updated_at: string;
-  delivery_config?: Json | null;
-  responses?: number; // Client-side calculated metric
-  completionRate?: number; // Client-side calculated metric
-}
-
-// Function to fetch surveys from Supabase
-const fetchSurveys = async (): Promise<Survey[]> => {
-  const { data, error } = await supabase
-    .from('surveys')
-    .select('*');
-  
-  if (error) {
-    throw new Error(error.message);
-  }
-  
-  // Transform the data to include response metrics
-  return data.map(survey => ({
-    ...survey,
-    responses: Math.floor(Math.random() * 100), // Placeholder for demo
-    completionRate: Math.floor(Math.random() * 100) // Placeholder for demo
-  }));
-};
-
-// Function to delete a survey
-const deleteSurvey = async (id: string) => {
-  const { error } = await supabase
-    .from('surveys')
-    .delete()
-    .eq('id', id);
-  
-  if (error) {
-    throw new Error(error.message);
-  }
-  
-  return true;
-};
+// Initialize the repository
+const surveyRepository = new SupabaseSurveyRepository();
 
 export default function Surveys() {
   const [filterActive, setFilterActive] = useState<string>("all");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
+  // Fetch surveys using our repository
   const { data: surveys = [], isLoading } = useQuery({
-    queryKey: ['surveys'],
-    queryFn: fetchSurveys
+    queryKey: ['surveys', filterActive],
+    queryFn: async () => {
+      try {
+        if (filterActive === "all") {
+          return await surveyRepository.getAllSurveys();
+        } else {
+          return await surveyRepository.getSurveysByStatus(filterActive);
+        }
+      } catch (error) {
+        console.error("Error fetching surveys:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load surveys. Please try again.",
+          variant: "destructive",
+        });
+        return [];
+      }
+    }
   });
 
+  // Prepare survey stats
+  const surveysWithStats = surveys.map(survey => {
+    return {
+      ...survey,
+      // We'll fetch real statistics in a separate query if needed
+      responses: Math.floor(Math.random() * 100), // Placeholder
+      completionRate: Math.floor(Math.random() * 100) // Placeholder
+    };
+  });
+
+  // Delete mutation using the repository
   const deleteMutation = useMutation({
-    mutationFn: deleteSurvey,
+    mutationFn: (id: string) => surveyRepository.deleteSurvey(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['surveys'] });
       toast({
@@ -158,10 +144,10 @@ export default function Surveys() {
               <div className="flex justify-center items-center p-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
-            ) : surveys.length > 0 ? (
+            ) : surveysWithStats.length > 0 ? (
               <CardContent className="p-0">
                 <ul className="divide-y">
-                  {surveys.map((survey) => (
+                  {surveysWithStats.map((survey) => (
                     <li key={survey.id} className="p-4 hover:bg-accent/20 transition-colors">
                       <div className="flex items-center justify-between">
                         <div className="flex-grow">
@@ -175,7 +161,7 @@ export default function Surveys() {
                             {survey.description}
                           </p>
                           <div className="flex items-center text-xs text-muted-foreground">
-                            <span>Created {formatDate(survey.created_at)}</span>
+                            <span>Created {formatDate(survey.createdAt)}</span>
                             <span className="mx-2">•</span>
                             <div className="flex items-center">
                               <div className="w-16 bg-secondary rounded-full h-1.5 mr-1">

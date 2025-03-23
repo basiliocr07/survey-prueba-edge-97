@@ -1,3 +1,4 @@
+
 import { Survey, SurveyStatistics } from '../../domain/models/Survey';
 import { SurveyRepository } from '../../domain/repositories/SurveyRepository';
 import { supabase } from '../../integrations/supabase/client';
@@ -78,6 +79,14 @@ export class SupabaseSurveyRepository implements SurveyRepository {
   }
 
   async getSurveyStatistics(surveyId: string): Promise<SurveyStatistics> {
+    // Using explicit type annotations to avoid TypeScript recursive type issues
+    interface ResponseData {
+      survey_id: string;
+      answers: Record<string, any> | null;
+      completion_time?: number;
+      [key: string]: any;
+    }
+
     const { data, error } = await supabase
       .from('survey_responses')
       .select('*')
@@ -85,7 +94,8 @@ export class SupabaseSurveyRepository implements SurveyRepository {
 
     if (error) throw error;
 
-    const responses = data as Array<Record<string, unknown>>;
+    // Cast data to our explicit interface to avoid deep inference
+    const responses: ResponseData[] = data || [];
 
     const survey = await this.getSurveyById(surveyId);
     if (!survey) throw new Error('Survey not found');
@@ -112,10 +122,9 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       const answerCounts: Record<string, number> = {};
       
       for (const response of responses) {
-        const answers = response.answers as Record<string, unknown> | null;
-        if (!answers) continue;
+        if (!response.answers) continue;
         
-        const answer = answers[question.id];
+        const answer = response.answers[question.id];
         if (answer === undefined || answer === null) continue;
         
         const answerKey = Array.isArray(answer) ? answer.join(', ') : String(answer);
@@ -136,8 +145,7 @@ export class SupabaseSurveyRepository implements SurveyRepository {
     let completedResponsesCount = 0;
     
     for (const response of responses) {
-      const answers = response.answers as Record<string, unknown> | null;
-      if (answers && Object.keys(answers).length > 0) {
+      if (response.answers && Object.keys(response.answers).length > 0) {
         completedResponsesCount++;
       }
     }
