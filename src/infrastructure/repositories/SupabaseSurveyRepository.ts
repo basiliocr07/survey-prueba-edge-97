@@ -1,4 +1,3 @@
-
 import { Survey, SurveyStatistics, DeliveryConfig } from '../../domain/models/Survey';
 import { SurveyRepository } from '../../domain/repositories/SurveyRepository';
 import { supabase } from '../../integrations/supabase/client';
@@ -14,24 +13,6 @@ interface ResponseRecord {
   submitted_at: string;
   answers: Record<string, any>;
   completion_time?: number;
-}
-
-// Define a simplified version of delivery config for parsing
-interface SimpleDeliveryConfig {
-  type: 'manual' | 'scheduled' | 'triggered';
-  emailAddresses: string[];
-  schedule?: {
-    frequency: 'daily' | 'weekly' | 'monthly';
-    dayOfMonth?: number;
-    dayOfWeek?: number;
-    time: string;
-    startDate?: string;
-  };
-  trigger?: {
-    type: 'ticket-closed' | 'purchase-completed';
-    delayHours: number;
-    sendAutomatically: boolean;
-  };
 }
 
 export class SupabaseSurveyRepository implements SurveyRepository {
@@ -133,7 +114,6 @@ export class SupabaseSurveyRepository implements SurveyRepository {
           answers: item.answers as Record<string, any> || {}
         };
         
-        // Add completion_time if it exists in the database record
         if ('completion_time' in item && item.completion_time !== undefined) {
           responseData.completion_time = 
             typeof item.completion_time === 'number' ? item.completion_time : 
@@ -174,7 +154,6 @@ export class SupabaseSurveyRepository implements SurveyRepository {
         const answer = response.answers[question.id];
         if (answer === undefined || answer === null) continue;
         
-        // Convert answers to strings for counting
         const answerKey = Array.isArray(answer) 
           ? answer.join(', ') 
           : String(answer);
@@ -213,6 +192,8 @@ export class SupabaseSurveyRepository implements SurveyRepository {
 
   async sendSurveyEmails(surveyId: string, emailAddresses: string[]): Promise<boolean> {
     try {
+      console.log('Sending survey emails:', { surveyId, emailAddresses });
+      
       const { data, error } = await supabase.functions.invoke('send-survey-emails', {
         body: { surveyId, emailAddresses }
       });
@@ -222,9 +203,10 @@ export class SupabaseSurveyRepository implements SurveyRepository {
         return false;
       }
       
+      console.log('Survey email response:', data);
       return data?.success || false;
     } catch (error) {
-      console.error('Error sending survey emails', error);
+      console.error('Error sending survey emails:', error);
       return false;
     }
   }
@@ -248,22 +230,19 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       parsedQuestions = [];
     }
 
-    // Parse the delivery_config if it exists, but avoid deep recursion
     let deliveryConfig: DeliveryConfig | undefined = undefined;
     
     try {
       if (data.delivery_config) {
-        // Parse as a simple object to avoid deep recursion
         const configData = typeof data.delivery_config === 'string' 
           ? JSON.parse(data.delivery_config) 
           : data.delivery_config;
-          
+        
         deliveryConfig = {
           type: configData.type || 'manual',
           emailAddresses: Array.isArray(configData.emailAddresses) ? configData.emailAddresses : [],
         };
         
-        // Add schedule if it exists
         if (configData.schedule) {
           deliveryConfig.schedule = {
             frequency: configData.schedule.frequency || 'monthly',
@@ -274,7 +253,6 @@ export class SupabaseSurveyRepository implements SurveyRepository {
           };
         }
         
-        // Add trigger if it exists
         if (configData.trigger) {
           deliveryConfig.trigger = {
             type: configData.trigger.type || 'ticket-closed',

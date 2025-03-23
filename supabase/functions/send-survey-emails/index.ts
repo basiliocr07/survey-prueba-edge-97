@@ -20,10 +20,16 @@ serve(async (req) => {
   }
 
   try {
+    console.log("Received request to send survey emails");
+    
     // Parse the request body
-    const { surveyId, emailAddresses } = await req.json() as RequestData;
+    const requestData = await req.json();
+    const { surveyId, emailAddresses } = requestData as RequestData;
+
+    console.log("Request data:", { surveyId, emailAddresses });
 
     if (!surveyId || !emailAddresses || !Array.isArray(emailAddresses) || emailAddresses.length === 0) {
+      console.error("Invalid request parameters:", { surveyId, emailAddresses });
       return new Response(
         JSON.stringify({ success: false, error: "Invalid request parameters" }),
         {
@@ -36,6 +42,18 @@ serve(async (req) => {
     // Create a Supabase client
     const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error("Missing Supabase configuration");
+      return new Response(
+        JSON.stringify({ success: false, error: "Missing Supabase configuration" }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500,
+        }
+      );
+    }
+    
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get the survey from the database
@@ -46,6 +64,7 @@ serve(async (req) => {
       .single();
 
     if (surveyError || !survey) {
+      console.error("Survey not found:", surveyError);
       return new Response(
         JSON.stringify({ success: false, error: "Survey not found" }),
         {
@@ -62,8 +81,20 @@ serve(async (req) => {
     const smtpPassword = Deno.env.get("SMTP_PASSWORD") || "";
     const senderEmail = Deno.env.get("SENDER_EMAIL") || "";
     const senderName = Deno.env.get("SENDER_NAME") || "Survey System";
+    const frontendUrl = Deno.env.get("FRONTEND_URL") || "http://localhost:5173";
+
+    console.log("SMTP Configuration:", { 
+      smtpServer, 
+      smtpPort, 
+      smtpUsername: smtpUsername ? "Set" : "Not set", 
+      smtpPassword: smtpPassword ? "Set" : "Not set",
+      senderEmail,
+      senderName,
+      frontendUrl
+    });
 
     if (!smtpServer || !smtpUsername || !smtpPassword || !senderEmail) {
+      console.error("SMTP configuration is missing");
       return new Response(
         JSON.stringify({ success: false, error: "SMTP configuration is missing" }),
         {
@@ -73,28 +104,33 @@ serve(async (req) => {
       );
     }
 
-    // Create an SMTP client
-    const client = new SmtpClient();
-    await client.connectTLS({
-      hostname: smtpServer,
-      port: smtpPort,
-      username: smtpUsername,
-      password: smtpPassword,
-    });
+    try {
+      // Create an SMTP client
+      const client = new SmtpClient();
+      
+      console.log("Connecting to SMTP server...");
+      await client.connectTLS({
+        hostname: smtpServer,
+        port: smtpPort,
+        username: smtpUsername,
+        password: smtpPassword,
+      });
+      console.log("Connected to SMTP server successfully");
 
-    // Generate survey URL (you may need to adjust this based on your frontend URL)
-    const frontendUrl = Deno.env.get("FRONTEND_URL") || "http://localhost:5173";
-    const surveyUrl = `${frontendUrl}/take-survey/${surveyId}`;
+      // Generate survey URL
+      const surveyUrl = `${frontendUrl}/take-survey/${surveyId}`;
+      console.log("Survey URL:", surveyUrl);
 
-    // Send email to each recipient
-    const emailResults = [];
-    for (const email of emailAddresses) {
-      try {
-        await client.send({
-          from: `${senderName} <${senderEmail}>`,
-          to: email,
-          subject: `Survey: ${survey.title}`,
-          content: `
+      // Send email to each recipient
+      const emailResults = [];
+      for (const email of emailAddresses) {
+        try {
+          console.log(`Sending email to ${email}...`);
+          await client.send({
+            from: `${senderName} <${senderEmail}>`,
+            to: email,
+            subject: `Survey: ${survey.title}`,
+            content: `
 <!DOCTYPE html>
 <html>
 <head>
@@ -130,43 +166,57 @@ serve(async (req) => {
 </body>
 </html>
           `,
-          html: true,
+            html: true,
+          });
+          console.log(`Email sent to ${email} successfully`);
+          emailResults.push({ email, success: true });
+        } catch (emailError) {
+          console.error(`Failed to send email to ${email}:`, emailError);
+          emailResults.push({ email, success: false, error: emailError.message });
+        }
+      }
+
+      // Close the SMTP connection
+      await client.close();
+      console.log("SMTP connection closed");
+
+      // Log the email sending in the database
+      const { error: logError } = await supabase
+        .from("survey_email_logs")
+        .insert({
+          survey_id: surveyId,
+          recipients: emailAddresses,
+          status: "sent",
+          error_message: null,
         });
-        emailResults.push({ email, success: true });
-      } catch (emailError) {
-        console.error(`Failed to send email to ${email}:`, emailError);
-        emailResults.push({ email, success: false, error: emailError.message });
+
+      if (logError) {
+        console.error("Failed to log email sending:", logError);
+      } else {
+        console.log("Email sending logged successfully");
       }
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: `Emails sent to ${emailResults.filter(r => r.success).length} recipients`,
+          results: emailResults
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
+    } catch (smtpError) {
+      console.error("SMTP Error:", smtpError);
+      return new Response(
+        JSON.stringify({ success: false, error: `SMTP Error: ${smtpError.message}` }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500,
+        }
+      );
     }
-
-    // Close the SMTP connection
-    await client.close();
-
-    // Log the email sending in the database
-    const { error: logError } = await supabase
-      .from("survey_email_logs")
-      .insert({
-        survey_id: surveyId,
-        recipients: emailAddresses,
-        status: "sent",
-        error_message: null,
-      });
-
-    if (logError) {
-      console.error("Failed to log email sending:", logError);
-    }
-
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: `Emails sent to ${emailResults.filter(r => r.success).length} recipients`,
-        results: emailResults
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      }
-    );
   } catch (error) {
     console.error("Error processing request:", error);
     
