@@ -77,9 +77,9 @@ serve(async (req) => {
     // Get SMTP settings from environment variables
     const smtpServer = Deno.env.get("SMTP_SERVER") || "smtp.gmail.com";
     const smtpPort = parseInt(Deno.env.get("SMTP_PORT") || "587", 10);
-    const smtpUsername = Deno.env.get("SMTP_USERNAME") || "crisant231@gmail.com";
-    const smtpPassword = Deno.env.get("SMTP_PASSWORD") || "zhme oltz utuh djbyo";
-    const senderEmail = Deno.env.get("SENDER_EMAIL") || "crisant231@gmail.com";
+    const smtpUsername = Deno.env.get("SMTP_USERNAME") || "";
+    const smtpPassword = Deno.env.get("SMTP_PASSWORD") || "";
+    const senderEmail = Deno.env.get("SENDER_EMAIL") || "";
     const senderName = Deno.env.get("SENDER_NAME") || "Sistema de Encuestas";
     const frontendUrl = Deno.env.get("FRONTEND_URL") || "http://localhost:5173";
 
@@ -170,19 +170,24 @@ serve(async (req) => {
       console.log("SMTP connection closed");
 
       // Log the email sending in the database
-      const { error: logError } = await supabase
-        .from("survey_email_logs")
-        .insert({
-          survey_id: surveyId,
-          recipients: emailAddresses,
-          status: "sent",
-          error_message: null,
-        });
+      try {
+        const { error: logError } = await supabase
+          .from("survey_email_logs")
+          .insert({
+            survey_id: surveyId,
+            recipients: emailAddresses,
+            status: "sent",
+            error_message: null,
+          });
 
-      if (logError) {
+        if (logError) {
+          console.error("Failed to log email sending:", logError);
+        } else {
+          console.log("Email sending logged successfully");
+        }
+      } catch (logError) {
+        // Just log the error but don't fail the request if logging fails
         console.error("Failed to log email sending:", logError);
-      } else {
-        console.log("Email sending logged successfully");
       }
 
       return new Response(
@@ -198,6 +203,21 @@ serve(async (req) => {
       );
     } catch (smtpError) {
       console.error("SMTP Error:", smtpError);
+      
+      // Try to log the failed email attempt
+      try {
+        await supabase
+          .from("survey_email_logs")
+          .insert({
+            survey_id: surveyId,
+            recipients: emailAddresses,
+            status: "failed",
+            error_message: smtpError.message,
+          });
+      } catch (logError) {
+        console.error("Failed to log failed email attempt:", logError);
+      }
+      
       return new Response(
         JSON.stringify({ success: false, error: `SMTP Error: ${smtpError.message}` }),
         {

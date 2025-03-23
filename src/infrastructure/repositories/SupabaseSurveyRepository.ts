@@ -1,3 +1,4 @@
+
 import { Survey, SurveyStatistics, DeliveryConfig } from '../../domain/models/Survey';
 import { SurveyRepository } from '../../domain/repositories/SurveyRepository';
 import { supabase } from '../../integrations/supabase/client';
@@ -238,11 +239,13 @@ export class SupabaseSurveyRepository implements SurveyRepository {
           ? JSON.parse(data.delivery_config) 
           : data.delivery_config;
         
+        // Simplify the delivery config creation to avoid deep type instantiation
         deliveryConfig = {
           type: configData.type || 'manual',
           emailAddresses: Array.isArray(configData.emailAddresses) ? configData.emailAddresses : []
         };
 
+        // Add schedule if present
         if (configData.schedule) {
           deliveryConfig.schedule = {
             frequency: configData.schedule.frequency || 'monthly',
@@ -253,6 +256,7 @@ export class SupabaseSurveyRepository implements SurveyRepository {
           };
         }
         
+        // Add trigger if present
         if (configData.trigger) {
           deliveryConfig.trigger = {
             type: configData.trigger.type || 'ticket-closed',
