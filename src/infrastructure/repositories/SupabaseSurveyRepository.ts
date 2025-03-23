@@ -4,6 +4,19 @@ import { SurveyRepository } from '../../domain/repositories/SurveyRepository';
 import { supabase } from '../../integrations/supabase/client';
 import { Json } from '../../integrations/supabase/types';
 
+// Define a simple interface for response records to avoid complex type issues
+interface ResponseRecord {
+  id: string;
+  survey_id: string;
+  respondent_name: string;
+  respondent_email: string | null;
+  respondent_company: string | null;
+  respondent_phone: string | null;
+  submitted_at: string;
+  answers: Record<string, any>;
+  completion_time?: number;
+}
+
 export class SupabaseSurveyRepository implements SurveyRepository {
   async getAllSurveys(): Promise<Survey[]> {
     const { data, error } = await supabase
@@ -36,6 +49,7 @@ export class SupabaseSurveyRepository implements SurveyRepository {
         title: survey.title,
         description: survey.description,
         questions: survey.questions as unknown as Json,
+        delivery_config: survey.deliveryConfig as unknown as Json
       })
       .select();
 
@@ -51,6 +65,7 @@ export class SupabaseSurveyRepository implements SurveyRepository {
         title: survey.title,
         description: survey.description,
         questions: survey.questions as unknown as Json,
+        delivery_config: survey.deliveryConfig as unknown as Json
       })
       .eq('id', survey.id);
 
@@ -79,19 +94,6 @@ export class SupabaseSurveyRepository implements SurveyRepository {
   }
 
   async getSurveyStatistics(surveyId: string): Promise<SurveyStatistics> {
-    // Define a simple interface for response records to avoid complex type issues
-    interface ResponseRecord {
-      id: string;
-      survey_id: string;
-      respondent_name: string;
-      respondent_email: string | null;
-      respondent_company: string | null;
-      respondent_phone: string | null;
-      submitted_at: string;
-      answers: Record<string, any>;
-      completion_time?: number;
-    }
-    
     const { data, error } = await supabase
       .from('survey_responses')
       .select('*')
@@ -114,8 +116,8 @@ export class SupabaseSurveyRepository implements SurveyRepository {
           answers: item.answers as Record<string, any> || {}
         };
         
-        // Convert completion_time if available
-        if (item.completion_time !== undefined) {
+        // Add completion_time if it exists in the database record
+        if ('completion_time' in item && item.completion_time !== undefined) {
           responseData.completion_time = 
             typeof item.completion_time === 'number' ? item.completion_time : 
             typeof item.completion_time === 'string' ? parseInt(item.completion_time, 10) : 
@@ -190,8 +192,16 @@ export class SupabaseSurveyRepository implements SurveyRepository {
 
   async sendSurveyEmails(surveyId: string, emailAddresses: string[]): Promise<boolean> {
     try {
-      console.log(`Sending survey ${surveyId} to emails: ${emailAddresses.join(', ')}`);
-      return true;
+      const { data, error } = await supabase.functions.invoke('send-survey-emails', {
+        body: { surveyId, emailAddresses }
+      });
+      
+      if (error) {
+        console.error('Error sending survey emails:', error);
+        return false;
+      }
+      
+      return data?.success || false;
     } catch (error) {
       console.error('Error sending survey emails', error);
       return false;
@@ -217,12 +227,25 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       parsedQuestions = [];
     }
 
+    // Parse the delivery_config if it exists
+    let deliveryConfig = undefined;
+    try {
+      if (data.delivery_config) {
+        deliveryConfig = typeof data.delivery_config === 'string' 
+          ? JSON.parse(data.delivery_config) 
+          : data.delivery_config;
+      }
+    } catch (e) {
+      console.error('Error parsing delivery config:', e);
+    }
+
     return {
       id: data.id,
       title: data.title,
       description: data.description || undefined,
       questions: parsedQuestions,
-      createdAt: data.created_at
+      createdAt: data.created_at,
+      deliveryConfig: deliveryConfig
     };
   }
 }

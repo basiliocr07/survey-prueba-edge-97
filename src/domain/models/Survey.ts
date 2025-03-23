@@ -18,6 +18,7 @@ export interface Survey {
   description?: string;
   questions: SurveyQuestion[];
   createdAt: string;
+  deliveryConfig?: DeliveryConfig;
 }
 
 export interface QuestionResponse {
