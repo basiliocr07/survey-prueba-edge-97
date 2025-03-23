@@ -63,9 +63,10 @@ export interface DeliveryConfig {
     dayOfMonth?: number;
     dayOfWeek?: number;
     time: string;
+    startDate?: Date;
   };
   trigger?: {
-    type: string;
+    type: 'ticket-closed' | 'purchase-completed';
     delayHours: number;
     sendAutomatically: boolean;
   };

@@ -2,7 +2,6 @@
 import { Survey, SurveyStatistics, DeliveryConfig } from '../../domain/models/Survey';
 import { SurveyRepository } from '../../domain/repositories/SurveyRepository';
 import { supabase } from '../../integrations/supabase/client';
-import { Json } from '../../integrations/supabase/types';
 
 // Define a simple interface for response records to avoid complex type issues
 interface ResponseRecord {
@@ -48,8 +47,8 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       .insert({
         title: survey.title,
         description: survey.description,
-        questions: survey.questions as unknown as Json,
-        delivery_config: survey.deliveryConfig as unknown as Json
+        questions: survey.questions,
+        delivery_config: survey.deliveryConfig
       })
       .select();
 
@@ -64,8 +63,8 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       .update({
         title: survey.title,
         description: survey.description,
-        questions: survey.questions as unknown as Json,
-        delivery_config: survey.deliveryConfig as unknown as Json
+        questions: survey.questions,
+        delivery_config: survey.deliveryConfig
       })
       .eq('id', survey.id);
 
@@ -242,8 +241,18 @@ export class SupabaseSurveyRepository implements SurveyRepository {
         deliveryConfig = {
           type: config.type || 'manual',
           emailAddresses: Array.isArray(config.emailAddresses) ? config.emailAddresses : [],
-          schedule: config.schedule,
-          trigger: config.trigger
+          schedule: config.schedule ? {
+            frequency: config.schedule.frequency || 'monthly',
+            dayOfMonth: config.schedule.dayOfMonth,
+            dayOfWeek: config.schedule.dayOfWeek,
+            time: config.schedule.time || '09:00',
+            startDate: config.schedule.startDate ? new Date(config.schedule.startDate) : undefined
+          } : undefined,
+          trigger: config.trigger ? {
+            type: config.trigger.type || 'ticket-closed',
+            delayHours: config.trigger.delayHours || 24,
+            sendAutomatically: !!config.trigger.sendAutomatically
+          } : undefined
         };
       }
     } catch (e) {
