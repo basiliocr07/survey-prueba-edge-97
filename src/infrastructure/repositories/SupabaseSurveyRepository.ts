@@ -2,6 +2,7 @@
 import { Survey, SurveyStatistics } from '../../domain/models/Survey';
 import { SurveyRepository } from '../../domain/repositories/SurveyRepository';
 import { supabase } from '../../integrations/supabase/client';
+import { Json } from '../../integrations/supabase/types';
 
 export class SupabaseSurveyRepository implements SurveyRepository {
   async getAllSurveys(): Promise<Survey[]> {
@@ -31,11 +32,11 @@ export class SupabaseSurveyRepository implements SurveyRepository {
   async createSurvey(survey: Omit<Survey, 'id' | 'createdAt'>): Promise<Survey> {
     const { data, error } = await supabase
       .from('surveys')
-      .insert([{
+      .insert({
         title: survey.title,
         description: survey.description,
-        questions: survey.questions,
-      }])
+        questions: survey.questions as unknown as Json,
+      })
       .select();
 
     if (error) throw error;
@@ -49,7 +50,7 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       .update({
         title: survey.title,
         description: survey.description,
-        questions: survey.questions,
+        questions: survey.questions as unknown as Json,
       })
       .eq('id', survey.id);
 
@@ -92,20 +93,34 @@ export class SupabaseSurveyRepository implements SurveyRepository {
 
     // Calculate statistics
     const totalResponses = responses.length;
-    const completionTimes = responses.filter(r => r.completion_time).map(r => r.completion_time);
-    const averageCompletionTime = completionTimes.length 
-      ? completionTimes.reduce((acc, val) => acc + (val || 0), 0) / completionTimes.length 
-      : 0;
+    
+    // Safely handle completion time calculation
+    let averageCompletionTime = 0;
+    const completionTimes: number[] = [];
+    
+    responses.forEach(response => {
+      const completionTime = (response as any).completion_time;
+      if (typeof completionTime === 'number') {
+        completionTimes.push(completionTime);
+      }
+    });
+    
+    if (completionTimes.length > 0) {
+      averageCompletionTime = completionTimes.reduce((sum, time) => sum + time, 0) / completionTimes.length;
+    }
     
     // Create question statistics
     const questionStats = survey.questions.map(question => {
       const questionResponses: Record<string, number> = {};
       
       responses.forEach(response => {
-        const answer = response.answers[question.id];
-        if (answer) {
-          const answerKey = Array.isArray(answer) ? answer.join(', ') : answer.toString();
-          questionResponses[answerKey] = (questionResponses[answerKey] || 0) + 1;
+        if (response.answers && typeof response.answers === 'object') {
+          const answers = response.answers as Record<string, any>;
+          const answer = answers[question.id];
+          if (answer) {
+            const answerKey = Array.isArray(answer) ? answer.join(', ') : answer.toString();
+            questionResponses[answerKey] = (questionResponses[answerKey] || 0) + 1;
+          }
         }
       });
       
@@ -123,7 +138,7 @@ export class SupabaseSurveyRepository implements SurveyRepository {
     return {
       totalResponses,
       averageCompletionTime,
-      completionRate: responses.length ? (responses.filter(r => Object.keys(r.answers || {}).length > 0).length / responses.length) * 100 : 0,
+      completionRate: responses.length ? (responses.filter(r => r.answers && Object.keys(r.answers).length > 0).length / responses.length) * 100 : 0,
       questionStats
     };
   }
@@ -141,17 +156,23 @@ export class SupabaseSurveyRepository implements SurveyRepository {
   }
 
   private mapToSurvey(data: any): Survey {
-    const parsedQuestions = Array.isArray(data.questions) 
-      ? data.questions.map((q: any) => ({
-          id: q.id || '',
-          title: q.title || '',
-          description: q.description,
-          type: q.type || '',
-          required: q.required || false,
-          options: q.options,
-          settings: q.settings
-        }))
-      : [];
+    let parsedQuestions;
+    try {
+      parsedQuestions = Array.isArray(data.questions) 
+        ? data.questions.map((q: any) => ({
+            id: q.id || '',
+            title: q.title || '',
+            description: q.description,
+            type: q.type || '',
+            required: q.required || false,
+            options: q.options,
+            settings: q.settings
+          }))
+        : [];
+    } catch (e) {
+      console.error('Error parsing questions:', e);
+      parsedQuestions = [];
+    }
 
     return {
       id: data.id,

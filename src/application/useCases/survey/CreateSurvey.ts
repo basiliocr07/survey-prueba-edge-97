@@ -6,6 +6,12 @@ export class CreateSurvey {
   constructor(private surveyRepository: SurveyRepository) {}
 
   async execute(surveyData: Omit<Survey, 'id' | 'createdAt'>): Promise<Survey> {
-    return await this.surveyRepository.createSurvey(surveyData);
+    try {
+      const result = await this.surveyRepository.createSurvey(surveyData);
+      return result;
+    } catch (error) {
+      console.error('Error creating survey:', error);
+      throw error;
+    }
   }
 }

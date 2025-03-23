@@ -22,7 +22,9 @@ export const useSurvey = (surveyId?: string) => {
   });
 
   const createSurveyMutation = useMutation({
-    mutationFn: (surveyData: Omit<Survey, 'id' | 'createdAt'>) => createSurveyUseCase.execute(surveyData),
+    mutationFn: (surveyData: Omit<Survey, 'id' | 'createdAt'>) => {
+      return createSurveyUseCase.execute(surveyData);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['surveys'] });
     },
@@ -38,7 +40,9 @@ export const useSurvey = (surveyId?: string) => {
     survey,
     isLoading,
     error,
-    createSurvey: createSurveyMutation.mutate,
+    createSurvey: (surveyData: Omit<Survey, 'id' | 'createdAt'>) => {
+      return createSurveyMutation.mutateAsync(surveyData);
+    },
     isCreating: createSurveyMutation.isPending,
     createError: createSurveyMutation.error,
     statistics,

@@ -52,7 +52,7 @@ export default function SurveyExample() {
       });
       
       // Navigate to the created survey
-      if (createdSurvey) {
+      if (createdSurvey && createdSurvey.id) {
         navigate(`/survey/${createdSurvey.id}`);
       }
     } catch (error) {
