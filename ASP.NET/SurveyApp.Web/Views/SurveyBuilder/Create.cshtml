@@ -1,0 +1,247 @@
+
+@model SurveyApp.Web.Models.CreateSurveyViewModel
+@{
+    ViewData["Title"] = Model.Id > 0 ? "Edit Survey" : "Create Survey";
+}
+
+<div class="min-h-screen bg-background">
+    <div class="container mx-auto pt-20 pb-10 px-4 md:px-6">
+        <div class="flex flex-col space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold tracking-tight">@(Model.Id > 0 ? "Edit Survey" : "Create Survey")</h1>
+                    <p class="text-muted-foreground mt-1">@(Model.Id > 0 ? "Update your existing survey" : "Design your new survey")</p>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <a asp-controller="Surveys" asp-action="Index" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+                        Cancel
+                    </a>
+                </div>
+            </div>
+
+            <form asp-controller="SurveyBuilder" asp-action="Create" method="post" class="space-y-6">
+                <input type="hidden" asp-for="Id" />
+                
+                <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+                    <div class="space-y-4">
+                        <div>
+                            <label asp-for="Title" class="text-sm font-medium">Survey Title</label>
+                            <input asp-for="Title" class="mt-1 block w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" placeholder="Enter survey title" />
+                            <span asp-validation-for="Title" class="text-sm text-destructive"></span>
+                        </div>
+                        
+                        <div>
+                            <label asp-for="Description" class="text-sm font-medium">Description (optional)</label>
+                            <textarea asp-for="Description" rows="3" class="mt-1 block w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" placeholder="Enter survey description"></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
+                    <div class="p-6 space-y-4">
+                        <h2 class="text-xl font-semibold">Questions</h2>
+                        <p class="text-sm text-muted-foreground">Build your survey by adding questions below</p>
+                        
+                        <div id="questions-container" class="space-y-4">
+                            @if (Model.Questions.Count == 0)
+                            {
+                                <div class="border rounded-md p-4 text-center text-muted-foreground">
+                                    No questions added yet. Click the button below to add your first question.
+                                </div>
+                            }
+                            else
+                            {
+                                @for (var i = 0; i < Model.Questions.Count; i++)
+                                {
+                                    <div class="question-card border rounded-md p-4">
+                                        <input type="hidden" name="Questions[@i].Id" value="@Model.Questions[i].Id" />
+                                        
+                                        <div class="flex justify-between items-center mb-2">
+                                            <h3 class="font-medium">Question @(i + 1)</h3>
+                                            <button type="button" class="text-destructive hover:text-destructive/80" onclick="removeQuestion(this)">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="space-y-3">
+                                            <div>
+                                                <label class="text-sm font-medium">Question Title</label>
+                                                <input type="text" name="Questions[@i].Title" value="@Model.Questions[i].Title" class="mt-1 block w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" />
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="text-sm font-medium">Question Type</label>
+                                                <select name="Questions[@i].Type" class="mt-1 block w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                                                    <option value="text" selected="@(Model.Questions[i].Type == "text")">Text Input</option>
+                                                    <option value="single-choice" selected="@(Model.Questions[i].Type == "single-choice")">Single Choice</option>
+                                                    <option value="multiple-choice" selected="@(Model.Questions[i].Type == "multiple-choice")">Multiple Choice</option>
+                                                    <option value="rating" selected="@(Model.Questions[i].Type == "rating")">Rating</option>
+                                                    <option value="nps" selected="@(Model.Questions[i].Type == "nps")">Net Promoter Score</option>
+                                                </select>
+                                            </div>
+                                            
+                                            <div class="flex items-center space-x-2">
+                                                <input type="checkbox" id="required-@i" name="Questions[@i].Required" checked="@Model.Questions[i].Required" class="rounded border-input text-primary focus:ring-primary" />
+                                                <label for="required-@i" class="text-sm">Required question</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+                        
+                        <button type="button" id="add-question-btn" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus mr-2 h-4 w-4"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            Add Question
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+                    <h2 class="text-xl font-semibold mb-4">Delivery Settings</h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-sm font-medium block mb-2">Delivery Method</label>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <label class="flex items-start p-4 border rounded-md cursor-pointer hover:bg-accent/10">
+                                    <input type="radio" name="DeliveryConfig.Type" value="manual" checked="@(Model.DeliveryConfig.Type == "manual")" class="mt-1 mr-2" />
+                                    <div>
+                                        <span class="font-medium">Manual</span>
+                                        <p class="text-sm text-muted-foreground mt-1">Send your survey to recipients manually</p>
+                                    </div>
+                                </label>
+                                
+                                <label class="flex items-start p-4 border rounded-md cursor-pointer hover:bg-accent/10">
+                                    <input type="radio" name="DeliveryConfig.Type" value="scheduled" checked="@(Model.DeliveryConfig.Type == "scheduled")" class="mt-1 mr-2" />
+                                    <div>
+                                        <span class="font-medium">Scheduled</span>
+                                        <p class="text-sm text-muted-foreground mt-1">Set a schedule to automatically send surveys</p>
+                                    </div>
+                                </label>
+                                
+                                <label class="flex items-start p-4 border rounded-md cursor-pointer hover:bg-accent/10">
+                                    <input type="radio" name="DeliveryConfig.Type" value="triggered" checked="@(Model.DeliveryConfig.Type == "triggered")" class="mt-1 mr-2" />
+                                    <div>
+                                        <span class="font-medium">Triggered</span>
+                                        <p class="text-sm text-muted-foreground mt-1">Send surveys based on specific triggers</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="border-t pt-4">
+                            <label class="text-sm font-medium block mb-2">Email Recipients</label>
+                            <textarea name="EmailAddresses" rows="3" class="mt-1 block w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" placeholder="Enter email addresses, separated by commas"></textarea>
+                            <p class="text-xs text-muted-foreground mt-1">Enter one email address per line, or separate with commas</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end gap-3">
+                    <a asp-controller="Surveys" asp-action="Index" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+                        Cancel
+                    </a>
+                    <button type="submit" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                        @(Model.Id > 0 ? "Update Survey" : "Create Survey")
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const addQuestionBtn = document.getElementById('add-question-btn');
+            const questionsContainer = document.getElementById('questions-container');
+            
+            if (addQuestionBtn && questionsContainer) {
+                addQuestionBtn.addEventListener('click', function() {
+                    const questionCount = document.querySelectorAll('.question-card').length;
+                    const uniqueId = 'new-' + Date.now();
+                    
+                    const emptyMessage = questionsContainer.querySelector('.text-center');
+                    if (emptyMessage) {
+                        emptyMessage.remove();
+                    }
+                    
+                    const newQuestion = document.createElement('div');
+                    newQuestion.className = 'question-card border rounded-md p-4';
+                    newQuestion.innerHTML = `
+                        <input type="hidden" name="Questions[${questionCount}].Id" value="${uniqueId}" />
+                        
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="font-medium">Question ${questionCount + 1}</h3>
+                            <button type="button" class="text-destructive hover:text-destructive/80" onclick="removeQuestion(this)">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
+                            </button>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div>
+                                <label class="text-sm font-medium">Question Title</label>
+                                <input type="text" name="Questions[${questionCount}].Title" class="mt-1 block w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" />
+                            </div>
+                            
+                            <div>
+                                <label class="text-sm font-medium">Question Type</label>
+                                <select name="Questions[${questionCount}].Type" class="mt-1 block w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                                    <option value="text">Text Input</option>
+                                    <option value="single-choice">Single Choice</option>
+                                    <option value="multiple-choice">Multiple Choice</option>
+                                    <option value="rating">Rating</option>
+                                    <option value="nps">Net Promoter Score</option>
+                                </select>
+                            </div>
+                            
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" id="required-${questionCount}" name="Questions[${questionCount}].Required" checked class="rounded border-input text-primary focus:ring-primary" />
+                                <label for="required-${questionCount}" class="text-sm">Required question</label>
+                            </div>
+                        </div>
+                    `;
+                    
+                    questionsContainer.appendChild(newQuestion);
+                });
+            }
+            
+            // Make the removeQuestion function global
+            window.removeQuestion = function(button) {
+                const questionCard = button.closest('.question-card');
+                if (questionCard) {
+                    questionCard.remove();
+                    
+                    // Re-number the questions
+                    const questions = document.querySelectorAll('.question-card');
+                    if (questions.length === 0) {
+                        questionsContainer.innerHTML = `
+                            <div class="border rounded-md p-4 text-center text-muted-foreground">
+                                No questions added yet. Click the button below to add your first question.
+                            </div>
+                        `;
+                    } else {
+                        questions.forEach((question, index) => {
+                            const heading = question.querySelector('h3');
+                            if (heading) {
+                                heading.textContent = `Question ${index + 1}`;
+                            }
+                            
+                            // Update input names with new indices
+                            const inputs = question.querySelectorAll('input, select');
+                            inputs.forEach(input => {
+                                const name = input.getAttribute('name');
+                                if (name) {
+                                    const updatedName = name.replace(/Questions\[\d+\]/, `Questions[${index}]`);
+                                    input.setAttribute('name', updatedName);
+                                }
+                            });
+                        });
+                    }
+                }
+            };
+        });
+    </script>
+}
