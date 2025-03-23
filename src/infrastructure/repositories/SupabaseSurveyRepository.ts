@@ -79,7 +79,9 @@ export class SupabaseSurveyRepository implements SurveyRepository {
   }
 
   async getSurveyStatistics(surveyId: string): Promise<SurveyStatistics> {
-    // Definimos interfaces simples para evitar problemas de tipo
+    // Define a simplified type for survey responses to avoid type recursion
+    type SimpleAnswer = string | string[] | number | boolean | null;
+    
     interface SimpleResponse {
       survey_id: string;
       id: string;
@@ -89,10 +91,10 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       respondent_phone: string | null;
       submitted_at: string;
       completion_time?: number;
-      answers: Record<string, any>;
+      answers: Record<string, SimpleAnswer>;
     }
 
-    // Obtenemos los datos de respuestas de la encuesta
+    // Fetch the survey responses
     const { data, error } = await supabase
       .from('survey_responses')
       .select('*')
@@ -100,11 +102,12 @@ export class SupabaseSurveyRepository implements SurveyRepository {
 
     if (error) throw error;
 
-    // Transformamos los datos de manera segura
+    // Transform the data to match our simplified type
     const responses: SimpleResponse[] = [];
     
     if (data) {
       for (const item of data) {
+        // Create a new response object with our simplified structure
         const responseData: SimpleResponse = {
           survey_id: item.survey_id,
           id: item.id,
@@ -116,38 +119,40 @@ export class SupabaseSurveyRepository implements SurveyRepository {
           answers: {}
         };
         
-        // Manejo seguro de completion_time
-        if (typeof item.completion_time === 'number') {
-          responseData.completion_time = item.completion_time;
-        } else if (typeof item.completion_time === 'string') {
-          responseData.completion_time = Number(item.completion_time);
+        // Safely handle completion_time which may not exist in the type
+        // Access it using bracket notation to avoid TypeScript errors
+        const completionTime = (item as any)['completion_time'];
+        if (typeof completionTime === 'number') {
+          responseData.completion_time = completionTime;
+        } else if (typeof completionTime === 'string') {
+          responseData.completion_time = Number(completionTime);
         }
         
-        // Manejo seguro de answers
+        // Safely handle answers
         if (item.answers && typeof item.answers === 'object') {
-          responseData.answers = item.answers as Record<string, any>;
+          // Use a type assertion to handle complex JSON types
+          responseData.answers = item.answers as Record<string, SimpleAnswer>;
         }
         
         responses.push(responseData);
       }
     }
 
-    // Obtenemos la encuesta
+    // Get the survey details
     const survey = await this.getSurveyById(surveyId);
     if (!survey) throw new Error('Survey not found');
 
-    // Calculamos las estadísticas
+    // Calculate statistics
     const totalResponses = responses.length;
     
-    // Cálculo del tiempo medio de finalización
+    // Calculate average completion time
     let averageCompletionTime = 0;
     let completionTimeSum = 0;
     let completionTimeCount = 0;
     
     for (const response of responses) {
-      const completionTime = response.completion_time;
-      if (typeof completionTime === 'number') {
-        completionTimeSum += completionTime;
+      if (response.completion_time !== undefined) {
+        completionTimeSum += response.completion_time;
         completionTimeCount++;
       }
     }
@@ -156,7 +161,7 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       averageCompletionTime = completionTimeSum / completionTimeCount;
     }
     
-    // Estadísticas por pregunta
+    // Calculate statistics per question
     const questionStats = survey.questions.map(question => {
       const answerCounts: Record<string, number> = {};
       
@@ -181,7 +186,7 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       };
     });
 
-    // Cálculo de la tasa de finalización
+    // Calculate completion rate
     let completedResponsesCount = 0;
     
     for (const response of responses) {
@@ -192,7 +197,7 @@ export class SupabaseSurveyRepository implements SurveyRepository {
     
     const completionRate = totalResponses ? (completedResponsesCount / totalResponses) * 100 : 0;
     
-    // Devolvemos las estadísticas
+    // Return the statistics
     return {
       totalResponses,
       averageCompletionTime,
