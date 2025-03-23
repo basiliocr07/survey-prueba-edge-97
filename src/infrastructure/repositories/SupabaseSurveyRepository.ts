@@ -240,7 +240,7 @@ export class SupabaseSurveyRepository implements SurveyRepository {
         
         deliveryConfig = {
           type: configData.type || 'manual',
-          emailAddresses: Array.isArray(configData.emailAddresses) ? configData.emailAddresses : [],
+          emailAddresses: Array.isArray(configData.emailAddresses) ? configData.emailAddresses : []
         };
 
         if (configData.schedule) {
