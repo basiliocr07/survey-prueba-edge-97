@@ -80,7 +80,7 @@ export class SupabaseSurveyRepository implements SurveyRepository {
   }
 
   async getSurveyStatistics(surveyId: string): Promise<SurveyStatistics> {
-    // Fetch survey responses - use explicit typing for responses
+    // Fetch survey responses with explicit response type
     const { data, error } = await supabase
       .from('survey_responses')
       .select('*')
@@ -88,8 +88,8 @@ export class SupabaseSurveyRepository implements SurveyRepository {
 
     if (error) throw error;
 
-    // Use a simple array type without complex nesting
-    const responses = data || [];
+    // Define a simple array type for responses
+    const responses: any[] = data || [];
 
     // Get survey to access questions
     const survey = await this.getSurveyById(surveyId);
@@ -98,49 +98,44 @@ export class SupabaseSurveyRepository implements SurveyRepository {
     // Calculate statistics
     const totalResponses = responses.length;
     
-    // Simplified completion time calculation
+    // Calculate average completion time
     let averageCompletionTime = 0;
-    const completionTimes: number[] = [];
+    let completionTimeSum = 0;
+    let completionTimeCount = 0;
     
     for (const response of responses) {
-      // Use simple property access with type guard
-      if (
-        response && 
-        typeof response === 'object' && 
-        'completion_time' in response && 
-        typeof response.completion_time === 'number'
-      ) {
-        completionTimes.push(response.completion_time);
+      if (response && 
+          typeof response === 'object' && 
+          'completion_time' in response && 
+          typeof response.completion_time === 'number') {
+        completionTimeSum += response.completion_time;
+        completionTimeCount++;
       }
     }
     
-    if (completionTimes.length > 0) {
-      averageCompletionTime = completionTimes.reduce((sum, time) => sum + time, 0) / completionTimes.length;
+    if (completionTimeCount > 0) {
+      averageCompletionTime = completionTimeSum / completionTimeCount;
     }
     
-    // Process question statistics with simpler type handling
+    // Process question statistics with explicit typing
     const questionStats = survey.questions.map(question => {
-      // Use a simple accumulator object with string keys
+      // Simple record to count answers
       const answerCounts: Record<string, number> = {};
       
       for (const response of responses) {
-        // Use simple type guards to avoid complex type inference
-        if (!response || typeof response !== 'object' || !response.answers) {
-          continue;
-        }
+        // Skip invalid responses
+        if (!response || typeof response !== 'object') continue;
         
-        // Force cast to any to simplify type handling
-        const answers = response.answers as any;
+        // Get answers with type assertion
+        const answers = response.answers as Record<string, unknown> | null | undefined;
+        if (!answers) continue;
         
-        // Skip if no answer for this question
-        if (!answers || !answers[question.id]) {
-          continue;
-        }
-        
-        // Get the answer and convert to string representation
+        // Get answer for this question
         const answer = answers[question.id];
-        let answerKey: string;
+        if (answer === undefined || answer === null) continue;
         
+        // Convert answer to string for counting
+        let answerKey: string;
         if (Array.isArray(answer)) {
           answerKey = answer.join(', ');
         } else {
@@ -151,7 +146,7 @@ export class SupabaseSurveyRepository implements SurveyRepository {
         answerCounts[answerKey] = (answerCounts[answerKey] || 0) + 1;
       }
       
-      // Transform counts to the required format
+      // Convert to required format
       return {
         questionId: question.id,
         questionTitle: question.title,
@@ -163,10 +158,18 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       };
     });
 
-    // Calculate completion rate
-    const completedResponsesCount = responses.filter(r => {
-      return r && typeof r === 'object' && r.answers && Object.keys(r.answers).length > 0;
-    }).length;
+    // Calculate completion rate with explicit type handling
+    let completedResponsesCount = 0;
+    
+    for (const response of responses) {
+      if (response && 
+          typeof response === 'object' && 
+          response.answers && 
+          typeof response.answers === 'object' &&
+          Object.keys(response.answers).length > 0) {
+        completedResponsesCount++;
+      }
+    }
     
     const completionRate = totalResponses ? (completedResponsesCount / totalResponses) * 100 : 0;
     
