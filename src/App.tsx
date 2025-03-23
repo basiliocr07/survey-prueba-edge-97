@@ -18,6 +18,7 @@ import Dashboard from "./pages/Dashboard";
 import About from "./pages/About";
 import ClientAccess from "./pages/ClientAccess";
 import ClientLogin from "./pages/ClientLogin";
+import SurveyExample from "./pages/SurveyExample";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,7 @@ const App = () => (
               <Route path="/about" element={<About />} />
               <Route path="/client" element={<ClientAccess />} />
               <Route path="/login" element={<ClientLogin />} />
+              <Route path="/hexagonal-example" element={<SurveyExample />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
