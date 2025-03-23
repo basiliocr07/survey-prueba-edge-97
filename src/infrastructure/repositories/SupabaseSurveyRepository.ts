@@ -1,4 +1,3 @@
-
 import { Survey, SurveyStatistics } from '../../domain/models/Survey';
 import { SurveyRepository } from '../../domain/repositories/SurveyRepository';
 import { supabase } from '../../integrations/supabase/client';
@@ -30,7 +29,6 @@ export class SupabaseSurveyRepository implements SurveyRepository {
   }
 
   async createSurvey(survey: Omit<Survey, 'id' | 'createdAt'>): Promise<Survey> {
-    // Convert SurveyQuestion[] to Json for Supabase
     const { data, error } = await supabase
       .from('surveys')
       .insert({
@@ -80,7 +78,6 @@ export class SupabaseSurveyRepository implements SurveyRepository {
   }
 
   async getSurveyStatistics(surveyId: string): Promise<SurveyStatistics> {
-    // Fetch survey responses with explicit response type
     const { data, error } = await supabase
       .from('survey_responses')
       .select('*')
@@ -88,25 +85,20 @@ export class SupabaseSurveyRepository implements SurveyRepository {
 
     if (error) throw error;
 
-    // Define a simple array type for responses
     const responses: any[] = data || [];
 
-    // Get survey to access questions
     const survey = await this.getSurveyById(surveyId);
     if (!survey) throw new Error('Survey not found');
 
-    // Calculate statistics
     const totalResponses = responses.length;
     
-    // Calculate average completion time
     let averageCompletionTime = 0;
     let completionTimeSum = 0;
     let completionTimeCount = 0;
     
-    for (const response of responses) {
+    for (let i = 0; i < responses.length; i++) {
+      const response = responses[i];
       if (response && 
-          typeof response === 'object' && 
-          'completion_time' in response && 
           typeof response.completion_time === 'number') {
         completionTimeSum += response.completion_time;
         completionTimeCount++;
@@ -117,24 +109,19 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       averageCompletionTime = completionTimeSum / completionTimeCount;
     }
     
-    // Process question statistics with explicit typing
     const questionStats = survey.questions.map(question => {
-      // Simple record to count answers
       const answerCounts: Record<string, number> = {};
       
-      for (const response of responses) {
-        // Skip invalid responses
-        if (!response || typeof response !== 'object') continue;
+      for (let i = 0; i < responses.length; i++) {
+        const response = responses[i];
+        if (!response) continue;
         
-        // Get answers with type assertion
-        const answers = response.answers as Record<string, unknown> | null | undefined;
+        const answers = response.answers as any;
         if (!answers) continue;
         
-        // Get answer for this question
         const answer = answers[question.id];
         if (answer === undefined || answer === null) continue;
         
-        // Convert answer to string for counting
         let answerKey: string;
         if (Array.isArray(answer)) {
           answerKey = answer.join(', ');
@@ -142,11 +129,9 @@ export class SupabaseSurveyRepository implements SurveyRepository {
           answerKey = String(answer);
         }
         
-        // Count the answer
         answerCounts[answerKey] = (answerCounts[answerKey] || 0) + 1;
       }
       
-      // Convert to required format
       return {
         questionId: question.id,
         questionTitle: question.title,
@@ -158,15 +143,11 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       };
     });
 
-    // Calculate completion rate with explicit type handling
     let completedResponsesCount = 0;
     
-    for (const response of responses) {
-      if (response && 
-          typeof response === 'object' && 
-          response.answers && 
-          typeof response.answers === 'object' &&
-          Object.keys(response.answers).length > 0) {
+    for (let i = 0; i < responses.length; i++) {
+      const response = responses[i];
+      if (response && response.answers && Object.keys(response.answers as any).length > 0) {
         completedResponsesCount++;
       }
     }
@@ -183,8 +164,6 @@ export class SupabaseSurveyRepository implements SurveyRepository {
 
   async sendSurveyEmails(surveyId: string, emailAddresses: string[]): Promise<boolean> {
     try {
-      // In a real implementation, this would connect to an email service
-      // For demo purposes, we'll simulate success
       console.log(`Sending survey ${surveyId} to emails: ${emailAddresses.join(', ')}`);
       return true;
     } catch (error) {
