@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
@@ -17,18 +16,7 @@ import { useSurvey } from '@/application/hooks/useSurvey';
 import { Survey, SurveyQuestion, DeliveryConfig } from '@/domain/models/Survey';
 import { FilePlus, Save, Send, Settings } from 'lucide-react';
 
-type Question = {
-  id: string;
-  title: string;
-  description?: string;
-  type: string;
-  required: boolean;
-  options?: string[];
-  settings?: {
-    min?: number;
-    max?: number;
-  };
-};
+type Question = SurveyQuestion;
 
 export default function CreateSurvey() {
   const navigate = useNavigate();
@@ -65,7 +53,7 @@ export default function CreateSurvey() {
   
   // Add a new question to the survey
   const addQuestion = useCallback(() => {
-    const newQuestion = {
+    const newQuestion: Question = {
       id: uuidv4(),
       title: 'New Question',
       type: 'text',
@@ -78,7 +66,7 @@ export default function CreateSurvey() {
   
   // Add a sample question of each type for demo purposes
   const addSampleQuestions = useCallback(() => {
-    const sampleQuestions = [
+    const sampleQuestions: Question[] = [
       {
         id: uuidv4(),
         title: 'How satisfied are you with our service?',
@@ -359,7 +347,7 @@ export default function CreateSurvey() {
                     question={question}
                     index={index}
                     total={questions.length}
-                    onUpdate={(updatedQuestion) => updateQuestion(question.id, updatedQuestion)}
+                    onUpdate={(updatedQuestion) => updateQuestion(question.id, updatedQuestion as Question)}
                     onDelete={() => removeQuestion(question.id)}
                     onMoveUp={() => moveQuestion(question.id, 'up')}
                     onMoveDown={() => moveQuestion(question.id, 'down')}

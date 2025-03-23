@@ -1,4 +1,3 @@
-
 import { Survey, SurveyStatistics, DeliveryConfig } from '../../domain/models/Survey';
 import { SurveyRepository } from '../../domain/repositories/SurveyRepository';
 import { supabase } from '../../integrations/supabase/client';
@@ -44,12 +43,12 @@ export class SupabaseSurveyRepository implements SurveyRepository {
   async createSurvey(survey: Omit<Survey, 'id' | 'createdAt'>): Promise<Survey> {
     const { data, error } = await supabase
       .from('surveys')
-      .insert({
+      .insert([{
         title: survey.title,
         description: survey.description,
-        questions: survey.questions,
-        delivery_config: survey.deliveryConfig
-      })
+        questions: survey.questions as any,
+        delivery_config: survey.deliveryConfig as any
+      }])
       .select();
 
     if (error) throw error;
@@ -63,8 +62,8 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       .update({
         title: survey.title,
         description: survey.description,
-        questions: survey.questions,
-        delivery_config: survey.deliveryConfig
+        questions: survey.questions as any,
+        delivery_config: survey.deliveryConfig as any
       })
       .eq('id', survey.id);
 
