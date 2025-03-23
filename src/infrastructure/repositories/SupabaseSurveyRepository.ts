@@ -1,3 +1,4 @@
+
 import { Survey, SurveyStatistics } from '../../domain/models/Survey';
 import { SurveyRepository } from '../../domain/repositories/SurveyRepository';
 import { supabase } from '../../integrations/supabase/client';
@@ -78,7 +79,8 @@ export class SupabaseSurveyRepository implements SurveyRepository {
   }
 
   async getSurveyStatistics(surveyId: string): Promise<SurveyStatistics> {
-    type ResponseRecord = {
+    // Definimos un tipo simple para las respuestas para evitar problemas de recursión de tipos
+    interface SimpleResponseRecord {
       id: string;
       survey_id: string;
       respondent_name: string;
@@ -87,7 +89,8 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       respondent_phone: string | null;
       submitted_at: string;
       answers: Record<string, any>;
-    };
+      completion_time?: number;
+    }
     
     const { data, error } = await supabase
       .from('survey_responses')
@@ -96,11 +99,12 @@ export class SupabaseSurveyRepository implements SurveyRepository {
 
     if (error) throw error;
 
-    const responses: Array<ResponseRecord & { completion_time?: number }> = [];
+    const responses: SimpleResponseRecord[] = [];
     
     if (data) {
       for (const item of data) {
-        const responseData: ResponseRecord & { completion_time?: number } = {
+        // Usamos un enfoque más simple para mapear los datos
+        const responseData: SimpleResponseRecord = {
           id: item.id,
           survey_id: item.survey_id,
           respondent_name: item.respondent_name,
@@ -111,15 +115,15 @@ export class SupabaseSurveyRepository implements SurveyRepository {
           answers: {}
         };
         
+        // Convertimos completion_time de manera segura
         if ('completion_time' in item) {
-          const completionTimeValue = (item as any).completion_time;
-          if (typeof completionTimeValue === 'number') {
-            responseData.completion_time = completionTimeValue;
-          } else if (typeof completionTimeValue === 'string') {
-            responseData.completion_time = Number(completionTimeValue);
+          const completionTime = (item as any).completion_time;
+          if (typeof completionTime === 'number' || typeof completionTime === 'string') {
+            responseData.completion_time = Number(completionTime);
           }
         }
         
+        // Manejamos las respuestas (answers) de manera más segura
         if (item.answers && typeof item.answers === 'object') {
           responseData.answers = item.answers as Record<string, any>;
         }

@@ -1,18 +1,20 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FilePlus, Edit, Eye, Trash2 } from "lucide-react";
+import { FilePlus, Edit, Eye, Trash2, BarChart2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/layout/Navbar";
 import { useToast } from "@/hooks/use-toast";
 import { SupabaseSurveyRepository } from "@/infrastructure/repositories/SupabaseSurveyRepository";
+import { SupabaseSurveyResponseRepository } from "@/infrastructure/repositories/SupabaseSurveyResponseRepository";
 import { Survey } from "@/domain/models/Survey";
 
-// Initialize the repository
+// Initialize repositories
 const surveyRepository = new SupabaseSurveyRepository();
+const responseRepository = new SupabaseSurveyResponseRepository();
 
 export default function Surveys() {
   const [filterActive, setFilterActive] = useState<string>("all");
@@ -20,7 +22,7 @@ export default function Surveys() {
   const queryClient = useQueryClient();
   
   // Fetch surveys using our repository
-  const { data: surveys = [], isLoading } = useQuery({
+  const { data: surveys = [], isLoading: isLoadingSurveys } = useQuery({
     queryKey: ['surveys', filterActive],
     queryFn: async () => {
       try {
@@ -41,14 +43,29 @@ export default function Surveys() {
     }
   });
 
-  // Prepare survey stats
-  const surveysWithStats = surveys.map(survey => {
-    return {
-      ...survey,
-      // We'll fetch real statistics in a separate query if needed
-      responses: Math.floor(Math.random() * 100), // Placeholder
-      completionRate: Math.floor(Math.random() * 100) // Placeholder
-    };
+  // Fetch responses for statistics
+  const { data: responseStats = {}, isLoading: isLoadingStats } = useQuery({
+    queryKey: ['survey-responses-stats'],
+    queryFn: async () => {
+      try {
+        const stats: Record<string, { count: number, completionRate: number }> = {};
+        
+        // For each survey, fetch its statistics
+        for (const survey of surveys) {
+          const surveyStats = await surveyRepository.getSurveyStatistics(survey.id);
+          stats[survey.id] = {
+            count: surveyStats.totalResponses,
+            completionRate: surveyStats.completionRate
+          };
+        }
+        
+        return stats;
+      } catch (error) {
+        console.error("Error fetching response stats:", error);
+        return {};
+      }
+    },
+    enabled: surveys.length > 0,
   });
 
   // Delete mutation using the repository
@@ -84,6 +101,16 @@ export default function Surveys() {
       day: 'numeric' 
     }).format(date);
   };
+
+  const getResponseCount = (surveyId: string): number => {
+    return responseStats[surveyId]?.count || 0;
+  };
+
+  const getCompletionRate = (surveyId: string): number => {
+    return responseStats[surveyId]?.completionRate || 0;
+  };
+
+  const isLoading = isLoadingSurveys || (surveys.length > 0 && isLoadingStats);
 
   return (
     <div className="min-h-screen bg-background">
@@ -144,17 +171,17 @@ export default function Surveys() {
               <div className="flex justify-center items-center p-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
-            ) : surveysWithStats.length > 0 ? (
+            ) : surveys.length > 0 ? (
               <CardContent className="p-0">
                 <ul className="divide-y">
-                  {surveysWithStats.map((survey) => (
+                  {surveys.map((survey) => (
                     <li key={survey.id} className="p-4 hover:bg-accent/20 transition-colors">
                       <div className="flex items-center justify-between">
                         <div className="flex-grow">
                           <div className="flex items-center justify-between mb-1">
                             <h3 className="font-medium">{survey.title}</h3>
                             <Badge variant="outline" className="bg-primary/10 text-primary text-xs">
-                              {survey.responses} responses
+                              {getResponseCount(survey.id)} responses
                             </Badge>
                           </div>
                           <p className="text-xs text-muted-foreground line-clamp-1 mb-1">
@@ -167,10 +194,10 @@ export default function Surveys() {
                               <div className="w-16 bg-secondary rounded-full h-1.5 mr-1">
                                 <div 
                                   className="bg-primary h-1.5 rounded-full" 
-                                  style={{ width: `${survey.completionRate}%` }}
+                                  style={{ width: `${getCompletionRate(survey.id)}%` }}
                                 ></div>
                               </div>
-                              <span>{survey.completionRate}% completed</span>
+                              <span>{Math.round(getCompletionRate(survey.id))}% completed</span>
                             </div>
                           </div>
                         </div>
@@ -178,6 +205,11 @@ export default function Surveys() {
                           <Link to={`/survey/${survey.id}`}>
                             <Button variant="ghost" size="icon" className="h-8 w-8">
                               <Eye className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                          <Link to={`/results/${survey.id}`}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <BarChart2 className="h-4 w-4" />
                             </Button>
                           </Link>
                           <Link to={`/create?edit=${survey.id}`}>
