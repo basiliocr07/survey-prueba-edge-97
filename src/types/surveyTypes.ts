@@ -4,7 +4,7 @@ export interface SurveyQuestion {
   id: string;
   title: string;
   description?: string;
-  type: string;
+  type: QuestionType;
   required: boolean;
   options?: string[];
   settings?: {
@@ -63,7 +63,7 @@ export interface DeliveryConfig {
     frequency: 'daily' | 'weekly' | 'monthly';
     dayOfMonth?: number;
     dayOfWeek?: number;
-    time?: string;
+    time: string; // Make time required to match domain model
     startDate?: Date;
   };
   trigger?: {
@@ -73,6 +73,5 @@ export interface DeliveryConfig {
   };
 }
 
-// Define QuestionType to match the one in utils/sampleData.ts
+// Define QuestionType to match the one used in QuestionTypes.tsx
 export type QuestionType = 'multiple-choice' | 'single-choice' | 'text' | 'rating' | 'dropdown' | 'matrix' | 'ranking' | 'nps' | 'date' | 'file-upload';
-

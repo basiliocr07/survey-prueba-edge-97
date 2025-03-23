@@ -1,3 +1,4 @@
+
 import { Survey, SurveyStatistics, DeliveryConfig } from '../../domain/models/Survey';
 import { SurveyRepository } from '../../domain/repositories/SurveyRepository';
 import { supabase } from '../../integrations/supabase/client';
@@ -13,6 +14,24 @@ interface ResponseRecord {
   submitted_at: string;
   answers: Record<string, any>;
   completion_time?: number;
+}
+
+// Define a simplified version of delivery config for parsing
+interface SimpleDeliveryConfig {
+  type: 'manual' | 'scheduled' | 'triggered';
+  emailAddresses: string[];
+  schedule?: {
+    frequency: 'daily' | 'weekly' | 'monthly';
+    dayOfMonth?: number;
+    dayOfWeek?: number;
+    time: string;
+    startDate?: string;
+  };
+  trigger?: {
+    type: 'ticket-closed' | 'purchase-completed';
+    delayHours: number;
+    sendAutomatically: boolean;
+  };
 }
 
 export class SupabaseSurveyRepository implements SurveyRepository {
@@ -229,39 +248,38 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       parsedQuestions = [];
     }
 
-    // Parse the delivery_config if it exists
+    // Parse the delivery_config if it exists, but avoid deep recursion
     let deliveryConfig: DeliveryConfig | undefined = undefined;
     
     try {
       if (data.delivery_config) {
-        // Safely parse the delivery_config to avoid deep recursion
-        const config = typeof data.delivery_config === 'string' 
+        // Parse as a simple object to avoid deep recursion
+        const configData = typeof data.delivery_config === 'string' 
           ? JSON.parse(data.delivery_config) 
           : data.delivery_config;
           
-        // Create a new object instead of using the potentially recursive one
         deliveryConfig = {
-          type: config.type || 'manual',
-          emailAddresses: Array.isArray(config.emailAddresses) ? config.emailAddresses : [],
+          type: configData.type || 'manual',
+          emailAddresses: Array.isArray(configData.emailAddresses) ? configData.emailAddresses : [],
         };
         
-        // Conditionally add schedule if it exists
-        if (config.schedule) {
+        // Add schedule if it exists
+        if (configData.schedule) {
           deliveryConfig.schedule = {
-            frequency: config.schedule.frequency || 'monthly',
-            dayOfMonth: config.schedule.dayOfMonth,
-            dayOfWeek: config.schedule.dayOfWeek,
-            time: config.schedule.time || '09:00',
-            startDate: config.schedule.startDate ? new Date(config.schedule.startDate) : undefined
+            frequency: configData.schedule.frequency || 'monthly',
+            dayOfMonth: configData.schedule.dayOfMonth,
+            dayOfWeek: configData.schedule.dayOfWeek,
+            time: configData.schedule.time || '09:00',
+            startDate: configData.schedule.startDate ? new Date(configData.schedule.startDate) : undefined
           };
         }
         
-        // Conditionally add trigger if it exists
-        if (config.trigger) {
+        // Add trigger if it exists
+        if (configData.trigger) {
           deliveryConfig.trigger = {
-            type: config.trigger.type || 'ticket-closed',
-            delayHours: config.trigger.delayHours || 24,
-            sendAutomatically: Boolean(config.trigger.sendAutomatically)
+            type: configData.trigger.type || 'ticket-closed',
+            delayHours: configData.trigger.delayHours || 24,
+            sendAutomatically: Boolean(configData.trigger.sendAutomatically)
           };
         }
       }

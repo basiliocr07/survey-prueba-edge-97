@@ -6,28 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import QuestionBuilder from '@/components/survey/QuestionBuilder';
+import QuestionBuilder, { Question } from '@/components/survey/QuestionBuilder';
 import EmailDeliverySettings from '@/components/survey/EmailDeliverySettings';
 import { useSurvey } from '@/application/hooks/useSurvey';
-import { Survey, SurveyQuestion, DeliveryConfig, QuestionType } from '@/types/surveyTypes';
-import { FilePlus, Save, Send, Settings } from 'lucide-react';
-
-type Question = {
-  id: string;
-  title: string;
-  description?: string;
-  type: QuestionType;
-  required: boolean;
-  options?: string[];
-  settings?: {
-    min?: number;
-    max?: number;
-  };
-};
+import { Survey, SurveyQuestion, DeliveryConfig } from '@/types/surveyTypes';
+import { FilePlus, Save, Send } from 'lucide-react';
 
 export default function CreateSurvey() {
   const navigate = useNavigate();
@@ -54,11 +40,15 @@ export default function CreateSurvey() {
       setDescription(survey.description || '');
       setQuestions(survey.questions.map(q => ({
         ...q,
-        type: q.type as QuestionType
+        type: q.type as any
       })));
       
       if (survey.deliveryConfig) {
-        setDeliveryConfig(survey.deliveryConfig);
+        const config = {...survey.deliveryConfig};
+        if (config.schedule && !config.schedule.time) {
+          config.schedule.time = '09:00';
+        }
+        setDeliveryConfig(config);
       }
     }
   }, [survey]);
@@ -151,6 +141,11 @@ export default function CreateSurvey() {
     }
     
     try {
+      const finalDeliveryConfig = {...deliveryConfig};
+      if (finalDeliveryConfig.schedule && !finalDeliveryConfig.schedule.time) {
+        finalDeliveryConfig.schedule.time = '09:00';
+      }
+      
       const surveyQuestions: SurveyQuestion[] = questions.map(q => ({
         id: q.id,
         title: q.title,
@@ -165,7 +160,7 @@ export default function CreateSurvey() {
         title,
         description: description || undefined,
         questions: surveyQuestions,
-        deliveryConfig
+        deliveryConfig: finalDeliveryConfig
       };
       
       let result;
@@ -182,16 +177,16 @@ export default function CreateSurvey() {
       }
       
       if (
-        deliveryConfig.type === 'manual' && 
-        deliveryConfig.emailAddresses.length > 0 &&
+        finalDeliveryConfig.type === 'manual' && 
+        finalDeliveryConfig.emailAddresses.length > 0 &&
         result && 'id' in result
       ) {
         const shouldSendEmails = window.confirm(
-          `¿Quieres enviar la encuesta a ${deliveryConfig.emailAddresses.length} direcciones de correo ahora?`
+          `¿Quieres enviar la encuesta a ${finalDeliveryConfig.emailAddresses.length} direcciones de correo ahora?`
         );
         
         if (shouldSendEmails) {
-          await sendSurveyEmails(result.id, deliveryConfig.emailAddresses);
+          await sendSurveyEmails(result.id, finalDeliveryConfig.emailAddresses);
         }
       }
       
@@ -354,12 +349,12 @@ export default function CreateSurvey() {
                   <QuestionBuilder
                     key={question.id}
                     question={question}
-                    index={index}
-                    total={questions.length}
                     onUpdate={(updatedQuestion) => updateQuestion(question.id, updatedQuestion as Question)}
                     onDelete={() => removeQuestion(question.id)}
                     onMoveUp={() => moveQuestion(question.id, 'up')}
                     onMoveDown={() => moveQuestion(question.id, 'down')}
+                    isFirst={index === 0}
+                    isLast={index === questions.length - 1}
                   />
                 ))}
               </div>
@@ -368,7 +363,7 @@ export default function CreateSurvey() {
           
           <TabsContent value="delivery">
             <EmailDeliverySettings 
-              deliveryConfig={deliveryConfig} 
+              deliveryConfig={deliveryConfig as any}
               onConfigChange={(config) => setDeliveryConfig(config)}
             />
             

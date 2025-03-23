@@ -29,7 +29,9 @@ export interface Question {
 
 interface QuestionBuilderProps {
   question: Question;
-  onChange: (updatedQuestion: Question) => void;
+  index?: number; // Make index optional
+  total?: number; // Make total optional
+  onUpdate: (updatedQuestion: Question) => void;
   onDelete: () => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
@@ -39,10 +41,12 @@ interface QuestionBuilderProps {
 
 export default function QuestionBuilder({
   question,
-  onChange,
+  onUpdate,
   onDelete,
   onMoveUp,
   onMoveDown,
+  index,
+  total,
   isFirst = false,
   isLast = false
 }: QuestionBuilderProps) {
@@ -50,7 +54,7 @@ export default function QuestionBuilder({
   const [showQuestionTypes, setShowQuestionTypes] = useState(false);
 
   const handleInputChange = (field: keyof Question, value: any) => {
-    onChange({ ...question, [field]: value });
+    onUpdate({ ...question, [field]: value });
   };
 
   const handleOptionChange = (index: number, value: string) => {
@@ -75,7 +79,7 @@ export default function QuestionBuilder({
   };
 
   const handleTypeChange = (type: QuestionType) => {
-    onChange({
+    onUpdate({
       ...question,
       type,
       options: ['multiple-choice', 'single-choice', 'dropdown', 'matrix', 'ranking'].includes(type)

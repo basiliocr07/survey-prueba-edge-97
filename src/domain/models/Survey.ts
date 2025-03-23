@@ -3,7 +3,7 @@ export interface SurveyQuestion {
   id: string;
   title: string;
   description?: string;
-  type: string;
+  type: string | QuestionType;
   required: boolean;
   options?: string[];
   settings?: {
@@ -86,3 +86,6 @@ export interface SurveyStatistics {
     }[];
   }[];
 }
+
+// Import the QuestionType from types/surveyTypes
+import { QuestionType } from '@/types/surveyTypes';
