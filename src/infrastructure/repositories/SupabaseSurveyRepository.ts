@@ -1,4 +1,3 @@
-
 import { Survey, SurveyStatistics } from '../../domain/models/Survey';
 import { SurveyRepository } from '../../domain/repositories/SurveyRepository';
 import { supabase } from '../../integrations/supabase/client';
@@ -79,8 +78,7 @@ export class SupabaseSurveyRepository implements SurveyRepository {
   }
 
   async getSurveyStatistics(surveyId: string): Promise<SurveyStatistics> {
-    // Define our own simple types instead of using complex nested types
-    type SimpleResponseRecord = {
+    type ResponseRecord = {
       id: string;
       survey_id: string;
       respondent_name: string;
@@ -88,10 +86,9 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       respondent_company: string | null;
       respondent_phone: string | null;
       submitted_at: string;
-      answers: Record<string, unknown>;
+      answers: Record<string, any>;
     };
     
-    // Fetch the survey responses
     const { data, error } = await supabase
       .from('survey_responses')
       .select('*')
@@ -99,13 +96,11 @@ export class SupabaseSurveyRepository implements SurveyRepository {
 
     if (error) throw error;
 
-    // Transform the data to match our simplified type
-    const responses: Array<SimpleResponseRecord & { completion_time?: number }> = [];
+    const responses: Array<ResponseRecord & { completion_time?: number }> = [];
     
     if (data) {
       for (const item of data) {
-        // Create a new response object with our simplified structure
-        const responseData: SimpleResponseRecord & { completion_time?: number } = {
+        const responseData: ResponseRecord & { completion_time?: number } = {
           id: item.id,
           survey_id: item.survey_id,
           respondent_name: item.respondent_name,
@@ -116,34 +111,28 @@ export class SupabaseSurveyRepository implements SurveyRepository {
           answers: {}
         };
         
-        // Safely handle completion_time which may not exist in the type
-        const completionTime = typeof (item as any).completion_time === 'number' 
-          ? (item as any).completion_time
-          : typeof (item as any).completion_time === 'string'
-            ? Number((item as any).completion_time)
-            : undefined;
-            
-        if (completionTime !== undefined) {
-          responseData.completion_time = completionTime;
+        if ('completion_time' in item) {
+          const completionTimeValue = (item as any).completion_time;
+          if (typeof completionTimeValue === 'number') {
+            responseData.completion_time = completionTimeValue;
+          } else if (typeof completionTimeValue === 'string') {
+            responseData.completion_time = Number(completionTimeValue);
+          }
         }
         
-        // Safely handle answers
         if (item.answers && typeof item.answers === 'object') {
-          responseData.answers = item.answers as Record<string, unknown>;
+          responseData.answers = item.answers as Record<string, any>;
         }
         
         responses.push(responseData);
       }
     }
 
-    // Get the survey details
     const survey = await this.getSurveyById(surveyId);
     if (!survey) throw new Error('Survey not found');
 
-    // Calculate statistics
     const totalResponses = responses.length;
     
-    // Calculate average completion time
     let averageCompletionTime = 0;
     let completionTimeSum = 0;
     let completionTimeCount = 0;
@@ -159,7 +148,6 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       averageCompletionTime = completionTimeSum / completionTimeCount;
     }
     
-    // Calculate statistics per question
     const questionStats = survey.questions.map(question => {
       const answerCounts: Record<string, number> = {};
       
@@ -184,7 +172,6 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       };
     });
 
-    // Calculate completion rate
     let completedResponsesCount = 0;
     
     for (const response of responses) {
@@ -195,7 +182,6 @@ export class SupabaseSurveyRepository implements SurveyRepository {
     
     const completionRate = totalResponses ? (completedResponsesCount / totalResponses) * 100 : 0;
     
-    // Return the statistics
     return {
       totalResponses,
       averageCompletionTime,
