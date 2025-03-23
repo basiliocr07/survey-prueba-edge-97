@@ -79,6 +79,7 @@ export class SupabaseSurveyRepository implements SurveyRepository {
   }
 
   async getSurveyStatistics(surveyId: string): Promise<SurveyStatistics> {
+    // Fetch survey responses
     const { data, error } = await supabase
       .from('survey_responses')
       .select('*')
@@ -86,8 +87,8 @@ export class SupabaseSurveyRepository implements SurveyRepository {
 
     if (error) throw error;
 
-    // Use a simple type annotation to avoid deep type inference
-    const responses = (data || []) as Record<string, any>[];
+    // Use explicit any[] type to avoid type inference issues
+    const responses: any[] = data || [];
 
     const survey = await this.getSurveyById(surveyId);
     if (!survey) throw new Error('Survey not found');
@@ -119,7 +120,8 @@ export class SupabaseSurveyRepository implements SurveyRepository {
         const response = responses[i];
         if (!response) continue;
         
-        const answers = response.answers as Record<string, any>;
+        // Use any to avoid deep type inference
+        const answers: any = response.answers;
         if (!answers) continue;
         
         const answer = answers[question.id];
@@ -146,7 +148,8 @@ export class SupabaseSurveyRepository implements SurveyRepository {
     
     for (let i = 0; i < responses.length; i++) {
       const response = responses[i];
-      const answers = response?.answers as Record<string, any> | undefined;
+      // Use any type for answers to avoid deep type inference
+      const answers: any = response?.answers;
       if (answers && Object.keys(answers).length > 0) {
         completedResponsesCount++;
       }
