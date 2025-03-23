@@ -1,4 +1,3 @@
-
 import { Survey, SurveyStatistics } from '../../domain/models/Survey';
 import { SurveyRepository } from '../../domain/repositories/SurveyRepository';
 import { supabase } from '../../integrations/supabase/client';
@@ -79,7 +78,6 @@ export class SupabaseSurveyRepository implements SurveyRepository {
   }
 
   async getSurveyStatistics(surveyId: string): Promise<SurveyStatistics> {
-    // Fetch survey responses with explicit typing
     const { data, error } = await supabase
       .from('survey_responses')
       .select('*')
@@ -87,23 +85,21 @@ export class SupabaseSurveyRepository implements SurveyRepository {
 
     if (error) throw error;
 
-    // Use explicit type annotation to prevent deep type inference
-    const responses = (data || []) as any[];
+    const responses = data as Array<Record<string, unknown>>;
 
     const survey = await this.getSurveyById(surveyId);
     if (!survey) throw new Error('Survey not found');
 
     const totalResponses = responses.length;
     
-    // Calculate average completion time with explicit typing
     let averageCompletionTime = 0;
     let completionTimeSum = 0;
     let completionTimeCount = 0;
     
-    for (let i = 0; i < responses.length; i++) {
-      const response = responses[i] as any;
-      if (response && typeof response.completion_time === 'number') {
-        completionTimeSum += response.completion_time;
+    for (const response of responses) {
+      const completionTime = response.completion_time;
+      if (typeof completionTime === 'number') {
+        completionTimeSum += completionTime;
         completionTimeCount++;
       }
     }
@@ -112,22 +108,16 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       averageCompletionTime = completionTimeSum / completionTimeCount;
     }
     
-    // Process question statistics with explicit typing
     const questionStats = survey.questions.map(question => {
       const answerCounts: Record<string, number> = {};
       
-      for (let i = 0; i < responses.length; i++) {
-        const response = responses[i] as any;
-        if (!response) continue;
-        
-        // Use explicit any type for answers to avoid deep inference
-        const answers = response.answers as any;
+      for (const response of responses) {
+        const answers = response.answers as Record<string, unknown> | null;
         if (!answers) continue;
         
         const answer = answers[question.id];
         if (answer === undefined || answer === null) continue;
         
-        // Convert answer to string for counting
         const answerKey = Array.isArray(answer) ? answer.join(', ') : String(answer);
         answerCounts[answerKey] = (answerCounts[answerKey] || 0) + 1;
       }
@@ -143,13 +133,10 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       };
     });
 
-    // Calculate completion rate with explicit typing
     let completedResponsesCount = 0;
     
-    for (let i = 0; i < responses.length; i++) {
-      const response = responses[i] as any;
-      // Use explicit any type for answers
-      const answers = response?.answers as any;
+    for (const response of responses) {
+      const answers = response.answers as Record<string, unknown> | null;
       if (answers && Object.keys(answers).length > 0) {
         completedResponsesCount++;
       }
