@@ -79,12 +79,17 @@ export class SupabaseSurveyRepository implements SurveyRepository {
   }
 
   async getSurveyStatistics(surveyId: string): Promise<SurveyStatistics> {
-    // Using explicit type annotations to avoid TypeScript recursive type issues
+    // Define a simpler interface to avoid deep type inference
     interface ResponseData {
       survey_id: string;
-      answers: Record<string, any> | null;
+      answers: Record<string, unknown>;
       completion_time?: number;
-      [key: string]: any;
+      id: string;
+      respondent_company: string | null;
+      respondent_email: string | null;
+      respondent_name: string;
+      respondent_phone: string | null;
+      submitted_at: string;
     }
 
     const { data, error } = await supabase
@@ -94,8 +99,11 @@ export class SupabaseSurveyRepository implements SurveyRepository {
 
     if (error) throw error;
 
-    // Cast data to our explicit interface to avoid deep inference
-    const responses: ResponseData[] = data || [];
+    // Safe casting with mapped transformation
+    const responses: ResponseData[] = (data || []).map(item => ({
+      ...item,
+      answers: typeof item.answers === 'object' ? item.answers as Record<string, unknown> : {}
+    }));
 
     const survey = await this.getSurveyById(surveyId);
     if (!survey) throw new Error('Survey not found');
