@@ -15,15 +15,17 @@ import EmailDeliverySettings from '@/components/survey/EmailDeliverySettings';
 import { useSurvey } from '@/application/hooks/useSurvey';
 import { Survey, SurveyQuestion, DeliveryConfig } from '@/domain/models/Survey';
 import { FilePlus, Save, Send, Settings } from 'lucide-react';
+import { QuestionType } from '@/utils/sampleData';
 
-type Question = SurveyQuestion;
+type Question = Omit<SurveyQuestion, 'type'> & {
+  type: string;
+};
 
 export default function CreateSurvey() {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   
-  // Get survey ID from URL if in edit mode
   const query = new URLSearchParams(location.search);
   const editSurveyId = query.get('edit');
   
@@ -38,12 +40,11 @@ export default function CreateSurvey() {
     emailAddresses: [],
   });
   
-  // Load survey data when editing
   useEffect(() => {
     if (survey) {
       setTitle(survey.title);
       setDescription(survey.description || '');
-      setQuestions(survey.questions);
+      setQuestions(survey.questions as Question[]);
       
       if (survey.deliveryConfig) {
         setDeliveryConfig(survey.deliveryConfig);
@@ -51,7 +52,6 @@ export default function CreateSurvey() {
     }
   }, [survey]);
   
-  // Add a new question to the survey
   const addQuestion = useCallback(() => {
     const newQuestion: Question = {
       id: uuidv4(),
@@ -64,7 +64,6 @@ export default function CreateSurvey() {
     setQuestions(prev => [...prev, newQuestion]);
   }, []);
   
-  // Add a sample question of each type for demo purposes
   const addSampleQuestions = useCallback(() => {
     const sampleQuestions: Question[] = [
       {
@@ -93,32 +92,27 @@ export default function CreateSurvey() {
     setQuestions(prev => [...prev, ...sampleQuestions]);
   }, []);
   
-  // Update a question
   const updateQuestion = useCallback((questionId: string, updatedQuestion: Question) => {
     setQuestions(prev => 
       prev.map(q => q.id === questionId ? updatedQuestion : q)
     );
   }, []);
   
-  // Remove a question
   const removeQuestion = useCallback((questionId: string) => {
     setQuestions(prev => prev.filter(q => q.id !== questionId));
   }, []);
   
-  // Move a question up or down in the order
   const moveQuestion = useCallback((questionId: string, direction: 'up' | 'down') => {
     setQuestions(prev => {
       const currentIndex = prev.findIndex(q => q.id === questionId);
       if (currentIndex === -1) return prev;
       
-      // Bounds checking
       if (direction === 'up' && currentIndex === 0) return prev;
       if (direction === 'down' && currentIndex === prev.length - 1) return prev;
       
       const newQuestions = [...prev];
       const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
       
-      // Swap the questions
       [newQuestions[currentIndex], newQuestions[targetIndex]] = 
         [newQuestions[targetIndex], newQuestions[currentIndex]];
       
@@ -126,7 +120,6 @@ export default function CreateSurvey() {
     });
   }, []);
   
-  // Handle form submission
   const handleSubmit = async () => {
     if (!title.trim()) {
       toast({
@@ -157,7 +150,6 @@ export default function CreateSurvey() {
       let result;
       
       if (editSurveyId) {
-        // Update existing survey
         await updateSurvey({
           ...surveyData,
           id: editSurveyId,
@@ -165,11 +157,9 @@ export default function CreateSurvey() {
         });
         result = { id: editSurveyId };
       } else {
-        // Create new survey
         result = await createSurvey(surveyData);
       }
       
-      // If in manual delivery mode and emails provided, send emails now
       if (
         deliveryConfig.type === 'manual' && 
         deliveryConfig.emailAddresses.length > 0 &&
@@ -191,7 +181,6 @@ export default function CreateSurvey() {
           : "La encuesta ha sido creada exitosamente"
       });
       
-      // Navigate to the surveys list
       navigate("/surveys");
     } catch (error) {
       toast({
@@ -202,7 +191,6 @@ export default function CreateSurvey() {
     }
   };
   
-  // Determine if the form is in a loading state
   const isFormLoading = isLoading || isCreating || isUpdating || isSendingEmails;
   
   if (isLoading && editSurveyId) {

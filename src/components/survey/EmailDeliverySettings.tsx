@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,23 +11,6 @@ import { Separator } from "@/components/ui/separator";
 import { CalendarIcon, Clock, SendHorizontal, Settings } from "lucide-react";
 import { DeliveryConfig } from "@/domain/models/Survey";
 
-export interface DeliveryConfig {
-  type: 'manual' | 'scheduled' | 'triggered';
-  emailAddresses: string[];
-  schedule?: {
-    frequency: 'daily' | 'weekly' | 'monthly';
-    dayOfMonth?: number;
-    dayOfWeek?: number;
-    time?: string;
-    startDate?: Date;
-  };
-  trigger?: {
-    type: 'ticket-closed' | 'purchase-completed';
-    delayHours: number;
-    sendAutomatically: boolean;
-  };
-}
-
 interface EmailDeliverySettingsProps {
   deliveryConfig: DeliveryConfig;
   onConfigChange: (config: DeliveryConfig) => void;
@@ -39,7 +21,6 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
   const [emailInput, setEmailInput] = useState<string>("");
 
   useEffect(() => {
-    // When the prop changes, update the internal state
     setConfig(deliveryConfig);
   }, [deliveryConfig]);
 
@@ -51,7 +32,6 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
   const handleTypeChange = (value: 'manual' | 'scheduled' | 'triggered') => {
     const newConfig = { ...config, type: value };
     
-    // Initialize schedule or trigger if not present
     if (value === 'scheduled' && !newConfig.schedule) {
       newConfig.schedule = {
         frequency: 'monthly',

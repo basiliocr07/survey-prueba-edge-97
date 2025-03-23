@@ -19,6 +19,7 @@ export interface Survey {
   description?: string;
   questions: SurveyQuestion[];
   createdAt: string;
+  deliveryConfig?: DeliveryConfig;
 }
 
 export interface QuestionResponse {
@@ -53,4 +54,21 @@ export interface SurveyResponseSubmission {
   isExistingClient?: boolean;
   existingClientId?: string;
   submittedAt?: string; // Fecha de envío
+}
+
+export interface DeliveryConfig {
+  type: 'manual' | 'scheduled' | 'triggered';
+  emailAddresses: string[];
+  schedule?: {
+    frequency: 'daily' | 'weekly' | 'monthly';
+    dayOfMonth?: number;
+    dayOfWeek?: number;
+    time?: string;
+    startDate?: Date;
+  };
+  trigger?: {
+    type: 'ticket-closed' | 'purchase-completed';
+    delayHours: number;
+    sendAutomatically: boolean;
+  };
 }

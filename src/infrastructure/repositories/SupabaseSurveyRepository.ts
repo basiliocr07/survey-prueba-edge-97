@@ -231,6 +231,7 @@ export class SupabaseSurveyRepository implements SurveyRepository {
 
     // Parse the delivery_config if it exists
     let deliveryConfig: DeliveryConfig | undefined = undefined;
+    
     try {
       if (data.delivery_config) {
         const config = typeof data.delivery_config === 'string' 
