@@ -79,7 +79,7 @@ export class SupabaseSurveyRepository implements SurveyRepository {
   }
 
   async getSurveyStatistics(surveyId: string): Promise<SurveyStatistics> {
-    // Fetch survey responses
+    // Fetch survey responses with explicit typing
     const { data, error } = await supabase
       .from('survey_responses')
       .select('*')
@@ -87,21 +87,21 @@ export class SupabaseSurveyRepository implements SurveyRepository {
 
     if (error) throw error;
 
-    // Use explicit any[] type to avoid type inference issues
-    const responses: any[] = data || [];
+    // Use explicit type annotation to prevent deep type inference
+    const responses = (data || []) as any[];
 
     const survey = await this.getSurveyById(surveyId);
     if (!survey) throw new Error('Survey not found');
 
     const totalResponses = responses.length;
     
-    // Calculate average completion time with simple type handling
+    // Calculate average completion time with explicit typing
     let averageCompletionTime = 0;
     let completionTimeSum = 0;
     let completionTimeCount = 0;
     
     for (let i = 0; i < responses.length; i++) {
-      const response = responses[i];
+      const response = responses[i] as any;
       if (response && typeof response.completion_time === 'number') {
         completionTimeSum += response.completion_time;
         completionTimeCount++;
@@ -112,16 +112,16 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       averageCompletionTime = completionTimeSum / completionTimeCount;
     }
     
-    // Process question statistics with simple type handling
+    // Process question statistics with explicit typing
     const questionStats = survey.questions.map(question => {
       const answerCounts: Record<string, number> = {};
       
       for (let i = 0; i < responses.length; i++) {
-        const response = responses[i];
+        const response = responses[i] as any;
         if (!response) continue;
         
-        // Use any to avoid deep type inference
-        const answers: any = response.answers;
+        // Use explicit any type for answers to avoid deep inference
+        const answers = response.answers as any;
         if (!answers) continue;
         
         const answer = answers[question.id];
@@ -143,13 +143,13 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       };
     });
 
-    // Calculate completion rate with simple type handling
+    // Calculate completion rate with explicit typing
     let completedResponsesCount = 0;
     
     for (let i = 0; i < responses.length; i++) {
-      const response = responses[i];
-      // Use any type for answers to avoid deep type inference
-      const answers: any = response?.answers;
+      const response = responses[i] as any;
+      // Use explicit any type for answers
+      const answers = response?.answers as any;
       if (answers && Object.keys(answers).length > 0) {
         completedResponsesCount++;
       }
