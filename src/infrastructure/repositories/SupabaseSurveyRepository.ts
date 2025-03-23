@@ -231,6 +231,7 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       parsedQuestions = [];
     }
 
+    // Create DeliveryConfig directly to avoid deep type instantiation issues
     let deliveryConfig: DeliveryConfig | undefined = undefined;
     
     try {
@@ -239,7 +240,7 @@ export class SupabaseSurveyRepository implements SurveyRepository {
           ? JSON.parse(data.delivery_config) 
           : data.delivery_config;
         
-        // Simplify the delivery config creation to avoid deep type instantiation
+        // Create a simple object that satisfies the DeliveryConfig interface
         deliveryConfig = {
           type: configData.type || 'manual',
           emailAddresses: Array.isArray(configData.emailAddresses) ? configData.emailAddresses : []
