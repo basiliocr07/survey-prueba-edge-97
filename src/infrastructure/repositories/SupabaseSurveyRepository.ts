@@ -79,8 +79,8 @@ export class SupabaseSurveyRepository implements SurveyRepository {
   }
 
   async getSurveyStatistics(surveyId: string): Promise<SurveyStatistics> {
-    // Definimos un tipo simple para las respuestas para evitar problemas de recursión de tipos
-    interface SimpleResponseRecord {
+    // Define a simple interface for response records to avoid complex type issues
+    interface ResponseRecord {
       id: string;
       survey_id: string;
       respondent_name: string;
@@ -99,12 +99,11 @@ export class SupabaseSurveyRepository implements SurveyRepository {
 
     if (error) throw error;
 
-    const responses: SimpleResponseRecord[] = [];
+    const responses: ResponseRecord[] = [];
     
     if (data) {
       for (const item of data) {
-        // Usamos un enfoque más simple para mapear los datos
-        const responseData: SimpleResponseRecord = {
+        const responseData: ResponseRecord = {
           id: item.id,
           survey_id: item.survey_id,
           respondent_name: item.respondent_name,
@@ -112,20 +111,15 @@ export class SupabaseSurveyRepository implements SurveyRepository {
           respondent_company: item.respondent_company,
           respondent_phone: item.respondent_phone,
           submitted_at: item.submitted_at,
-          answers: {}
+          answers: item.answers as Record<string, any> || {}
         };
         
-        // Convertimos completion_time de manera segura
-        if ('completion_time' in item) {
-          const completionTime = (item as any).completion_time;
-          if (typeof completionTime === 'number' || typeof completionTime === 'string') {
-            responseData.completion_time = Number(completionTime);
-          }
-        }
-        
-        // Manejamos las respuestas (answers) de manera más segura
-        if (item.answers && typeof item.answers === 'object') {
-          responseData.answers = item.answers as Record<string, any>;
+        // Convert completion_time if available
+        if (item.completion_time !== undefined) {
+          responseData.completion_time = 
+            typeof item.completion_time === 'number' ? item.completion_time : 
+            typeof item.completion_time === 'string' ? parseInt(item.completion_time, 10) : 
+            undefined;
         }
         
         responses.push(responseData);

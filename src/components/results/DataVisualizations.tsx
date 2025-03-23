@@ -10,7 +10,8 @@ import {
   XAxis, YAxis, 
   Tooltip, Legend, CartesianGrid
 } from "recharts";
-import { Survey, SurveyResponse, QuestionResponse } from "@/types/surveyTypes";
+import { Survey, SurveyResponse } from "../../domain/models/Survey";
+import { Loader2 } from 'lucide-react';
 
 interface DataVisualizationsProps {
   survey: Survey;
@@ -22,20 +23,23 @@ export default function DataVisualizations({ survey, responses }: DataVisualizat
     survey.questions.length > 0 ? survey.questions[0].id : ''
   );
 
-  const getAnswersForQuestion = (questionId: string): QuestionResponse[] => {
+  const getAnswersForQuestion = (questionId: string) => {
     return responses
+      .filter(response => response.answers.some(answer => answer.questionId === questionId))
       .map(response => response.answers.find(answer => answer.questionId === questionId))
-      .filter((answer): answer is QuestionResponse => answer !== undefined);
+      .filter(answer => answer !== undefined);
   };
 
   const getSelectedQuestion = () => {
     return survey.questions.find(q => q.id === selectedQuestionId);
   };
 
-  const formatDataForVisualization = (questionType: string, answers: QuestionResponse[]) => {
+  const formatDataForVisualization = (questionType: string, answers: any[]) => {
+    if (!answers || answers.length === 0) return [];
+    
     if (questionType === 'text') {
       return answers.map(answer => ({
-        response: answer.value as string,
+        response: answer.value,
       }));
     }
 
@@ -93,6 +97,25 @@ export default function DataVisualizations({ survey, responses }: DataVisualizat
     return [];
   };
 
+  if (!survey || !responses) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="animate-spin h-8 w-8 text-primary" />
+      </div>
+    );
+  }
+
+  if (survey.questions.length === 0) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>No hay preguntas</CardTitle>
+          <CardDescription>Esta encuesta no tiene preguntas para analizar</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+
   const selectedQuestion = getSelectedQuestion();
   const questionAnswers = selectedQuestion ? getAnswersForQuestion(selectedQuestion.id) : [];
   const visualizationData = selectedQuestion 
@@ -107,24 +130,24 @@ export default function DataVisualizations({ survey, responses }: DataVisualizat
     
     return (
       <div className="mb-6 border rounded-md p-4">
-        <h3 className="text-sm font-medium mb-2">Respondent Information</h3>
+        <h3 className="text-sm font-medium mb-2">Información de respuestas</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <div>
-            <p className="text-xs text-muted-foreground">Total Responses</p>
+            <p className="text-xs text-muted-foreground">Total de respuestas</p>
             <p className="font-medium">{responses.length}</p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Valid Responses</p>
+            <p className="text-xs text-muted-foreground">Respuestas válidas</p>
             <p className="font-medium">{questionAnswers.filter(a => a.isValid).length}</p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Latest Response</p>
+            <p className="text-xs text-muted-foreground">Última respuesta</p>
             <p className="font-medium">
               {responses.length ? new Date(responses[0].submittedAt).toLocaleDateString() : 'N/A'}
             </p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Invalid Responses</p>
+            <p className="text-xs text-muted-foreground">Respuestas inválidas</p>
             <p className="font-medium">{questionAnswers.filter(a => !a.isValid).length}</p>
           </div>
         </div>
@@ -136,11 +159,11 @@ export default function DataVisualizations({ survey, responses }: DataVisualizat
     return (
       <div className="space-y-3">
         <p className="text-sm text-muted-foreground">
-          {questionAnswers.length} text responses collected
+          {questionAnswers.length} respuestas de texto recopiladas
         </p>
         <div className="max-h-[400px] overflow-y-auto border rounded-md">
           {questionAnswers.length === 0 ? (
-            <p className="text-center p-4 text-muted-foreground">No responses yet</p>
+            <p className="text-center p-4 text-muted-foreground">No hay respuestas aún</p>
           ) : (
             <div className="divide-y">
               {questionAnswers.map((answer, i) => (
@@ -148,7 +171,7 @@ export default function DataVisualizations({ survey, responses }: DataVisualizat
                   <div className="flex justify-between items-start">
                     <p className="text-sm">{answer.value as string}</p>
                     {!answer.isValid && (
-                      <span className="px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-800">Invalid</span>
+                      <span className="px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-800">Inválida</span>
                     )}
                   </div>
                 </div>
@@ -164,7 +187,7 @@ export default function DataVisualizations({ survey, responses }: DataVisualizat
     if (!selectedQuestion || questionAnswers.length === 0) {
       return (
         <div className="flex items-center justify-center h-[300px] border rounded-md">
-          <p className="text-muted-foreground">No data available for visualization</p>
+          <p className="text-muted-foreground">No hay datos disponibles para visualización</p>
         </div>
       );
     }
@@ -176,9 +199,9 @@ export default function DataVisualizations({ survey, responses }: DataVisualizat
     return (
       <Tabs defaultValue="bar" className="w-full">
         <TabsList className="grid grid-cols-3 mb-4">
-          <TabsTrigger value="bar">Bar Chart</TabsTrigger>
-          <TabsTrigger value="pie">Pie Chart</TabsTrigger>
-          <TabsTrigger value="line">Line Chart</TabsTrigger>
+          <TabsTrigger value="bar">Gráfico de barras</TabsTrigger>
+          <TabsTrigger value="pie">Gráfico circular</TabsTrigger>
+          <TabsTrigger value="line">Gráfico de líneas</TabsTrigger>
         </TabsList>
 
         <TabsContent value="bar" className="w-full animate-fade-in">
@@ -234,7 +257,7 @@ export default function DataVisualizations({ survey, responses }: DataVisualizat
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(value, name, props) => [`${value} responses`, name]}
+                  formatter={(value, name, props) => [`${value} respuestas`, name]}
                   contentStyle={{ 
                     borderRadius: '6px', 
                     border: '1px solid hsl(var(--border))',
@@ -282,14 +305,14 @@ export default function DataVisualizations({ survey, responses }: DataVisualizat
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Question Analysis</CardTitle>
-        <CardDescription>Visualize responses for each question</CardDescription>
+        <CardTitle>Análisis de Preguntas</CardTitle>
+        <CardDescription>Visualizar respuestas para cada pregunta</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
           <div>
             <label htmlFor="question-selector" className="block text-sm font-medium mb-2">
-              Select a question to analyze
+              Selecciona una pregunta para analizar
             </label>
             <select
               id="question-selector"
