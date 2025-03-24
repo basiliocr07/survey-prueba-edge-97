@@ -1,13 +1,13 @@
 
 @model SurveyApp.Web.Models.CreateSurveyViewModel
 @{
-    ViewData["Title"] = "Crear Encuesta";
+    ViewData["Title"] = Model.Id > 0 ? "Editar Encuesta" : "Crear Encuesta";
 }
 
 <div class="container mx-auto py-6">
     <div class="flex justify-between items-center mb-8">
         <div>
-            <h1 class="text-3xl font-bold">@(Model.Id > 0 ? "Editar Encuesta" : "Crear Encuesta")</h1>
+            <h1 class="text-3xl font-bold">@ViewData["Title"]</h1>
             <p class="text-gray-500">Diseña tu encuesta con preguntas personalizadas</p>
         </div>
         
@@ -25,38 +25,38 @@
             <div class="border-b border-gray-200 mb-6">
                 <ul class="flex flex-wrap -mb-px text-sm font-medium text-center">
                     <li class="mr-2">
-                        <a href="#content" 
+                        <a href="#" 
                            @click.prevent="activeTab = 'content'"
                            :class="{ 'border-b-2 border-primary text-primary': activeTab === 'content' }"
                            class="inline-flex items-center p-4 hover:text-primary">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
-                            Contenido
+                            Contenido de la Encuesta
                         </a>
                     </li>
                     <li class="mr-2">
-                        <a href="#delivery" 
+                        <a href="#" 
                            @click.prevent="activeTab = 'delivery'"
                            :class="{ 'border-b-2 border-primary text-primary': activeTab === 'delivery' }"
                            class="inline-flex items-center p-4 hover:text-primary">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
                             </svg>
-                            Entrega
+                            Configuración de Envío
                         </a>
                     </li>
                 </ul>
             </div>
             
             <!-- Contenido de las pestañas -->
-            <div x-show="activeTab === 'content'" class="animate-fade-in">
-                <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div x-show="activeTab === 'content'" class="space-y-6">
+                <div class="bg-white rounded-lg shadow-sm p-6">
                     <h2 class="text-xl font-semibold mb-4">Detalles de la Encuesta</h2>
                     
                     <div class="mb-4">
                         <label asp-for="Title" class="block text-sm font-medium mb-1">Título <span class="text-red-500">*</span></label>
-                        <input asp-for="Title" class="w-full border rounded py-2 px-3 focus:outline-none focus:ring-1 focus:ring-primary" placeholder="Ingresa el título de la encuesta">
+                        <input asp-for="Title" class="w-full border rounded py-2 px-3 focus:outline-none focus:ring-1 focus:ring-primary" placeholder="Ingresa el título de la encuesta" required>
                         <span asp-validation-for="Title" class="text-red-500 text-sm"></span>
                     </div>
                     
@@ -79,7 +79,6 @@
                     </div>
                     
                     <div id="questions-container" class="space-y-4">
-                        @* Las preguntas se cargarán aquí dinámicamente *@
                         @if (Model.Questions != null && Model.Questions.Count > 0)
                         {
                             @for (var i = 0; i < Model.Questions.Count; i++)
@@ -87,31 +86,30 @@
                                 @await Component.InvokeAsync("QuestionBuilder", new { question = Model.Questions[i], index = i })
                             }
                         }
-                    </div>
-                    
-                    @if (Model.Questions == null || Model.Questions.Count == 0)
-                    {
-                        <div class="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed">
-                            <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                            <p class="text-gray-500 mb-3">No hay preguntas aún</p>
-                            <button type="button" class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-md text-sm inline-flex items-center" onclick="SurveyBuilder.addQuestion()">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        else
+                        {
+                            <div class="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed">
+                                <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                 </svg>
-                                Agregar Primera Pregunta
-                            </button>
-                        </div>
-                    }
+                                <p class="text-gray-500 mb-3">No hay preguntas aún</p>
+                                <button type="button" class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-md text-sm inline-flex items-center" onclick="SurveyBuilder.addQuestion()">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
+                                    Agregar Primera Pregunta
+                                </button>
+                            </div>
+                        }
+                    </div>
                 </div>
             </div>
             
-            <div x-show="activeTab === 'delivery'" class="animate-fade-in">
+            <div x-show="activeTab === 'delivery'" class="space-y-6">
                 <div class="bg-white rounded-lg shadow-sm p-6">
-                    <h2 class="text-xl font-semibold mb-4">Opciones de Envío</h2>
+                    <h2 class="text-xl font-semibold mb-4">Configuración de Envío</h2>
                     
-                    <div x-data="{ deliveryType: '@Model.DeliveryConfig?.Type' || 'manual' }">
+                    <div x-data="{ deliveryType: '@(Model.DeliveryConfig?.Type ?? "manual")' }">
                         <h3 class="text-lg font-medium mb-3">Método de Entrega</h3>
                         
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -189,9 +187,13 @@
                         <div class="border-t border-gray-200 pt-6 mt-6">
                             <h3 class="text-lg font-medium mb-3">Destinatarios de Correo Electrónico</h3>
                             
-                            <div x-data="{ newEmail: '', emails: [] }" x-init="emails = @Json.Serialize(Model.DeliveryConfig?.EmailAddresses ?? new List<string>())">
+                            <div x-data="{ 
+                                newEmail: '', 
+                                emails: @Json.Serialize(Model.DeliveryConfig?.EmailAddresses ?? new List<string>())
+                            }">
                                 <div class="flex items-center mb-3">
-                                    <input type="text" x-model="newEmail" @keydown.enter.prevent="if (newEmail.trim() && newEmail.includes('@')) { emails.push(newEmail.trim()); newEmail = ''; }" 
+                                    <input type="text" x-model="newEmail" 
+                                           @keydown.enter.prevent="if (newEmail.trim() && newEmail.includes('@')) { emails.push(newEmail.trim()); newEmail = ''; }" 
                                            class="flex-grow border rounded-l py-2 px-3 focus:outline-none focus:ring-1 focus:ring-primary" 
                                            placeholder="Agregar dirección de correo electrónico">
                                     <button type="button" 
@@ -225,7 +227,7 @@
                         </div>
                         
                         <!-- Configuración Programada -->
-                        <div x-show="deliveryType === 'scheduled'" class="border-t border-gray-200 pt-6 mt-6 animate-slide-in" id="scheduledSettings">
+                        <div x-show="deliveryType === 'scheduled'" class="border-t border-gray-200 pt-6 mt-6" id="scheduledSettings">
                             <h3 class="text-lg font-medium mb-3">Configuración de Programación</h3>
                             
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -248,7 +250,7 @@
                         </div>
                         
                         <!-- Configuración Activada -->
-                        <div x-show="deliveryType === 'triggered'" class="border-t border-gray-200 pt-6 mt-6 animate-slide-in" id="triggerSettings">
+                        <div x-show="deliveryType === 'triggered'" class="border-t border-gray-200 pt-6 mt-6" id="triggerSettings">
                             <h3 class="text-lg font-medium mb-3">Configuración de Activación</h3>
                             
                             <div class="mb-4">
@@ -296,12 +298,12 @@
             <div class="mt-6 text-right">
                 <button type="button" @click="activeTab = 'content'" 
                         x-show="activeTab === 'delivery'"
-                        class="btn btn-outline-secondary mr-2">
+                        class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-md mr-2">
                     Anterior
                 </button>
                 <button type="button" @click="activeTab = 'delivery'" 
                         x-show="activeTab === 'content'"
-                        class="btn btn-outline-primary mr-2">
+                        class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-md mr-2">
                     Siguiente
                 </button>
                 <button type="submit" class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-md">
@@ -317,7 +319,7 @@
     @await Component.InvokeAsync("QuestionBuilder", new { 
         question = new SurveyApp.Web.Models.SurveyQuestionViewModel 
         { 
-            Id = "template", 
+            Id = "new-" + Guid.NewGuid().ToString(), 
             Title = "Nueva pregunta", 
             Type = "text", 
             Required = true 
