@@ -19,10 +19,14 @@ export interface Survey {
   description?: string;
   questions: SurveyQuestion[];
   createdAt: string;
+  status?: string;
+  responseCount?: number;
+  completionRate?: number;
   deliveryConfig?: DeliveryConfig;
 }
 
 export interface QuestionResponse {
+  id?: number;
   questionId: string;
   questionTitle: string;
   questionType: string;
@@ -41,7 +45,8 @@ export interface SurveyResponse {
   answers: QuestionResponse[];
   isExistingClient?: boolean;
   existingClientId?: string;
-  completionTime?: number; // Propiedad para tiempo de completado
+  completionTime?: number;
+  survey?: Survey;
 }
 
 export interface SurveyResponseSubmission {
@@ -53,7 +58,8 @@ export interface SurveyResponseSubmission {
   answers: Record<string, string | string[]>;
   isExistingClient?: boolean;
   existingClientId?: string;
-  submittedAt?: string; // Fecha de envío
+  completionTime?: number;
+  submittedAt?: string;
 }
 
 export interface DeliveryConfig {
@@ -63,7 +69,7 @@ export interface DeliveryConfig {
     frequency: 'daily' | 'weekly' | 'monthly';
     dayOfMonth?: number;
     dayOfWeek?: number;
-    time: string; // Make time required to match domain model
+    time: string;
     startDate?: Date;
   };
   trigger?: {

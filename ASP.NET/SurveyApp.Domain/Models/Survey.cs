@@ -15,6 +15,9 @@ namespace SurveyApp.Domain.Models
         public int CompletionRate { get; set; }
         public List<Question> Questions { get; set; } = new List<Question>();
         public DeliveryConfiguration? DeliveryConfig { get; set; }
+        
+        // Navigation property
+        public List<SurveyResponse>? Responses { get; set; }
     }
 
     public class Question

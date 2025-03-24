@@ -20,6 +20,8 @@ export interface Survey {
   createdAt: string;
   updatedAt?: string;
   status?: string;
+  responseCount?: number;
+  completionRate?: number;
   deliveryConfig?: DeliveryConfig;
 }
 
@@ -54,6 +56,7 @@ export interface SurveyResponseSubmission {
   answers: Record<string, string | string[]>;
   isExistingClient?: boolean;
   existingClientId?: string;
+  completionTime?: number;
   submittedAt?: string;
 }
 
