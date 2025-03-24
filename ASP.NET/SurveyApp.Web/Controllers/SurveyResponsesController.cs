@@ -37,7 +37,7 @@ namespace SurveyApp.Web.Controllers
             }
 
             var responses = await _responseService.GetResponsesBySurveyIdAsync(surveyId);
-            var viewModel = responses.Select(r => new SurveyResponseViewModel
+            var viewModel = responses.Select(r => new SurveyApp.Web.Models.SurveyResponseViewModel
             {
                 Id = r.Id,
                 SurveyId = r.SurveyId,
@@ -47,7 +47,7 @@ namespace SurveyApp.Web.Controllers
                 RespondentPhone = r.RespondentPhone,
                 RespondentCompany = r.RespondentCompany,
                 SubmittedAt = r.SubmittedAt,
-                Answers = r.Answers.Select(a => new QuestionResponseViewModel
+                Answers = r.Answers.Select(a => new SurveyApp.Web.Models.QuestionResponseViewModel
                 {
                     QuestionId = a.QuestionId,
                     QuestionTitle = a.QuestionTitle,
@@ -75,12 +75,12 @@ namespace SurveyApp.Web.Controllers
                 return NotFound();
             }
 
-            var viewModel = new SurveyDetailViewModel
+            var viewModel = new SurveyApp.Web.Models.SurveyDetailViewModel
             {
                 Id = survey.Id,
                 Title = survey.Title,
                 Description = survey.Description,
-                Questions = survey.Questions.Select(q => new SurveyQuestionViewModel
+                Questions = survey.Questions.Select(q => new SurveyApp.Web.Models.SurveyQuestionViewModel
                 {
                     Id = q.Id.ToString(),
                     Type = q.Type,
@@ -96,7 +96,7 @@ namespace SurveyApp.Web.Controllers
         // POST: /SurveyResponses/Submit
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Submit(int surveyId, SurveySubmissionViewModel model)
+        public async Task<IActionResult> Submit(int surveyId, SurveyApp.Web.Models.SurveySubmissionViewModel model)
         {
             if (!ModelState.IsValid)
             {
