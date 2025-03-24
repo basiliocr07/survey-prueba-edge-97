@@ -100,51 +100,67 @@ namespace SurveyApp.Web.Controllers
         {
             if (!ModelState.IsValid)
             {
+                _logger.LogWarning("Invalid model state when submitting survey response");
                 return RedirectToAction(nameof(Take), new { id = surveyId });
             }
 
             var survey = await _surveyService.GetSurveyByIdAsync(surveyId);
             if (survey == null)
             {
+                _logger.LogWarning($"Survey with ID {surveyId} not found");
                 return NotFound();
             }
 
-            var response = new SurveyResponse
+            try
             {
-                SurveyId = surveyId,
-                RespondentName = model.Name,
-                RespondentEmail = model.Email,
-                RespondentPhone = model.Phone,
-                RespondentCompany = model.Company,
-                SubmittedAt = DateTime.UtcNow,
-                Answers = new List<QuestionResponse>()
-            };
-
-            foreach (var question in survey.Questions)
-            {
-                var questionId = question.Id.ToString();
-                if (model.Answers.TryGetValue(questionId, out string value))
+                var response = new SurveyResponse
                 {
-                    response.Answers.Add(new QuestionResponse
+                    SurveyId = surveyId,
+                    RespondentName = model.Name,
+                    RespondentEmail = model.Email,
+                    RespondentPhone = model.Phone,
+                    RespondentCompany = model.Company,
+                    SubmittedAt = DateTime.UtcNow,
+                    Answers = new List<QuestionResponse>()
+                };
+
+                foreach (var question in survey.Questions)
+                {
+                    var questionId = question.Id.ToString();
+                    if (model.Answers.TryGetValue(questionId, out string value))
                     {
-                        QuestionId = questionId,
-                        QuestionTitle = question.Text,
-                        QuestionType = question.Type,
-                        Value = value,
-                        IsValid = true // Initial value, will be validated in service
-                    });
+                        response.Answers.Add(new QuestionResponse
+                        {
+                            QuestionId = questionId,
+                            QuestionTitle = question.Text,
+                            QuestionType = question.Type,
+                            Value = value,
+                            IsValid = true // Initial value, will be validated in service
+                        });
+                    }
+                    else if (question.Required)
+                    {
+                        // If a required question is missing, log it but continue
+                        _logger.LogWarning($"Required question {questionId} missing from submission");
+                    }
+                }
+
+                var result = await _responseService.SubmitResponseAsync(response);
+                if (result)
+                {
+                    TempData["SuccessMessage"] = "Your response has been submitted successfully!";
+                    return RedirectToAction("ThankYou", new { surveyId });
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "There was an error submitting your response. Please try again.";
+                    return RedirectToAction(nameof(Take), new { id = surveyId });
                 }
             }
-
-            var result = await _responseService.SubmitResponseAsync(response);
-            if (result)
+            catch (Exception ex)
             {
-                TempData["SuccessMessage"] = "Your response has been submitted successfully!";
-                return RedirectToAction("ThankYou", new { surveyId });
-            }
-            else
-            {
-                TempData["ErrorMessage"] = "There was an error submitting your response. Please try again.";
+                _logger.LogError(ex, "Error submitting survey response");
+                TempData["ErrorMessage"] = "An unexpected error occurred. Please try again.";
                 return RedirectToAction(nameof(Take), new { id = surveyId });
             }
         }
