@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Application.Interfaces;
 using SurveyApp.Domain.Models;
@@ -57,6 +56,32 @@ namespace SurveyApp.Web.Controllers
             // Get survey statistics
             var statistics = await _surveyService.GetSurveyStatisticsAsync(int.Parse(id));
             
+            // Map domain model to view model
+            var statisticsViewModel = new SurveyApp.Web.Models.SurveyStatisticsViewModel();
+            
+            if (statistics != null)
+            {
+                statisticsViewModel = new SurveyApp.Web.Models.SurveyStatisticsViewModel
+                {
+                    TotalResponses = statistics.TotalResponses,
+                    AverageCompletionTime = statistics.AverageCompletionTime,
+                    CompletionRate = statistics.CompletionRate,
+                    QuestionStats = statistics.QuestionStats?.Select(q => new SurveyApp.Web.Models.QuestionStatisticViewModel
+                    {
+                        QuestionId = q.QuestionId,
+                        QuestionTitle = q.QuestionTitle,
+                        QuestionText = q.QuestionText,
+                        ResponseDistribution = q.ResponseDistribution?.ToDictionary(
+                            kvp => kvp.Key,
+                            kvp => new SurveyApp.Web.Models.ResponseDistributionViewModel
+                            {
+                                Count = kvp.Value.Count,
+                                Percentage = kvp.Value.Percentage
+                            })
+                    }).ToList() ?? new List<SurveyApp.Web.Models.QuestionStatisticViewModel>()
+                };
+            }
+            
             var model = new SurveyResultsViewModel
             {
                 Survey = new SurveyViewModel
@@ -69,7 +94,7 @@ namespace SurveyApp.Web.Controllers
                     Responses = statistics?.TotalResponses ?? 0,
                     CompletionRate = statistics?.CompletionRate ?? 0
                 },
-                Statistics = statistics
+                Statistics = statisticsViewModel
             };
             
             return View(model);
