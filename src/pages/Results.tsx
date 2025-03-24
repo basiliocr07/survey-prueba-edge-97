@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,14 +16,12 @@ export default function Results() {
   const { surveys, isLoadingSurveys, fetchSurveyStatistics, fetchSurveyResponses } = useSurveyAnalytics();
   const [selectedSurveyId, setSelectedSurveyId] = useState<string>('');
   
-  // Set initial selected survey when surveys are loaded
   useEffect(() => {
     if (surveys && surveys.length > 0 && !selectedSurveyId) {
       setSelectedSurveyId(surveys[0].id);
     }
   }, [surveys, selectedSurveyId]);
 
-  // Fetch survey statistics for selected survey
   const { 
     data: statistics, 
     isLoading: isLoadingStats 
@@ -34,7 +31,6 @@ export default function Results() {
     enabled: !!selectedSurveyId,
   });
 
-  // Fetch survey responses for selected survey
   const { 
     data: responses, 
     isLoading: isLoadingResponses 
@@ -353,14 +349,15 @@ export default function Results() {
   );
 }
 
-// Helper functions to get top and least selected responses
 function getTopResponse(statistics: SurveyStatistics) {
   let topResponse = { answer: "", count: 0, percentage: 0 };
   
   for (const question of statistics.questionStats) {
-    for (const response of question.responses) {
-      if (response.count > topResponse.count) {
-        topResponse = response;
+    if (question.responses) {
+      for (const response of question.responses) {
+        if (response.count > topResponse.count) {
+          topResponse = response;
+        }
       }
     }
   }
@@ -371,15 +368,22 @@ function getTopResponse(statistics: SurveyStatistics) {
 function getLeastResponse(statistics: SurveyStatistics) {
   if (statistics.questionStats.length === 0) return { answer: "", count: 0, percentage: 0 };
   
-  let leastResponse = statistics.questionStats[0].responses[0] || { answer: "", count: 0, percentage: 0 };
+  const firstQuestion = statistics.questionStats.find(q => q.responses && q.responses.length > 0);
+  if (!firstQuestion || !firstQuestion.responses || firstQuestion.responses.length === 0) {
+    return { answer: "", count: 0, percentage: 0 };
+  }
+  
+  let leastResponse = firstQuestion.responses[0];
   
   for (const question of statistics.questionStats) {
-    for (const response of question.responses) {
-      if (response.count < leastResponse.count || leastResponse.count === 0) {
-        leastResponse = response;
+    if (question.responses) {
+      for (const response of question.responses) {
+        if (leastResponse && (response.count < leastResponse.count || leastResponse.count === 0)) {
+          leastResponse = response;
+        }
       }
     }
   }
   
-  return leastResponse;
+  return leastResponse || { answer: "", count: 0, percentage: 0 };
 }
