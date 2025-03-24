@@ -84,11 +84,11 @@ export interface SurveyStatistics {
   questionStats: {
     questionId: string;
     questionTitle: string;
-    responses: {
-      answer: string;
+    questionText?: string;
+    responseDistribution?: Record<string, {
       count: number;
       percentage: number;
-    }[];
+    }>;
   }[];
 }
 

@@ -79,5 +79,20 @@ export interface DeliveryConfig {
   };
 }
 
+export interface SurveyStatistics {
+  totalResponses: number;
+  averageCompletionTime: number;
+  completionRate: number;
+  questionStats: {
+    questionId: string;
+    questionTitle: string;
+    questionText?: string;
+    responseDistribution?: Record<string, {
+      count: number;
+      percentage: number;
+    }>;
+  }[];
+}
+
 // Define QuestionType to match the one used in QuestionTypes.tsx
 export type QuestionType = 'multiple-choice' | 'single-choice' | 'text' | 'rating' | 'dropdown' | 'matrix' | 'ranking' | 'nps' | 'date' | 'file-upload';
