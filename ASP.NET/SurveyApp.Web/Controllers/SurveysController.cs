@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Text.Json;
 
 namespace SurveyApp.Web.Controllers
 {
@@ -77,7 +78,7 @@ namespace SurveyApp.Web.Controllers
         // GET: Surveys/Create
         public IActionResult Create()
         {
-            return View(new CreateSurveyViewModel
+            var model = new CreateSurveyViewModel
             {
                 Id = 0, // New survey
                 Questions = new List<QuestionViewModel>
@@ -98,7 +99,13 @@ namespace SurveyApp.Web.Controllers
                     Schedule = new ScheduleSettingsViewModel(),
                     Trigger = new TriggerSettingsViewModel()
                 }
-            });
+            };
+            
+            Console.WriteLine($"Initial survey model (Create): {JsonSerializer.Serialize(model)}");
+            
+            ViewBag.SurveyJson = JsonSerializer.Serialize(model);
+            
+            return View(model);
         }
 
         // POST: Surveys/Create
@@ -106,6 +113,8 @@ namespace SurveyApp.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateSurveyViewModel model)
         {
+            Console.WriteLine($"Received survey data: {JsonSerializer.Serialize(model)}");
+            
             if (ModelState.IsValid)
             {
                 var survey = new Survey
@@ -152,6 +161,8 @@ namespace SurveyApp.Web.Controllers
                     }
                 };
 
+                Console.WriteLine($"Converted domain model: {JsonSerializer.Serialize(survey)}");
+
                 bool success;
                 if (model.Id > 0)
                 {
@@ -171,8 +182,15 @@ namespace SurveyApp.Web.Controllers
                         TempData["ErrorMessage"] = "Failed to create survey.";
                 }
 
+                Console.WriteLine($"Survey save result: {success}");
+
                 if (success)
                     return RedirectToAction(nameof(Index));
+            }
+            else
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
+                Console.WriteLine($"Validation errors: {string.Join(", ", errors)}");
             }
 
             return View(model);
@@ -256,14 +274,18 @@ namespace SurveyApp.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SendEmails(int surveyId, List<string> emailAddresses)
         {
+            Console.WriteLine($"Sending survey emails. SurveyId: {surveyId}, Recipients: {JsonSerializer.Serialize(emailAddresses)}");
+            
             var success = await _surveyService.SendSurveyEmailsAsync(surveyId, emailAddresses);
             if (success)
             {
                 TempData["SuccessMessage"] = "Survey emails have been queued for delivery.";
+                Console.WriteLine("Emails sent successfully");
             }
             else
             {
                 TempData["ErrorMessage"] = "Failed to send survey emails. Please try again.";
+                Console.WriteLine("Failed to send emails");
             }
             
             return RedirectToAction(nameof(Edit), new { id = surveyId });
@@ -353,10 +375,8 @@ namespace SurveyApp.Web.Controllers
             }
             catch (Exception ex)
             {
-                // Log the exception
                 Console.WriteLine($"Error getting surveys: {ex.Message}");
                 
-                // If there's an error, return sample data temporarily
                 return GetSampleSurveys();
             }
         }
@@ -364,8 +384,6 @@ namespace SurveyApp.Web.Controllers
         // Helper method to get sample surveys while we're developing
         private List<SurveyViewModel> GetSampleSurveys()
         {
-            // This would normally come from the database via the service
-            // For now, we're creating sample data that matches the React version
             return new List<SurveyViewModel>
             {
                 new SurveyViewModel

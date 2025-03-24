@@ -1,1337 +1,346 @@
 
 @model SurveyApp.Web.Models.CreateSurveyViewModel
 @{
-    ViewData["Title"] = Model.Id > 0 ? "Edit Survey" : "Create Survey";
+    ViewData["Title"] = "Create Survey";
 }
 
-<div class="min-h-screen bg-background">
-    <div class="container mx-auto pt-20 pb-10 px-4 md:px-6">
-        <div class="flex flex-col space-y-6">
-            <div class="flex justify-between items-center mb-8">
-                <div>
-                    <h1 class="text-3xl font-bold">@(Model.Id > 0 ? "Edit Survey" : "Create Survey")</h1>
-                    <p class="text-muted-foreground">
-                        @(Model.Id > 0 
-                            ? "Update your existing survey" 
-                            : "Design a new survey for your users")
-                    </p>
+<div class="container mt-4">
+    <h1>@(Model.Id > 0 ? "Edit" : "Create") Survey</h1>
+    
+    <form asp-action="Create" method="post">
+        <input type="hidden" asp-for="Id" />
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Survey Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label asp-for="Title" class="form-label">Title</label>
+                    <input asp-for="Title" class="form-control" />
+                    <span asp-validation-for="Title" class="text-danger"></span>
                 </div>
                 
-                <div class="flex space-x-3">
-                    <a asp-controller="Surveys" asp-action="Index" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
-                        Cancel
-                    </a>
-                    <button type="submit" form="surveyForm" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-save mr-2 h-4 w-4"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                        @(Model.Id > 0 ? "Update Survey" : "Create Survey")
-                    </button>
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label">Description</label>
+                    <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
                 </div>
-            </div>
-            
-            <div class="bg-white rounded-lg border shadow-sm">
-                <div class="border-b p-4">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="col-span-2 md:col-span-1">
-                            <a href="#content" class="flex items-center justify-center md:justify-start p-3 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-plus mr-2 h-4 w-4"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" x2="12" y1="18" y2="12"></line><line x1="9" x2="15" y1="15" y2="15"></line></svg>
-                                Survey Content
-                            </a>
-                        </div>
-                        <div class="col-span-2 md:col-span-1">
-                            <a href="#delivery" class="flex items-center justify-center md:justify-start p-3 rounded-md border hover:bg-accent transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-send mr-2 h-4 w-4"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
-                                Delivery Settings
-                            </a>
-                        </div>
-                    </div>
+                
+                <div class="mb-3">
+                    <label asp-for="Status" class="form-label">Status</label>
+                    <select asp-for="Status" class="form-select">
+                        <option value="draft">Draft</option>
+                        <option value="active">Active</option>
+                        <option value="archived">Archived</option>
+                    </select>
                 </div>
-
-                <form id="surveyForm" asp-controller="Surveys" asp-action="Create" method="post">
-                    <input type="hidden" asp-for="Id" />
-                    <input type="hidden" asp-for="Status" value="@Model.Status" />
-                    
-                    <div id="content" class="p-6 space-y-6">
-                        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-                            <div class="p-6">
-                                <h3 class="text-xl font-semibold mb-4">Survey Details</h3>
-                                <div class="space-y-4">
-                                    <div>
-                                        <label asp-for="Title" class="block text-sm font-medium mb-1">
-                                            Title <span class="text-destructive">*</span>
-                                        </label>
-                                        <input 
-                                            asp-for="Title" 
-                                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                            placeholder="Enter survey title" 
-                                        />
-                                        <span asp-validation-for="Title" class="text-sm text-destructive"></span>
-                                    </div>
-                                    <div>
-                                        <label asp-for="Description" class="block text-sm font-medium mb-1">
-                                            Description (optional)
-                                        </label>
-                                        <textarea 
-                                            asp-for="Description" 
-                                            class="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                            placeholder="Enter a description for your survey"
-                                        ></textarea>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <div class="flex justify-between items-center mb-4">
-                                <h2 class="text-xl font-semibold">Questions</h2>
-                                <div class="flex space-x-2">
-                                    <button 
-                                        type="button" 
-                                        id="addSampleQuestions" 
-                                        class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
-                                    >
-                                        Add Sample Questions
-                                    </button>
-                                    <button 
-                                        type="button" 
-                                        id="addQuestion" 
-                                        class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
-                                    >
-                                        Add Question
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            <div id="questionsContainer" class="space-y-4">
-                                @if (Model.Questions == null || !Model.Questions.Any())
-                                {
-                                    <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-                                        <div class="flex flex-col items-center justify-center p-8 text-center">
-                                            <div class="rounded-full bg-primary/10 p-4 mb-4">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-plus h-6 w-6 text-primary"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" x2="12" y1="18" y2="12"></line><line x1="9" x2="15" y1="15" y2="15"></line></svg>
-                                            </div>
-                                            <h3 class="text-lg font-semibold mb-1">No questions yet</h3>
-                                            <p class="text-muted-foreground mb-4">Add questions to your survey</p>
-                                            <button type="button" class="addFirstQuestion inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
-                                                Add First Question
-                                            </button>
-                                        </div>
-                                    </div>
-                                }
-                                else
-                                {
-                                    @for (var i = 0; i < Model.Questions.Count; i++)
-                                    {
-                                        <div class="question-card rounded-lg border bg-card text-card-foreground shadow-sm">
-                                            <input type="hidden" name="Questions[@i].Id" value="@Model.Questions[i].Id" />
-                                            
-                                            <div class="flex items-center px-4 py-3 border-b bg-muted/30">
-                                                <div class="mr-2 text-muted-foreground">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-grip-vertical h-5 w-5 cursor-grab"><circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle></svg>
-                                                </div>
-                                                <button type="button" class="toggle-expand p-0 h-auto mr-2 bg-transparent border-0">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-up h-4 w-4"><path d="m18 15-6-6-6 6"></path></svg>
-                                                </button>
-                                                <div class="flex-1 font-medium truncate">
-                                                    @(string.IsNullOrEmpty(Model.Questions[i].Title) ? "Untitled Question" : Model.Questions[i].Title)
-                                                </div>
-                                                <div class="flex items-center gap-1">
-                                                    @if (i > 0)
-                                                    {
-                                                        <button type="button" class="move-up inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-up h-4 w-4"><path d="m18 15-6-6-6 6"></path></svg>
-                                                        </button>
-                                                    }
-                                                    @if (i < Model.Questions.Count - 1)
-                                                    {
-                                                        <button type="button" class="move-down inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down h-4 w-4"><path d="m6 9 6 6 6-6"></path></svg>
-                                                        </button>
-                                                    }
-                                                    <button type="button" class="delete-question inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-destructive h-8 w-8 p-0">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2 h-4 w-4"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="question-content p-4 space-y-4">
-                                                <div class="space-y-2">
-                                                    <div>
-                                                        <label class="block text-sm font-medium mb-1">Question</label>
-                                                        <input 
-                                                            type="text" 
-                                                            name="Questions[@i].Title" 
-                                                            value="@Model.Questions[i].Title" 
-                                                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" 
-                                                            placeholder="Enter your question"
-                                                        />
-                                                    </div>
-                                                    
-                                                    <div>
-                                                        <label class="block text-sm font-medium mb-1">Description (optional)</label>
-                                                        <textarea 
-                                                            name="Questions[@i].Description" 
-                                                            class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" 
-                                                            placeholder="Add a description to provide more context"
-                                                        >@Model.Questions[i].Description</textarea>
-                                                    </div>
-                                                </div>
-                                                
-                                                <div>
-                                                    <label class="block text-sm font-medium mb-1">Question Type</label>
-                                                    <select 
-                                                        name="Questions[@i].Type" 
-                                                        class="question-type flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                                    >
-                                                        <option value="text" @(Model.Questions[i].Type == "text" ? "selected" : "")>Text Input</option>
-                                                        <option value="single-choice" @(Model.Questions[i].Type == "single-choice" ? "selected" : "")>Single Choice</option>
-                                                        <option value="multiple-choice" @(Model.Questions[i].Type == "multiple-choice" ? "selected" : "")>Multiple Choice</option>
-                                                        <option value="rating" @(Model.Questions[i].Type == "rating" ? "selected" : "")>Rating</option>
-                                                        <option value="dropdown" @(Model.Questions[i].Type == "dropdown" ? "selected" : "")>Dropdown</option>
-                                                        <option value="nps" @(Model.Questions[i].Type == "nps" ? "selected" : "")>Net Promoter Score</option>
-                                                    </select>
-                                                </div>
-                                                
-                                                @if (new[] { "single-choice", "multiple-choice", "dropdown" }.Contains(Model.Questions[i].Type))
-                                                {
-                                                    <div class="options-container space-y-3">
-                                                        <label class="block text-sm font-medium">Options</label>
-                                                        @if (Model.Questions[i].Options != null)
-                                                        {
-                                                            for (var j = 0; j < Model.Questions[i].Options.Count; j++)
-                                                            {
-                                                                <div class="option-item flex items-center gap-2">
-                                                                    <div class="flex-1">
-                                                                        <input 
-                                                                            type="text" 
-                                                                            name="Questions[@i].Options[@j]" 
-                                                                            value="@Model.Questions[i].Options[j]" 
-                                                                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" 
-                                                                            placeholder="Option text"
-                                                                        />
-                                                                    </div>
-                                                                    <button 
-                                                                        type="button" 
-                                                                        class="remove-option inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-destructive h-10 w-10 p-0"
-                                                                        @(Model.Questions[i].Options.Count <= 2 ? "disabled" : "")
-                                                                    >
-                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2 h-4 w-4"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
-                                                                    </button>
-                                                                </div>
-                                                            }
-                                                        }
-                                                        <button 
-                                                            type="button" 
-                                                            class="add-option inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
-                                                        >
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus h-4 w-4 mr-1"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
-                                                            Add Option
-                                                        </button>
-                                                    </div>
-                                                }
-                                                
-                                                @if (Model.Questions[i].Type == "rating")
-                                                {
-                                                    <div class="rating-preview border rounded-md p-4 bg-muted/20">
-                                                        <label class="block text-sm font-medium mb-2">Preview</label>
-                                                        <div class="flex gap-1 justify-center">
-                                                            @for (var star = 1; star <= 5; star++)
-                                                            {
-                                                                <svg class="h-8 w-8 @(star <= 3 ? "text-yellow-400" : "text-gray-300")" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                                                    <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
-                                                                </svg>
-                                                            }
-                                                        </div>
-                                                    </div>
-                                                }
-                                                
-                                                @if (Model.Questions[i].Type == "nps")
-                                                {
-                                                    <div class="nps-preview border rounded-md p-4 bg-muted/20">
-                                                        <label class="block text-sm font-medium mb-2">Preview</label>
-                                                        <div class="grid grid-cols-11 gap-1">
-                                                            @for (var score = 0; score <= 10; score++)
-                                                            {
-                                                                <div class="flex items-center justify-center h-10 border rounded-md @(score == 7 ? "bg-primary text-primary-foreground" : "")">
-                                                                    @score
-                                                                </div>
-                                                            }
-                                                        </div>
-                                                        <div class="flex justify-between mt-2 text-xs text-muted-foreground">
-                                                            <span>Not at all likely</span>
-                                                            <span>Extremely likely</span>
-                                                        </div>
-                                                    </div>
-                                                }
-                                                
-                                                <div class="flex items-center space-x-2">
-                                                    <div class="flex h-6 items-center space-x-2">
-                                                        <input 
-                                                            type="checkbox" 
-                                                            id="required-@i" 
-                                                            name="Questions[@i].Required" 
-                                                            value="true" 
-                                                            @(Model.Questions[i].Required ? "checked" : "") 
-                                                            class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                                                        />
-                                                        <input type="hidden" name="Questions[@i].Required" value="false" />
-                                                        <label for="required-@i" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                                            Required question
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    }
-                                }
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div id="delivery" class="p-6 space-y-6 border-t">
-                        <h2 class="text-xl font-semibold mb-4">Delivery Settings</h2>
-                        
-                        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-                            <div class="p-6">
-                                <h3 class="text-base font-medium mb-4">Delivery Method</h3>
-                                
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div class="flex items-start p-4 border rounded-md @(Model.DeliveryConfig?.Type == "manual" ? "ring-2 ring-primary" : "")">
-                                        <input 
-                                            type="radio" 
-                                            id="deliveryManual" 
-                                            name="DeliveryConfig.Type" 
-                                            value="manual" 
-                                            @(Model.DeliveryConfig?.Type == "manual" ? "checked" : "")
-                                            class="mt-1 mr-2"
-                                        />
-                                        <label for="deliveryManual" class="flex-1">
-                                            <span class="font-medium">Manual</span>
-                                            <p class="text-sm text-muted-foreground mt-1">Send your survey to recipients manually</p>
-                                        </label>
-                                    </div>
-                                    
-                                    <div class="flex items-start p-4 border rounded-md @(Model.DeliveryConfig?.Type == "scheduled" ? "ring-2 ring-primary" : "")">
-                                        <input 
-                                            type="radio" 
-                                            id="deliveryScheduled" 
-                                            name="DeliveryConfig.Type" 
-                                            value="scheduled" 
-                                            @(Model.DeliveryConfig?.Type == "scheduled" ? "checked" : "")
-                                            class="mt-1 mr-2"
-                                        />
-                                        <label for="deliveryScheduled" class="flex-1">
-                                            <span class="font-medium">Scheduled</span>
-                                            <p class="text-sm text-muted-foreground mt-1">Set a schedule to automatically send surveys</p>
-                                        </label>
-                                    </div>
-                                    
-                                    <div class="flex items-start p-4 border rounded-md @(Model.DeliveryConfig?.Type == "triggered" ? "ring-2 ring-primary" : "")">
-                                        <input 
-                                            type="radio" 
-                                            id="deliveryTriggered" 
-                                            name="DeliveryConfig.Type" 
-                                            value="triggered" 
-                                            @(Model.DeliveryConfig?.Type == "triggered" ? "checked" : "")
-                                            class="mt-1 mr-2"
-                                        />
-                                        <label for="deliveryTriggered" class="flex-1">
-                                            <span class="font-medium">Triggered</span>
-                                            <p class="text-sm text-muted-foreground mt-1">Send surveys based on specific triggers</p>
-                                        </label>
-                                    </div>
-                                </div>
-                                
-                                <div id="deliverySettings" class="mt-6">
-                                    <div id="manualSettings" class="@(Model.DeliveryConfig?.Type != "manual" ? "hidden" : "")">
-                                        <div>
-                                            <label for="emailAddresses" class="block text-sm font-medium mb-2">Email Recipients</label>
-                                            <textarea 
-                                                id="emailAddresses" 
-                                                name="DeliveryConfig.EmailAddresses" 
-                                                rows="4" 
-                                                class="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" 
-                                                placeholder="Enter email addresses, separated by commas or new lines"
-                                            >@(Model.DeliveryConfig?.EmailAddresses != null ? string.Join(",", Model.DeliveryConfig.EmailAddresses) : "")</textarea>
-                                            <p class="text-xs text-muted-foreground mt-1">Enter multiple emails separated by commas or new lines</p>
-                                        </div>
-                                    </div>
-                                    
-                                    <div id="scheduledSettings" class="space-y-4 @(Model.DeliveryConfig?.Type != "scheduled" ? "hidden" : "")">
-                                        <div>
-                                            <label for="frequency" class="block text-sm font-medium mb-2">Frequency</label>
-                                            <select 
-                                                id="frequency" 
-                                                name="DeliveryConfig.Schedule.Frequency" 
-                                                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                            >
-                                                <option value="daily" @(Model.DeliveryConfig?.Schedule?.Frequency == "daily" ? "selected" : "")>Daily</option>
-                                                <option value="weekly" @(Model.DeliveryConfig?.Schedule?.Frequency == "weekly" ? "selected" : "")>Weekly</option>
-                                                <option value="monthly" @(Model.DeliveryConfig?.Schedule?.Frequency == "monthly" ? "selected" : "")>Monthly</option>
-                                            </select>
-                                        </div>
-                                        
-                                        <div>
-                                            <label for="dayOfMonth" class="block text-sm font-medium mb-2">Day of Month</label>
-                                            <input 
-                                                type="number" 
-                                                id="dayOfMonth" 
-                                                name="DeliveryConfig.Schedule.DayOfMonth" 
-                                                value="@(Model.DeliveryConfig?.Schedule?.DayOfMonth ?? 1)" 
-                                                min="1" 
-                                                max="31" 
-                                                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                            />
-                                        </div>
-                                        
-                                        <div>
-                                            <label for="time" class="block text-sm font-medium mb-2">Time</label>
-                                            <input 
-                                                type="time" 
-                                                id="time" 
-                                                name="DeliveryConfig.Schedule.Time" 
-                                                value="@(Model.DeliveryConfig?.Schedule?.Time ?? "09:00")" 
-                                                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                            />
-                                        </div>
-                                    </div>
-                                    
-                                    <div id="triggerSettings" class="space-y-4 @(Model.DeliveryConfig?.Type != "triggered" ? "hidden" : "")">
-                                        <div>
-                                            <label for="triggerType" class="block text-sm font-medium mb-2">Trigger Type</label>
-                                            <select 
-                                                id="triggerType" 
-                                                name="DeliveryConfig.Trigger.Type" 
-                                                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                            >
-                                                <option value="ticket-closed" @(Model.DeliveryConfig?.Trigger?.Type == "ticket-closed" ? "selected" : "")>Ticket Closed</option>
-                                                <option value="purchase-completed" @(Model.DeliveryConfig?.Trigger?.Type == "purchase-completed" ? "selected" : "")>Purchase Completed</option>
-                                            </select>
-                                        </div>
-                                        
-                                        <div>
-                                            <label for="delayHours" class="block text-sm font-medium mb-2">Delay (hours)</label>
-                                            <input 
-                                                type="number" 
-                                                id="delayHours" 
-                                                name="DeliveryConfig.Trigger.DelayHours" 
-                                                value="@(Model.DeliveryConfig?.Trigger?.DelayHours ?? 24)" 
-                                                min="0" 
-                                                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                            />
-                                        </div>
-                                        
-                                        <div class="flex items-center space-x-2">
-                                            <input 
-                                                type="checkbox" 
-                                                id="sendAutomatically" 
-                                                name="DeliveryConfig.Trigger.SendAutomatically" 
-                                                value="true" 
-                                                @(Model.DeliveryConfig?.Trigger?.SendAutomatically == true ? "checked" : "") 
-                                                class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                                            />
-                                            <input type="hidden" name="DeliveryConfig.Trigger.SendAutomatically" value="false" />
-                                            <label for="sendAutomatically" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                                Send automatically
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="flex justify-end space-x-3">
-                            <a href="#content" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
-                                Back to Questions
-                            </a>
-                            <button 
-                                type="submit" 
-                                class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-save mr-2 h-4 w-4"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                                @(Model.Id > 0 ? "Update Survey" : "Create Survey")
-                            </button>
-                        </div>
-                    </div>
-                </form>
             </div>
         </div>
-    </div>
-</div>
-
-@section Scripts {
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Question expansion/collapse
-            document.querySelectorAll('.toggle-expand').forEach(button => {
-                button.addEventListener('click', function() {
-                    const card = this.closest('.question-card');
-                    const content = card.querySelector('.question-content');
-                    const icon = this.querySelector('svg');
-                    
-                    if (content.style.display === 'none') {
-                        content.style.display = 'block';
-                        icon.classList.replace('lucide-chevron-down', 'lucide-chevron-up');
-                    } else {
-                        content.style.display = 'none';
-                        icon.classList.replace('lucide-chevron-up', 'lucide-chevron-down');
-                    }
-                });
-            });
-            
-            // Add question button
-            document.getElementById('addQuestion').addEventListener('click', addNewQuestion);
-            document.querySelector('.addFirstQuestion')?.addEventListener('click', addNewQuestion);
-            
-            // Add sample questions button
-            document.getElementById('addSampleQuestions').addEventListener('click', addSampleQuestions);
-            
-            // Delete question button
-            document.querySelectorAll('.delete-question').forEach(button => {
-                button.addEventListener('click', function() {
-                    if (confirm('Are you sure you want to delete this question?')) {
-                        const card = this.closest('.question-card');
-                        card.remove();
-                        renumberQuestions();
-                    }
-                });
-            });
-            
-            // Question type change
-            document.querySelectorAll('.question-type').forEach(select => {
-                select.addEventListener('change', function() {
-                    const questionCard = this.closest('.question-card');
-                    const optionsContainer = questionCard.querySelector('.options-container');
-                    const ratingPreview = questionCard.querySelector('.rating-preview');
-                    const npsPreview = questionCard.querySelector('.nps-preview');
-                    
-                    // Hide all special sections first
-                    if (optionsContainer) optionsContainer.style.display = 'none';
-                    if (ratingPreview) ratingPreview.style.display = 'none';
-                    if (npsPreview) npsPreview.style.display = 'none';
-                    
-                    const type = this.value;
-                    
-                    // Show appropriate section based on question type
-                    if (['single-choice', 'multiple-choice', 'dropdown'].includes(type)) {
-                        if (optionsContainer) {
-                            optionsContainer.style.display = 'block';
-                        } else {
-                            createOptionsContainer(questionCard, select);
-                        }
-                    } else if (type === 'rating') {
-                        if (ratingPreview) {
-                            ratingPreview.style.display = 'block';
-                        } else {
-                            createRatingPreview(questionCard);
-                        }
-                    } else if (type === 'nps') {
-                        if (npsPreview) {
-                            npsPreview.style.display = 'block';
-                        } else {
-                            createNPSPreview(questionCard);
-                        }
-                    }
-                });
-            });
-            
-            // Move question up
-            document.querySelectorAll('.move-up').forEach(button => {
-                button.addEventListener('click', function() {
-                    const currentCard = this.closest('.question-card');
-                    const previousCard = currentCard.previousElementSibling;
-                    
-                    if (previousCard && previousCard.classList.contains('question-card')) {
-                        currentCard.parentNode.insertBefore(currentCard, previousCard);
-                        renumberQuestions();
-                    }
-                });
-            });
-            
-            // Move question down
-            document.querySelectorAll('.move-down').forEach(button => {
-                button.addEventListener('click', function() {
-                    const currentCard = this.closest('.question-card');
-                    const nextCard = currentCard.nextElementSibling;
-                    
-                    if (nextCard && nextCard.classList.contains('question-card')) {
-                        nextCard.after(currentCard);
-                        renumberQuestions();
-                    }
-                });
-            });
-            
-            // Add option button
-            document.querySelectorAll('.add-option').forEach(button => {
-                button.addEventListener('click', function() {
-                    const optionsContainer = this.closest('.options-container');
-                    const questionCard = this.closest('.question-card');
-                    const index = getQuestionIndex(questionCard);
-                    const optionItems = optionsContainer.querySelectorAll('.option-item');
-                    const newOptionIndex = optionItems.length;
-                    
-                    const optionItem = document.createElement('div');
-                    optionItem.className = 'option-item flex items-center gap-2';
-                    optionItem.innerHTML = `
-                        <div class="flex-1">
-                            <input 
-                                type="text" 
-                                name="Questions[${index}].Options[${newOptionIndex}]" 
-                                value="New option" 
-                                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" 
-                                placeholder="Option text"
-                            />
-                        </div>
-                        <button 
-                            type="button" 
-                            class="remove-option inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-destructive h-10 w-10 p-0"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2 h-4 w-4"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
-                        </button>
-                    `;
-                    
-                    // Insert before the add button
-                    this.parentNode.insertBefore(optionItem, this);
-                    
-                    // Add event listener for the new remove button
-                    const removeButton = optionItem.querySelector('.remove-option');
-                    removeButton.addEventListener('click', function() {
-                        optionItem.remove();
-                        updateDisabledState(optionsContainer);
-                        renumberOptions(optionsContainer);
-                    });
-                    
-                    // Update disabled state
-                    updateDisabledState(optionsContainer);
-                });
-            });
-            
-            // Remove option button
-            document.querySelectorAll('.remove-option').forEach(button => {
-                button.addEventListener('click', function() {
-                    const optionsContainer = this.closest('.options-container');
-                    const optionItem = this.closest('.option-item');
-                    optionItem.remove();
-                    updateDisabledState(optionsContainer);
-                    renumberOptions(optionsContainer);
-                });
-            });
-            
-            // Delivery method radio buttons
-            document.querySelectorAll('input[name="DeliveryConfig.Type"]').forEach(radio => {
-                radio.addEventListener('change', function() {
-                    const type = this.value;
-                    
-                    // Hide all settings first
-                    document.getElementById('manualSettings').style.display = 'none';
-                    document.getElementById('scheduledSettings').style.display = 'none';
-                    document.getElementById('triggerSettings').style.display = 'none';
-                    
-                    // Show the selected settings
-                    if (type === 'manual') {
-                        document.getElementById('manualSettings').style.display = 'block';
-                    } else if (type === 'scheduled') {
-                        document.getElementById('scheduledSettings').style.display = 'block';
-                    } else if (type === 'triggered') {
-                        document.getElementById('triggerSettings').style.display = 'block';
-                    }
-                });
-            });
-            
-            // Functions
-            function addNewQuestion() {
-                const questionsContainer = document.getElementById('questionsContainer');
-                const emptyState = questionsContainer.querySelector('.rounded-lg:not(.question-card)');
-                if (emptyState) {
-                    emptyState.remove();
-                }
-                
-                const questionIndex = document.querySelectorAll('.question-card').length;
-                const uniqueId = 'new-' + Date.now();
-                
-                const questionCard = document.createElement('div');
-                questionCard.className = 'question-card rounded-lg border bg-card text-card-foreground shadow-sm';
-                questionCard.innerHTML = `
-                    <input type="hidden" name="Questions[${questionIndex}].Id" value="${uniqueId}" />
-                    
-                    <div class="flex items-center px-4 py-3 border-b bg-muted/30">
-                        <div class="mr-2 text-muted-foreground">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-grip-vertical h-5 w-5 cursor-grab"><circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle></svg>
-                        </div>
-                        <button type="button" class="toggle-expand p-0 h-auto mr-2 bg-transparent border-0">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-up h-4 w-4"><path d="m18 15-6-6-6 6"></path></svg>
-                        </button>
-                        <div class="flex-1 font-medium truncate">
-                            Untitled Question
-                        </div>
-                        <div class="flex items-center gap-1">
-                            ${questionIndex > 0 ? `
-                                <button type="button" class="move-up inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-up h-4 w-4"><path d="m18 15-6-6-6 6"></path></svg>
-                                </button>
-                            ` : ''}
-                            <button type="button" class="move-down inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down h-4 w-4"><path d="m6 9 6 6 6-6"></path></svg>
-                            </button>
-                            <button type="button" class="delete-question inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-destructive h-8 w-8 p-0">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2 h-4 w-4"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="question-content p-4 space-y-4">
-                        <div class="space-y-2">
-                            <div>
-                                <label class="block text-sm font-medium mb-1">Question</label>
-                                <input 
-                                    type="text" 
-                                    name="Questions[${questionIndex}].Title" 
-                                    value="" 
-                                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" 
-                                    placeholder="Enter your question"
-                                />
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium mb-1">Description (optional)</label>
-                                <textarea 
-                                    name="Questions[${questionIndex}].Description" 
-                                    class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" 
-                                    placeholder="Add a description to provide more context"
-                                ></textarea>
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium mb-1">Question Type</label>
-                            <select 
-                                name="Questions[${questionIndex}].Type" 
-                                class="question-type flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                                <option value="text">Text Input</option>
-                                <option value="single-choice">Single Choice</option>
-                                <option value="multiple-choice">Multiple Choice</option>
-                                <option value="rating">Rating</option>
-                                <option value="dropdown">Dropdown</option>
-                                <option value="nps">Net Promoter Score</option>
-                            </select>
-                        </div>
-                        
-                        <div class="flex items-center space-x-2">
-                            <div class="flex h-6 items-center space-x-2">
-                                <input 
-                                    type="checkbox" 
-                                    id="required-${questionIndex}" 
-                                    name="Questions[${questionIndex}].Required" 
-                                    value="true" 
-                                    checked 
-                                    class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                                />
-                                <input type="hidden" name="Questions[${questionIndex}].Required" value="false" />
-                                <label for="required-${questionIndex}" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                    Required question
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                questionsContainer.appendChild(questionCard);
-                
-                // Add event listeners to the new question
-                const expandButton = questionCard.querySelector('.toggle-expand');
-                const deleteButton = questionCard.querySelector('.delete-question');
-                const typeSelect = questionCard.querySelector('.question-type');
-                const moveUpButton = questionCard.querySelector('.move-up');
-                const moveDownButton = questionCard.querySelector('.move-down');
-                
-                expandButton.addEventListener('click', function() {
-                    const content = questionCard.querySelector('.question-content');
-                    const icon = this.querySelector('svg');
-                    
-                    if (content.style.display === 'none') {
-                        content.style.display = 'block';
-                        icon.classList.replace('lucide-chevron-down', 'lucide-chevron-up');
-                    } else {
-                        content.style.display = 'none';
-                        icon.classList.replace('lucide-chevron-up', 'lucide-chevron-down');
-                    }
-                });
-                
-                deleteButton.addEventListener('click', function() {
-                    if (confirm('Are you sure you want to delete this question?')) {
-                        questionCard.remove();
-                        renumberQuestions();
-                    }
-                });
-                
-                typeSelect.addEventListener('change', function() {
-                    const type = this.value;
-                    
-                    // Remove existing containers
-                    const existingOptions = questionCard.querySelector('.options-container');
-                    if (existingOptions) existingOptions.remove();
-                    
-                    const existingRating = questionCard.querySelector('.rating-preview');
-                    if (existingRating) existingRating.remove();
-                    
-                    const existingNPS = questionCard.querySelector('.nps-preview');
-                    if (existingNPS) existingNPS.remove();
-                    
-                    // Add appropriate container based on the selected type
-                    if (['single-choice', 'multiple-choice', 'dropdown'].includes(type)) {
-                        createOptionsContainer(questionCard, typeSelect);
-                    } else if (type === 'rating') {
-                        createRatingPreview(questionCard);
-                    } else if (type === 'nps') {
-                        createNPSPreview(questionCard);
-                    }
-                });
-                
-                if (moveUpButton) {
-                    moveUpButton.addEventListener('click', function() {
-                        const previousCard = questionCard.previousElementSibling;
-                        if (previousCard && previousCard.classList.contains('question-card')) {
-                            questionCard.parentNode.insertBefore(questionCard, previousCard);
-                            renumberQuestions();
-                        }
-                    });
-                }
-                
-                moveDownButton.addEventListener('click', function() {
-                    const nextCard = questionCard.nextElementSibling;
-                    if (nextCard && nextCard.classList.contains('question-card')) {
-                        nextCard.after(questionCard);
-                        renumberQuestions();
-                    }
-                });
-                
-                // Focus the title input
-                questionCard.querySelector('input[name$=".Title"]').focus();
-            }
-            
-            function addSampleQuestions() {
-                const questionsContainer = document.getElementById('questionsContainer');
-                const emptyState = questionsContainer.querySelector('.rounded-lg:not(.question-card)');
-                if (emptyState) {
-                    emptyState.remove();
-                }
-                
-                const sampleQuestions = [
+        
+        <!-- Questions section -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Questions</h5>
+                <button type="button" id="addQuestion" class="btn btn-primary btn-sm">Add Question</button>
+            </div>
+            <div class="card-body">
+                <div id="questionsContainer">
+                    @for (var i = 0; i < Model.Questions.Count; i++)
                     {
-                        title: 'How satisfied are you with our service?',
-                        type: 'rating',
-                        required: true
-                    },
-                    {
-                        title: 'What features do you like most?',
-                        type: 'multiple-choice',
-                        options: ['User Interface', 'Performance', 'Customer Support', 'Price'],
-                        required: true
-                    },
-                    {
-                        title: 'Please provide any additional feedback',
-                        type: 'text',
-                        required: false
-                    }
-                ];
-                
-                // Add each sample question
-                sampleQuestions.forEach(sample => {
-                    const questionIndex = document.querySelectorAll('.question-card').length;
-                    const uniqueId = 'sample-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
-                    
-                    const questionCard = document.createElement('div');
-                    questionCard.className = 'question-card rounded-lg border bg-card text-card-foreground shadow-sm';
-                    
-                    let optionsHtml = '';
-                    if (sample.type === 'multiple-choice' && sample.options) {
-                        optionsHtml = `
-                            <div class="options-container space-y-3 mt-4">
-                                <label class="block text-sm font-medium">Options</label>
-                                ${sample.options.map((option, optionIndex) => `
-                                    <div class="option-item flex items-center gap-2">
-                                        <div class="flex-1">
-                                            <input 
-                                                type="text" 
-                                                name="Questions[${questionIndex}].Options[${optionIndex}]" 
-                                                value="${option}" 
-                                                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" 
-                                                placeholder="Option text"
-                                            />
-                                        </div>
-                                        <button 
-                                            type="button" 
-                                            class="remove-option inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-destructive h-10 w-10 p-0"
-                                            ${sample.options.length <= 2 ? 'disabled' : ''}
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2 h-4 w-4"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
-                                        </button>
-                                    </div>
-                                `).join('')}
-                                <button 
-                                    type="button" 
-                                    class="add-option inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus h-4 w-4 mr-1"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
-                                    Add Option
-                                </button>
-                            </div>
-                        `;
-                    }
-                    
-                    let ratingHtml = '';
-                    if (sample.type === 'rating') {
-                        ratingHtml = `
-                            <div class="rating-preview border rounded-md p-4 bg-muted/20">
-                                <label class="block text-sm font-medium mb-2">Preview</label>
-                                <div class="flex gap-1 justify-center">
-                                    ${Array.from({ length: 5 }, (_, i) => i + 1).map(star => `
-                                        <svg class="h-8 w-8 ${star <= 3 ? 'text-yellow-400' : 'text-gray-300'}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                            <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
-                                        </svg>
-                                    `).join('')}
-                                </div>
-                            </div>
-                        `;
-                    }
-                    
-                    questionCard.innerHTML = `
-                        <input type="hidden" name="Questions[${questionIndex}].Id" value="${uniqueId}" />
-                        
-                        <div class="flex items-center px-4 py-3 border-b bg-muted/30">
-                            <div class="mr-2 text-muted-foreground">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-grip-vertical h-5 w-5 cursor-grab"><circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle></svg>
-                            </div>
-                            <button type="button" class="toggle-expand p-0 h-auto mr-2 bg-transparent border-0">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-up h-4 w-4"><path d="m18 15-6-6-6 6"></path></svg>
-                            </button>
-                            <div class="flex-1 font-medium truncate">
-                                ${sample.title}
-                            </div>
-                            <div class="flex items-center gap-1">
-                                ${questionIndex > 0 ? `
-                                    <button type="button" class="move-up inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-up h-4 w-4"><path d="m18 15-6-6-6 6"></path></svg>
-                                    </button>
-                                ` : ''}
-                                <button type="button" class="move-down inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down h-4 w-4"><path d="m6 9 6 6 6-6"></path></svg>
-                                </button>
-                                <button type="button" class="delete-question inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-destructive h-8 w-8 p-0">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2 h-4 w-4"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="question-content p-4 space-y-4">
-                            <div class="space-y-2">
-                                <div>
-                                    <label class="block text-sm font-medium mb-1">Question</label>
-                                    <input 
-                                        type="text" 
-                                        name="Questions[${questionIndex}].Title" 
-                                        value="${sample.title}" 
-                                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" 
-                                        placeholder="Enter your question"
-                                    />
+                        <div class="question-item card mb-3">
+                            <div class="card-body">
+                                <input type="hidden" name="Questions[@i].Id" value="@Model.Questions[i].Id" />
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Question Title</label>
+                                    <input type="text" class="form-control" name="Questions[@i].Title" value="@Model.Questions[i].Title" required />
                                 </div>
                                 
-                                <div>
-                                    <label class="block text-sm font-medium mb-1">Description (optional)</label>
-                                    <textarea 
-                                        name="Questions[${questionIndex}].Description" 
-                                        class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" 
-                                        placeholder="Add a description to provide more context"
-                                    ></textarea>
+                                <div class="mb-3">
+                                    <label class="form-label">Question Type</label>
+                                    <select class="form-select question-type" name="Questions[@i].Type" data-index="@i">
+                                        <option value="text" @(Model.Questions[i].Type == "text" ? "selected" : "")>Text</option>
+                                        <option value="single-choice" @(Model.Questions[i].Type == "single-choice" ? "selected" : "")>Single Choice</option>
+                                        <option value="multiple-choice" @(Model.Questions[i].Type == "multiple-choice" ? "selected" : "")>Multiple Choice</option>
+                                        <option value="rating" @(Model.Questions[i].Type == "rating" ? "selected" : "")>Rating</option>
+                                    </select>
                                 </div>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium mb-1">Question Type</label>
-                                <select 
-                                    name="Questions[${questionIndex}].Type" 
-                                    class="question-type flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                >
-                                    <option value="text" ${sample.type === 'text' ? 'selected' : ''}>Text Input</option>
-                                    <option value="single-choice" ${sample.type === 'single-choice' ? 'selected' : ''}>Single Choice</option>
-                                    <option value="multiple-choice" ${sample.type === 'multiple-choice' ? 'selected' : ''}>Multiple Choice</option>
-                                    <option value="rating" ${sample.type === 'rating' ? 'selected' : ''}>Rating</option>
-                                    <option value="dropdown" ${sample.type === 'dropdown' ? 'selected' : ''}>Dropdown</option>
-                                    <option value="nps" ${sample.type === 'nps' ? 'selected' : ''}>Net Promoter Score</option>
-                                </select>
-                            </div>
-                            
-                            ${optionsHtml}
-                            ${ratingHtml}
-                            
-                            <div class="flex items-center space-x-2">
-                                <div class="flex h-6 items-center space-x-2">
-                                    <input 
-                                        type="checkbox" 
-                                        id="required-${questionIndex}" 
-                                        name="Questions[${questionIndex}].Required" 
-                                        value="true" 
-                                        ${sample.required ? 'checked' : ''} 
-                                        class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                                    />
-                                    <input type="hidden" name="Questions[${questionIndex}].Required" value="false" />
-                                    <label for="required-${questionIndex}" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                        Required question
-                                    </label>
+                                
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="Questions[@i].Required" value="true" @(Model.Questions[i].Required ? "checked" : "") />
+                                        <label class="form-check-label">Required</label>
+                                    </div>
+                                </div>
+                                
+                                <div class="options-container @(Model.Questions[i].Type == "text" || Model.Questions[i].Type == "rating" ? "d-none" : "")">
+                                    <label class="form-label">Options</label>
+                                    <div class="options-list">
+                                        @if (Model.Questions[i].Options != null)
+                                        {
+                                            @for (var j = 0; j < Model.Questions[i].Options.Count; j++)
+                                            {
+                                                <div class="input-group mb-2">
+                                                    <input type="text" class="form-control" name="Questions[@i].Options[@j]" value="@Model.Questions[i].Options[j]" />
+                                                    <button type="button" class="btn btn-outline-danger remove-option">Remove</button>
+                                                </div>
+                                            }
+                                        }
+                                    </div>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm add-option mt-2">Add Option</button>
+                                </div>
+                                
+                                <div class="d-flex justify-content-end mt-3">
+                                    <button type="button" class="btn btn-outline-danger btn-sm remove-question">Remove Question</button>
                                 </div>
                             </div>
                         </div>
-                    `;
-                    
-                    questionsContainer.appendChild(questionCard);
-                    
-                    // Add event listeners to the new question
-                    attachEventListenersToQuestion(questionCard);
-                });
-            }
-            
-            function getQuestionIndex(questionCard) {
-                const questions = Array.from(document.querySelectorAll('.question-card'));
-                return questions.indexOf(questionCard);
-            }
-            
-            function renumberQuestions() {
-                const questions = document.querySelectorAll('.question-card');
+                    }
+                </div>
                 
-                questions.forEach((question, index) => {
-                    // Update input and select names
-                    question.querySelectorAll('input, select, textarea').forEach(input => {
-                        const name = input.getAttribute('name');
-                        if (name && name.includes('Questions[')) {
-                            const newName = name.replace(/Questions\[\d+\]/, `Questions[${index}]`);
-                            input.setAttribute('name', newName);
+                @if (Model.Questions.Count == 0)
+                {
+                    <div class="alert alert-info">
+                        No questions added yet. Click "Add Question" to start building your survey.
+                    </div>
+                }
+            </div>
+        </div>
+        
+        <!-- Delivery Settings -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Delivery Settings</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Delivery Type</label>
+                    <select class="form-select" id="deliveryType" name="DeliveryConfig.Type">
+                        <option value="manual" @(Model.DeliveryConfig?.Type == "manual" ? "selected" : "")>Manual (Send via email)</option>
+                        <option value="scheduled" @(Model.DeliveryConfig?.Type == "scheduled" ? "selected" : "")>Scheduled</option>
+                        <option value="trigger" @(Model.DeliveryConfig?.Type == "trigger" ? "selected" : "")>Event Triggered</option>
+                    </select>
+                </div>
+                
+                <div id="emailAddresses" class="@(Model.DeliveryConfig?.Type == "manual" ? "" : "d-none")">
+                    <label class="form-label">Email Addresses</label>
+                    <div id="emailList">
+                        @if (Model.DeliveryConfig?.EmailAddresses != null)
+                        {
+                            @for (var i = 0; i < Model.DeliveryConfig.EmailAddresses.Count; i++)
+                            {
+                                <div class="input-group mb-2">
+                                    <input type="email" class="form-control" name="DeliveryConfig.EmailAddresses[@i]" value="@Model.DeliveryConfig.EmailAddresses[i]" />
+                                    <button type="button" class="btn btn-outline-danger remove-email">Remove</button>
+                                </div>
+                            }
                         }
-                    });
+                    </div>
+                    <div class="input-group mb-2">
+                        <input type="email" id="newEmail" class="form-control" placeholder="Enter email address" />
+                        <button type="button" class="btn btn-outline-primary" id="addEmail">Add</button>
+                    </div>
+                </div>
+                
+                <div id="scheduleSettings" class="@(Model.DeliveryConfig?.Type == "scheduled" ? "" : "d-none")">
+                    <h6 class="mt-3">Schedule Settings</h6>
+                    <div class="mb-3">
+                        <label class="form-label">Frequency</label>
+                        <select class="form-select" name="DeliveryConfig.Schedule.Frequency">
+                            <option value="daily" @(Model.DeliveryConfig?.Schedule?.Frequency == "daily" ? "selected" : "")>Daily</option>
+                            <option value="weekly" @(Model.DeliveryConfig?.Schedule?.Frequency == "weekly" ? "selected" : "")>Weekly</option>
+                            <option value="monthly" @(Model.DeliveryConfig?.Schedule?.Frequency == "monthly" ? "selected" : "")>Monthly</option>
+                        </select>
+                    </div>
                     
-                    // Update required checkbox ID
-                    const requiredCheckbox = question.querySelector('input[type="checkbox"][name$=".Required"]');
-                    if (requiredCheckbox) {
-                        requiredCheckbox.id = `required-${index}`;
-                        const label = question.querySelector(`label[for^="required-"]`);
-                        if (label) {
-                            label.setAttribute('for', `required-${index}`);
+                    <div class="mb-3">
+                        <label class="form-label">Day of Month</label>
+                        <input type="number" class="form-control" name="DeliveryConfig.Schedule.DayOfMonth" value="@(Model.DeliveryConfig?.Schedule?.DayOfMonth ?? 1)" min="1" max="31" />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Time</label>
+                        <input type="time" class="form-control" name="DeliveryConfig.Schedule.Time" value="@(Model.DeliveryConfig?.Schedule?.Time ?? "09:00")" />
+                    </div>
+                </div>
+                
+                <div id="triggerSettings" class="@(Model.DeliveryConfig?.Type == "trigger" ? "" : "d-none")">
+                    <h6 class="mt-3">Trigger Settings</h6>
+                    <div class="mb-3">
+                        <label class="form-label">Trigger Event</label>
+                        <select class="form-select" name="DeliveryConfig.Trigger.Type">
+                            <option value="ticket-closed" @(Model.DeliveryConfig?.Trigger?.Type == "ticket-closed" ? "selected" : "")>Ticket Closed</option>
+                            <option value="new-customer" @(Model.DeliveryConfig?.Trigger?.Type == "new-customer" ? "selected" : "")>New Customer</option>
+                            <option value="purchase-completed" @(Model.DeliveryConfig?.Trigger?.Type == "purchase-completed" ? "selected" : "")>Purchase Completed</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Delay (hours)</label>
+                        <input type="number" class="form-control" name="DeliveryConfig.Trigger.DelayHours" value="@(Model.DeliveryConfig?.Trigger?.DelayHours ?? 24)" min="0" />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="DeliveryConfig.Trigger.SendAutomatically" value="true" @(Model.DeliveryConfig?.Trigger?.SendAutomatically == true ? "checked" : "") />
+                            <label class="form-check-label">Send Automatically</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mb-4 d-flex justify-content-between">
+            <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+            <button type="submit" class="btn btn-primary">Save Survey</button>
+        </div>
+    </form>
+    
+    <!-- Template for new questions -->
+    <template id="questionTemplate">
+        <div class="question-item card mb-3">
+            <div class="card-body">
+                <input type="hidden" name="Questions[INDEX].Id" value="new-RANDOM_ID" />
+                
+                <div class="mb-3">
+                    <label class="form-label">Question Title</label>
+                    <input type="text" class="form-control" name="Questions[INDEX].Title" value="New Question" required />
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Question Type</label>
+                    <select class="form-select question-type" name="Questions[INDEX].Type" data-index="INDEX">
+                        <option value="text">Text</option>
+                        <option value="single-choice">Single Choice</option>
+                        <option value="multiple-choice">Multiple Choice</option>
+                        <option value="rating">Rating</option>
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="Questions[INDEX].Required" value="true" checked />
+                        <label class="form-check-label">Required</label>
+                    </div>
+                </div>
+                
+                <div class="options-container d-none">
+                    <label class="form-label">Options</label>
+                    <div class="options-list">
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control" name="Questions[INDEX].Options[0]" value="Option 1" />
+                            <button type="button" class="btn btn-outline-danger remove-option">Remove</button>
+                        </div>
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control" name="Questions[INDEX].Options[1]" value="Option 2" />
+                            <button type="button" class="btn btn-outline-danger remove-option">Remove</button>
+                        </div>
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control" name="Questions[INDEX].Options[2]" value="Option 3" />
+                            <button type="button" class="btn btn-outline-danger remove-option">Remove</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-outline-secondary btn-sm add-option mt-2">Add Option</button>
+                </div>
+                
+                <div class="d-flex justify-content-end mt-3">
+                    <button type="button" class="btn btn-outline-danger btn-sm remove-question">Remove Question</button>
+                </div>
+            </div>
+        </div>
+    </template>
+    
+    <!-- Template for new options -->
+    <template id="optionTemplate">
+        <div class="input-group mb-2">
+            <input type="text" class="form-control" name="Questions[INDEX].Options[OPTION_INDEX]" value="New Option" />
+            <button type="button" class="btn btn-outline-danger remove-option">Remove</button>
+        </div>
+    </template>
+    
+    <!-- Template for new email -->
+    <template id="emailTemplate">
+        <div class="input-group mb-2">
+            <input type="email" class="form-control" name="DeliveryConfig.EmailAddresses[EMAIL_INDEX]" value="EMAIL_VALUE" />
+            <button type="button" class="btn btn-outline-danger remove-email">Remove</button>
+        </div>
+    </template>
+</div>
+
+<!-- JSON Console logging for debugging -->
+<div style="display:none" id="surveyJsonData">@ViewBag.SurveyJson</div>
+
+@section Scripts {
+    <script src="~/js/survey-json-logging.js"></script>
+    <script>
+        // Log survey data to console
+        document.addEventListener('DOMContentLoaded', function() {
+            const jsonData = document.getElementById('surveyJsonData').textContent;
+            if (jsonData) {
+                console.log('Survey Data (JSON):', JSON.parse(jsonData));
+            }
+            
+            // Log form submission
+            const form = document.querySelector('form');
+            form.addEventListener('submit', function() {
+                console.log('Form submitted - collecting data for console...');
+                // Create an object to hold all form data
+                const formData = new FormData(form);
+                const data = {};
+                
+                // Group the data properly
+                for (let [key, value] of formData.entries()) {
+                    if (key.includes('.')) {
+                        const parts = key.split('.');
+                        const groupName = parts[0];
+                        const propName = parts.slice(1).join('.');
+                        
+                        if (!data[groupName]) {
+                            data[groupName] = {};
                         }
-                    }
-                    
-                    // Update move buttons visibility
-                    const moveUpButton = question.querySelector('.move-up');
-                    if (moveUpButton) {
-                        moveUpButton.style.visibility = index === 0 ? 'hidden' : 'visible';
-                    }
-                    
-                    const moveDownButton = question.querySelector('.move-down');
-                    if (moveDownButton) {
-                        moveDownButton.style.visibility = index === questions.length - 1 ? 'hidden' : 'visible';
-                    }
-                });
-            }
-            
-            function renumberOptions(optionsContainer) {
-                const questionCard = optionsContainer.closest('.question-card');
-                const questionIndex = getQuestionIndex(questionCard);
-                const options = optionsContainer.querySelectorAll('.option-item');
-                
-                options.forEach((option, optionIndex) => {
-                    const input = option.querySelector('input');
-                    if (input) {
-                        input.name = `Questions[${questionIndex}].Options[${optionIndex}]`;
-                    }
-                });
-            }
-            
-            function updateDisabledState(optionsContainer) {
-                const options = optionsContainer.querySelectorAll('.option-item');
-                const removeButtons = optionsContainer.querySelectorAll('.remove-option');
-                
-                // Disable remove buttons if there are only 2 options
-                const disabled = options.length <= 2;
-                removeButtons.forEach(button => {
-                    button.disabled = disabled;
-                });
-            }
-            
-            function createOptionsContainer(questionCard, selectElement) {
-                const questionIndex = getQuestionIndex(questionCard);
-                const optionsContainer = document.createElement('div');
-                optionsContainer.className = 'options-container space-y-3 mt-4';
-                optionsContainer.innerHTML = `
-                    <label class="block text-sm font-medium">Options</label>
-                    <div class="option-item flex items-center gap-2">
-                        <div class="flex-1">
-                            <input 
-                                type="text" 
-                                name="Questions[${questionIndex}].Options[0]" 
-                                value="Option 1" 
-                                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" 
-                                placeholder="Option text"
-                            />
-                        </div>
-                        <button 
-                            type="button" 
-                            class="remove-option inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-destructive h-10 w-10 p-0"
-                            disabled
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2 h-4 w-4"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
-                        </button>
-                    </div>
-                    <div class="option-item flex items-center gap-2">
-                        <div class="flex-1">
-                            <input 
-                                type="text" 
-                                name="Questions[${questionIndex}].Options[1]" 
-                                value="Option 2" 
-                                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" 
-                                placeholder="Option text"
-                            />
-                        </div>
-                        <button 
-                            type="button" 
-                            class="remove-option inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-destructive h-10 w-10 p-0"
-                            disabled
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2 h-4 w-4"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
-                        </button>
-                    </div>
-                    <button 
-                        type="button" 
-                        class="add-option inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus h-4 w-4 mr-1"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
-                        Add Option
-                    </button>
-                `;
-                
-                // Insert after the select element's parent div
-                selectElement.parentNode.after(optionsContainer);
-                
-                // Add event listeners for option buttons
-                const addOptionButton = optionsContainer.querySelector('.add-option');
-                addOptionButton.addEventListener('click', function() {
-                    const newOptionIndex = optionsContainer.querySelectorAll('.option-item').length;
-                    
-                    const optionItem = document.createElement('div');
-                    optionItem.className = 'option-item flex items-center gap-2';
-                    optionItem.innerHTML = `
-                        <div class="flex-1">
-                            <input 
-                                type="text" 
-                                name="Questions[${questionIndex}].Options[${newOptionIndex}]" 
-                                value="New option" 
-                                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" 
-                                placeholder="Option text"
-                            />
-                        </div>
-                        <button 
-                            type="button" 
-                            class="remove-option inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-destructive h-10 w-10 p-0"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2 h-4 w-4"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
-                        </button>
-                    `;
-                    
-                    // Insert before the add button
-                    this.parentNode.insertBefore(optionItem, this);
-                    
-                    // Add event listener for the new remove button
-                    const removeButton = optionItem.querySelector('.remove-option');
-                    removeButton.addEventListener('click', function() {
-                        optionItem.remove();
-                        updateDisabledState(optionsContainer);
-                        renumberOptions(optionsContainer);
-                    });
-                    
-                    // Update disabled state for all remove buttons
-                    updateDisabledState(optionsContainer);
-                });
-                
-                // Add event listeners for existing remove buttons
-                optionsContainer.querySelectorAll('.remove-option').forEach(button => {
-                    button.addEventListener('click', function() {
-                        this.closest('.option-item').remove();
-                        updateDisabledState(optionsContainer);
-                        renumberOptions(optionsContainer);
-                    });
-                });
-            }
-            
-            function createRatingPreview(questionCard) {
-                const ratingPreview = document.createElement('div');
-                ratingPreview.className = 'rating-preview border rounded-md p-4 bg-muted/20';
-                ratingPreview.innerHTML = `
-                    <label class="block text-sm font-medium mb-2">Preview</label>
-                    <div class="flex gap-1 justify-center">
-                        ${Array.from({ length: 5 }, (_, i) => i + 1).map(star => `
-                            <svg class="h-8 w-8 ${star <= 3 ? 'text-yellow-400' : 'text-gray-300'}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
-                            </svg>
-                        `).join('')}
-                    </div>
-                `;
-                
-                // Add after the question type select
-                const typeSelect = questionCard.querySelector('.question-type');
-                typeSelect.parentNode.after(ratingPreview);
-            }
-            
-            function createNPSPreview(questionCard) {
-                const npsPreview = document.createElement('div');
-                npsPreview.className = 'nps-preview border rounded-md p-4 bg-muted/20';
-                npsPreview.innerHTML = `
-                    <label class="block text-sm font-medium mb-2">Preview</label>
-                    <div class="grid grid-cols-11 gap-1">
-                        ${Array.from({ length: 11 }, (_, i) => i).map(score => `
-                            <div class="flex items-center justify-center h-10 border rounded-md ${score === 7 ? 'bg-primary text-primary-foreground' : ''}">
-                                ${score}
-                            </div>
-                        `).join('')}
-                    </div>
-                    <div class="flex justify-between mt-2 text-xs text-muted-foreground">
-                        <span>Not at all likely</span>
-                        <span>Extremely likely</span>
-                    </div>
-                `;
-                
-                // Add after the question type select
-                const typeSelect = questionCard.querySelector('.question-type');
-                typeSelect.parentNode.after(npsPreview);
-            }
-            
-            function attachEventListenersToQuestion(questionCard) {
-                // Toggle expand/collapse
-                const expandButton = questionCard.querySelector('.toggle-expand');
-                expandButton.addEventListener('click', function() {
-                    const content = questionCard.querySelector('.question-content');
-                    const icon = this.querySelector('svg');
-                    
-                    if (content.style.display === 'none') {
-                        content.style.display = 'block';
-                        icon.classList.replace('lucide-chevron-down', 'lucide-chevron-up');
+                        
+                        let current = data[groupName];
+                        const propParts = propName.split('.');
+                        
+                        for (let i = 0; i < propParts.length - 1; i++) {
+                            const part = propParts[i];
+                            if (!current[part]) {
+                                current[part] = {};
+                            }
+                            current = current[part];
+                        }
+                        
+                        current[propParts[propParts.length - 1]] = value;
+                    } else if (key.includes('[')) {
+                        // Handle array properties
+                        const match = key.match(/([^\[]+)\[(\d+)\](?:\.(.+))?/);
+                        if (match) {
+                            const arrayName = match[1];
+                            const index = parseInt(match[2]);
+                            const propName = match[3];
+                            
+                            if (!data[arrayName]) {
+                                data[arrayName] = [];
+                            }
+                            
+                            if (!data[arrayName][index]) {
+                                data[arrayName][index] = {};
+                            }
+                            
+                            if (propName) {
+                                data[arrayName][index][propName] = value;
+                            } else {
+                                data[arrayName][index] = value;
+                            }
+                        }
                     } else {
-                        content.style.display = 'none';
-                        icon.classList.replace('lucide-chevron-up', 'lucide-chevron-down');
+                        data[key] = value;
                     }
-                });
-                
-                // Delete question
-                const deleteButton = questionCard.querySelector('.delete-question');
-                deleteButton.addEventListener('click', function() {
-                    if (confirm('Are you sure you want to delete this question?')) {
-                        questionCard.remove();
-                        renumberQuestions();
-                    }
-                });
-                
-                // Question type change
-                const typeSelect = questionCard.querySelector('.question-type');
-                typeSelect.addEventListener('change', function() {
-                    const type = this.value;
-                    
-                    // Remove existing containers
-                    const existingOptions = questionCard.querySelector('.options-container');
-                    if (existingOptions) existingOptions.remove();
-                    
-                    const existingRating = questionCard.querySelector('.rating-preview');
-                    if (existingRating) existingRating.remove();
-                    
-                    const existingNPS = questionCard.querySelector('.nps-preview');
-                    if (existingNPS) existingNPS.remove();
-                    
-                    // Add appropriate container based on the selected type
-                    if (['single-choice', 'multiple-choice', 'dropdown'].includes(type)) {
-                        createOptionsContainer(questionCard, typeSelect);
-                    } else if (type === 'rating') {
-                        createRatingPreview(questionCard);
-                    } else if (type === 'nps') {
-                        createNPSPreview(questionCard);
-                    }
-                });
-                
-                // Move question up
-                const moveUpButton = questionCard.querySelector('.move-up');
-                if (moveUpButton) {
-                    moveUpButton.addEventListener('click', function() {
-                        const previousCard = questionCard.previousElementSibling;
-                        if (previousCard && previousCard.classList.contains('question-card')) {
-                            questionCard.parentNode.insertBefore(questionCard, previousCard);
-                            renumberQuestions();
-                        }
-                    });
                 }
                 
-                // Move question down
-                const moveDownButton = questionCard.querySelector('.move-down');
-                if (moveDownButton) {
-                    moveDownButton.addEventListener('click', function() {
-                        const nextCard = questionCard.nextElementSibling;
-                        if (nextCard && nextCard.classList.contains('question-card')) {
-                            nextCard.after(questionCard);
-                            renumberQuestions();
-                        }
-                    });
-                }
-                
-                // Add option button
-                const addOptionButton = questionCard.querySelector('.add-option');
-                if (addOptionButton) {
-                    addOptionButton.addEventListener('click', function() {
-                        const optionsContainer = this.closest('.options-container');
-                        const questionIndex = getQuestionIndex(questionCard);
-                        const optionItems = optionsContainer.querySelectorAll('.option-item');
-                        const newOptionIndex = optionItems.length;
-                        
-                        const optionItem = document.createElement('div');
-                        optionItem.className = 'option-item flex items-center gap-2';
-                        optionItem.innerHTML = `
-                            <div class="flex-1">
-                                <input 
-                                    type="text" 
-                                    name="Questions[${questionIndex}].Options[${newOptionIndex}]" 
-                                    value="New option" 
-                                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" 
-                                    placeholder="Option text"
-                                />
-                            </div>
-                            <button 
-                                type="button" 
-                                class="remove-option inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-destructive h-10 w-10 p-0"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2 h-4 w-4"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
-                            </button>
-                        `;
-                        
-                        // Insert before the add button
-                        this.parentNode.insertBefore(optionItem, this);
-                        
-                        // Add event listener for the new remove button
-                        const removeButton = optionItem.querySelector('.remove-option');
-                        removeButton.addEventListener('click', function() {
-                            optionItem.remove();
-                            updateDisabledState(optionsContainer);
-                            renumberOptions(optionsContainer);
-                        });
-                        
-                        // Update disabled state
-                        updateDisabledState(optionsContainer);
-                    });
-                }
-                
-                // Remove option buttons
-                questionCard.querySelectorAll('.remove-option').forEach(button => {
-                    button.addEventListener('click', function() {
-                        const optionsContainer = this.closest('.options-container');
-                        const optionItem = this.closest('.option-item');
-                        optionItem.remove();
-                        updateDisabledState(optionsContainer);
-                        renumberOptions(optionsContainer);
-                    });
-                });
-            }
+                console.log('Form Submission Data (JSON):', JSON.stringify(data, null, 2));
+            });
         });
     </script>
 }
-

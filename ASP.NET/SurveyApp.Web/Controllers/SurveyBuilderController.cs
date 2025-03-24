@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Text.Json;
 
 namespace SurveyApp.Web.Controllers
 {
@@ -41,12 +42,32 @@ namespace SurveyApp.Web.Controllers
                 }
             };
             
+            // Log the initial model for debugging
+            Console.WriteLine($"Initial survey model: {JsonSerializer.Serialize(model)}");
+            
+            // Add client-side logging script
+            ViewBag.LoggingScript = @"
+                <script>
+                    console.log('Initial survey model:', " + JsonSerializer.Serialize(JsonSerializer.Serialize(model)) + @");
+                </script>
+            ";
+            
             return View(model);
         }
 
         [HttpPost]
         public async Task<IActionResult> Create(CreateSurveyViewModel model)
         {
+            // Log the received model data
+            Console.WriteLine($"Received survey data: {JsonSerializer.Serialize(model)}");
+            
+            // Add client-side logging script
+            ViewBag.LoggingScript = @"
+                <script>
+                    console.log('Received survey data:', " + JsonSerializer.Serialize(JsonSerializer.Serialize(model)) + @");
+                </script>
+            ";
+            
             if (!ModelState.IsValid)
             {
                 TempData["ErrorMessage"] = "Por favor, corrija los errores en el formulario.";
@@ -98,6 +119,9 @@ namespace SurveyApp.Web.Controllers
                     }
                 };
 
+                // Log the domain model
+                Console.WriteLine($"Converted survey domain model: {JsonSerializer.Serialize(survey)}");
+
                 bool success;
                 if (model.Id > 0)
                 {
@@ -105,10 +129,12 @@ namespace SurveyApp.Web.Controllers
                     if (success)
                     {
                         TempData["SuccessMessage"] = "Encuesta actualizada exitosamente.";
+                        Console.WriteLine($"Survey updated successfully. ID: {survey.Id}");
                     }
                     else
                     {
                         TempData["ErrorMessage"] = "Error al actualizar la encuesta.";
+                        Console.WriteLine($"Failed to update survey. ID: {survey.Id}");
                     }
                 }
                 else
@@ -117,10 +143,12 @@ namespace SurveyApp.Web.Controllers
                     if (success)
                     {
                         TempData["SuccessMessage"] = "Encuesta creada exitosamente.";
+                        Console.WriteLine($"Survey created successfully.");
                     }
                     else
                     {
                         TempData["ErrorMessage"] = "Error al crear la encuesta.";
+                        Console.WriteLine($"Failed to create survey.");
                     }
                 }
 
@@ -131,6 +159,7 @@ namespace SurveyApp.Web.Controllers
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Exception in survey creation: {ex.Message}");
                 ModelState.AddModelError("", $"Error: {ex.Message}");
                 TempData["ErrorMessage"] = $"Error inesperado: {ex.Message}";
             }
