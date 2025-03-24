@@ -85,6 +85,9 @@ namespace SurveyApp.Web.Controllers
                     Id = q.Id.ToString(),
                     Type = q.Type,
                     Question = q.Text,
+                    Text = q.Text,
+                    Title = q.Text,
+                    Description = q.Description ?? "",
                     Options = q.Options,
                     Required = q.Required
                 }).ToList()
