@@ -109,7 +109,7 @@ namespace SurveyApp.Web.Controllers
                 return NotFound();
             }
 
-            var response = new SurveyResponse
+            var response = new SurveyApp.Domain.Models.SurveyResponse
             {
                 SurveyId = surveyId,
                 RespondentName = model.Name,
@@ -117,7 +117,7 @@ namespace SurveyApp.Web.Controllers
                 RespondentPhone = model.Phone,
                 RespondentCompany = model.Company,
                 SubmittedAt = DateTime.UtcNow,
-                Answers = new List<QuestionResponse>()
+                Answers = new List<SurveyApp.Domain.Models.QuestionResponse>()
             };
 
             foreach (var question in survey.Questions)
@@ -125,7 +125,7 @@ namespace SurveyApp.Web.Controllers
                 var questionId = question.Id.ToString();
                 if (model.Answers.TryGetValue(questionId, out string value))
                 {
-                    response.Answers.Add(new QuestionResponse
+                    response.Answers.Add(new SurveyApp.Domain.Models.QuestionResponse
                     {
                         QuestionId = questionId,
                         QuestionTitle = question.Text,

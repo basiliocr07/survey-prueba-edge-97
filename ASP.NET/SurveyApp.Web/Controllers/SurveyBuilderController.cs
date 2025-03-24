@@ -24,9 +24,9 @@ namespace SurveyApp.Web.Controllers
         {
             var model = new CreateSurveyViewModel
             {
-                Questions = new List<SurveyQuestionViewModel>
+                Questions = new List<QuestionViewModel>
                 {
-                    new SurveyQuestionViewModel
+                    new QuestionViewModel
                     {
                         Id = Guid.NewGuid().ToString(),
                         Title = "Nueva pregunta",
@@ -56,14 +56,14 @@ namespace SurveyApp.Web.Controllers
             try
             {
                 // Mapear de ViewModel a entidad de dominio
-                var survey = new Survey
+                var survey = new SurveyApp.Domain.Models.Survey
                 {
                     Id = model.Id,
                     Title = model.Title,
                     Description = model.Description,
                     Status = model.Status,
                     CreatedAt = DateTime.Now,
-                    Questions = model.Questions.Select(q => new Question
+                    Questions = model.Questions.Select(q => new SurveyApp.Domain.Models.Question
                     {
                         Id = string.IsNullOrEmpty(q.Id) || q.Id.StartsWith("new-") 
                             ? 0 
@@ -73,23 +73,23 @@ namespace SurveyApp.Web.Controllers
                         Required = q.Required,
                         Description = q.Description ?? string.Empty,
                         Options = q.Options ?? new List<string>(),
-                        Settings = q.Settings != null ? new QuestionSettings
+                        Settings = q.Settings != null ? new SurveyApp.Domain.Models.QuestionSettings
                         {
                             Min = q.Settings.Min,
                             Max = q.Settings.Max
                         } : null
                     }).ToList(),
-                    DeliveryConfig = new DeliveryConfiguration
+                    DeliveryConfig = new SurveyApp.Domain.Models.DeliveryConfiguration
                     {
                         Type = model.DeliveryConfig?.Type ?? "manual",
                         EmailAddresses = model.DeliveryConfig?.EmailAddresses ?? new List<string>(),
-                        Schedule = model.DeliveryConfig?.Schedule != null ? new ScheduleSettings
+                        Schedule = model.DeliveryConfig?.Schedule != null ? new SurveyApp.Domain.Models.ScheduleSettings
                         {
                             Frequency = model.DeliveryConfig.Schedule.Frequency,
                             DayOfMonth = model.DeliveryConfig.Schedule.DayOfMonth,
                             Time = model.DeliveryConfig.Schedule.Time
                         } : null,
-                        Trigger = model.DeliveryConfig?.Trigger != null ? new TriggerSettings
+                        Trigger = model.DeliveryConfig?.Trigger != null ? new SurveyApp.Domain.Models.TriggerSettings
                         {
                             Type = model.DeliveryConfig.Trigger.Type,
                             DelayHours = model.DeliveryConfig.Trigger.DelayHours,
@@ -155,7 +155,7 @@ namespace SurveyApp.Web.Controllers
                 Title = survey.Title,
                 Description = survey.Description,
                 Status = survey.Status,
-                Questions = survey.Questions.Select(q => new SurveyQuestionViewModel
+                Questions = survey.Questions.Select(q => new QuestionViewModel
                 {
                     Id = q.Id.ToString(),
                     Title = q.Text,

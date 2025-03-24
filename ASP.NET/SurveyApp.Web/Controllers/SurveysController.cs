@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Application.Interfaces;
 using SurveyApp.Domain.Models;
@@ -108,13 +109,13 @@ namespace SurveyApp.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                var survey = new Survey
+                var survey = new SurveyApp.Domain.Models.Survey
                 {
                     Title = model.Title,
                     Description = model.Description,
                     CreatedAt = DateTime.Now,
                     Status = model.Status,
-                    Questions = model.Questions.Select(q => new Question
+                    Questions = model.Questions.Select(q => new SurveyApp.Domain.Models.Question
                     {
                         Text = q.Title,
                         Type = q.Type,
@@ -122,19 +123,19 @@ namespace SurveyApp.Web.Controllers
                         Description = q.Description,
                         Options = q.Options,
                         Settings = q.Settings != null 
-                            ? new QuestionSettings 
+                            ? new SurveyApp.Domain.Models.QuestionSettings 
                             { 
                                 Min = q.Settings.Min, 
                                 Max = q.Settings.Max 
                             } 
                             : null
                     }).ToList(),
-                    DeliveryConfig = new DeliveryConfiguration
+                    DeliveryConfig = new SurveyApp.Domain.Models.DeliveryConfiguration
                     {
                         Type = model.DeliveryConfig.Type,
                         EmailAddresses = model.DeliveryConfig.EmailAddresses,
                         Schedule = model.DeliveryConfig.Schedule != null 
-                            ? new ScheduleSettings
+                            ? new SurveyApp.Domain.Models.ScheduleSettings
                             {
                                 Frequency = model.DeliveryConfig.Schedule.Frequency,
                                 DayOfMonth = model.DeliveryConfig.Schedule.DayOfMonth,
@@ -142,7 +143,7 @@ namespace SurveyApp.Web.Controllers
                             }
                             : null,
                         Trigger = model.DeliveryConfig.Trigger != null
-                            ? new TriggerSettings
+                            ? new SurveyApp.Domain.Models.TriggerSettings
                             {
                                 Type = model.DeliveryConfig.Trigger.Type,
                                 DelayHours = model.DeliveryConfig.Trigger.DelayHours,
