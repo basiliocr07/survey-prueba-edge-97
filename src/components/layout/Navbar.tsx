@@ -14,27 +14,10 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 
-interface NavFeature {
-  name: string;
-  description: string;
-  href: string;
-  roles?: string[];
-}
-
-interface NavMenuItem {
-  label: string;
-  icon?: React.ReactNode;
-  href: string;
-  description?: string;
-  roles: string[];
-  features?: NavFeature[];
-}
-
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userRole, setUserRole] = useState('');
   const [username, setUsername] = useState('');
   const location = useLocation();
   const navigate = useNavigate();
@@ -42,11 +25,9 @@ export default function Navbar() {
 
   useEffect(() => {
     const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    const role = localStorage.getItem('userRole') || '';
     const name = localStorage.getItem('username') || '';
     
     setIsLoggedIn(loggedIn);
-    setUserRole(role);
     setUsername(name);
     
     const handleScroll = () => {
@@ -69,7 +50,6 @@ export default function Navbar() {
     localStorage.removeItem('username');
     
     setIsLoggedIn(false);
-    setUserRole('');
     setUsername('');
     
     toast({
@@ -81,82 +61,36 @@ export default function Navbar() {
   };
 
   const getFilteredNavItems = () => {
-    const clientNavItems = [
-      { path: '/', label: 'Home', icon: <Home className="w-4 h-4 mr-2" />, roles: ['client'] },
-      { path: '/suggestions', label: 'Enviar Sugerencia', icon: <MessageSquare className="w-4 h-4 mr-2" />, roles: ['client'] },
-      { path: '/requirements', label: 'Enviar Requerimiento', icon: <FileText className="w-4 h-4 mr-2" />, roles: ['client'] },
+    return [
+      { path: '/', label: 'Home', icon: <Home className="w-4 h-4 mr-2" /> },
+      { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4 mr-2" /> },
+      { path: '/surveys', label: 'Surveys', icon: <FileBarChart className="w-4 h-4 mr-2" /> },
+      { path: '/results', label: 'Analysis', icon: <BarChart3 className="w-4 h-4 mr-2" /> },
+      { path: '/suggestions', label: 'Suggestions', icon: <MessageSquare className="w-4 h-4 mr-2" /> },
+      { path: '/customers', label: 'Customer Growth', icon: <Users className="w-4 h-4 mr-2" /> },
+      { path: '/requirements', label: 'Requirements', icon: <FileText className="w-4 h-4 mr-2" /> },
     ];
-
-    const allNavItems = [
-      { path: '/', label: 'Home', icon: <Home className="w-4 h-4 mr-2" />, roles: ['admin', ''] },
-      { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4 mr-2" />, roles: ['admin'] },
-      { path: '/surveys', label: 'Surveys', icon: <FileBarChart className="w-4 h-4 mr-2" />, roles: ['admin'] },
-      { path: '/results', label: 'Analysis', icon: <BarChart3 className="w-4 h-4 mr-2" />, roles: ['admin'] },
-      { path: '/suggestions', label: 'Suggestions', icon: <MessageSquare className="w-4 h-4 mr-2" />, roles: ['admin', 'client'] },
-      { path: '/customers', label: 'Customer Growth', icon: <Users className="w-4 h-4 mr-2" />, roles: ['admin'] },
-      { path: '/requirements', label: 'Requirements', icon: <FileText className="w-4 h-4 mr-2" />, roles: ['admin', 'client'] },
-    ];
-
-    if (!isLoggedIn) {
-      return allNavItems.filter(item => item.roles.includes(''));
-    } else if (userRole.toLowerCase() === 'admin') {
-      return allNavItems.filter(item => item.roles.includes('admin'));
-    } else {
-      return clientNavItems;
-    }
   };
 
   const filteredNavItems = getFilteredNavItems();
 
   const getFilteredNavMenuItems = () => {
-    const clientMenuItems: NavMenuItem[] = [
+    return [
       {
         label: 'Home',
         icon: <Home className="w-4 h-4 mr-2" />,
         href: '/',
-        description: 'Página principal',
-        roles: ['client']
-      },
-      {
-        label: 'Enviar Sugerencia',
-        icon: <MessageSquare className="w-4 h-4 mr-2" />,
-        href: '/suggestions',
-        description: 'Enviar una nueva sugerencia',
-        roles: ['client'],
-        features: [
-          { name: 'Nueva Sugerencia', description: 'Enviar una nueva sugerencia', href: '/suggestions#new', roles: ['client'] },
-        ]
-      },
-      {
-        label: 'Enviar Requerimiento',
-        icon: <FileText className="w-4 h-4 mr-2" />,
-        href: '/requirements',
-        description: 'Enviar un nuevo requerimiento',
-        roles: ['client'],
-        features: [
-          { name: 'Nuevo Requerimiento', description: 'Enviar un nuevo requerimiento', href: '/requirements#new', roles: ['client'] },
-        ]
-      }
-    ];
-
-    const allMenuItems: NavMenuItem[] = [
-      {
-        label: 'Home',
-        icon: <Home className="w-4 h-4 mr-2" />,
-        href: '/',
-        description: 'Return to the main page',
-        roles: ['admin', 'client', '']
+        description: 'Return to the main page'
       },
       {
         label: 'Dashboard',
         icon: <LayoutDashboard className="w-4 h-4 mr-2" />,
         href: '/dashboard',
         description: 'Overview of your latest activity',
-        roles: ['admin'],
         features: [
-          { name: 'Recent Surveys', description: 'View your most recent surveys', href: '/dashboard#surveys', roles: ['admin'] },
-          { name: 'Latest Suggestions', description: 'Check customer suggestions', href: '/dashboard#suggestions', roles: ['admin'] },
-          { name: 'Requirements', description: 'View latest requirements', href: '/dashboard#requirements', roles: ['admin'] },
+          { name: 'Recent Surveys', description: 'View your most recent surveys', href: '/dashboard#surveys' },
+          { name: 'Latest Suggestions', description: 'Check customer suggestions', href: '/dashboard#suggestions' },
+          { name: 'Requirements', description: 'View latest requirements', href: '/dashboard#requirements' },
         ]
       },
       {
@@ -164,11 +98,10 @@ export default function Navbar() {
         icon: <FileBarChart className="w-4 h-4 mr-2" />,
         href: '/surveys',
         description: 'Create and manage surveys',
-        roles: ['admin'],
         features: [
-          { name: 'All Surveys', description: 'View all your surveys', href: '/surveys', roles: ['admin'] },
-          { name: 'Create Survey', description: 'Build a new survey', href: '/create', roles: ['admin'] },
-          { name: 'Survey Responses', description: 'View collected responses', href: '/results', roles: ['admin'] },
+          { name: 'All Surveys', description: 'View all your surveys', href: '/surveys' },
+          { name: 'Create Survey', description: 'Build a new survey', href: '/create' },
+          { name: 'Survey Responses', description: 'View collected responses', href: '/results' },
         ]
       },
       {
@@ -176,11 +109,10 @@ export default function Navbar() {
         icon: <BarChart3 className="w-4 h-4 mr-2" />,
         href: '/results',
         description: 'Analyze survey results',
-        roles: ['admin'],
         features: [
-          { name: 'Data Visualization', description: 'View charts and graphs', href: '/results#charts', roles: ['admin'] },
-          { name: 'Response Analytics', description: 'Detailed response analysis', href: '/results#analytics', roles: ['admin'] },
-          { name: 'Export Data', description: 'Download survey results', href: '/results#export', roles: ['admin'] },
+          { name: 'Data Visualization', description: 'View charts and graphs', href: '/results#charts' },
+          { name: 'Response Analytics', description: 'Detailed response analysis', href: '/results#analytics' },
+          { name: 'Export Data', description: 'Download survey results', href: '/results#export' },
         ]
       },
       {
@@ -188,11 +120,10 @@ export default function Navbar() {
         icon: <MessageSquare className="w-4 h-4 mr-2" />,
         href: '/suggestions',
         description: 'Customer feedback and ideas',
-        roles: ['admin', 'client'],
         features: [
-          { name: 'All Suggestions', description: 'Browse customer suggestions', href: '/suggestions', roles: ['admin'] },
-          { name: 'New Suggestion', description: 'Submit a new suggestion', href: '/suggestions#new', roles: ['admin', 'client'] },
-          { name: 'Suggestion Reports', description: 'Analyze suggestion trends', href: '/suggestions#reports', roles: ['admin'] },
+          { name: 'All Suggestions', description: 'Browse customer suggestions', href: '/suggestions' },
+          { name: 'New Suggestion', description: 'Submit a new suggestion', href: '/suggestions#new' },
+          { name: 'Suggestion Reports', description: 'Analyze suggestion trends', href: '/suggestions#reports' },
         ]
       },
       {
@@ -200,11 +131,10 @@ export default function Navbar() {
         icon: <Users className="w-4 h-4 mr-2" />,
         href: '/customers',
         description: 'Manage and grow your customer base',
-        roles: ['admin'],
         features: [
-          { name: 'Customer List', description: 'View all customers', href: '/customers', roles: ['admin'] },
-          { name: 'Customer Analysis', description: 'Analyze customer growth', href: '/customers#analysis', roles: ['admin'] },
-          { name: 'Add Customer', description: 'Add a new customer', href: '/customers#add', roles: ['admin'] },
+          { name: 'Customer List', description: 'View all customers', href: '/customers' },
+          { name: 'Customer Analysis', description: 'Analyze customer growth', href: '/customers#analysis' },
+          { name: 'Add Customer', description: 'Add a new customer', href: '/customers#add' },
         ]
       },
       {
@@ -212,28 +142,18 @@ export default function Navbar() {
         icon: <FileText className="w-4 h-4 mr-2" />,
         href: '/requirements',
         description: 'Project requirements and documentation',
-        roles: ['admin', 'client'],
         features: [
-          { name: 'All Requirements', description: 'View project requirements', href: '/requirements', roles: ['admin'] },
-          { name: 'New Requirement', description: 'Submit a new requirement', href: '/requirements#new', roles: ['admin', 'client'] },
-          { name: 'Documentation', description: 'Project documentation', href: '/requirements#docs', roles: ['admin'] },
+          { name: 'All Requirements', description: 'View project requirements', href: '/requirements' },
+          { name: 'New Requirement', description: 'Submit a new requirement', href: '/requirements#new' },
+          { name: 'Documentation', description: 'Project documentation', href: '/requirements#docs' },
         ]
       },
       {
         label: 'About',
         href: '/about',
-        description: 'Learn more about Execudata',
-        roles: ['admin', 'client', '']
+        description: 'Learn more about Execudata'
       }
     ];
-
-    if (!isLoggedIn) {
-      return allMenuItems.filter(item => item.roles.includes(''));
-    } else if (userRole.toLowerCase() === 'admin') {
-      return allMenuItems.filter(item => item.roles.includes('admin'));
-    } else {
-      return clientMenuItems;
-    }
   };
 
   const filteredNavMenuItems = getFilteredNavMenuItems();
@@ -275,7 +195,7 @@ export default function Navbar() {
                           </Link>
                           <p className="text-xs text-muted-foreground mb-2">{item.description}</p>
                           <div className="grid gap-2">
-                            {item.features.map((feature) => (
+                            {item.features?.map((feature) => (
                               <Link
                                 key={feature.name}
                                 to={feature.href}

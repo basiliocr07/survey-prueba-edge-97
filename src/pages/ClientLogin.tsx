@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -38,43 +37,17 @@ export default function ClientLogin() {
       return;
     }
     
-    // Verify if admin (case insensitive)
-    if (loginFormData.username.toLowerCase() === 'admin' && loginFormData.password === 'adminpass') {
-      console.log('Admin login successful');
-      localStorage.setItem('userRole', 'admin');
-      localStorage.setItem('username', 'admin'); // Store consistent casing
-      localStorage.setItem('isLoggedIn', 'true');
-      
-      toast({
-        title: "Inicio de sesión exitoso",
-        description: "Bienvenido administrador",
-      });
-      
-      setIsLoading(false);
-      navigate('/dashboard');
-      return;
-    }
+    // Simplified login - accept any credentials
+    localStorage.setItem('username', loginFormData.username);
+    localStorage.setItem('isLoggedIn', 'true');
     
-    // Verify if client (case insensitive)
-    if (loginFormData.username.toLowerCase() === 'client' && loginFormData.password === 'clientpass') {
-      console.log('Client login successful');
-      localStorage.setItem('userRole', 'client');
-      localStorage.setItem('username', 'client'); // Store consistent casing
-      localStorage.setItem('isLoggedIn', 'true');
-      
-      toast({
-        title: "Inicio de sesión exitoso",
-        description: "Bienvenido cliente",
-      });
-      
-      setIsLoading(false);
-      navigate('/');
-      return;
-    }
+    toast({
+      title: "Inicio de sesión exitoso",
+      description: `Bienvenido ${loginFormData.username}`,
+    });
     
-    // In case of incorrect credentials or for normal users
-    setLoginError("Nombre de usuario o contraseña incorrectos");
     setIsLoading(false);
+    navigate('/dashboard');
   };
 
   const handleRegisterSubmit = (e: React.FormEvent) => {
@@ -105,15 +78,7 @@ export default function ClientLogin() {
       return;
     }
     
-    // Process registration
-    if (registerFormData.username.toLowerCase() === 'admin' || 
-        registerFormData.username.toLowerCase() === 'client') {
-      setRegisterError("Este nombre de usuario está reservado");
-      setIsLoading(false);
-      return;
-    }
-    
-    localStorage.setItem('userRole', 'client');
+    // Simplified registration - accept any registration
     localStorage.setItem('username', registerFormData.username);
     localStorage.setItem('isLoggedIn', 'true');
     
@@ -123,7 +88,7 @@ export default function ClientLogin() {
     });
     
     setIsLoading(false);
-    navigate('/');
+    navigate('/dashboard');
   };
 
   return (
@@ -171,9 +136,8 @@ export default function ClientLogin() {
                   />
                 </div>
                 <div className="text-sm text-muted-foreground p-3 bg-gray-100 rounded-md border border-gray-200">
-                  <p className="font-medium mb-1">Credenciales de prueba:</p>
-                  <p><span className="font-semibold">Admin:</span> admin / adminpass</p>
-                  <p><span className="font-semibold">Cliente:</span> client / clientpass</p>
+                  <p className="font-medium mb-1">Nota:</p>
+                  <p>Puedes usar cualquier nombre de usuario y contraseña para iniciar sesión</p>
                 </div>
               </CardContent>
               <CardFooter>

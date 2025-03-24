@@ -31,16 +31,17 @@ export class SupabaseSurveyRepository implements SurveyRepository {
   }
   
   async createSurvey(survey: Omit<Survey, 'id' | 'createdAt'>): Promise<Survey> {
+    // Transform the survey data to match the database schema
+    const dbSurvey = {
+      title: survey.title,
+      description: survey.description,
+      questions: JSON.stringify(survey.questions),
+      delivery_config: survey.deliveryConfig ? JSON.stringify(survey.deliveryConfig) : null
+    };
+    
     const { data, error } = await supabase
       .from('surveys')
-      .insert([
-        {
-          title: survey.title,
-          description: survey.description,
-          questions: survey.questions,
-          delivery_config: survey.deliveryConfig
-        }
-      ])
+      .insert([dbSurvey])
       .select()
       .single();
     
@@ -53,14 +54,17 @@ export class SupabaseSurveyRepository implements SurveyRepository {
   }
   
   async updateSurvey(survey: Survey): Promise<boolean> {
+    // Transform the survey data to match the database schema
+    const dbSurvey = {
+      title: survey.title,
+      description: survey.description,
+      questions: JSON.stringify(survey.questions),
+      delivery_config: survey.deliveryConfig ? JSON.stringify(survey.deliveryConfig) : null
+    };
+    
     const { error } = await supabase
       .from('surveys')
-      .update({
-        title: survey.title,
-        description: survey.description,
-        questions: survey.questions,
-        delivery_config: survey.deliveryConfig
-      })
+      .update(dbSurvey)
       .eq('id', survey.id);
     
     if (error) {
@@ -85,45 +89,73 @@ export class SupabaseSurveyRepository implements SurveyRepository {
     return true;
   }
 
-  // Método simplificado para mapear resultados de la base de datos a objetos Survey
+  // Simplified method to map database results to Survey objects
   private mapToSurvey(item: any): Survey {
-    // Creamos un deliveryConfig simplificado para evitar inferencia de tipos excesiva
-    const deliveryConfig = item.delivery_config ? {
-      type: String(item.delivery_config.type || 'manual'),
-      emailAddresses: Array.isArray(item.delivery_config.emailAddresses) 
-        ? item.delivery_config.emailAddresses 
-        : [],
-      // Manejamos schedule y trigger de manera explícita
-      ...(item.delivery_config.schedule ? {
-        schedule: {
-          frequency: String(item.delivery_config.schedule.frequency || 'daily'),
-          dayOfMonth: Number(item.delivery_config.schedule.dayOfMonth || 1),
-          dayOfWeek: Number(item.delivery_config.schedule.dayOfWeek || 1),
-          time: String(item.delivery_config.schedule.time || '12:00'),
+    // Parse questions from JSON string if necessary
+    let questions = [];
+    try {
+      if (typeof item.questions === 'string') {
+        questions = JSON.parse(item.questions);
+      } else if (Array.isArray(item.questions)) {
+        questions = item.questions;
+      }
+    } catch (e) {
+      console.error('Error parsing questions:', e);
+      questions = [];
+    }
+
+    // Parse delivery_config from JSON string if necessary
+    let deliveryConfig;
+    try {
+      if (item.delivery_config) {
+        const configData = typeof item.delivery_config === 'string' 
+          ? JSON.parse(item.delivery_config) 
+          : item.delivery_config;
+        
+        deliveryConfig = {
+          type: String(configData.type || 'manual'),
+          emailAddresses: Array.isArray(configData.emailAddresses) 
+            ? configData.emailAddresses 
+            : [],
+        };
+
+        // Add schedule if it exists
+        if (configData.schedule) {
+          deliveryConfig.schedule = {
+            frequency: String(configData.schedule.frequency || 'daily'),
+            dayOfMonth: Number(configData.schedule.dayOfMonth || 1),
+            dayOfWeek: Number(configData.schedule.dayOfWeek || 1),
+            time: String(configData.schedule.time || '12:00'),
+          };
         }
-      } : {}),
-      ...(item.delivery_config.trigger ? {
-        trigger: {
-          type: String(item.delivery_config.trigger.type || 'ticket-closed'),
-          delayHours: Number(item.delivery_config.trigger.delayHours || 24),
-          sendAutomatically: Boolean(item.delivery_config.trigger.sendAutomatically || false),
+
+        // Add trigger if it exists
+        if (configData.trigger) {
+          deliveryConfig.trigger = {
+            type: String(configData.trigger.type || 'ticket-closed'),
+            delayHours: Number(configData.trigger.delayHours || 24),
+            sendAutomatically: Boolean(configData.trigger.sendAutomatically || false),
+          };
         }
-      } : {})
-    } : undefined;
+      }
+    } catch (e) {
+      console.error('Error parsing delivery config:', e);
+      deliveryConfig = undefined;
+    }
 
     return {
       id: String(item.id),
       title: String(item.title),
       description: item.description ? String(item.description) : undefined,
-      questions: Array.isArray(item.questions) ? item.questions : [],
+      questions: questions,
       createdAt: String(item.created_at),
       deliveryConfig: deliveryConfig
     };
   }
   
   async getSurveysByStatus(status: string): Promise<Survey[]> {
-    // Esta es una implementación mock. En una aplicación real, necesitarías
-    // una columna 'status' en tu tabla de encuestas.
+    // This is a simple implementation that doesn't filter by status
+    // since we're removing restrictions
     const { data, error } = await supabase
       .from('surveys')
       .select('*');
@@ -133,7 +165,6 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       throw error;
     }
     
-    // Filtramos en el cliente ya que podría no haber un campo status en la DB
     return (data || []).map(this.mapToSurvey);
   }
   
@@ -172,10 +203,25 @@ export class SupabaseSurveyRepository implements SurveyRepository {
     
     // Calculamos tiempo promedio de respuesta si hay datos disponibles
     if (totalResponses > 0) {
-      const totalCompletionTime = responses.reduce((sum, response) => {
-        return sum + (response.completion_time || 0);
-      }, 0);
-      averageCompletionTime = totalCompletionTime / totalResponses;
+      // Calculate completion time if available
+      let totalCompletionTime = 0;
+      let responsesWithCompletionTime = 0;
+      
+      for (const response of responses) {
+        const completionTime = response.completion_time || 
+                              (response as any).completion_time || 
+                              0;
+        
+        if (completionTime) {
+          totalCompletionTime += Number(completionTime);
+          responsesWithCompletionTime++;
+        }
+      }
+      
+      averageCompletionTime = responsesWithCompletionTime > 0 
+        ? totalCompletionTime / responsesWithCompletionTime 
+        : 0;
+        
       completionRate = 100; // Asumimos una tasa de finalización del 100% para respuestas enviadas
     }
     
