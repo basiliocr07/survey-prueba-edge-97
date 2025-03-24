@@ -10,238 +10,1152 @@
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 class="text-3xl font-bold tracking-tight">@(Model.Id > 0 ? "Edit Survey" : "Create Survey")</h1>
-                    <p class="text-muted-foreground mt-1">@(Model.Id > 0 ? "Update your existing survey" : "Design your new survey")</p>
+                    <p class="text-muted-foreground mt-1">@(Model.Id > 0 ? "Update your existing survey" : "Design a new survey for your users")</p>
                 </div>
                 
                 <div class="flex items-center gap-2">
                     <a asp-controller="Surveys" asp-action="Index" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
                         Cancel
                     </a>
+                    <button type="submit" form="survey-form" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-save mr-2 h-4 w-4"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                        @(Model.Id > 0 ? "Update Survey" : "Create Survey")
+                    </button>
                 </div>
             </div>
 
-            <form asp-controller="SurveyBuilder" asp-action="Create" method="post" class="space-y-6">
+            <div class="flex border-b">
+                <button type="button" class="tab-button active py-2 px-4 flex items-center gap-2 border-b-2 border-primary text-primary" data-tab="content-tab">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-plus"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" x2="12" y1="18" y2="12"></line><line x1="9" x2="15" y1="15" y2="15"></line></svg>
+                    Survey Content
+                </button>
+                <button type="button" class="tab-button py-2 px-4 flex items-center gap-2 border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors" data-tab="delivery-tab">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-send"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
+                    Delivery Settings
+                </button>
+            </div>
+
+            <form id="survey-form" asp-controller="SurveyBuilder" asp-action="Create" method="post" class="space-y-6">
                 <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="Status" value="@Model.Status" />
                 
-                <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-                    <div class="space-y-4">
-                        <div>
-                            <label asp-for="Title" class="text-sm font-medium">Survey Title</label>
-                            <input asp-for="Title" class="mt-1 block w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" placeholder="Enter survey title" />
-                            <span asp-validation-for="Title" class="text-sm text-destructive"></span>
-                        </div>
-                        
-                        <div>
-                            <label asp-for="Description" class="text-sm font-medium">Description (optional)</label>
-                            <textarea asp-for="Description" rows="3" class="mt-1 block w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" placeholder="Enter survey description"></textarea>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-                    <div class="p-6 space-y-4">
-                        <h2 class="text-xl font-semibold">Questions</h2>
-                        <p class="text-sm text-muted-foreground">Build your survey by adding questions below</p>
-                        
-                        <div id="questions-container" class="space-y-4">
-                            @if (Model.Questions.Count == 0)
-                            {
-                                <div class="border rounded-md p-4 text-center text-muted-foreground">
-                                    No questions added yet. Click the button below to add your first question.
-                                </div>
-                            }
-                            else
-                            {
-                                @for (var i = 0; i < Model.Questions.Count; i++)
-                                {
-                                    <div class="question-card border rounded-md p-4">
-                                        <input type="hidden" name="Questions[@i].Id" value="@Model.Questions[i].Id" />
-                                        
-                                        <div class="flex justify-between items-center mb-2">
-                                            <h3 class="font-medium">Question @(i + 1)</h3>
-                                            <button type="button" class="text-destructive hover:text-destructive/80" onclick="removeQuestion(this)">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
-                                            </button>
-                                        </div>
-                                        
-                                        <div class="space-y-3">
-                                            <div>
-                                                <label class="text-sm font-medium">Question Title</label>
-                                                <input type="text" name="Questions[@i].Title" value="@Model.Questions[i].Title" class="mt-1 block w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" />
-                                            </div>
-                                            
-                                            <div>
-                                                <label class="text-sm font-medium">Question Type</label>
-                                                <select name="Questions[@i].Type" class="mt-1 block w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-                                                    <option value="text" selected="@(Model.Questions[i].Type == "text")">Text Input</option>
-                                                    <option value="single-choice" selected="@(Model.Questions[i].Type == "single-choice")">Single Choice</option>
-                                                    <option value="multiple-choice" selected="@(Model.Questions[i].Type == "multiple-choice")">Multiple Choice</option>
-                                                    <option value="rating" selected="@(Model.Questions[i].Type == "rating")">Rating</option>
-                                                    <option value="nps" selected="@(Model.Questions[i].Type == "nps")">Net Promoter Score</option>
-                                                </select>
-                                            </div>
-                                            
-                                            <div class="flex items-center space-x-2">
-                                                <input type="checkbox" id="required-@i" name="Questions[@i].Required" checked="@Model.Questions[i].Required" class="rounded border-input text-primary focus:ring-primary" />
-                                                <label for="required-@i" class="text-sm">Required question</label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
-                            }
-                        </div>
-                        
-                        <button type="button" id="add-question-btn" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus mr-2 h-4 w-4"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                            Add Question
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-                    <h2 class="text-xl font-semibold mb-4">Delivery Settings</h2>
-                    
-                    <div class="space-y-4">
-                        <div>
-                            <label class="text-sm font-medium block mb-2">Delivery Method</label>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <label class="flex items-start p-4 border rounded-md cursor-pointer hover:bg-accent/10">
-                                    <input type="radio" name="DeliveryConfig.Type" value="manual" checked="@(Model.DeliveryConfig.Type == "manual")" class="mt-1 mr-2" />
-                                    <div>
-                                        <span class="font-medium">Manual</span>
-                                        <p class="text-sm text-muted-foreground mt-1">Send your survey to recipients manually</p>
-                                    </div>
+                <div id="content-tab" class="tab-content">
+                    <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+                        <h2 class="text-xl font-semibold mb-4">Survey Details</h2>
+                        <div class="space-y-4">
+                            <div>
+                                <label asp-for="Title" class="block text-sm font-medium mb-1">
+                                    Title <span class="text-destructive">*</span>
                                 </label>
-                                
-                                <label class="flex items-start p-4 border rounded-md cursor-pointer hover:bg-accent/10">
-                                    <input type="radio" name="DeliveryConfig.Type" value="scheduled" checked="@(Model.DeliveryConfig.Type == "scheduled")" class="mt-1 mr-2" />
-                                    <div>
-                                        <span class="font-medium">Scheduled</span>
-                                        <p class="text-sm text-muted-foreground mt-1">Set a schedule to automatically send surveys</p>
-                                    </div>
+                                <input asp-for="Title" class="mt-1 block w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" placeholder="Enter survey title" />
+                                <span asp-validation-for="Title" class="text-sm text-destructive"></span>
+                            </div>
+                            
+                            <div>
+                                <label asp-for="Description" class="block text-sm font-medium mb-1">
+                                    Description (optional)
                                 </label>
-                                
-                                <label class="flex items-start p-4 border rounded-md cursor-pointer hover:bg-accent/10">
-                                    <input type="radio" name="DeliveryConfig.Type" value="triggered" checked="@(Model.DeliveryConfig.Type == "triggered")" class="mt-1 mr-2" />
-                                    <div>
-                                        <span class="font-medium">Triggered</span>
-                                        <p class="text-sm text-muted-foreground mt-1">Send surveys based on specific triggers</p>
-                                    </div>
-                                </label>
+                                <textarea asp-for="Description" rows="3" class="mt-1 block w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" placeholder="Enter a description for your survey"></textarea>
                             </div>
                         </div>
-                        
-                        <div class="border-t pt-4">
-                            <label class="text-sm font-medium block mb-2">Email Recipients</label>
-                            <textarea name="EmailAddresses" rows="3" class="mt-1 block w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" placeholder="Enter email addresses, separated by commas"></textarea>
-                            <p class="text-xs text-muted-foreground mt-1">Enter one email address per line, or separate with commas</p>
+                    </div>
+                    
+                    <div class="flex justify-between items-center mt-6">
+                        <h2 class="text-xl font-semibold">Questions</h2>
+                        <div class="flex space-x-2">
+                            <button type="button" id="add-sample-questions-btn" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+                                Add Sample Questions
+                            </button>
+                            <button type="button" id="add-question-btn" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus mr-2 h-4 w-4"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                Add Question
+                            </button>
                         </div>
+                    </div>
+                    
+                    <div id="questions-container" class="mt-4 space-y-4">
+                        @if (Model.Questions.Count == 0)
+                        {
+                            <div id="no-questions" class="rounded-lg border bg-card text-card-foreground shadow-sm">
+                                <div class="flex flex-col items-center justify-center p-8 text-center">
+                                    <div class="rounded-full bg-primary/10 p-4 mb-4">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-plus h-6 w-6 text-primary"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" x2="12" y1="18" y2="12"></line><line x1="9" x2="15" y1="15" y2="15"></line></svg>
+                                    </div>
+                                    <h3 class="text-lg font-semibold mb-1">No questions yet</h3>
+                                    <p class="text-muted-foreground mb-4">Add questions to your survey</p>
+                                    <button type="button" id="add-first-question-btn" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                                        Add First Question
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            @for (var i = 0; i < Model.Questions.Count; i++)
+                            {
+                                <div class="question-card border rounded-md overflow-hidden shadow-sm">
+                                    <input type="hidden" name="Questions[@i].Id" value="@Model.Questions[i].Id" />
+                                    
+                                    <div class="flex items-center px-4 py-3 border-b bg-muted/30">
+                                        <div class="mr-2 text-muted-foreground cursor-grab">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-grip-vertical"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>
+                                        </div>
+                                        <button type="button" class="toggle-question p-0 h-auto mr-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-up h-4 w-4"><path d="m18 15-6-6-6 6"/></svg>
+                                        </button>
+                                        <div class="flex-1 font-medium truncate">
+                                            @(string.IsNullOrEmpty(Model.Questions[i].Title) ? "Untitled Question" : Model.Questions[i].Title)
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            @if (i > 0)
+                                            {
+                                                <button type="button" class="move-up inline-flex items-center justify-center rounded-md text-sm font-medium h-8 w-8 p-0" data-index="@i">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-up h-4 w-4"><path d="m18 15-6-6-6 6"/></svg>
+                                                </button>
+                                            }
+                                            @if (i < Model.Questions.Count - 1)
+                                            {
+                                                <button type="button" class="move-down inline-flex items-center justify-center rounded-md text-sm font-medium h-8 w-8 p-0" data-index="@i">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down h-4 w-4"><path d="m6 9 6 6 6-6"/></svg>
+                                                </button>
+                                            }
+                                            <button type="button" class="remove-question inline-flex items-center justify-center rounded-md text-sm font-medium h-8 w-8 p-0 text-muted-foreground hover:text-destructive" data-index="@i">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2 h-4 w-4"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="question-content p-4 space-y-4">
+                                        <div class="space-y-2">
+                                            <div>
+                                                <label class="text-sm font-medium">Question</label>
+                                                <input type="text" name="Questions[@i].Title" value="@Model.Questions[i].Title" class="mt-1 block w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" placeholder="Enter your question" />
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="text-sm font-medium">Description (optional)</label>
+                                                <textarea name="Questions[@i].Description" class="mt-1 block w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 min-h-[80px]" placeholder="Add a description to provide more context">@Model.Questions[i].Description</textarea>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label class="text-sm font-medium block mb-1">Question Type</label>
+                                            <button type="button" class="question-type-button w-full justify-between group inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 mb-2">
+                                                <span>Question Type: <span class="font-medium question-type-text">@Model.Questions[i].Type.Replace("-", " ")</span></span>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down h-4 w-4 transition-transform"><path d="m6 9 6 6 6-6"/></svg>
+                                            </button>
+                                            
+                                            <div class="question-type-dropdown hidden mt-3 p-3 border rounded-md animate-fade-in">
+                                                <div class="grid grid-cols-2 gap-2">
+                                                    <label class="flex items-center p-2 rounded-md cursor-pointer hover:bg-accent">
+                                                        <input type="radio" name="Questions[@i].Type" value="text" checked="@(Model.Questions[i].Type == "text")" class="mr-2 hidden question-type-radio" />
+                                                        <div class="flex items-center">
+                                                            <div class="@(Model.Questions[i].Type == "text" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground") rounded-md p-1 mr-2">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-text"><path d="M17 6.1H3"/><path d="M21 12.1H3"/><path d="M15.1 18H3"/></svg>
+                                                            </div>
+                                                            <span>Text Input</span>
+                                                        </div>
+                                                    </label>
+                                                    <label class="flex items-center p-2 rounded-md cursor-pointer hover:bg-accent">
+                                                        <input type="radio" name="Questions[@i].Type" value="single-choice" checked="@(Model.Questions[i].Type == "single-choice")" class="mr-2 hidden question-type-radio" />
+                                                        <div class="flex items-center">
+                                                            <div class="@(Model.Questions[i].Type == "single-choice" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground") rounded-md p-1 mr-2">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-dot"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="1"/></svg>
+                                                            </div>
+                                                            <span>Single Choice</span>
+                                                        </div>
+                                                    </label>
+                                                    <label class="flex items-center p-2 rounded-md cursor-pointer hover:bg-accent">
+                                                        <input type="radio" name="Questions[@i].Type" value="multiple-choice" checked="@(Model.Questions[i].Type == "multiple-choice")" class="mr-2 hidden question-type-radio" />
+                                                        <div class="flex items-center">
+                                                            <div class="@(Model.Questions[i].Type == "multiple-choice" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground") rounded-md p-1 mr-2">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-square"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                                                            </div>
+                                                            <span>Multiple Choice</span>
+                                                        </div>
+                                                    </label>
+                                                    <label class="flex items-center p-2 rounded-md cursor-pointer hover:bg-accent">
+                                                        <input type="radio" name="Questions[@i].Type" value="rating" checked="@(Model.Questions[i].Type == "rating")" class="mr-2 hidden question-type-radio" />
+                                                        <div class="flex items-center">
+                                                            <div class="@(Model.Questions[i].Type == "rating" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground") rounded-md p-1 mr-2">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                                            </div>
+                                                            <span>Rating</span>
+                                                        </div>
+                                                    </label>
+                                                    <label class="flex items-center p-2 rounded-md cursor-pointer hover:bg-accent">
+                                                        <input type="radio" name="Questions[@i].Type" value="dropdown" checked="@(Model.Questions[i].Type == "dropdown")" class="mr-2 hidden question-type-radio" />
+                                                        <div class="flex items-center">
+                                                            <div class="@(Model.Questions[i].Type == "dropdown" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground") rounded-md p-1 mr-2">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-list"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>
+                                                            </div>
+                                                            <span>Dropdown</span>
+                                                        </div>
+                                                    </label>
+                                                    <label class="flex items-center p-2 rounded-md cursor-pointer hover:bg-accent">
+                                                        <input type="radio" name="Questions[@i].Type" value="nps" checked="@(Model.Questions[i].Type == "nps")" class="mr-2 hidden question-type-radio" />
+                                                        <div class="flex items-center">
+                                                            <div class="@(Model.Questions[i].Type == "nps" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground") rounded-md p-1 mr-2">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bar-chart"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg>
+                                                            </div>
+                                                            <span>Net Promoter Score</span>
+                                                        </div>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        @if (new[] { "multiple-choice", "single-choice", "dropdown" }.Contains(Model.Questions[i].Type))
+                                        {
+                                            <div class="options-container space-y-3 mt-4">
+                                                <label class="text-sm font-medium">Options</label>
+                                                <div class="options-list space-y-2">
+                                                    @if (Model.Questions[i].Options != null && Model.Questions[i].Options.Count > 0)
+                                                    {
+                                                        for (var j = 0; j < Model.Questions[i].Options.Count; j++)
+                                                        {
+                                                            <div class="option-item flex items-center gap-2">
+                                                                <div class="flex-1">
+                                                                    <input type="text" name="Questions[@i].Options[@j]" value="@Model.Questions[i].Options[j]" class="block w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" placeholder="Option @(j + 1)" />
+                                                                </div>
+                                                                <button type="button" class="remove-option h-9 w-9 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 text-muted-foreground hover:text-destructive" @(Model.Questions[i].Options.Count <= 2 ? "disabled" : "")>
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2 h-4 w-4"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
+                                                                </button>
+                                                            </div>
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="option-item flex items-center gap-2">
+                                                            <div class="flex-1">
+                                                                <input type="text" name="Questions[@i].Options[0]" value="Option 1" class="block w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" placeholder="Option 1" />
+                                                            </div>
+                                                            <button type="button" class="remove-option h-9 w-9 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 text-muted-foreground hover:text-destructive" disabled>
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2 h-4 w-4"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
+                                                            </button>
+                                                        </div>
+                                                        <div class="option-item flex items-center gap-2">
+                                                            <div class="flex-1">
+                                                                <input type="text" name="Questions[@i].Options[1]" value="Option 2" class="block w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" placeholder="Option 2" />
+                                                            </div>
+                                                            <button type="button" class="remove-option h-9 w-9 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 text-muted-foreground hover:text-destructive" disabled>
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2 h-4 w-4"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
+                                                            </button>
+                                                        </div>
+                                                    }
+                                                </div>
+                                                <button type="button" class="add-option inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 mt-2">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus mr-1 h-4 w-4"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                                    Add Option
+                                                </button>
+                                            </div>
+                                        }
+
+                                        <div class="flex items-center space-x-2 pt-2">
+                                            <div class="relative inline-flex items-center">
+                                                <input type="checkbox" id="required-@i" name="Questions[@i].Required" @(Model.Questions[i].Required ? "checked" : "") class="h-4 w-4 rounded border-input bg-background text-primary" />
+                                            </div>
+                                            <label for="required-@i" class="text-sm">Required question</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
                     </div>
                 </div>
                 
-                <div class="flex justify-end gap-3">
-                    <a asp-controller="Surveys" asp-action="Index" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
-                        Cancel
-                    </a>
-                    <button type="submit" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
-                        @(Model.Id > 0 ? "Update Survey" : "Create Survey")
-                    </button>
+                <div id="delivery-tab" class="tab-content hidden">
+                    <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
+                        <div class="p-6 space-y-4">
+                            <div class="flex items-center mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right mr-2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                                <h2 class="text-xl font-semibold">Email Delivery Settings</h2>
+                            </div>
+                            
+                            <div class="delivery-methods grid grid-cols-3 gap-2">
+                                <label class="delivery-method-tab flex py-4 justify-center items-center cursor-pointer border rounded-md hover:bg-accent/20 transition-colors @(Model.DeliveryConfig?.Type == "manual" ? "bg-primary/10 border-primary" : "")">
+                                    <input type="radio" name="DeliveryConfig.Type" value="manual" checked="@(Model.DeliveryConfig?.Type == "manual")" class="sr-only" />
+                                    <span>Manual</span>
+                                </label>
+                                <label class="delivery-method-tab flex py-4 justify-center items-center cursor-pointer border rounded-md hover:bg-accent/20 transition-colors @(Model.DeliveryConfig?.Type == "scheduled" ? "bg-primary/10 border-primary" : "")">
+                                    <input type="radio" name="DeliveryConfig.Type" value="scheduled" checked="@(Model.DeliveryConfig?.Type == "scheduled")" class="sr-only" />
+                                    <span>Scheduled</span>
+                                </label>
+                                <label class="delivery-method-tab flex py-4 justify-center items-center cursor-pointer border rounded-md hover:bg-accent/20 transition-colors @(Model.DeliveryConfig?.Type == "triggered" ? "bg-primary/10 border-primary" : "")">
+                                    <input type="radio" name="DeliveryConfig.Type" value="triggered" checked="@(Model.DeliveryConfig?.Type == "triggered")" class="sr-only" />
+                                    <span>Triggered</span>
+                                </label>
+                            </div>
+                            
+                            <div id="manual-settings" class="delivery-settings @(Model.DeliveryConfig?.Type != "manual" ? "hidden" : "")">
+                                <p class="text-sm text-muted-foreground mb-6">
+                                    Send this survey manually to specific email addresses.
+                                </p>
+                            </div>
+                            
+                            <div id="scheduled-settings" class="delivery-settings @(Model.DeliveryConfig?.Type != "scheduled" ? "hidden" : "")">
+                                <p class="text-sm text-muted-foreground mb-6">
+                                    Schedule this survey to be sent automatically at regular intervals.
+                                </p>
+                                
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1">Frequency</label>
+                                        <select name="DeliveryConfig.Schedule.Frequency" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                                            <option value="daily" @(Model.DeliveryConfig?.Schedule?.Frequency == "daily" ? "selected" : "")>Daily</option>
+                                            <option value="weekly" @(Model.DeliveryConfig?.Schedule?.Frequency == "weekly" ? "selected" : "")>Weekly</option>
+                                            <option value="monthly" @(Model.DeliveryConfig?.Schedule?.Frequency == "monthly" ? "selected" : "")>Monthly</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div id="monthly-settings" class="@(Model.DeliveryConfig?.Schedule?.Frequency != "monthly" && Model.DeliveryConfig?.Schedule?.Frequency != null ? "hidden" : "")">
+                                        <label class="block text-sm font-medium mb-1">Day of Month</label>
+                                        <select name="DeliveryConfig.Schedule.DayOfMonth" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                                            @for (var day = 1; day <= 31; day++)
+                                            {
+                                                <option value="@day" @(Model.DeliveryConfig?.Schedule?.DayOfMonth == day ? "selected" : "")>@day</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1">Time</label>
+                                        <div class="flex items-center space-x-2">
+                                            <input type="time" name="DeliveryConfig.Schedule.Time" value="@(Model.DeliveryConfig?.Schedule?.Time ?? "09:00")" class="flex h-10 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock h-4 w-4 text-muted-foreground"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="trigger-settings" class="delivery-settings @(Model.DeliveryConfig?.Type != "triggered" ? "hidden" : "")">
+                                <p class="text-sm text-muted-foreground mb-6">
+                                    Send this survey when specific events occur in your system.
+                                </p>
+                                
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1">Trigger Event</label>
+                                        <div class="flex flex-col space-y-2 mt-2">
+                                            <label class="flex items-center space-x-2">
+                                                <input type="radio" name="DeliveryConfig.Trigger.Type" value="ticket-closed" @(Model.DeliveryConfig?.Trigger?.Type == "ticket-closed" ? "checked" : "") class="rounded border-input text-primary focus:ring-primary" />
+                                                <span>After ticket is closed</span>
+                                            </label>
+                                            <label class="flex items-center space-x-2">
+                                                <input type="radio" name="DeliveryConfig.Trigger.Type" value="purchase-completed" @(Model.DeliveryConfig?.Trigger?.Type == "purchase-completed" ? "checked" : "") class="rounded border-input text-primary focus:ring-primary" />
+                                                <span>After purchase is completed</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1">Delay (hours)</label>
+                                        <input type="number" name="DeliveryConfig.Trigger.DelayHours" value="@(Model.DeliveryConfig?.Trigger?.DelayHours ?? 24)" min="0" max="168" class="flex h-10 w-24 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
+                                    </div>
+                                    
+                                    <div class="flex items-center space-x-2">
+                                        <div class="relative inline-flex items-center">
+                                            <input type="checkbox" id="auto-send" name="DeliveryConfig.Trigger.SendAutomatically" @(Model.DeliveryConfig?.Trigger?.SendAutomatically == true ? "checked" : "") class="h-4 w-4 rounded border-input bg-background text-primary" />
+                                        </div>
+                                        <label for="auto-send" class="text-sm">Send automatically</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="border-t my-6 pt-6">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Email Recipients</label>
+                                    <div class="flex items-center space-x-2 mt-2">
+                                        <input type="email" id="email-input" class="flex-1 flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" placeholder="Enter email address" />
+                                        <button type="button" id="add-email-btn" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">Add</button>
+                                    </div>
+                                    <div id="email-validation-error" class="text-xs text-red-500 mt-1 hidden">Please enter a valid email address</div>
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <div id="emails-container" class="border rounded-lg p-4 @(Model.DeliveryConfig?.EmailAddresses.Count == 0 ? "hidden" : "")">
+                                        <ul id="emails-list" class="space-y-2">
+                                            @if (Model.DeliveryConfig?.EmailAddresses != null)
+                                            {
+                                                @for (var i = 0; i < Model.DeliveryConfig.EmailAddresses.Count; i++)
+                                                {
+                                                    <li class="flex justify-between items-center text-sm">
+                                                        <span>@Model.DeliveryConfig.EmailAddresses[i]</span>
+                                                        <input type="hidden" name="DeliveryConfig.EmailAddresses[@i]" value="@Model.DeliveryConfig.EmailAddresses[i]" />
+                                                        <button type="button" class="remove-email h-6 w-6 p-0 inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 text-muted-foreground hover:text-destructive">&times;</button>
+                                                    </li>
+                                                }
+                                            }
+                                        </ul>
+                                    </div>
+                                    <div id="no-emails-message" class="@(Model.DeliveryConfig?.EmailAddresses.Count > 0 ? "hidden" : "")">
+                                        <p class="text-sm text-muted-foreground mt-2">No email addresses added yet.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 flex justify-end">
+                        <button type="button" id="back-to-content-btn" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 mr-2">
+                            Back to Questions
+                        </button>
+                        <button type="submit" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-save mr-2 h-4 w-4"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                            @(Model.Id > 0 ? "Update Survey" : "Create Survey")
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
+<template id="question-template">
+    <div class="question-card border rounded-md overflow-hidden shadow-sm">
+        <input type="hidden" name="Questions[INDEX].Id" value="ID_PLACEHOLDER" />
+        
+        <div class="flex items-center px-4 py-3 border-b bg-muted/30">
+            <div class="mr-2 text-muted-foreground cursor-grab">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-grip-vertical"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>
+            </div>
+            <button type="button" class="toggle-question p-0 h-auto mr-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-up h-4 w-4"><path d="m18 15-6-6-6 6"/></svg>
+            </button>
+            <div class="flex-1 font-medium truncate">
+                Untitled Question
+            </div>
+            <div class="flex items-center gap-1">
+                <button type="button" class="move-up inline-flex items-center justify-center rounded-md text-sm font-medium h-8 w-8 p-0" data-index="INDEX">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-up h-4 w-4"><path d="m18 15-6-6-6 6"/></svg>
+                </button>
+                <button type="button" class="move-down inline-flex items-center justify-center rounded-md text-sm font-medium h-8 w-8 p-0" data-index="INDEX">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down h-4 w-4"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <button type="button" class="remove-question inline-flex items-center justify-center rounded-md text-sm font-medium h-8 w-8 p-0 text-muted-foreground hover:text-destructive" data-index="INDEX">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2 h-4 w-4"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="question-content p-4 space-y-4">
+            <div class="space-y-2">
+                <div>
+                    <label class="text-sm font-medium">Question</label>
+                    <input type="text" name="Questions[INDEX].Title" class="mt-1 block w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" placeholder="Enter your question" />
+                </div>
+                
+                <div>
+                    <label class="text-sm font-medium">Description (optional)</label>
+                    <textarea name="Questions[INDEX].Description" class="mt-1 block w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 min-h-[80px]" placeholder="Add a description to provide more context"></textarea>
+                </div>
+            </div>
+
+            <div>
+                <label class="text-sm font-medium block mb-1">Question Type</label>
+                <button type="button" class="question-type-button w-full justify-between group inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 mb-2">
+                    <span>Question Type: <span class="font-medium question-type-text">text</span></span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down h-4 w-4 transition-transform"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                
+                <div class="question-type-dropdown hidden mt-3 p-3 border rounded-md animate-fade-in">
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="flex items-center p-2 rounded-md cursor-pointer hover:bg-accent">
+                            <input type="radio" name="Questions[INDEX].Type" value="text" checked="checked" class="mr-2 hidden question-type-radio" />
+                            <div class="flex items-center">
+                                <div class="bg-primary text-primary-foreground rounded-md p-1 mr-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-text"><path d="M17 6.1H3"/><path d="M21 12.1H3"/><path d="M15.1 18H3"/></svg>
+                                </div>
+                                <span>Text Input</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center p-2 rounded-md cursor-pointer hover:bg-accent">
+                            <input type="radio" name="Questions[INDEX].Type" value="single-choice" class="mr-2 hidden question-type-radio" />
+                            <div class="flex items-center">
+                                <div class="bg-muted text-muted-foreground rounded-md p-1 mr-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-dot"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="1"/></svg>
+                                </div>
+                                <span>Single Choice</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center p-2 rounded-md cursor-pointer hover:bg-accent">
+                            <input type="radio" name="Questions[INDEX].Type" value="multiple-choice" class="mr-2 hidden question-type-radio" />
+                            <div class="flex items-center">
+                                <div class="bg-muted text-muted-foreground rounded-md p-1 mr-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-square"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                                </div>
+                                <span>Multiple Choice</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center p-2 rounded-md cursor-pointer hover:bg-accent">
+                            <input type="radio" name="Questions[INDEX].Type" value="rating" class="mr-2 hidden question-type-radio" />
+                            <div class="flex items-center">
+                                <div class="bg-muted text-muted-foreground rounded-md p-1 mr-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                </div>
+                                <span>Rating</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center p-2 rounded-md cursor-pointer hover:bg-accent">
+                            <input type="radio" name="Questions[INDEX].Type" value="dropdown" class="mr-2 hidden question-type-radio" />
+                            <div class="flex items-center">
+                                <div class="bg-muted text-muted-foreground rounded-md p-1 mr-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-list"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>
+                                </div>
+                                <span>Dropdown</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center p-2 rounded-md cursor-pointer hover:bg-accent">
+                            <input type="radio" name="Questions[INDEX].Type" value="nps" class="mr-2 hidden question-type-radio" />
+                            <div class="flex items-center">
+                                <div class="bg-muted text-muted-foreground rounded-md p-1 mr-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bar-chart"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg>
+                                </div>
+                                <span>Net Promoter Score</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2 pt-2">
+                <div class="relative inline-flex items-center">
+                    <input type="checkbox" id="required-INDEX" name="Questions[INDEX].Required" checked class="h-4 w-4 rounded border-input bg-background text-primary" />
+                </div>
+                <label for="required-INDEX" class="text-sm">Required question</label>
+            </div>
+        </div>
+    </div>
+</template>
+
+<template id="option-template">
+    <div class="option-item flex items-center gap-2">
+        <div class="flex-1">
+            <input type="text" name="Questions[QUESTION_INDEX].Options[OPTION_INDEX]" value="OPTION_VALUE" class="block w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" placeholder="Option OPTION_INDEX" />
+        </div>
+        <button type="button" class="remove-option h-9 w-9 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 text-muted-foreground hover:text-destructive">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2 h-4 w-4"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
+        </button>
+    </div>
+</template>
+
+<template id="email-template">
+    <li class="flex justify-between items-center text-sm">
+        <span>EMAIL_ADDRESS</span>
+        <input type="hidden" name="DeliveryConfig.EmailAddresses[EMAIL_INDEX]" value="EMAIL_ADDRESS" />
+        <button type="button" class="remove-email h-6 w-6 p-0 inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 text-muted-foreground hover:text-destructive">&times;</button>
+    </li>
+</template>
+
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const addQuestionBtn = document.getElementById('add-question-btn');
-            const questionsContainer = document.getElementById('questions-container');
+            // Tab switching
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
             
-            if (addQuestionBtn && questionsContainer) {
-                addQuestionBtn.addEventListener('click', function() {
-                    const questionCount = document.querySelectorAll('.question-card').length;
-                    const uniqueId = 'new-' + Date.now();
-                    
-                    const emptyMessage = questionsContainer.querySelector('.text-center');
-                    if (emptyMessage) {
-                        emptyMessage.remove();
+            function switchTab(tabName) {
+                tabButtons.forEach(btn => {
+                    if (btn.dataset.tab === tabName) {
+                        btn.classList.add('active', 'border-primary', 'text-primary');
+                        btn.classList.remove('border-transparent', 'text-muted-foreground');
+                    } else {
+                        btn.classList.remove('active', 'border-primary', 'text-primary');
+                        btn.classList.add('border-transparent', 'text-muted-foreground');
                     }
-                    
-                    const newQuestion = document.createElement('div');
-                    newQuestion.className = 'question-card border rounded-md p-4';
-                    newQuestion.innerHTML = `
-                        <input type="hidden" name="Questions[${questionCount}].Id" value="${uniqueId}" />
-                        
-                        <div class="flex justify-between items-center mb-2">
-                            <h3 class="font-medium">Question ${questionCount + 1}</h3>
-                            <button type="button" class="text-destructive hover:text-destructive/80" onclick="removeQuestion(this)">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
-                            </button>
-                        </div>
-                        
-                        <div class="space-y-3">
-                            <div>
-                                <label class="text-sm font-medium">Question Title</label>
-                                <input type="text" name="Questions[${questionCount}].Title" class="mt-1 block w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" />
-                            </div>
-                            
-                            <div>
-                                <label class="text-sm font-medium">Question Type</label>
-                                <select name="Questions[${questionCount}].Type" class="mt-1 block w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-                                    <option value="text">Text Input</option>
-                                    <option value="single-choice">Single Choice</option>
-                                    <option value="multiple-choice">Multiple Choice</option>
-                                    <option value="rating">Rating</option>
-                                    <option value="nps">Net Promoter Score</option>
-                                </select>
-                            </div>
-                            
-                            <div class="flex items-center space-x-2">
-                                <input type="checkbox" id="required-${questionCount}" name="Questions[${questionCount}].Required" checked class="rounded border-input text-primary focus:ring-primary" />
-                                <label for="required-${questionCount}" class="text-sm">Required question</label>
-                            </div>
-                        </div>
-                    `;
-                    
-                    questionsContainer.appendChild(newQuestion);
+                });
+                
+                tabContents.forEach(content => {
+                    if (content.id === tabName) {
+                        content.classList.remove('hidden');
+                    } else {
+                        content.classList.add('hidden');
+                    }
                 });
             }
             
-            // Make the removeQuestion function global
-            window.removeQuestion = function(button) {
-                const questionCard = button.closest('.question-card');
-                if (questionCard) {
-                    questionCard.remove();
+            tabButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    switchTab(btn.dataset.tab);
+                });
+            });
+            
+            // Back to content button
+            document.getElementById('back-to-content-btn')?.addEventListener('click', () => {
+                switchTab('content-tab');
+            });
+            
+            // Delivery method handling
+            const deliveryMethodInputs = document.querySelectorAll('input[name="DeliveryConfig.Type"]');
+            const deliverySettings = document.querySelectorAll('.delivery-settings');
+            
+            deliveryMethodInputs.forEach(input => {
+                input.addEventListener('change', () => {
+                    deliverySettings.forEach(setting => {
+                        setting.classList.add('hidden');
+                    });
                     
-                    // Re-number the questions
-                    const questions = document.querySelectorAll('.question-card');
-                    if (questions.length === 0) {
-                        questionsContainer.innerHTML = `
-                            <div class="border rounded-md p-4 text-center text-muted-foreground">
-                                No questions added yet. Click the button below to add your first question.
-                            </div>
-                        `;
+                    document.getElementById(`${input.value}-settings`)?.classList.remove('hidden');
+                    
+                    // Update visual styling of tabs
+                    document.querySelectorAll('.delivery-method-tab').forEach(tab => {
+                        tab.classList.remove('bg-primary/10', 'border-primary');
+                    });
+                    
+                    input.closest('.delivery-method-tab').classList.add('bg-primary/10', 'border-primary');
+                });
+            });
+            
+            // Schedule frequency handling
+            const frequencySelect = document.querySelector('select[name="DeliveryConfig.Schedule.Frequency"]');
+            if (frequencySelect) {
+                frequencySelect.addEventListener('change', () => {
+                    const monthlySettings = document.getElementById('monthly-settings');
+                    if (frequencySelect.value === 'monthly') {
+                        monthlySettings?.classList.remove('hidden');
                     } else {
-                        questions.forEach((question, index) => {
-                            const heading = question.querySelector('h3');
-                            if (heading) {
-                                heading.textContent = `Question ${index + 1}`;
+                        monthlySettings?.classList.add('hidden');
+                    }
+                });
+            }
+            
+            // Question handling
+            const questionsContainer = document.getElementById('questions-container');
+            const questionTemplate = document.getElementById('question-template');
+            const addQuestionBtn = document.getElementById('add-question-btn');
+            const addFirstQuestionBtn = document.getElementById('add-first-question-btn');
+            const addSampleQuestionsBtn = document.getElementById('add-sample-questions-btn');
+            
+            function addQuestion() {
+                const noQuestionsElem = document.getElementById('no-questions');
+                if (noQuestionsElem) {
+                    noQuestionsElem.remove();
+                }
+                
+                const questions = document.querySelectorAll('.question-card');
+                const index = questions.length;
+                const uniqueId = 'new-' + Date.now();
+                
+                const newQuestion = questionTemplate.content.cloneNode(true);
+                
+                // Replace placeholders with actual values
+                newQuestion.querySelectorAll('[name*="INDEX"]').forEach(elem => {
+                    elem.name = elem.name.replace('INDEX', index);
+                });
+                
+                newQuestion.querySelectorAll('[id*="INDEX"]').forEach(elem => {
+                    elem.id = elem.id.replace('INDEX', index);
+                });
+                
+                newQuestion.querySelectorAll('[for*="INDEX"]').forEach(elem => {
+                    elem.htmlFor = elem.htmlFor.replace('INDEX', index);
+                });
+                
+                newQuestion.querySelectorAll('[data-index="INDEX"]').forEach(elem => {
+                    elem.dataset.index = index;
+                });
+                
+                const idInput = newQuestion.querySelector('input[type="hidden"]');
+                idInput.value = uniqueId;
+                
+                questionsContainer.appendChild(newQuestion);
+                
+                // Initialize event listeners for the new question
+                initQuestionEvents(questionsContainer.lastElementChild, index);
+                
+                return index;
+            }
+            
+            function addSampleQuestions() {
+                const sampleQuestions = [
+                    {
+                        title: "How satisfied are you with our service?",
+                        type: "rating",
+                        required: true,
+                    },
+                    {
+                        title: "What features do you like most?",
+                        type: "multiple-choice",
+                        required: true,
+                        options: ["User Interface", "Performance", "Customer Support", "Price"]
+                    },
+                    {
+                        title: "Please provide any additional feedback",
+                        type: "text",
+                        required: false,
+                    }
+                ];
+                
+                const noQuestionsElem = document.getElementById('no-questions');
+                if (noQuestionsElem) {
+                    noQuestionsElem.remove();
+                }
+                
+                sampleQuestions.forEach(sample => {
+                    const index = addQuestion();
+                    const question = document.querySelectorAll('.question-card')[index];
+                    
+                    // Set values
+                    question.querySelector('input[name^="Questions"][name$=".Title"]').value = sample.title;
+                    
+                    // Set question type
+                    const typeRadios = question.querySelectorAll('input[name^="Questions"][name$=".Type"]');
+                    typeRadios.forEach(radio => {
+                        if (radio.value === sample.type) {
+                            radio.checked = true;
+                            updateQuestionType(question, sample.type);
+                        }
+                    });
+                    
+                    // Set required
+                    const requiredCheckbox = question.querySelector('input[name^="Questions"][name$=".Required"]');
+                    requiredCheckbox.checked = sample.required;
+                    
+                    // Set options for multiple-choice
+                    if (sample.options && sample.type.includes('choice')) {
+                        const optionsContainer = question.querySelector('.options-list');
+                        if (optionsContainer) {
+                            optionsContainer.innerHTML = '';
+                            
+                            sample.options.forEach((option, optIndex) => {
+                                const optionTemplate = document.getElementById('option-template').content.cloneNode(true);
+                                const optionItem = optionTemplate.querySelector('.option-item');
+                                
+                                const optionInput = optionItem.querySelector('input[type="text"]');
+                                optionInput.name = `Questions[${index}].Options[${optIndex}]`;
+                                optionInput.value = option;
+                                optionInput.placeholder = `Option ${optIndex + 1}`;
+                                
+                                optionsContainer.appendChild(optionItem);
+                            });
+                            
+                            initOptionEvents(question);
+                        }
+                    }
+                });
+            }
+            
+            function updateQuestionType(questionCard, type) {
+                const typeText = questionCard.querySelector('.question-type-text');
+                if (typeText) {
+                    typeText.textContent = type.replace('-', ' ');
+                }
+                
+                // Update icon colors based on selected type
+                const optionContainers = questionCard.querySelectorAll('.question-type-dropdown label');
+                optionContainers.forEach(container => {
+                    const radio = container.querySelector('input[type="radio"]');
+                    const iconContainer = container.querySelector('div > div');
+                    
+                    if (radio.value === type) {
+                        iconContainer.classList.remove('bg-muted', 'text-muted-foreground');
+                        iconContainer.classList.add('bg-primary', 'text-primary-foreground');
+                    } else {
+                        iconContainer.classList.remove('bg-primary', 'text-primary-foreground');
+                        iconContainer.classList.add('bg-muted', 'text-muted-foreground');
+                    }
+                });
+                
+                // Show/hide options container based on question type
+                const optionsContainer = questionCard.querySelector('.options-container');
+                
+                // Remove existing options container if it exists
+                if (optionsContainer) {
+                    optionsContainer.remove();
+                }
+                
+                // Add options container for choice-based questions
+                if (['multiple-choice', 'single-choice', 'dropdown'].includes(type)) {
+                    const optionsTemplate = `
+                        <div class="options-container space-y-3 mt-4">
+                            <label class="text-sm font-medium">Options</label>
+                            <div class="options-list space-y-2">
+                                <div class="option-item flex items-center gap-2">
+                                    <div class="flex-1">
+                                        <input type="text" name="Questions[${questionCard.querySelector('input[type="hidden"]').name.match(/\d+/)[0]}].Options[0]" value="Option 1" class="block w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" placeholder="Option 1" />
+                                    </div>
+                                    <button type="button" class="remove-option h-9 w-9 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 text-muted-foreground hover:text-destructive" disabled>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2 h-4 w-4"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
+                                    </button>
+                                </div>
+                                <div class="option-item flex items-center gap-2">
+                                    <div class="flex-1">
+                                        <input type="text" name="Questions[${questionCard.querySelector('input[type="hidden"]').name.match(/\d+/)[0]}].Options[1]" value="Option 2" class="block w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" placeholder="Option 2" />
+                                    </div>
+                                    <button type="button" class="remove-option h-9 w-9 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 text-muted-foreground hover:text-destructive" disabled>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2 h-4 w-4"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="button" class="add-option inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 mt-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus mr-1 h-4 w-4"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                Add Option
+                            </button>
+                        </div>
+                    `;
+                    
+                    const typeElement = questionCard.querySelector('.question-type-dropdown').parentElement;
+                    typeElement.insertAdjacentHTML('afterend', optionsTemplate);
+                    
+                    initOptionEvents(questionCard);
+                }
+            }
+            
+            function initQuestionEvents(questionCard, index) {
+                // Toggle question content
+                const toggleBtn = questionCard.querySelector('.toggle-question');
+                const questionContent = questionCard.querySelector('.question-content');
+                
+                toggleBtn.addEventListener('click', () => {
+                    questionContent.classList.toggle('hidden');
+                    const icon = toggleBtn.querySelector('svg');
+                    
+                    if (questionContent.classList.contains('hidden')) {
+                        icon.outerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down h-4 w-4"><path d="m6 9 6 6 6-6"/></svg>';
+                    } else {
+                        icon.outerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-up h-4 w-4"><path d="m18 15-6-6-6 6"/></svg>';
+                    }
+                });
+                
+                // Question type dropdown
+                const typeButton = questionCard.querySelector('.question-type-button');
+                const typeDropdown = questionCard.querySelector('.question-type-dropdown');
+                
+                typeButton.addEventListener('click', () => {
+                    typeDropdown.classList.toggle('hidden');
+                    const icon = typeButton.querySelector('svg');
+                    
+                    if (typeDropdown.classList.contains('hidden')) {
+                        icon.classList.remove('rotate-180');
+                    } else {
+                        icon.classList.add('rotate-180');
+                    }
+                });
+                
+                // Question type selection
+                const typeRadios = questionCard.querySelectorAll('.question-type-radio');
+                typeRadios.forEach(radio => {
+                    radio.addEventListener('change', () => {
+                        if (radio.checked) {
+                            updateQuestionType(questionCard, radio.value);
+                            typeDropdown.classList.add('hidden');
+                            typeButton.querySelector('svg').classList.remove('rotate-180');
+                        }
+                    });
+                });
+                
+                // Update question title in the header when changed
+                const titleInput = questionCard.querySelector('input[name^="Questions"][name$=".Title"]');
+                const titleHeader = questionCard.querySelector('.flex-1');
+                
+                titleInput.addEventListener('input', () => {
+                    titleHeader.textContent = titleInput.value || "Untitled Question";
+                });
+                
+                // Remove question
+                const removeBtn = questionCard.querySelector('.remove-question');
+                removeBtn.addEventListener('click', () => {
+                    if (confirm('Are you sure you want to remove this question?')) {
+                        questionCard.remove();
+                        reindexQuestions();
+                        
+                        if (document.querySelectorAll('.question-card').length === 0) {
+                            showNoQuestionsMessage();
+                        }
+                    }
+                });
+                
+                // Move question up/down
+                const moveUpBtn = questionCard.querySelector('.move-up');
+                const moveDownBtn = questionCard.querySelector('.move-down');
+                
+                if (moveUpBtn) {
+                    moveUpBtn.addEventListener('click', () => {
+                        const currentIndex = parseInt(moveUpBtn.dataset.index);
+                        if (currentIndex > 0) {
+                            const questions = Array.from(document.querySelectorAll('.question-card'));
+                            const prevQuestion = questions[currentIndex - 1];
+                            
+                            questionsContainer.insertBefore(questionCard, prevQuestion);
+                            reindexQuestions();
+                        }
+                    });
+                }
+                
+                if (moveDownBtn) {
+                    moveDownBtn.addEventListener('click', () => {
+                        const currentIndex = parseInt(moveDownBtn.dataset.index);
+                        const questions = Array.from(document.querySelectorAll('.question-card'));
+                        
+                        if (currentIndex < questions.length - 1) {
+                            const nextQuestion = questions[currentIndex + 1];
+                            const afterNextQuestion = nextQuestion.nextElementSibling;
+                            
+                            if (afterNextQuestion) {
+                                questionsContainer.insertBefore(questionCard, afterNextQuestion);
+                            } else {
+                                questionsContainer.appendChild(questionCard);
                             }
                             
-                            // Update input names with new indices
-                            const inputs = question.querySelectorAll('input, select');
-                            inputs.forEach(input => {
-                                const name = input.getAttribute('name');
-                                if (name) {
-                                    const updatedName = name.replace(/Questions\[\d+\]/, `Questions[${index}]`);
-                                    input.setAttribute('name', updatedName);
-                                }
-                            });
-                        });
-                    }
+                            reindexQuestions();
+                        }
+                    });
                 }
-            };
+                
+                // Initialize existing options
+                initOptionEvents(questionCard);
+            }
+            
+            function initOptionEvents(questionCard) {
+                // Add option button
+                const addOptionBtn = questionCard.querySelector('.add-option');
+                if (addOptionBtn) {
+                    addOptionBtn.addEventListener('click', () => {
+                        const optionsList = questionCard.querySelector('.options-list');
+                        const options = optionsList.querySelectorAll('.option-item');
+                        const questionIndex = questionCard.querySelector('input[type="hidden"]').name.match(/\d+/)[0];
+                        const optionIndex = options.length;
+                        
+                        const optionTemplate = document.getElementById('option-template').content.cloneNode(true);
+                        const optionItem = optionTemplate.querySelector('.option-item');
+                        
+                        const optionInput = optionItem.querySelector('input[type="text"]');
+                        optionInput.name = `Questions[${questionIndex}].Options[${optionIndex}]`;
+                        optionInput.value = `Option ${optionIndex + 1}`;
+                        optionInput.placeholder = `Option ${optionIndex + 1}`;
+                        
+                        optionsList.appendChild(optionItem);
+                        
+                        // Enable/disable remove buttons
+                        updateRemoveOptionButtons(questionCard);
+                        
+                        // Init remove option event
+                        initRemoveOptionEvent(optionItem, questionCard);
+                    });
+                }
+                
+                // Init remove option event for existing options
+                const optionItems = questionCard.querySelectorAll('.option-item');
+                optionItems.forEach(item => {
+                    initRemoveOptionEvent(item, questionCard);
+                });
+                
+                // Update initial state of remove buttons
+                updateRemoveOptionButtons(questionCard);
+            }
+            
+            function initRemoveOptionEvent(optionItem, questionCard) {
+                const removeOptionBtn = optionItem.querySelector('.remove-option');
+                removeOptionBtn.addEventListener('click', () => {
+                    optionItem.remove();
+                    reindexOptions(questionCard);
+                    updateRemoveOptionButtons(questionCard);
+                });
+            }
+            
+            function updateRemoveOptionButtons(questionCard) {
+                const options = questionCard.querySelectorAll('.option-item');
+                const removeButtons = questionCard.querySelectorAll('.remove-option');
+                
+                removeButtons.forEach(btn => {
+                    if (options.length <= 2) {
+                        btn.disabled = true;
+                        btn.classList.add('opacity-50');
+                    } else {
+                        btn.disabled = false;
+                        btn.classList.remove('opacity-50');
+                    }
+                });
+            }
+            
+            function reindexQuestions() {
+                const questions = document.querySelectorAll('.question-card');
+                
+                questions.forEach((question, index) => {
+                    // Update hidden input name and value
+                    const hiddenInput = question.querySelector('input[type="hidden"]');
+                    const originalId = hiddenInput.value;
+                    hiddenInput.name = `Questions[${index}].Id`;
+                    
+                    // Update all inputs/elements with index
+                    question.querySelectorAll('[name^="Questions["]').forEach(elem => {
+                        elem.name = elem.name.replace(/Questions\[\d+\]/g, `Questions[${index}]`);
+                    });
+                    
+                    // Update ids and for attributes
+                    question.querySelectorAll('[id*="required-"]').forEach(elem => {
+                        elem.id = `required-${index}`;
+                    });
+                    
+                    question.querySelectorAll('[for*="required-"]').forEach(elem => {
+                        elem.htmlFor = `required-${index}`;
+                    });
+                    
+                    // Update move buttons index
+                    question.querySelectorAll('[data-index]').forEach(elem => {
+                        elem.dataset.index = index;
+                    });
+                    
+                    // Update move up/down buttons visibility
+                    const moveUpBtn = question.querySelector('.move-up');
+                    const moveDownBtn = question.querySelector('.move-down');
+                    
+                    if (moveUpBtn) {
+                        if (index === 0) {
+                            moveUpBtn.classList.add('invisible');
+                        } else {
+                            moveUpBtn.classList.remove('invisible');
+                        }
+                    }
+                    
+                    if (moveDownBtn) {
+                        if (index === questions.length - 1) {
+                            moveDownBtn.classList.add('invisible');
+                        } else {
+                            moveDownBtn.classList.remove('invisible');
+                        }
+                    }
+                });
+            }
+            
+            function reindexOptions(questionCard) {
+                const options = questionCard.querySelectorAll('.option-item');
+                const questionIndex = questionCard.querySelector('input[type="hidden"]').name.match(/\d+/)[0];
+                
+                options.forEach((option, index) => {
+                    const input = option.querySelector('input[type="text"]');
+                    input.name = `Questions[${questionIndex}].Options[${index}]`;
+                    input.placeholder = `Option ${index + 1}`;
+                });
+            }
+            
+            function showNoQuestionsMessage() {
+                questionsContainer.innerHTML = `
+                    <div id="no-questions" class="rounded-lg border bg-card text-card-foreground shadow-sm">
+                        <div class="flex flex-col items-center justify-center p-8 text-center">
+                            <div class="rounded-full bg-primary/10 p-4 mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-plus h-6 w-6 text-primary"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" x2="12" y1="18" y2="12"></line><line x1="9" x2="15" y1="15" y2="15"></line></svg>
+                            </div>
+                            <h3 class="text-lg font-semibold mb-1">No questions yet</h3>
+                            <p class="text-muted-foreground mb-4">Add questions to your survey</p>
+                            <button type="button" id="add-first-question-btn" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                                Add First Question
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('add-first-question-btn').addEventListener('click', addQuestion);
+            }
+            
+            // Email handling
+            const emailInput = document.getElementById('email-input');
+            const addEmailBtn = document.getElementById('add-email-btn');
+            const emailsList = document.getElementById('emails-list');
+            const emailsContainer = document.getElementById('emails-container');
+            const noEmailsMessage = document.getElementById('no-emails-message');
+            const emailValidationError = document.getElementById('email-validation-error');
+            
+            function isValidEmail(email) {
+                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+            }
+            
+            function addEmail() {
+                const email = emailInput.value.trim();
+                
+                if (!email) return;
+                
+                if (!isValidEmail(email)) {
+                    emailValidationError.classList.remove('hidden');
+                    return;
+                }
+                
+                emailValidationError.classList.add('hidden');
+                
+                // Check if email already exists
+                const existingEmails = Array.from(emailsList.querySelectorAll('input[type="hidden"]')).map(input => input.value);
+                if (existingEmails.includes(email)) {
+                    return;
+                }
+                
+                const emailCount = emailsList.children.length;
+                const emailTemplate = document.getElementById('email-template').content.cloneNode(true);
+                
+                emailTemplate.querySelector('span').textContent = email;
+                const hiddenInput = emailTemplate.querySelector('input[type="hidden"]');
+                hiddenInput.name = `DeliveryConfig.EmailAddresses[${emailCount}]`;
+                hiddenInput.value = email;
+                
+                emailsList.appendChild(emailTemplate);
+                emailInput.value = '';
+                
+                // Show emails container and hide no emails message
+                emailsContainer.classList.remove('hidden');
+                noEmailsMessage.classList.add('hidden');
+                
+                // Init remove email event
+                initRemoveEmailEvent(emailsList.lastElementChild);
+            }
+            
+            function initRemoveEmailEvent(emailItem) {
+                const removeBtn = emailItem.querySelector('.remove-email');
+                removeBtn.addEventListener('click', () => {
+                    emailItem.remove();
+                    reindexEmails();
+                    
+                    if (emailsList.children.length === 0) {
+                        emailsContainer.classList.add('hidden');
+                        noEmailsMessage.classList.remove('hidden');
+                    }
+                });
+            }
+            
+            function reindexEmails() {
+                const emails = emailsList.querySelectorAll('li');
+                
+                emails.forEach((email, index) => {
+                    const input = email.querySelector('input[type="hidden"]');
+                    input.name = `DeliveryConfig.EmailAddresses[${index}]`;
+                });
+            }
+            
+            if (addEmailBtn) {
+                addEmailBtn.addEventListener('click', addEmail);
+            }
+            
+            if (emailInput) {
+                emailInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addEmail();
+                    }
+                });
+                
+                emailInput.addEventListener('input', () => {
+                    emailValidationError.classList.add('hidden');
+                });
+            }
+            
+            // Init remove email event for existing emails
+            document.querySelectorAll('#emails-list li').forEach(item => {
+                initRemoveEmailEvent(item);
+            });
+            
+            // Init all existing questions
+            document.querySelectorAll('.question-card').forEach(initQuestionEvents);
+            
+            // Add event listeners to add question buttons
+            if (addQuestionBtn) {
+                addQuestionBtn.addEventListener('click', addQuestion);
+            }
+            
+            if (addFirstQuestionBtn) {
+                addFirstQuestionBtn.addEventListener('click', addQuestion);
+            }
+            
+            if (addSampleQuestionsBtn) {
+                addSampleQuestionsBtn.addEventListener('click', addSampleQuestions);
+            }
         });
     </script>
 }
