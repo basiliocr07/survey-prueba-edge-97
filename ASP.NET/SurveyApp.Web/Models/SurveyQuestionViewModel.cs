@@ -1,3 +1,4 @@
+
 using System.Collections.Generic;
 
 namespace SurveyApp.Web.Models
@@ -19,5 +20,6 @@ namespace SurveyApp.Web.Models
         public string Description { get; set; }
         public List<string> Options { get; set; } = new List<string>();
         public bool Required { get; set; }
+        public QuestionSettingsViewModel Settings { get; set; }
     }
 }
