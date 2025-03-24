@@ -56,7 +56,7 @@
                                 @foreach (var questionStat in Model.Statistics.QuestionStats)
                                 {
                                     <div class="p-6">
-                                        <h4 class="font-medium mb-2">@questionStat.QuestionText</h4>
+                                        <h4 class="font-medium mb-2">@(questionStat.QuestionText ?? questionStat.QuestionTitle)</h4>
                                         
                                         @if (questionStat.ResponseDistribution?.Count > 0)
                                         {
@@ -69,7 +69,7 @@
                                                             <span class="text-sm text-muted-foreground">@option.Value.Count responses (@Math.Round(option.Value.Percentage)%)</span>
                                                         </div>
                                                         <div class="w-full bg-secondary rounded-full h-2">
-                                                            <div class="bg-primary rounded-full h-2" style="width: @(option.Value.Percentage)%"></div>
+                                                            <div class="bg-primary rounded-full h-2" style="width: @option.Value.Percentage%"></div>
                                                         </div>
                                                     </div>
                                                 }

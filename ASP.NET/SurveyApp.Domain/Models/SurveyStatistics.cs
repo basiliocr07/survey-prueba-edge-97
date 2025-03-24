@@ -19,12 +19,20 @@ namespace SurveyApp.Domain.Models
     {
         public string QuestionId { get; set; } = string.Empty;
         public string QuestionTitle { get; set; } = string.Empty;
+        public string QuestionText { get; set; } = string.Empty; // Added for compatibility
         public List<AnswerStatistic> Responses { get; set; } = new List<AnswerStatistic>();
+        public Dictionary<string, ResponseDistributionItem> ResponseDistribution { get; set; } = new Dictionary<string, ResponseDistributionItem>();
     }
 
     public class AnswerStatistic
     {
         public string Answer { get; set; } = string.Empty;
+        public int Count { get; set; }
+        public double Percentage { get; set; }
+    }
+
+    public class ResponseDistributionItem
+    {
         public int Count { get; set; }
         public double Percentage { get; set; }
     }
