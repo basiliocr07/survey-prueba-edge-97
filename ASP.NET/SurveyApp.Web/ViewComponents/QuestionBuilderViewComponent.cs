@@ -17,7 +17,8 @@ namespace SurveyApp.Web.ViewComponents
                 Text = question.Text,
                 Description = question.Description,
                 Options = question.Options,
-                Required = question.Required
+                Required = question.Required,
+                Settings = question.Settings
             };
 
             return View(new QuestionBuilderViewModel
