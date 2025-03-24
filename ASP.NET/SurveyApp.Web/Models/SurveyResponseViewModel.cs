@@ -16,9 +16,9 @@ namespace SurveyApp.Web.Models
         public string RespondentCompany { get; set; }
         public DateTime SubmittedAt { get; set; }
         public List<QuestionResponseViewModel> Answers { get; set; } = new List<QuestionResponseViewModel>();
-        public bool IsExistingClient { get; set; }
+        public bool? IsExistingClient { get; set; }
         public string ExistingClientId { get; set; }
-        public int CompletionTime { get; set; }
+        public int? CompletionTime { get; set; }
     }
 
     public class QuestionResponseViewModel
