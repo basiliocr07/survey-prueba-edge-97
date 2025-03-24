@@ -9,17 +9,18 @@ namespace SurveyApp.Web.Models
     {
         public string Id { get; set; }
         
-        [Required(ErrorMessage = "Question title is required")]
-        public string Title { get; set; }
+        [Required(ErrorMessage = "Question text is required")]
+        public string Text { get; set; }  // Changed from Title to match domain model
         
+        [Required(ErrorMessage = "Question type is required")]
         public string Type { get; set; }
         
-        public bool Required { get; set; } = true;
+        public bool Required { get; set; }
         
         public string Description { get; set; }
         
         public List<string> Options { get; set; } = new List<string>();
         
-        public QuestionSettingsViewModel Settings { get; set; } = new QuestionSettingsViewModel();
+        public QuestionSettingsViewModel Settings { get; set; }
     }
 }

@@ -314,7 +314,6 @@ namespace SurveyApp.Web.Controllers
                 return NotFound();
             }
 
-            // Create a view model for the preview
             var model = new SurveyPreviewViewModel
             {
                 Id = survey.Id,
@@ -323,7 +322,7 @@ namespace SurveyApp.Web.Controllers
                 Questions = survey.Questions.Select(q => new QuestionViewModel
                 {
                     Id = q.Id.ToString(),
-                    Title = q.Text,
+                    Text = q.Text,
                     Type = q.Type,
                     Required = q.Required,
                     Description = q.Description,
@@ -351,7 +350,6 @@ namespace SurveyApp.Web.Controllers
                 return NotFound();
             }
 
-            // Create sharing URL
             string surveyUrl = Url.Action("Take", "SurveyResponses", new { id = survey.Id }, Request.Scheme);
             
             ViewBag.SurveyUrl = surveyUrl;
@@ -372,17 +370,14 @@ namespace SurveyApp.Web.Controllers
                     Title = s.Title,
                     Description = s.Description,
                     CreatedAt = s.CreatedAt,
-                    Responses = s.ResponseCount, 
+                    ResponseCount = s.ResponseCount,
                     CompletionRate = s.CompletionRate,
                     Status = s.Status
                 }).ToList();
             }
             catch (Exception ex)
             {
-                // Log the exception
                 Console.WriteLine($"Error getting surveys: {ex.Message}");
-                
-                // If there's an error, return sample data temporarily
                 return GetSampleSurveys();
             }
         }
@@ -390,8 +385,6 @@ namespace SurveyApp.Web.Controllers
         // Helper method to get sample surveys while we're developing
         private List<SurveyViewModel> GetSampleSurveys()
         {
-            // This would normally come from the database via the service
-            // For now, we're creating sample data that matches the React version
             return new List<SurveyViewModel>
             {
                 new SurveyViewModel
@@ -400,7 +393,7 @@ namespace SurveyApp.Web.Controllers
                     Title = "Customer Satisfaction Survey",
                     Description = "Gather feedback about our customer service quality",
                     CreatedAt = DateTime.Parse("2023-10-15T12:00:00Z"),
-                    Responses = 42,
+                    ResponseCount = 42,
                     CompletionRate = 78,
                     Status = "active"
                 },
@@ -410,7 +403,7 @@ namespace SurveyApp.Web.Controllers
                     Title = "Product Feedback Survey",
                     Description = "Help us improve our product offerings",
                     CreatedAt = DateTime.Parse("2023-09-22T15:30:00Z"),
-                    Responses = 103,
+                    ResponseCount = 103,
                     CompletionRate = 89,
                     Status = "active"
                 },
@@ -420,7 +413,7 @@ namespace SurveyApp.Web.Controllers
                     Title = "Website Usability Survey",
                     Description = "Evaluate the user experience of our new website",
                     CreatedAt = DateTime.Parse("2023-11-05T09:15:00Z"),
-                    Responses = 28,
+                    ResponseCount = 28,
                     CompletionRate = 65,
                     Status = "draft"
                 },
@@ -430,7 +423,7 @@ namespace SurveyApp.Web.Controllers
                     Title = "Employee Satisfaction Survey",
                     Description = "Annual survey for employee feedback",
                     CreatedAt = DateTime.Parse("2023-08-10T14:20:00Z"),
-                    Responses = 56,
+                    ResponseCount = 56,
                     CompletionRate = 92,
                     Status = "archived"
                 }

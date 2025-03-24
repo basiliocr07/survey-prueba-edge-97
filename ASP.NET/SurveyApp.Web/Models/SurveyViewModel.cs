@@ -1,7 +1,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 
 namespace SurveyApp.Web.Models
 {
@@ -11,10 +10,8 @@ namespace SurveyApp.Web.Models
         public string Title { get; set; }
         public string Description { get; set; }
         public DateTime CreatedAt { get; set; }
-        public int Responses { get; set; }
+        public int ResponseCount { get; set; }  // Changed from Responses to match domain model
         public int CompletionRate { get; set; }
-        public string Status { get; set; } = "active"; // Can be "active", "draft", or "archived"
+        public string Status { get; set; }
     }
-
-    // No duplicate QuestionViewModel definition here
 }

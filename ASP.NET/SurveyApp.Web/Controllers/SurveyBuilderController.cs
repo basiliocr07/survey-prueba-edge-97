@@ -29,7 +29,7 @@ namespace SurveyApp.Web.Controllers
                     new QuestionViewModel
                     {
                         Id = Guid.NewGuid().ToString(),
-                        Title = "Nueva pregunta",
+                        Text = "New Question",  // Updated to match domain model
                         Type = "text",
                         Required = true
                     }
