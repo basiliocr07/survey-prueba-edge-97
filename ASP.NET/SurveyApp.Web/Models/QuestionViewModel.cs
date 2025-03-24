@@ -10,7 +10,7 @@ namespace SurveyApp.Web.Models
         public string Id { get; set; }
         
         [Required(ErrorMessage = "Question text is required")]
-        public string Text { get; set; }  // Changed from Title to match domain model
+        public string Text { get; set; }
         
         [Required(ErrorMessage = "Question type is required")]
         public string Type { get; set; }

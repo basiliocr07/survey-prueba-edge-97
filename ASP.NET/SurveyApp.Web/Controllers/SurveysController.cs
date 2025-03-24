@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Application.Interfaces;
 using SurveyApp.Domain.Models;
@@ -116,7 +117,7 @@ namespace SurveyApp.Web.Controllers
                     {
                         Id = Guid.NewGuid().ToString(),
                         Type = "single-choice",
-                        Title = "",
+                        Text = "",
                         Required = true,
                         Options = new List<string> { "Option 1", "Option 2", "Option 3" }
                     }
@@ -146,7 +147,7 @@ namespace SurveyApp.Web.Controllers
                     Status = model.Status,
                     Questions = model.Questions.Select(q => new SurveyApp.Domain.Models.Question
                     {
-                        Text = q.Title,
+                        Text = q.Text,
                         Type = q.Type,
                         Required = q.Required,
                         Description = q.Description,
@@ -226,7 +227,7 @@ namespace SurveyApp.Web.Controllers
                 Questions = survey.Questions.Select(q => new QuestionViewModel
                 {
                     Id = q.Id.ToString(),
-                    Title = q.Text,
+                    Text = q.Text,
                     Type = q.Type,
                     Required = q.Required,
                     Description = q.Description,

@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Application.Interfaces;
 using SurveyApp.Domain.Models;
@@ -67,7 +68,7 @@ namespace SurveyApp.Web.Controllers
                         Id = string.IsNullOrEmpty(q.Id) || q.Id.StartsWith("new-") 
                             ? 0 
                             : int.Parse(q.Id),
-                        Text = q.Title,
+                        Text = q.Text,
                         Type = q.Type,
                         Required = q.Required,
                         Description = q.Description ?? string.Empty,
@@ -157,7 +158,7 @@ namespace SurveyApp.Web.Controllers
                 Questions = survey.Questions.Select(q => new QuestionViewModel
                 {
                     Id = q.Id.ToString(),
-                    Title = q.Text,
+                    Text = q.Text,
                     Type = q.Type,
                     Required = q.Required,
                     Description = q.Description,
