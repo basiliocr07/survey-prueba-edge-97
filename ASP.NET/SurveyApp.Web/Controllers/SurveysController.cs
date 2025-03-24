@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Application.Interfaces;
 using SurveyApp.Domain.Models;
@@ -43,6 +42,36 @@ namespace SurveyApp.Web.Controllers
 
             ViewBag.FilterActive = filter ?? "all";
             return View("Index", filteredSurveys);
+        }
+
+        // GET: Surveys/Results/{id}
+        public async Task<IActionResult> Results(string id)
+        {
+            var survey = await _surveyService.GetSurveyByIdAsync(int.Parse(id));
+            if (survey == null)
+            {
+                return NotFound();
+            }
+            
+            // Get survey statistics
+            var statistics = await _surveyService.GetSurveyStatisticsAsync(int.Parse(id));
+            
+            var model = new SurveyResultsViewModel
+            {
+                Survey = new SurveyViewModel
+                {
+                    Id = survey.Id.ToString(),
+                    Title = survey.Title,
+                    Description = survey.Description,
+                    CreatedAt = survey.CreatedAt,
+                    Status = survey.Status,
+                    Responses = statistics?.TotalResponses ?? 0,
+                    CompletionRate = statistics?.CompletionRate ?? 0
+                },
+                Statistics = statistics
+            };
+            
+            return View(model);
         }
 
         // GET: Surveys/Create

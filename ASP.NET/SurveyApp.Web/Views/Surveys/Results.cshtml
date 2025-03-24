@@ -1,0 +1,114 @@
+
+@model SurveyApp.Web.Models.SurveyResultsViewModel
+@{
+    ViewData["Title"] = "Survey Results";
+}
+
+<div class="min-h-screen bg-background">
+    <div class="container mx-auto pt-20 pb-10 px-4 md:px-6">
+        <div class="flex flex-col space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold tracking-tight">Survey Results</h1>
+                    <p class="text-muted-foreground mt-1">Analyzing responses for "@Model.Survey.Title"</p>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <a asp-controller="Surveys" asp-action="Index" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left mr-2 h-4 w-4"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
+                        Back to Surveys
+                    </a>
+                </div>
+            </div>
+
+            @if (Model.Statistics?.TotalResponses > 0)
+            {
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+                        <div class="flex flex-col space-y-1.5">
+                            <h3 class="text-2xl font-semibold whitespace-nowrap">@Model.Statistics.TotalResponses</h3>
+                            <p class="text-sm text-muted-foreground">Total Responses</p>
+                        </div>
+                    </div>
+                    <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+                        <div class="flex flex-col space-y-1.5">
+                            <h3 class="text-2xl font-semibold whitespace-nowrap">@Model.Statistics.CompletionRate%</h3>
+                            <p class="text-sm text-muted-foreground">Completion Rate</p>
+                        </div>
+                    </div>
+                    <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+                        <div class="flex flex-col space-y-1.5">
+                            <h3 class="text-2xl font-semibold whitespace-nowrap">@Model.Statistics.AverageCompletionTime min</h3>
+                            <p class="text-sm text-muted-foreground">Avg. Completion Time</p>
+                        </div>
+                    </div>
+                </div>
+
+                @if (Model.Statistics?.QuestionStats?.Count > 0)
+                {
+                    <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
+                        <div class="flex flex-col space-y-1.5 p-6">
+                            <h3 class="text-xl font-semibold">Question Analysis</h3>
+                            <p class="text-sm text-muted-foreground">Response breakdown by question</p>
+                        </div>
+                        <div class="p-0">
+                            <div class="divide-y">
+                                @foreach (var questionStat in Model.Statistics.QuestionStats)
+                                {
+                                    <div class="p-6">
+                                        <h4 class="font-medium mb-2">@questionStat.QuestionText</h4>
+                                        
+                                        @if (questionStat.ResponseDistribution?.Count > 0)
+                                        {
+                                            <div class="space-y-4">
+                                                @foreach (var option in questionStat.ResponseDistribution)
+                                                {
+                                                    <div>
+                                                        <div class="flex justify-between mb-1">
+                                                            <span class="text-sm">@option.Key</span>
+                                                            <span class="text-sm text-muted-foreground">@option.Value.Count responses (@Math.Round(option.Value.Percentage)%)</span>
+                                                        </div>
+                                                        <div class="w-full bg-secondary rounded-full h-2">
+                                                            <div class="bg-primary rounded-full h-2" style="width: @(option.Value.Percentage)%"></div>
+                                                        </div>
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <p class="text-sm text-muted-foreground">No response data available for this question.</p>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="flex flex-col items-center justify-center p-12 text-center rounded-lg border bg-card text-card-foreground shadow-sm">
+                    <div class="rounded-full bg-primary/10 p-4 mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-primary"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M8 14L6 8h12l-1.88 5.65a1 1 0 0 1-.93.73"/><path d="M18.67 17.42a1 1 0 0 1-.67.47 1 1 0 0 1-.73-.18"/><path d="M9 17h13"/><path d="M6 17h2"/></svg>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-1">No responses yet</h3>
+                    <p class="text-muted-foreground mb-4">Share your survey to start collecting responses</p>
+                    <a asp-controller="Surveys" asp-action="Share" asp-route-id="@Model.Survey.Id" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-share mr-2 h-4 w-4"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" x2="12" y1="2" y2="15"></line></svg>
+                        Share Survey
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Client-side code for any interactive elements
+            console.log("Survey results page loaded");
+        });
+    </script>
+}
