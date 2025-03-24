@@ -1,0 +1,119 @@
+
+/* Survey Creator Specific Styles */
+.question-card {
+    transition: all 0.25s ease;
+}
+
+.question-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Question drag handle */
+.cursor-grab:active {
+    cursor: grabbing;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.question-card {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Rating stars styling */
+.rating-preview svg {
+    transition: color 0.2s ease;
+}
+
+.rating-preview svg:hover {
+    color: #facc15;
+    cursor: pointer;
+}
+
+/* NPS score styling */
+.nps-preview .grid > div {
+    transition: all 0.2s ease;
+}
+
+.nps-preview .grid > div:hover {
+    background-color: rgba(var(--primary-rgb), 0.1);
+    cursor: pointer;
+}
+
+/* Options for choice questions */
+.option-item {
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.option-item:hover {
+    background-color: rgba(0, 0, 0, 0.01);
+}
+
+.option-item .remove-option {
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
+}
+
+.option-item:hover .remove-option:not(:disabled) {
+    opacity: 1;
+}
+
+/* Delivery method options */
+input[name="DeliveryConfig.Type"]:checked + div {
+    border-color: var(--primary-color);
+}
+
+/* Responsive improvements */
+@media (max-width: 640px) {
+    .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    .question-card .flex.items-center {
+        flex-wrap: wrap;
+    }
+    
+    .question-card .flex-1 {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* Tab navigation highlighting */
+a[href="#content"].bg-primary,
+a[href="#delivery"].bg-primary {
+    position: relative;
+}
+
+a[href="#content"].bg-primary::after,
+a[href="#delivery"].bg-primary::after {
+    content: "";
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: var(--primary-color);
+}
+
+/* Settings sections transitions */
+#manualSettings, 
+#scheduledSettings, 
+#triggerSettings {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.hidden {
+    display: none;
+}
