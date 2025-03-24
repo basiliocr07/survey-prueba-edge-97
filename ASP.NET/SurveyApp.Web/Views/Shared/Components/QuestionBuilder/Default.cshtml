@@ -1,0 +1,129 @@
+
+@model SurveyApp.Web.ViewComponents.QuestionBuilderViewModel
+
+<div class="question-card" data-question-id="@Model.Question.Id" data-question-index="@Model.Index">
+    <div class="question-header">
+        <div class="question-handle">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
+            </svg>
+        </div>
+        
+        <button type="button" class="toggle-question-btn bg-transparent hover:bg-primary/5 rounded p-1">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+            </svg>
+        </button>
+        
+        <input type="text" class="question-title-input flex-grow border-none bg-transparent p-1 focus:ring-0" 
+               value="@Model.Question.Title" placeholder="Título de la pregunta">
+               
+        <span class="question-type-badge">@Model.Question.Type</span>
+    </div>
+    
+    <div class="question-content">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium mb-1">Descripción (opcional)</label>
+                <textarea class="question-description-input w-full border rounded py-2 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary">@Model.Question.Description</textarea>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium mb-1">Tipo de pregunta</label>
+                <select class="question-type-select w-full border rounded py-2 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary">
+                    <option value="text" selected="@(Model.Question.Type == "text")">Texto</option>
+                    <option value="paragraph" selected="@(Model.Question.Type == "paragraph")">Párrafo</option>
+                    <option value="number" selected="@(Model.Question.Type == "number")">Número</option>
+                    <option value="multiple-choice" selected="@(Model.Question.Type == "multiple-choice")">Opción Múltiple</option>
+                    <option value="single-choice" selected="@(Model.Question.Type == "single-choice")">Opción Única</option>
+                    <option value="dropdown" selected="@(Model.Question.Type == "dropdown")">Desplegable</option>
+                    <option value="rating" selected="@(Model.Question.Type == "rating")">Calificación con Estrellas</option>
+                    <option value="nps" selected="@(Model.Question.Type == "nps")">NPS</option>
+                    <option value="date" selected="@(Model.Question.Type == "date")">Fecha</option>
+                    <option value="time" selected="@(Model.Question.Type == "time")">Hora</option>
+                    <option value="ranking" selected="@(Model.Question.Type == "ranking")">Ranking</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="question-options-container my-4 @(new[] {"multiple-choice", "single-choice", "dropdown", "ranking"}.Contains(Model.Question.Type) ? "" : "hidden")">
+            @if (Model.Question.Options != null && Model.Question.Options.Any())
+            {
+                @for (var i = 0; i < Model.Question.Options.Count; i++)
+                {
+                    <div class="option-item mb-2">
+                        <input type="text" class="option-input form-control mr-2" value="@Model.Question.Options[i]" 
+                               data-option-index="@i" data-question-id="@Model.Question.Id">
+                        <button type="button" class="option-remove btn btn-sm text-danger" 
+                                data-option-index="@i" data-question-id="@Model.Question.Id">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
+                    </div>
+                }
+            }
+            
+            <button type="button" class="add-option-btn bg-transparent hover:bg-primary/5 text-primary hover:text-primary-dark px-3 py-1 rounded text-sm flex items-center mt-2">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Agregar opción
+            </button>
+        </div>
+        
+        <div class="question-preview-container my-4 @(new[] {"rating", "nps"}.Contains(Model.Question.Type) ? "" : "hidden")">
+            @if (Model.Question.Type == "rating")
+            {
+                <div class="question-preview star-rating">
+                    @for (var i = 1; i <= 5; i++)
+                    {
+                        <div>
+                            <svg class="@(i <= 3 ? "filled" : "")" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                            </svg>
+                        </div>
+                    }
+                </div>
+            }
+            else if (Model.Question.Type == "nps")
+            {
+                <div class="question-preview nps-rating">
+                    @for (var i = 0; i <= 10; i++)
+                    {
+                        <div class="nps-option @(i == 7 ? "selected" : "")">@i</div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+    
+    <div class="question-footer">
+        <div class="flex items-center">
+            <label class="inline-flex items-center mr-4">
+                <input type="checkbox" class="question-required-toggle form-checkbox" @(Model.Question.Required ? "checked" : "")>
+                <span class="ml-2 text-sm">Obligatorio</span>
+            </label>
+        </div>
+        
+        <div class="flex items-center space-x-2">
+            <button type="button" class="move-up-btn bg-transparent hover:bg-primary/5 rounded p-1" @(Model.Index == 0 ? "disabled" : "")>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                </svg>
+            </button>
+            
+            <button type="button" class="move-down-btn bg-transparent hover:bg-primary/5 rounded p-1">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </button>
+            
+            <button type="button" class="delete-question-btn bg-transparent hover:bg-red-50 text-red-500 rounded p-1">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+</div>
