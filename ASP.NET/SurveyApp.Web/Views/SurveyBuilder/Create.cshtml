@@ -26,7 +26,7 @@
                 <ul class="flex flex-wrap -mb-px text-sm font-medium text-center">
                     <li class="mr-2">
                         <a href="#" 
-                           @click.prevent="activeTab = 'content'"
+                           x-on:click.prevent="activeTab = 'content'"
                            :class="{ 'border-b-2 border-primary text-primary': activeTab === 'content' }"
                            class="inline-flex items-center p-4 hover:text-primary">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -37,7 +37,7 @@
                     </li>
                     <li class="mr-2">
                         <a href="#" 
-                           @click.prevent="activeTab = 'delivery'"
+                           x-on:click.prevent="activeTab = 'delivery'"
                            :class="{ 'border-b-2 border-primary text-primary': activeTab === 'delivery' }"
                            class="inline-flex items-center p-4 hover:text-primary">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -193,11 +193,11 @@
                             }">
                                 <div class="flex items-center mb-3">
                                     <input type="text" x-model="newEmail" 
-                                           @keydown.enter.prevent="if (newEmail.trim() && newEmail.includes('@')) { emails.push(newEmail.trim()); newEmail = ''; }" 
+                                           x-on:keydown.enter.prevent="if (newEmail.trim() && newEmail.includes('@')) { emails.push(newEmail.trim()); newEmail = ''; }" 
                                            class="flex-grow border rounded-l py-2 px-3 focus:outline-none focus:ring-1 focus:ring-primary" 
                                            placeholder="Agregar dirección de correo electrónico">
                                     <button type="button" 
-                                            @click="if (newEmail.trim() && newEmail.includes('@')) { emails.push(newEmail.trim()); newEmail = ''; }"
+                                            x-on:click="if (newEmail.trim() && newEmail.includes('@')) { emails.push(newEmail.trim()); newEmail = ''; }"
                                             class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-r">
                                         Agregar
                                     </button>
@@ -207,7 +207,7 @@
                                     <template x-for="(email, index) in emails" :key="index">
                                         <div class="flex justify-between items-center py-2 px-3 mb-1 bg-white rounded shadow-sm">
                                             <span x-text="email"></span>
-                                            <button type="button" @click="emails.splice(index, 1)" class="text-red-500 hover:text-red-700">
+                                            <button type="button" x-on:click="emails.splice(index, 1)" class="text-red-500 hover:text-red-700">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                                 </svg>
