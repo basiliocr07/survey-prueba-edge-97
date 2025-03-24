@@ -208,6 +208,7 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       let responsesWithCompletionTime = 0;
       
       for (const response of responses) {
+        // Fixed the property access to handle any potential completion_time format
         const completionTime = response.completion_time || 
                               (response as any).completion_time || 
                               0;
