@@ -24,6 +24,6 @@ namespace SurveyApp.Web.Models
         public string Answer { get; set; }
         public int Count { get; set; }
         public double Percentage { get; set; }
-        public string Color { get; set; } // Para gráficos
+        public string Color { get; set; } // For charts
     }
 }
