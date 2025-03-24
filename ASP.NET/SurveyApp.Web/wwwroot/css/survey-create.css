@@ -25,6 +25,14 @@
     }
 }
 
+.animate-fade-in {
+    animation: fadeIn 0.2s ease-out forwards;
+}
+
+.animate-slide-down {
+    animation: fadeIn 0.3s ease-out forwards;
+}
+
 .question-card {
     animation: fadeIn 0.3s ease-out;
 }
