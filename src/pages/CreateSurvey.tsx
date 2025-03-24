@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
@@ -163,6 +164,9 @@ export default function CreateSurvey() {
         deliveryConfig: finalDeliveryConfig
       };
       
+      // Log the survey data as JSON to the browser console
+      console.log('Survey data being sent (JSON):', JSON.stringify(surveyData, null, 2));
+      
       let result;
       
       if (editSurveyId) {
@@ -172,8 +176,10 @@ export default function CreateSurvey() {
           createdAt: survey?.createdAt || new Date().toISOString()
         });
         result = { id: editSurveyId };
+        console.log('Survey updated with ID:', editSurveyId);
       } else {
         result = await createSurvey(surveyData);
+        console.log('Survey created with result:', result);
       }
       
       if (
@@ -186,7 +192,9 @@ export default function CreateSurvey() {
         );
         
         if (shouldSendEmails) {
+          console.log('Sending survey emails to:', finalDeliveryConfig.emailAddresses);
           await sendSurveyEmails(result.id, finalDeliveryConfig.emailAddresses);
+          console.log('Emails sent successfully');
         }
       }
       
@@ -199,6 +207,7 @@ export default function CreateSurvey() {
       
       navigate("/surveys");
     } catch (error) {
+      console.error('Error creating/updating survey:', error);
       toast({
         title: "Error",
         description: `No se pudo ${editSurveyId ? 'actualizar' : 'crear'} la encuesta: ${error instanceof Error ? error.message : 'Error desconocido'}`,

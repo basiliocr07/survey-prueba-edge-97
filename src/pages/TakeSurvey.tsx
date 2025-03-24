@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -69,7 +68,6 @@ export default function TakeSurvey() {
     }
   }, []);
   
-  // Fetch survey from Supabase
   const { data: survey, isLoading, error } = useQuery({
     queryKey: ['survey', surveyId],
     queryFn: async () => {
@@ -84,8 +82,8 @@ export default function TakeSurvey() {
       if (error) throw error;
       if (!data) throw new Error('Survey not found');
       
-      // Transform Supabase data to match Survey interface
-      // Parse the questions from Json to SurveyQuestion[]
+      console.log('Raw survey data from DB:', data);
+      
       const parsedQuestions: SurveyQuestion[] = 
         Array.isArray(data.questions) 
           ? data.questions.map((q: any) => ({
@@ -117,14 +115,13 @@ export default function TakeSurvey() {
         createdAt: data.created_at
       };
       
+      console.log('Transformed survey data:', transformedData);
       return transformedData;
     }
   });
   
-  // Initialize form when survey data is loaded
   useEffect(() => {
     if (survey) {
-      // Initialize form with empty answers
       const initialAnswers: Record<string, any> = {};
       survey.questions.forEach((question: SurveyQuestion) => {
         if (question.type === 'multiple-choice') {
@@ -138,9 +135,10 @@ export default function TakeSurvey() {
     }
   }, [survey, form]);
   
-  // Submit response mutation
   const submitResponseMutation = useMutation({
     mutationFn: async (responseData: SurveyResponseSubmission) => {
+      console.log('Response data being submitted (JSON):', JSON.stringify(responseData, null, 2));
+      
       const { data, error } = await supabase
         .from('survey_responses')
         .insert([
@@ -157,6 +155,7 @@ export default function TakeSurvey() {
         .select();
         
       if (error) throw error;
+      console.log('Response saved successfully:', data);
       return data;
     },
     onSuccess: () => {
@@ -206,6 +205,7 @@ export default function TakeSurvey() {
       submittedAt: new Date().toISOString()
     };
     
+    console.log('Preparing to submit survey response:', submission);
     submitResponseMutation.mutate(submission);
   };
   
@@ -279,7 +279,6 @@ export default function TakeSurvey() {
     );
   }
   
-  // Process questions from the survey data format
   const questions = survey?.questions || [];
   
   return (
