@@ -1,243 +1,180 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { Survey, SurveyStatistics } from '../../domain/models/Survey';
-import { SurveyRepository } from '../../domain/repositories/SurveyRepository';
+import { SurveyRepository } from "@/domain/repositories/SurveyRepository";
+import { Survey } from "@/domain/models/Survey";
+import { supabase } from "@/integrations/supabase/client";
+import { Surveys } from "@/integrations/supabase/types";
 
 export class SupabaseSurveyRepository implements SurveyRepository {
-  async getAllSurveys(): Promise<Survey[]> {
-    const { data, error } = await supabase.from('surveys').select('*');
-    
+  async createSurvey(survey: Survey): Promise<Survey> {
+    const { data, error } = await supabase
+      .from('surveys')
+      .insert([
+        {
+          title: survey.title,
+          description: survey.description,
+          questions: survey.questions,
+          settings: survey.settings,
+          created_by: survey.createdBy,
+        }
+      ])
+      .select()
+      .single();
+
     if (error) {
-      console.error('Error fetching surveys:', error);
-      throw error;
+      console.error('Error creating survey:', error);
+      throw new Error('Failed to create survey');
     }
-    
-    return data.map(this.mapToSurvey) || [];
+
+    return this.mapDbSurveyToModel(data);
   }
-  
+
   async getSurveyById(id: string): Promise<Survey | null> {
     const { data, error } = await supabase
       .from('surveys')
       .select('*')
       .eq('id', id)
-      .maybeSingle();
-    
+      .single();
+
     if (error) {
-      console.error(`Error fetching survey with id ${id}:`, error);
-      throw error;
+      console.error('Error fetching survey:', error);
+      return null;
     }
-    
-    return data ? this.mapToSurvey(data) : null;
+
+    if (!data) {
+      return null;
+    }
+
+    return this.mapDbSurveyToModel(data);
   }
-  
-  async createSurvey(survey: Omit<Survey, 'id' | 'createdAt'>): Promise<Survey> {
-    // Transform the survey data to match the database schema
-    const dbSurvey = {
-      title: survey.title,
-      description: survey.description,
-      questions: JSON.stringify(survey.questions),
-      delivery_config: survey.deliveryConfig ? JSON.stringify(survey.deliveryConfig) : null
-    };
-    
+
+  async getAllSurveys(): Promise<Survey[]> {
     const { data, error } = await supabase
       .from('surveys')
-      .insert([dbSurvey])
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching surveys:', error);
+      return [];
+    }
+
+    return data.map(this.mapDbSurveyToModel);
+  }
+
+  async updateSurvey(survey: Survey): Promise<Survey> {
+    const { data, error } = await supabase
+      .from('surveys')
+      .update({
+        title: survey.title,
+        description: survey.description,
+        questions: survey.questions,
+        settings: survey.settings,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', survey.id)
       .select()
       .single();
-    
+
     if (error) {
-      console.error('Error creating survey:', error);
-      throw error;
+      console.error('Error updating survey:', error);
+      throw new Error('Failed to update survey');
     }
-    
-    return this.mapToSurvey(data);
+
+    return this.mapDbSurveyToModel(data);
   }
-  
-  async updateSurvey(survey: Survey): Promise<boolean> {
-    // Transform the survey data to match the database schema
-    const dbSurvey = {
-      title: survey.title,
-      description: survey.description,
-      questions: JSON.stringify(survey.questions),
-      delivery_config: survey.deliveryConfig ? JSON.stringify(survey.deliveryConfig) : null
-    };
-    
-    const { error } = await supabase
-      .from('surveys')
-      .update(dbSurvey)
-      .eq('id', survey.id);
-    
-    if (error) {
-      console.error(`Error updating survey with id ${survey.id}:`, error);
-      throw error;
-    }
-    
-    return true;
-  }
-  
-  async deleteSurvey(id: string): Promise<boolean> {
+
+  async deleteSurvey(id: string): Promise<void> {
     const { error } = await supabase
       .from('surveys')
       .delete()
       .eq('id', id);
-    
+
     if (error) {
-      console.error(`Error deleting survey with id ${id}:`, error);
-      throw error;
+      console.error('Error deleting survey:', error);
+      throw new Error('Failed to delete survey');
     }
-    
-    return true;
   }
 
-  // Simplified method to map database results to Survey objects
-  private mapToSurvey(item: any): Survey {
-    // Parse questions from JSON string if necessary
-    let questions = [];
-    try {
-      if (typeof item.questions === 'string') {
-        questions = JSON.parse(item.questions);
-      } else if (Array.isArray(item.questions)) {
-        questions = item.questions;
-      }
-    } catch (e) {
-      console.error('Error parsing questions:', e);
-      questions = [];
-    }
-
-    // Parse delivery_config from JSON string if necessary
-    let deliveryConfig;
-    try {
-      if (item.delivery_config) {
-        const configData = typeof item.delivery_config === 'string' 
-          ? JSON.parse(item.delivery_config) 
-          : item.delivery_config;
-        
-        deliveryConfig = {
-          type: String(configData.type || 'manual'),
-          emailAddresses: Array.isArray(configData.emailAddresses) 
-            ? configData.emailAddresses 
-            : [],
-        };
-
-        // Add schedule if it exists
-        if (configData.schedule) {
-          deliveryConfig.schedule = {
-            frequency: String(configData.schedule.frequency || 'daily'),
-            dayOfMonth: Number(configData.schedule.dayOfMonth || 1),
-            dayOfWeek: Number(configData.schedule.dayOfWeek || 1),
-            time: String(configData.schedule.time || '12:00'),
-          };
-        }
-
-        // Add trigger if it exists
-        if (configData.trigger) {
-          deliveryConfig.trigger = {
-            type: String(configData.trigger.type || 'ticket-closed'),
-            delayHours: Number(configData.trigger.delayHours || 24),
-            sendAutomatically: Boolean(configData.trigger.sendAutomatically || false),
-          };
-        }
-      }
-    } catch (e) {
-      console.error('Error parsing delivery config:', e);
-      deliveryConfig = undefined;
-    }
-
-    return {
-      id: String(item.id),
-      title: String(item.title),
-      description: item.description ? String(item.description) : undefined,
-      questions: questions,
-      createdAt: String(item.created_at),
-      deliveryConfig: deliveryConfig
-    };
-  }
-  
-  async getSurveysByStatus(status: string): Promise<Survey[]> {
-    // This is a simple implementation that doesn't filter by status
-    // since we're removing restrictions
+  async getSurveysByUser(userId: string): Promise<Survey[]> {
     const { data, error } = await supabase
       .from('surveys')
-      .select('*');
-    
+      .select('*')
+      .eq('created_by', userId)
+      .order('created_at', { ascending: false });
+
     if (error) {
-      console.error('Error fetching surveys by status:', error);
-      throw error;
+      console.error('Error fetching user surveys:', error);
+      return [];
     }
-    
-    return (data || []).map(this.mapToSurvey);
+
+    return data.map(this.mapDbSurveyToModel);
   }
-  
-  async getSurveyStatistics(surveyId: string): Promise<SurveyStatistics> {
-    // Obtenemos las respuestas para esta encuesta
-    const { data: responses, error: responsesError } = await supabase
+
+  private mapDbSurveyToModel(dbSurvey: Surveys): Survey {
+    return {
+      id: dbSurvey.id,
+      title: dbSurvey.title,
+      description: dbSurvey.description || '',
+      questions: dbSurvey.questions || [],
+      settings: dbSurvey.settings || {},
+      createdAt: new Date(dbSurvey.created_at),
+      updatedAt: dbSurvey.updated_at ? new Date(dbSurvey.updated_at) : undefined,
+      createdBy: dbSurvey.created_by || '',
+      status: dbSurvey.status || 'draft',
+    };
+  }
+
+  async getSurveyStatistics(surveyId: string): Promise<{
+    responseCount: number;
+    completionRate: number;
+    averageCompletionTime: number;
+  }> {
+    // Get all responses for the survey
+    const { data: responses, error } = await supabase
       .from('survey_responses')
       .select('*')
       .eq('survey_id', surveyId);
-    
-    if (responsesError) {
-      console.error(`Error fetching responses for survey ${surveyId}:`, responsesError);
-      throw responsesError;
+
+    if (error) {
+      console.error('Error fetching survey responses:', error);
+      return {
+        responseCount: 0,
+        completionRate: 0,
+        averageCompletionTime: 0
+      };
     }
+
+    // Calculate statistics
+    const responseCount = responses.length;
     
-    // Obtenemos la encuesta
-    const { data: survey, error: surveyError } = await supabase
-      .from('surveys')
-      .select('*')
-      .eq('id', surveyId)
-      .maybeSingle();
+    // Count responses with completion times
+    let totalCompletionTime = 0;
+    let responsesWithCompletionTime = 0;
     
-    if (surveyError) {
-      console.error(`Error fetching survey ${surveyId}:`, surveyError);
-      throw surveyError;
-    }
-    
-    if (!survey) {
-      throw new Error(`Survey with id ${surveyId} not found`);
-    }
-    
-    // Calculamos estadísticas básicas
-    const totalResponses = responses.length;
-    let completionRate = 0;
-    let averageCompletionTime = 0;
-    
-    // Calculamos tiempo promedio de respuesta si hay datos disponibles
-    if (totalResponses > 0) {
-      // Calculate completion time if available
-      let totalCompletionTime = 0;
-      let responsesWithCompletionTime = 0;
-      
-      for (const response of responses) {
-        // Fixed the property access to handle any potential completion_time format
-        const completionTime = response.completion_time || 
-                              (response as any).completion_time || 
-                              0;
+    for (const response of responses) {
+      // Fixed the property access method to ensure type safety
+      if (typeof response.completion_time === 'number' || 
+          typeof (response as any).completion_time === 'number') {
+        const completionTime = typeof response.completion_time === 'number' ? 
+                              response.completion_time : 
+                              (response as any).completion_time;
         
-        if (completionTime) {
-          totalCompletionTime += Number(completionTime);
-          responsesWithCompletionTime++;
-        }
+        totalCompletionTime += completionTime;
+        responsesWithCompletionTime++;
       }
-      
-      averageCompletionTime = responsesWithCompletionTime > 0 
-        ? totalCompletionTime / responsesWithCompletionTime 
-        : 0;
-        
-      completionRate = 100; // Asumimos una tasa de finalización del 100% para respuestas enviadas
     }
+
+    // Calculate averages
+    const completionRate = responseCount > 0 ? 
+      (responsesWithCompletionTime / responseCount) * 100 : 0;
     
+    const averageCompletionTime = responsesWithCompletionTime > 0 ? 
+      totalCompletionTime / responsesWithCompletionTime : 0;
+
     return {
-      totalResponses,
-      averageCompletionTime,
+      responseCount,
       completionRate,
-      questionStats: [] // En un caso real, aquí calcularíamos estadísticas para cada pregunta
+      averageCompletionTime
     };
-  }
-  
-  async sendSurveyEmails(surveyId: string, emailAddresses: string[]): Promise<boolean> {
-    // En un caso real, aquí enviaríamos correos electrónicos.
-    // Como es una simulación, simplemente devolvemos true
-    console.log(`Sending survey ${surveyId} to:`, emailAddresses);
-    return true;
   }
 }
