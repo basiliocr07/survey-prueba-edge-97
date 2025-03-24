@@ -189,15 +189,15 @@
                             
                             <div x-data="{ 
                                 newEmail: '', 
-                                emails: @Json.Serialize(Model.DeliveryConfig?.EmailAddresses ?? new List<string>())
+                                emails: @Html.Raw(Json.Serialize(Model.DeliveryConfig?.EmailAddresses ?? new List<string>()))
                             }">
                                 <div class="flex items-center mb-3">
                                     <input type="text" x-model="newEmail" 
-                                           x-on:keydown.enter.prevent="if (newEmail.trim() && newEmail.includes('@')) { emails.push(newEmail.trim()); newEmail = ''; }" 
+                                           x-on:keydown.enter.prevent="if(newEmail.trim() && newEmail.includes('@')) { emails.push(newEmail.trim()); newEmail = ''; }" 
                                            class="flex-grow border rounded-l py-2 px-3 focus:outline-none focus:ring-1 focus:ring-primary" 
                                            placeholder="Agregar dirección de correo electrónico">
                                     <button type="button" 
-                                            x-on:click="if (newEmail.trim() && newEmail.includes('@')) { emails.push(newEmail.trim()); newEmail = ''; }"
+                                            x-on:click="if(newEmail.trim() && newEmail.includes('@')) { emails.push(newEmail.trim()); newEmail = ''; }"
                                             class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-r">
                                         Agregar
                                     </button>
