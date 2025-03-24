@@ -1,0 +1,159 @@
+
+<nav class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-6 py-4 glass shadow-sm">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <a href="/" class="flex items-center space-x-2 font-bold text-xl tracking-tight transition-opacity duration-200 hover:opacity-80">
+            <span class="text-primary">SurveyMaster</span>
+        </a>
+
+        <div class="hidden md:flex">
+            <ul class="flex space-x-4">
+                <li>
+                    <a href="/" class="h-9 px-3 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                        Home
+                    </a>
+                </li>
+                <li>
+                    <a href="/dashboard" class="h-9 px-3 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 mr-2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                        Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="/surveys" class="h-9 px-3 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 mr-2"><path d="M2 12a7 7 0 0 1 7-7"/><path d="M9 5a7 7 0 0 1 7 7"/><path d="M5 19a11.6 11.6 0 0 1-4-8"/><path d="M19 19a11.6 11.6 0 0 0 4-8"/><path d="M12 19v-7"/><path d="M9 5a5 5 0 0 1 6 0"/></svg>
+                        Surveys
+                    </a>
+                </li>
+                <li>
+                    <a href="/results" class="h-9 px-3 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 mr-2"><rect x="2" y="2" width="20" height="20" rx="2"/><line x1="12" x2="12" y1="18" y2="18"/><line x1="7" x2="7" y1="15" y2="18"/><line x1="17" x2="17" y1="9" y2="18"/></svg>
+                        Analysis
+                    </a>
+                </li>
+                <li>
+                    <a href="/suggestions" class="h-9 px-3 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 mr-2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        Suggestions
+                    </a>
+                </li>
+                <li>
+                    <a href="/customers" class="h-9 px-3 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 mr-2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        Customer Growth
+                    </a>
+                </li>
+                <li>
+                    <a href="/requirements" class="h-9 px-3 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 mr-2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+                        Requirements
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="hidden md:flex items-center space-x-2">
+            <div id="userStatus">
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <div class="flex items-center space-x-2">
+                        <span class="text-sm text-gray-600">Hola, @User.Identity?.Name</span>
+                        <form asp-controller="Account" asp-action="Logout" method="post">
+                            <button type="submit" class="inline-flex items-center justify-center space-x-1 text-sm px-3 py-1.5 rounded-md text-foreground bg-transparent hover:bg-accent hover:text-accent-foreground">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                                <span>Salir</span>
+                            </button>
+                        </form>
+                    </div>
+                }
+                else
+                {
+                    <a href="/login" class="inline-flex items-center justify-center space-x-1 text-sm px-3 py-1.5 rounded-md text-foreground bg-transparent hover:bg-accent hover:text-accent-foreground">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                        <span>Iniciar Sesión</span>
+                    </a>
+                }
+            </div>
+        </div>
+
+        <button id="mobileMenuToggle" class="md:hidden flex items-center justify-center w-9 h-9 rounded-md hover:bg-accent hover:text-accent-foreground" aria-label="Toggle menu">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+        </button>
+    </div>
+
+    <div id="mobileMenu" class="fixed inset-0 bg-background z-40 md:hidden transition-all duration-300 flex flex-col opacity-0 translate-x-full pointer-events-none">
+        <div class="flex flex-col pt-24 px-6 space-y-4">
+            <a href="/" class="px-4 py-3 rounded-md flex items-center text-lg hover:bg-accent hover:text-accent-foreground">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                <span>Home</span>
+            </a>
+            <a href="/dashboard" class="px-4 py-3 rounded-md flex items-center text-lg hover:bg-accent hover:text-accent-foreground">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 mr-2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="/surveys" class="px-4 py-3 rounded-md flex items-center text-lg hover:bg-accent hover:text-accent-foreground">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 mr-2"><path d="M2 12a7 7 0 0 1 7-7"/><path d="M9 5a7 7 0 0 1 7 7"/><path d="M5 19a11.6 11.6 0 0 1-4-8"/><path d="M19 19a11.6 11.6 0 0 0 4-8"/><path d="M12 19v-7"/><path d="M9 5a5 5 0 0 1 6 0"/></svg>
+                <span>Surveys</span>
+            </a>
+            <a href="/results" class="px-4 py-3 rounded-md flex items-center text-lg hover:bg-accent hover:text-accent-foreground">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 mr-2"><rect x="2" y="2" width="20" height="20" rx="2"/><line x1="12" x2="12" y1="18" y2="18"/><line x1="7" x2="7" y1="15" y2="18"/><line x1="17" x2="17" y1="9" y2="18"/></svg>
+                <span>Analysis</span>
+            </a>
+            <a href="/suggestions" class="px-4 py-3 rounded-md flex items-center text-lg hover:bg-accent hover:text-accent-foreground">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 mr-2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                <span>Suggestions</span>
+            </a>
+            <a href="/customers" class="px-4 py-3 rounded-md flex items-center text-lg hover:bg-accent hover:text-accent-foreground">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 mr-2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span>Customer Growth</span>
+            </a>
+            <a href="/requirements" class="px-4 py-3 rounded-md flex items-center text-lg hover:bg-accent hover:text-accent-foreground">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 mr-2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+                <span>Requirements</span>
+            </a>
+
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <form asp-controller="Account" asp-action="Logout" method="post" class="w-full mt-4">
+                    <button type="submit" class="w-full flex items-center justify-center space-x-2 px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                        <span>Cerrar Sesión (@User.Identity?.Name)</span>
+                    </button>
+                </form>
+            }
+            else
+            {
+                <a href="/login" class="w-full mt-4">
+                    <div class="w-full flex items-center justify-center space-x-2 px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                        <span>Iniciar Sesión</span>
+                    </div>
+                </a>
+            }
+        </div>
+    </div>
+</nav>
+
+<script>
+    // Mobile menu toggle functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const menuToggle = document.getElementById('mobileMenuToggle');
+        const mobileMenu = document.getElementById('mobileMenu');
+        
+        if (menuToggle && mobileMenu) {
+            menuToggle.addEventListener('click', function() {
+                const isOpen = mobileMenu.classList.contains('opacity-100');
+                
+                if (isOpen) {
+                    mobileMenu.classList.remove('opacity-100', 'translate-x-0');
+                    mobileMenu.classList.add('opacity-0', 'translate-x-full', 'pointer-events-none');
+                    menuToggle.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>';
+                } else {
+                    mobileMenu.classList.remove('opacity-0', 'translate-x-full', 'pointer-events-none');
+                    mobileMenu.classList.add('opacity-100', 'translate-x-0');
+                    menuToggle.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+                }
+            });
+        }
+    });
+</script>

@@ -111,7 +111,6 @@ export class SupabaseSurveyRepository implements SurveyRepository {
     return data.map(this.mapDbSurveyToModel);
   }
 
-  // Implement the required method from the interface
   async getSurveysByStatus(status: string): Promise<Survey[]> {
     // Note: This is a simplified implementation since we may not have a status column
     const { data, error } = await supabase
@@ -144,8 +143,8 @@ export class SupabaseSurveyRepository implements SurveyRepository {
 
   private mapDbSurveyToModel(dbSurvey: any): Survey {
     const questions = Array.isArray(dbSurvey.questions) 
-      ? dbSurvey.questions 
-      : [];
+      ? dbSurvey.questions as SurveyQuestion[]
+      : [] as SurveyQuestion[];
     
     return {
       id: dbSurvey.id,
@@ -179,10 +178,6 @@ export class SupabaseSurveyRepository implements SurveyRepository {
     // Calculate statistics
     const responseCount = responses.length;
     
-    // Count responses with completion times
-    let totalCompletionTime = 0;
-    let responsesWithCompletionTime = 0;
-    
     // Get the survey to access its questions
     const { data: surveyData } = await supabase
       .from('surveys')
@@ -190,7 +185,7 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       .eq('id', surveyId)
       .single();
     
-    const surveyQuestions = surveyData?.questions || [];
+    const surveyQuestions = surveyData?.questions as unknown as SurveyQuestion[] || [];
     
     // For each response, analyze the answers
     const questionStats: {
@@ -213,7 +208,7 @@ export class SupabaseSurveyRepository implements SurveyRepository {
         
         // Count the answers for this question
         for (const response of responses) {
-          const answers = response.answers || {};
+          const answers = response.answers as unknown as Record<string, string | string[]>;
           const answer = answers[questionId];
           
           if (answer) {
@@ -254,4 +249,3 @@ export class SupabaseSurveyRepository implements SurveyRepository {
     };
   }
 }
-

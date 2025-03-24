@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - SurveyApp</title>
+    <title>@ViewData["Title"] - SurveyMaster</title>
     <link rel="stylesheet" href="~/css/tailwind_custom.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/surveys.css" asp-append-version="true" />
@@ -12,52 +12,16 @@
     <script src="https://cdn.jsdelivr.net/npm/uuid@latest/dist/umd/uuidv4.min.js"></script>
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body class="bg-background text-foreground antialiased">
-    <header class="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-        <div class="container mx-auto px-4 flex justify-between items-center h-16">
-            <div class="flex items-center space-x-4">
-                <a asp-controller="Home" asp-action="Index" class="flex items-center space-x-2">
-                    <svg class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
-                    <span class="text-lg font-bold">SurveyApp</span>
-                </a>
-                <nav class="hidden md:flex items-center space-x-6">
-                    <a asp-controller="Surveys" asp-action="Index" class="text-sm font-medium hover:text-primary transition-colors">Surveys</a>
-                    <a asp-controller="SurveyResponses" asp-action="Index" class="text-sm font-medium hover:text-primary transition-colors">Responses</a>
-                </nav>
-            </div>
-            <div class="flex items-center space-x-4">
-                <a href="#" class="text-sm font-medium hover:text-primary transition-colors hidden md:block">Documentation</a>
-                <a href="#" class="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 text-sm font-medium transition-colors">
-                    Get Started
-                </a>
-            </div>
-        </div>
-    </header>
-
-    <div class="container mx-auto">
-        <main role="main">
+<body class="bg-background text-foreground antialiased min-h-screen flex flex-col">
+    @await Html.PartialAsync("_NavbarPartial")
+    
+    <div class="container mx-auto pt-24 flex-grow">
+        <main role="main" class="pb-12">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-t border-border mt-auto">
-        <div class="container mx-auto px-4 py-8">
-            <div class="flex flex-col md:flex-row justify-between items-center">
-                <div class="mb-4 md:mb-0">
-                    <p class="text-sm text-muted-foreground">
-                        &copy; 2023 SurveyApp. All rights reserved.
-                    </p>
-                </div>
-                <div class="flex space-x-6">
-                    <a href="#" class="text-sm text-muted-foreground hover:text-foreground transition-colors">Terms</a>
-                    <a href="#" class="text-sm text-muted-foreground hover:text-foreground transition-colors">Privacy</a>
-                    <a href="#" class="text-sm text-muted-foreground hover:text-foreground transition-colors">Contact</a>
-                </div>
-            </div>
-        </div>
-    </footer>
+    @await Html.PartialAsync("_FooterPartial")
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
