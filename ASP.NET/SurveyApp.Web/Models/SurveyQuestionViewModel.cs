@@ -1,3 +1,4 @@
+
 using System.Collections.Generic;
 
 namespace SurveyApp.Web.Models
@@ -6,18 +7,10 @@ namespace SurveyApp.Web.Models
     {
         public string Id { get; set; }
         public string Type { get; set; }
-        
-        // This will be the main text/title of the question
         public string Text { get; set; }
         
-        // Keeping Title for backward compatibility, but it's the same as Text
+        // Alias for Text to maintain compatibility
         public string Title { 
-            get { return Text; } 
-            set { Text = value; } 
-        }
-        
-        // Keeping Question for backward compatibility, but it's the same as Text
-        public string Question { 
             get { return Text; } 
             set { Text = value; } 
         }
@@ -27,9 +20,11 @@ namespace SurveyApp.Web.Models
         public bool Required { get; set; }
         public QuestionSettingsViewModel Settings { get; set; }
         
-        // Add conversion method from QuestionViewModel
+        // Conversion methods to ensure compatibility
         public static SurveyQuestionViewModel FromQuestionViewModel(QuestionViewModel model)
         {
+            if (model == null) return null;
+            
             return new SurveyQuestionViewModel
             {
                 Id = model.Id,
@@ -42,7 +37,6 @@ namespace SurveyApp.Web.Models
             };
         }
         
-        // Add conversion method to QuestionViewModel
         public QuestionViewModel ToQuestionViewModel()
         {
             return new QuestionViewModel

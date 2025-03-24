@@ -23,13 +23,8 @@ namespace SurveyApp.Web.Models
         
         public QuestionSettingsViewModel Settings { get; set; }
         
-        // Add these properties for compatibility with SurveyQuestionViewModel
+        // These properties ensure compatibility with both naming conventions
         public string Title { 
-            get { return Text; } 
-            set { Text = value; } 
-        }
-        
-        public string Question { 
             get { return Text; } 
             set { Text = value; } 
         }
