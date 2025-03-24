@@ -9,17 +9,8 @@ namespace SurveyApp.Web.ViewComponents
     {
         public async Task<IViewComponentResult> InvokeAsync(QuestionViewModel question, int index)
         {
-            // Convert QuestionViewModel to SurveyQuestionViewModel
-            var surveyQuestion = new SurveyQuestionViewModel
-            {
-                Id = question.Id,
-                Type = question.Type,
-                Text = question.Text,
-                Description = question.Description,
-                Options = question.Options,
-                Required = question.Required,
-                Settings = question.Settings
-            };
+            // Convert QuestionViewModel to SurveyQuestionViewModel using the new conversion method
+            var surveyQuestion = SurveyQuestionViewModel.FromQuestionViewModel(question);
 
             return View(new QuestionBuilderViewModel
             {

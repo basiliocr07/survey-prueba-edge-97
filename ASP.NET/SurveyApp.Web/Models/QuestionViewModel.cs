@@ -22,5 +22,16 @@ namespace SurveyApp.Web.Models
         public List<string> Options { get; set; } = new List<string>();
         
         public QuestionSettingsViewModel Settings { get; set; }
+        
+        // Add these properties for compatibility with SurveyQuestionViewModel
+        public string Title { 
+            get { return Text; } 
+            set { Text = value; } 
+        }
+        
+        public string Question { 
+            get { return Text; } 
+            set { Text = value; } 
+        }
     }
 }
