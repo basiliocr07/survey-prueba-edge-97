@@ -18,6 +18,8 @@ export interface Survey {
   description?: string;
   questions: SurveyQuestion[];
   createdAt: string;
+  updatedAt?: string;
+  status?: string;
   deliveryConfig?: DeliveryConfig;
 }
 

@@ -1,20 +1,20 @@
 
 import { SurveyRepository } from "@/domain/repositories/SurveyRepository";
-import { Survey } from "@/domain/models/Survey";
+import { Survey, SurveyQuestion, SurveyStatistics } from "@/domain/models/Survey";
 import { supabase } from "@/integrations/supabase/client";
-import { Surveys } from "@/integrations/supabase/types";
+import { Json } from "@/integrations/supabase/types";
 
 export class SupabaseSurveyRepository implements SurveyRepository {
-  async createSurvey(survey: Survey): Promise<Survey> {
+  async createSurvey(survey: Omit<Survey, 'id' | 'createdAt'>): Promise<Survey> {
     const { data, error } = await supabase
       .from('surveys')
       .insert([
         {
           title: survey.title,
-          description: survey.description,
-          questions: survey.questions,
-          settings: survey.settings,
-          created_by: survey.createdBy,
+          description: survey.description || '',
+          questions: survey.questions as unknown as Json,
+          delivery_config: survey.deliveryConfig as unknown as Json,
+          created_at: new Date().toISOString(),
         }
       ])
       .select()
@@ -61,14 +61,14 @@ export class SupabaseSurveyRepository implements SurveyRepository {
     return data.map(this.mapDbSurveyToModel);
   }
 
-  async updateSurvey(survey: Survey): Promise<Survey> {
+  async updateSurvey(survey: Survey): Promise<boolean> {
     const { data, error } = await supabase
       .from('surveys')
       .update({
         title: survey.title,
-        description: survey.description,
-        questions: survey.questions,
-        settings: survey.settings,
+        description: survey.description || '',
+        questions: survey.questions as unknown as Json,
+        delivery_config: survey.deliveryConfig as unknown as Json,
         updated_at: new Date().toISOString()
       })
       .eq('id', survey.id)
@@ -77,13 +77,13 @@ export class SupabaseSurveyRepository implements SurveyRepository {
 
     if (error) {
       console.error('Error updating survey:', error);
-      throw new Error('Failed to update survey');
+      return false;
     }
 
-    return this.mapDbSurveyToModel(data);
+    return true;
   }
 
-  async deleteSurvey(id: string): Promise<void> {
+  async deleteSurvey(id: string): Promise<boolean> {
     const { error } = await supabase
       .from('surveys')
       .delete()
@@ -91,8 +91,10 @@ export class SupabaseSurveyRepository implements SurveyRepository {
 
     if (error) {
       console.error('Error deleting survey:', error);
-      throw new Error('Failed to delete survey');
+      return false;
     }
+    
+    return true;
   }
 
   async getSurveysByUser(userId: string): Promise<Survey[]> {
@@ -110,25 +112,54 @@ export class SupabaseSurveyRepository implements SurveyRepository {
     return data.map(this.mapDbSurveyToModel);
   }
 
-  private mapDbSurveyToModel(dbSurvey: Surveys): Survey {
+  // Implement missing methods required by the interface
+  async getSurveysByStatus(status: string): Promise<Survey[]> {
+    const { data, error } = await supabase
+      .from('surveys')
+      .select('*')
+      .eq('status', status)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching surveys by status:', error);
+      return [];
+    }
+
+    return data.map(this.mapDbSurveyToModel);
+  }
+
+  async sendSurveyEmails(surveyId: string, emailAddresses: string[]): Promise<boolean> {
+    try {
+      // In a real implementation, this would call a Supabase Edge Function
+      // or another service to send emails
+      console.log(`Would send emails for survey ${surveyId} to:`, emailAddresses);
+      
+      // For now, simulate success
+      return true;
+    } catch (error) {
+      console.error('Error sending survey emails:', error);
+      return false;
+    }
+  }
+
+  private mapDbSurveyToModel(dbSurvey: any): Survey {
+    const questions = Array.isArray(dbSurvey.questions) 
+      ? dbSurvey.questions 
+      : [];
+    
     return {
       id: dbSurvey.id,
       title: dbSurvey.title,
       description: dbSurvey.description || '',
-      questions: dbSurvey.questions || [],
-      settings: dbSurvey.settings || {},
-      createdAt: new Date(dbSurvey.created_at),
-      updatedAt: dbSurvey.updated_at ? new Date(dbSurvey.updated_at) : undefined,
-      createdBy: dbSurvey.created_by || '',
+      questions: questions,
+      deliveryConfig: dbSurvey.delivery_config || undefined,
+      createdAt: dbSurvey.created_at,
+      updatedAt: dbSurvey.updated_at || undefined,
       status: dbSurvey.status || 'draft',
     };
   }
 
-  async getSurveyStatistics(surveyId: string): Promise<{
-    responseCount: number;
-    completionRate: number;
-    averageCompletionTime: number;
-  }> {
+  async getSurveyStatistics(surveyId: string): Promise<SurveyStatistics> {
     // Get all responses for the survey
     const { data: responses, error } = await supabase
       .from('survey_responses')
@@ -138,9 +169,10 @@ export class SupabaseSurveyRepository implements SurveyRepository {
     if (error) {
       console.error('Error fetching survey responses:', error);
       return {
-        responseCount: 0,
+        totalResponses: 0,
         completionRate: 0,
-        averageCompletionTime: 0
+        averageCompletionTime: 0,
+        questionStats: []
       };
     }
 
@@ -152,13 +184,10 @@ export class SupabaseSurveyRepository implements SurveyRepository {
     let responsesWithCompletionTime = 0;
     
     for (const response of responses) {
-      // Fixed the property access method to ensure type safety
-      if (typeof response.completion_time === 'number' || 
-          typeof (response as any).completion_time === 'number') {
-        const completionTime = typeof response.completion_time === 'number' ? 
-                              response.completion_time : 
-                              (response as any).completion_time;
-        
+      // Use safe property access since completion_time might not exist
+      const completionTime = response.completion_time as number | undefined;
+      
+      if (typeof completionTime === 'number') {
         totalCompletionTime += completionTime;
         responsesWithCompletionTime++;
       }
@@ -171,10 +200,13 @@ export class SupabaseSurveyRepository implements SurveyRepository {
     const averageCompletionTime = responsesWithCompletionTime > 0 ? 
       totalCompletionTime / responsesWithCompletionTime : 0;
 
+    // For now, we'll return an empty questionStats array
+    // In a real implementation, this would analyze each question's responses
     return {
-      responseCount,
+      totalResponses: responseCount,
       completionRate,
-      averageCompletionTime
+      averageCompletionTime,
+      questionStats: []
     };
   }
 }

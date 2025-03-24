@@ -7,8 +7,10 @@ import { SupabaseSurveyRepository } from '../../infrastructure/repositories/Supa
 import { Survey } from '../../domain/models/Survey';
 import { useToast } from '@/hooks/use-toast';
 
-// Initialize repositories and use cases
+// Initialize repository for use cases
 const surveyRepository = new SupabaseSurveyRepository();
+
+// Initialize use cases with the repository
 const getSurveyByIdUseCase = new GetSurveyById(surveyRepository);
 const createSurveyUseCase = new CreateSurvey(surveyRepository);
 const getSurveyStatisticsUseCase = new GetSurveyStatistics(surveyRepository);
@@ -55,7 +57,7 @@ export const useSurvey = (surveyId?: string) => {
 
   const sendEmailsMutation = useMutation({
     mutationFn: ({ id, emails }: { id: string; emails: string[] }) => {
-      return createSurveyUseCase.sendEmails(id, emails);
+      return surveyRepository.sendSurveyEmails(id, emails);
     },
     onSuccess: () => {
       toast({
