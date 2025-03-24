@@ -1,5 +1,6 @@
 
 using System;
+using System.Collections.Generic;
 
 namespace SurveyApp.Domain.Models
 {
@@ -8,7 +9,7 @@ namespace SurveyApp.Domain.Models
         public int SurveyId { get; set; }
         public int TotalResponses { get; set; }
         public int CompletionRate { get; set; }
-        public int AverageCompletionTime { get; set; } // En segundos
+        public int AverageCompletionTime { get; set; } // In seconds
         public DateTime StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public List<QuestionStatistic> QuestionStats { get; set; } = new List<QuestionStatistic>();
@@ -16,14 +17,14 @@ namespace SurveyApp.Domain.Models
 
     public class QuestionStatistic
     {
-        public string QuestionId { get; set; }
-        public string QuestionTitle { get; set; }
+        public string QuestionId { get; set; } = string.Empty;
+        public string QuestionTitle { get; set; } = string.Empty;
         public List<AnswerStatistic> Responses { get; set; } = new List<AnswerStatistic>();
     }
 
     public class AnswerStatistic
     {
-        public string Answer { get; set; }
+        public string Answer { get; set; } = string.Empty;
         public int Count { get; set; }
         public double Percentage { get; set; }
     }
