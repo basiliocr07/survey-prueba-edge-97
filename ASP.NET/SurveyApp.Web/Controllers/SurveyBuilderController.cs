@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Application.Interfaces;
 using SurveyApp.Domain.Models;
@@ -55,7 +54,6 @@ namespace SurveyApp.Web.Controllers
 
             try
             {
-                // Mapear de ViewModel a entidad de dominio
                 var survey = new Survey
                 {
                     Id = model.Id,
@@ -148,14 +146,13 @@ namespace SurveyApp.Web.Controllers
                 return RedirectToAction("Index", "Surveys");
             }
 
-            // Mapear de entidad de dominio a ViewModel usando explícitamente SurveyApp.Web.Models
-            var model = new SurveyApp.Web.Models.CreateSurveyViewModel
+            var model = new CreateSurveyViewModel
             {
                 Id = survey.Id,
                 Title = survey.Title,
                 Description = survey.Description,
                 Status = survey.Status,
-                Questions = survey.Questions.Select(q => new SurveyApp.Web.Models.SurveyQuestionViewModel
+                Questions = survey.Questions.Select(q => new SurveyQuestionViewModel
                 {
                     Id = q.Id.ToString(),
                     Title = q.Text,
@@ -163,29 +160,29 @@ namespace SurveyApp.Web.Controllers
                     Required = q.Required,
                     Description = q.Description,
                     Options = q.Options,
-                    Settings = q.Settings != null ? new SurveyApp.Web.Models.QuestionSettingsViewModel
+                    Settings = q.Settings != null ? new QuestionSettingsViewModel
                     {
                         Min = q.Settings.Min,
                         Max = q.Settings.Max
                     } : null
                 }).ToList(),
-                DeliveryConfig = survey.DeliveryConfig != null ? new SurveyApp.Web.Models.DeliveryConfigViewModel
+                DeliveryConfig = survey.DeliveryConfig != null ? new DeliveryConfigViewModel
                 {
                     Type = survey.DeliveryConfig.Type,
                     EmailAddresses = survey.DeliveryConfig.EmailAddresses,
-                    Schedule = survey.DeliveryConfig.Schedule != null ? new SurveyApp.Web.Models.ScheduleSettingsViewModel
+                    Schedule = survey.DeliveryConfig.Schedule != null ? new ScheduleSettingsViewModel
                     {
                         Frequency = survey.DeliveryConfig.Schedule.Frequency,
                         DayOfMonth = survey.DeliveryConfig.Schedule.DayOfMonth,
                         Time = survey.DeliveryConfig.Schedule.Time
                     } : null,
-                    Trigger = survey.DeliveryConfig.Trigger != null ? new SurveyApp.Web.Models.TriggerSettingsViewModel
+                    Trigger = survey.DeliveryConfig.Trigger != null ? new TriggerSettingsViewModel
                     {
                         Type = survey.DeliveryConfig.Trigger.Type,
                         DelayHours = survey.DeliveryConfig.Trigger.DelayHours,
                         SendAutomatically = survey.DeliveryConfig.Trigger.SendAutomatically
                     } : null
-                } : new SurveyApp.Web.Models.DeliveryConfigViewModel()
+                } : new DeliveryConfigViewModel()
             };
 
             return View("Create", model);
