@@ -53,32 +53,36 @@ namespace SurveyApp.Web.Controllers
                 return NotFound();
             }
             
-            // Get survey statistics
             var statistics = await _surveyService.GetSurveyStatisticsAsync(int.Parse(id));
-            
-            // Map domain model to view model
-            var statisticsViewModel = new SurveyApp.Web.Models.SurveyStatisticsViewModel();
+            var statisticsViewModel = new SurveyStatisticsViewModel();
             
             if (statistics != null)
             {
-                statisticsViewModel = new SurveyApp.Web.Models.SurveyStatisticsViewModel
+                statisticsViewModel = new SurveyStatisticsViewModel
                 {
                     TotalResponses = statistics.TotalResponses,
                     AverageCompletionTime = statistics.AverageCompletionTime,
                     CompletionRate = statistics.CompletionRate,
-                    QuestionStats = statistics.QuestionStats?.Select(q => new SurveyApp.Web.Models.QuestionStatisticViewModel
+                    QuestionStats = statistics.QuestionStats?.Select(q => new QuestionStatisticViewModel
                     {
                         QuestionId = q.QuestionId,
                         QuestionTitle = q.QuestionTitle,
                         QuestionText = q.QuestionText,
+                        Responses = q.Responses?.Select(r => new ResponseViewModel
+                        {
+                            Answer = r.Answer,
+                            Count = r.Count,
+                            Percentage = r.Percentage
+                        }).ToList() ?? new List<ResponseViewModel>(),
                         ResponseDistribution = q.ResponseDistribution?.ToDictionary(
                             kvp => kvp.Key,
-                            kvp => new SurveyApp.Web.Models.ResponseDistributionViewModel
+                            kvp => new ResponseDistributionViewModel
                             {
                                 Count = kvp.Value.Count,
                                 Percentage = kvp.Value.Percentage
-                            })
-                    }).ToList() ?? new List<SurveyApp.Web.Models.QuestionStatisticViewModel>()
+                            }
+                        ) ?? new Dictionary<string, ResponseDistributionViewModel>()
+                    }).ToList() ?? new List<QuestionStatisticViewModel>()
                 };
             }
             
@@ -91,7 +95,7 @@ namespace SurveyApp.Web.Controllers
                     Description = survey.Description,
                     CreatedAt = survey.CreatedAt,
                     Status = survey.Status,
-                    Responses = statistics?.TotalResponses ?? 0,
+                    ResponseCount = statistics?.TotalResponses ?? 0,
                     CompletionRate = statistics?.CompletionRate ?? 0
                 },
                 Statistics = statisticsViewModel

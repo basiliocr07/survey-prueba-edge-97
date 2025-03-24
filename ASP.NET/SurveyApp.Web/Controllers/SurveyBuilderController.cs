@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Application.Interfaces;
 using SurveyApp.Domain.Models;
@@ -29,7 +28,7 @@ namespace SurveyApp.Web.Controllers
                     new QuestionViewModel
                     {
                         Id = Guid.NewGuid().ToString(),
-                        Text = "New Question",  // Updated to match domain model
+                        Text = "New Question",
                         Type = "text",
                         Required = true
                     }

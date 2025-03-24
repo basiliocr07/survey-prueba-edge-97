@@ -353,12 +353,12 @@ function getTopResponse(statistics: SurveyStatistics) {
   let topResponse = { answer: "", count: 0, percentage: 0 };
   
   for (const question of statistics.questionStats) {
-    if (question.responses) {
-      for (const response of question.responses) {
-        if (response.count > topResponse.count) {
-          topResponse = response;
+    if (question.responseDistribution) {
+      Object.entries(question.responseDistribution).forEach(([answer, data]) => {
+        if (data.count > topResponse.count) {
+          topResponse = { answer, count: data.count, percentage: data.percentage };
         }
-      }
+      });
     }
   }
   
@@ -366,24 +366,23 @@ function getTopResponse(statistics: SurveyStatistics) {
 }
 
 function getLeastResponse(statistics: SurveyStatistics) {
-  if (statistics.questionStats.length === 0) return { answer: "", count: 0, percentage: 0 };
-  
-  const firstQuestion = statistics.questionStats.find(q => q.responses && q.responses.length > 0);
-  if (!firstQuestion || !firstQuestion.responses || firstQuestion.responses.length === 0) {
+  if (statistics.questionStats.length === 0) {
     return { answer: "", count: 0, percentage: 0 };
   }
   
-  let leastResponse = firstQuestion.responses[0];
+  let leastResponse = { answer: "", count: Infinity, percentage: 0 };
   
   for (const question of statistics.questionStats) {
-    if (question.responses) {
-      for (const response of question.responses) {
-        if (leastResponse && (response.count < leastResponse.count || leastResponse.count === 0)) {
-          leastResponse = response;
+    if (question.responseDistribution) {
+      Object.entries(question.responseDistribution).forEach(([answer, data]) => {
+        if (data.count < leastResponse.count) {
+          leastResponse = { answer, count: data.count, percentage: data.percentage };
         }
-      }
+      });
     }
   }
   
-  return leastResponse || { answer: "", count: 0, percentage: 0 };
+  return leastResponse.count === Infinity 
+    ? { answer: "", count: 0, percentage: 0 }
+    : leastResponse;
 }

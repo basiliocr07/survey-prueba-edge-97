@@ -8,11 +8,11 @@ namespace SurveyApp.Web.Models
         public string QuestionId { get; set; }
         public string QuestionTitle { get; set; }
         public string QuestionText { get; set; }
-        public List<AnswerStatisticViewModel> Responses { get; set; } = new List<AnswerStatisticViewModel>();
+        public List<ResponseViewModel> Responses { get; set; } = new List<ResponseViewModel>();
         public Dictionary<string, ResponseDistributionViewModel> ResponseDistribution { get; set; } = new Dictionary<string, ResponseDistributionViewModel>();
     }
 
-    public class AnswerStatisticViewModel
+    public class ResponseViewModel
     {
         public string Answer { get; set; }
         public int Count { get; set; }
