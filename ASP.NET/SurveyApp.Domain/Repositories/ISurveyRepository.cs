@@ -12,5 +12,8 @@ namespace SurveyApp.Domain.Repositories
         Task<bool> AddAsync(Survey survey);
         Task<bool> UpdateAsync(Survey survey);
         Task<bool> DeleteAsync(int id);
+        Task<IEnumerable<Survey>> GetByStatusAsync(string status);
+        Task<SurveyStatistics> GetStatisticsAsync(int surveyId);
+        Task<bool> SendEmailsAsync(int surveyId, List<string> emailAddresses);
     }
 }

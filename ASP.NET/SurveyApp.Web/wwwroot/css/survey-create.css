@@ -117,3 +117,35 @@ a[href="#delivery"].bg-primary::after {
 .hidden {
     display: none;
 }
+
+/* Question Type specific previews */
+.question-preview {
+    padding: 1rem;
+    border-radius: 0.375rem;
+    background-color: rgba(0, 0, 0, 0.02);
+    margin-top: 0.5rem;
+}
+
+/* Chart colors for results */
+.chart-color-1 { background-color: #3b82f6; }
+.chart-color-2 { background-color: #10b981; }
+.chart-color-3 { background-color: #f59e0b; }
+.chart-color-4 { background-color: #ef4444; }
+.chart-color-5 { background-color: #8b5cf6; }
+.chart-color-6 { background-color: #ec4899; }
+.chart-color-7 { background-color: #06b6d4; }
+.chart-color-8 { background-color: #f97316; }
+
+/* Drag and drop ordering */
+.draggable-handle {
+    cursor: grab;
+}
+
+.draggable-handle:active {
+    cursor: grabbing;
+}
+
+.sortable-ghost {
+    opacity: 0.5;
+    background-color: #f3f4f6;
+}

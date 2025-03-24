@@ -3,7 +3,6 @@ using SurveyApp.Application.Interfaces;
 using SurveyApp.Domain.Models;
 using SurveyApp.Domain.Repositories;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace SurveyApp.Application.Services
@@ -44,57 +43,17 @@ namespace SurveyApp.Application.Services
 
         public async Task<IEnumerable<Survey>> GetSurveysByStatusAsync(string status)
         {
-            var surveys = await _surveyRepository.GetAllAsync();
-            return status.ToLower() switch
-            {
-                "active" => surveys.Where(s => s.Status == "active"),
-                "draft" => surveys.Where(s => s.Status == "draft"),
-                "archived" => surveys.Where(s => s.Status == "archived"),
-                _ => surveys
-            };
+            return await _surveyRepository.GetByStatusAsync(status);
         }
 
         public async Task<bool> SendSurveyEmailsAsync(int surveyId, List<string> emailAddresses)
         {
-            // In a real implementation, this would connect to an email service
-            // For now, we just return true to simulate success
-            var survey = await _surveyRepository.GetByIdAsync(surveyId);
-            if (survey == null || emailAddresses.Count == 0)
-                return false;
-
-            // Email sending logic would go here
-            return true;
+            return await _surveyRepository.SendEmailsAsync(surveyId, emailAddresses);
         }
 
-        // NEW: Get survey response statistics
         public async Task<SurveyStatistics> GetSurveyStatisticsAsync(int surveyId)
         {
-            var survey = await _surveyRepository.GetByIdAsync(surveyId);
-            if (survey == null)
-                return new SurveyStatistics { SurveyId = surveyId };
-
-            // In a real implementation, this would calculate statistics
-            // from actual response data in the database
-            return new SurveyStatistics
-            {
-                SurveyId = surveyId,
-                TotalResponses = survey.ResponseCount,
-                CompletionRate = survey.CompletionRate,
-                AverageCompletionTime = 120, // 2 minutes (sample data)
-                StartDate = survey.CreatedAt,
-                EndDate = null // Ongoing survey
-            };
+            return await _surveyRepository.GetStatisticsAsync(surveyId);
         }
-    }
-
-    // NEW: Class to hold survey statistics
-    public class SurveyStatistics
-    {
-        public int SurveyId { get; set; }
-        public int TotalResponses { get; set; }
-        public int CompletionRate { get; set; }
-        public int AverageCompletionTime { get; set; } // In seconds
-        public System.DateTime StartDate { get; set; }
-        public System.DateTime? EndDate { get; set; }
     }
 }
