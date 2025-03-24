@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Application.Interfaces;
 using SurveyApp.Domain.Models;
@@ -54,6 +55,7 @@ namespace SurveyApp.Web.Controllers
 
             try
             {
+                // Mapear de ViewModel a entidad de dominio
                 var survey = new Survey
                 {
                     Id = model.Id,
@@ -146,6 +148,7 @@ namespace SurveyApp.Web.Controllers
                 return RedirectToAction("Index", "Surveys");
             }
 
+            // Mapear de entidad de dominio a ViewModel
             var model = new CreateSurveyViewModel
             {
                 Id = survey.Id,
