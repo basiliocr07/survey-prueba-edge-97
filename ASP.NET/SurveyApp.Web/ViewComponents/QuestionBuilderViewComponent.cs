@@ -7,19 +7,24 @@ namespace SurveyApp.Web.ViewComponents
 {
     public class QuestionBuilderViewComponent : ViewComponent
     {
-        public async Task<IViewComponentResult> InvokeAsync(SurveyQuestionViewModel question, int index)
+        public async Task<IViewComponentResult> InvokeAsync(QuestionViewModel question, int index)
         {
+            // Convert QuestionViewModel to SurveyQuestionViewModel
+            var surveyQuestion = new SurveyQuestionViewModel
+            {
+                Id = question.Id,
+                Type = question.Type,
+                Text = question.Text,
+                Description = question.Description,
+                Options = question.Options,
+                Required = question.Required
+            };
+
             return View(new QuestionBuilderViewModel
             {
-                Question = question,
+                Question = surveyQuestion,
                 Index = index
             });
         }
-    }
-
-    public class QuestionBuilderViewModel
-    {
-        public SurveyQuestionViewModel Question { get; set; }
-        public int Index { get; set; }
     }
 }
