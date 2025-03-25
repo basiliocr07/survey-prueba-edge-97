@@ -157,3 +157,20 @@ a[href="#delivery"].bg-primary::after {
     opacity: 0.5;
     background-color: #f3f4f6;
 }
+
+/* Question type dropdown */
+.question-type-option {
+    padding: 0.75rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.question-type-option:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.question-type-option.selected {
+    background-color: rgba(var(--primary-rgb), 0.1);
+    color: var(--primary-color);
+}

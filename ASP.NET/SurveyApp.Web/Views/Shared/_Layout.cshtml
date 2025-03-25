@@ -4,60 +4,28 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - SurveyMaster</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/tailwind.min.css" asp-append-version="true" />
+    <title>@ViewData["Title"] - SurveyApp</title>
+    <link rel="stylesheet" href="~/css/tailwind_custom.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/surveys.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/survey-create.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/questions.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/survey-builder.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/survey-create.css" asp-append-version="true" />
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/uuid@latest/dist/umd/uuidv4.min.js"></script>
-    <style>
-        /* Primary color overrides */
-        :root {
-            --primary-color: #3b82f6;
-            --primary-rgb: 59, 130, 246;
-        }
-        
-        .bg-primary {
-            background-color: var(--primary-color);
-        }
-        
-        .text-primary {
-            color: var(--primary-color);
-        }
-        
-        .border-primary {
-            border-color: var(--primary-color);
-        }
-        
-        .hover\:bg-primary:hover {
-            background-color: var(--primary-color);
-        }
-        
-        .bg-primary\/10 {
-            background-color: rgba(var(--primary-rgb), 0.1);
-        }
-        
-        .bg-primary\/90 {
-            background-color: rgba(var(--primary-rgb), 0.9);
-        }
-    </style>
-    @await RenderSectionAsync("Styles", required: false)
 </head>
-<body class="bg-background text-foreground antialiased min-h-screen flex flex-col">
-    @await Html.PartialAsync("_NavbarPartial")
-    
-    <div class="container mx-auto pt-24 flex-grow">
-        <main role="main" class="pb-12">
+<body>
+    <div class="page-container">
+        <header>
+            @await Html.PartialAsync("_NavbarPartial")
+        </header>
+        <main class="container mx-auto px-4 py-4">
             @RenderBody()
         </main>
+        <footer>
+            @await Html.PartialAsync("_FooterPartial")
+        </footer>
     </div>
 
-    @await Html.PartialAsync("_FooterPartial")
-
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
