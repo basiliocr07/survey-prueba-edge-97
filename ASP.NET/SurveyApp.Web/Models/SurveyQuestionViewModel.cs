@@ -29,9 +29,9 @@ namespace SurveyApp.Web.Models
             {
                 Id = model.Id,
                 Type = model.Type,
-                Text = model.Text,
+                Text = model.Text ?? model.Title, // Handle both naming conventions
                 Description = model.Description,
-                Options = model.Options,
+                Options = model.Options ?? new List<string>(),
                 Required = model.Required,
                 Settings = model.Settings
             };
@@ -44,11 +44,32 @@ namespace SurveyApp.Web.Models
                 Id = this.Id,
                 Type = this.Type,
                 Text = this.Text,
+                Title = this.Text, // Ensure both properties are set
                 Description = this.Description,
-                Options = this.Options,
+                Options = this.Options ?? new List<string>(),
                 Required = this.Required,
                 Settings = this.Settings
             };
+        }
+        
+        // Helper method to ensure all properties are properly set
+        public void EnsureConsistency()
+        {
+            // Make sure Text and Title are in sync
+            if (string.IsNullOrEmpty(Text) && !string.IsNullOrEmpty(Title))
+            {
+                Text = Title;
+            }
+            else if (string.IsNullOrEmpty(Title) && !string.IsNullOrEmpty(Text))
+            {
+                Title = Text;
+            }
+            
+            // Initialize collections if they're null
+            if (Options == null)
+            {
+                Options = new List<string>();
+            }
         }
     }
 }

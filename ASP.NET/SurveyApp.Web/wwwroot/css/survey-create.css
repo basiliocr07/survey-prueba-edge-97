@@ -2,6 +2,7 @@
 /* Survey Creator Specific Styles */
 .question-card {
     transition: all 0.25s ease;
+    margin-bottom: 1rem;
 }
 
 .question-card:hover {
@@ -172,5 +173,40 @@ a[href="#delivery"].bg-primary::after {
 
 .question-type-option.selected {
     background-color: rgba(var(--primary-rgb), 0.1);
+    color: var(--primary-color);
+}
+
+/* Form validation styling */
+.input-validation-error {
+    border-color: #ef4444 !important;
+}
+
+.field-validation-error {
+    color: #ef4444;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: block;
+}
+
+/* Question builder specific styles */
+.question-builder-container {
+    margin-bottom: 1.5rem;
+}
+
+/* Ensure consistency with React version's tabs */
+.tabs-container {
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 1.5rem;
+}
+
+.tab-button {
+    padding: 0.75rem 1.25rem;
+    font-weight: 500;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.tab-button.active {
+    border-bottom-color: var(--primary-color);
     color: var(--primary-color);
 }
