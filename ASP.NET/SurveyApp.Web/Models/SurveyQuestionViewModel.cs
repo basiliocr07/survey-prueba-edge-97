@@ -9,7 +9,7 @@ namespace SurveyApp.Web.Models
         public string Type { get; set; }
         public string Text { get; set; }
         
-        // Alias for Text to maintain compatibility
+        // Alias for Text to maintain compatibility with React version
         public string Title { 
             get { return Text; } 
             set { Text = value; } 
@@ -20,7 +20,7 @@ namespace SurveyApp.Web.Models
         public bool Required { get; set; }
         public QuestionSettingsViewModel Settings { get; set; }
         
-        // Conversion methods to ensure compatibility
+        // Conversion methods to ensure compatibility with React version
         public static SurveyQuestionViewModel FromQuestionViewModel(QuestionViewModel model)
         {
             if (model == null) return null;
@@ -69,6 +69,12 @@ namespace SurveyApp.Web.Models
             if (Options == null)
             {
                 Options = new List<string>();
+            }
+            
+            // Default type if not set
+            if (string.IsNullOrEmpty(Type))
+            {
+                Type = "text";
             }
         }
     }

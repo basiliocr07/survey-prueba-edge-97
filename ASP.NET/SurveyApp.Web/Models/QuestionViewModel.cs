@@ -23,7 +23,7 @@ namespace SurveyApp.Web.Models
         
         public QuestionSettingsViewModel Settings { get; set; }
         
-        // Title property for compatibility with various naming conventions
+        // Title property for compatibility with React version
         public string Title { 
             get { return Text; } 
             set { Text = value; } 

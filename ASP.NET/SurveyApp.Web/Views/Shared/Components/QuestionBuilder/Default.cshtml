@@ -1,41 +1,51 @@
 
 @model SurveyApp.Web.ViewComponents.QuestionBuilderViewModel
 
-<div class="question-card border rounded-lg mb-4 shadow-sm transition-all duration-300 bg-white" data-question-id="@Model.Question.Id" data-question-index="@Model.Index">
+<div class="question-card w-full transition-all duration-300 mb-4 border shadow-sm" data-question-id="@Model.Question.Id" data-question-index="@Model.Index">
     <div class="flex items-center px-4 py-3 border-b bg-muted/30">
         <div class="mr-2 text-muted-foreground">
             <span class="cursor-grab draggable-handle">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
                 </svg>
             </span>
         </div>
-        
-        <button type="button" class="toggle-question-btn p-1 h-8 w-8">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <button 
+            type="button" 
+            class="toggle-question-btn p-0 h-auto mr-2 bg-transparent border-none"
+        >
+            <svg class="h-4 w-4 toggle-icon-down" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
             </svg>
+            <svg class="h-4 w-4 toggle-icon-up hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+            </svg>
         </button>
-        
         <div class="flex-1 font-medium truncate">
-            <span class="question-title">@(string.IsNullOrEmpty(Model.Question.Text) ? "Untitled Question" : Model.Question.Text)</span>
+            <span class="question-title">@(string.IsNullOrEmpty(Model.Question.Title) ? "Untitled Question" : Model.Question.Title)</span>
         </div>
-        
         <div class="flex items-center gap-1">
-            <button type="button" class="move-up-btn p-1 h-8 w-8 rounded-md hover:bg-gray-100" @(Model.Index == 0 ? "disabled" : "")>
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
-                </svg>
-            </button>
-            
-            <button type="button" class="move-down-btn p-1 h-8 w-8 rounded-md hover:bg-gray-100">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                </svg>
-            </button>
-            
-            <button type="button" class="delete-question-btn p-1 h-8 w-8 rounded-md hover:bg-gray-100 text-muted-foreground hover:text-red-500">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            @if (!Model.IsFirst)
+            {
+                <button type="button" class="move-up-btn h-8 w-8 bg-transparent border-none rounded-md hover:bg-gray-100">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                    </svg>
+                </button>
+            }
+            @if (!Model.IsLast)
+            {
+                <button type="button" class="move-down-btn h-8 w-8 bg-transparent border-none rounded-md hover:bg-gray-100">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+            }
+            <button 
+                type="button" 
+                class="delete-question-btn h-8 w-8 text-muted-foreground hover:text-destructive bg-transparent border-none rounded-md hover:bg-gray-100"
+            >
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                 </svg>
             </button>
@@ -49,16 +59,20 @@
                 <input 
                     type="text" 
                     id="question-@(Model.Question.Id)-title" 
+                    name="Questions[@Model.Index].Title"
                     class="question-title-input w-full border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary"
-                    value="@Model.Question.Text" 
+                    value="@Model.Question.Title" 
                     placeholder="Enter your question"
                 />
+                <input type="hidden" name="Questions[@Model.Index].Id" value="@Model.Question.Id" />
+                <input type="hidden" name="Questions[@Model.Index].Type" value="@Model.Question.Type" class="question-type-input" />
             </div>
             
             <div>
                 <label for="question-@(Model.Question.Id)-description" class="block text-sm font-medium mb-1">Description (optional)</label>
                 <textarea 
                     id="question-@(Model.Question.Id)-description" 
+                    name="Questions[@Model.Index].Description"
                     class="question-description-input w-full border rounded-md py-2 px-3 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="Add a description to provide more context"
                 >@Model.Question.Description</textarea>
@@ -68,7 +82,7 @@
         <div>
             <div class="relative w-full">
                 <button type="button" class="question-type-toggle w-full justify-between border rounded-md py-2 px-3 flex items-center bg-white hover:bg-gray-50">
-                    <span>Question Type: <span class="font-medium">@Model.Question.Type.Replace("-", " ")</span></span>
+                    <span>Question Type: <span class="font-medium question-type-label">@Model.Question.Type.Replace("-", " ")</span></span>
                     <svg class="w-4 h-4 transition-transform question-type-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
@@ -149,41 +163,39 @@
         {
             <div class="question-options-container space-y-3 mt-4">
                 <label class="block text-sm font-medium mb-1">Options</label>
-                @if (Model.Question.Options != null && Model.Question.Options.Any())
-                {
-                    <div class="options-list">
-                        @for (var i = 0; i < Model.Question.Options.Count; i++)
-                        {
-                            <div class="option-item flex items-center gap-2 mb-2">
-                                <div class="flex-1">
-                                    <input 
-                                        type="text" 
-                                        class="option-input w-full border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary" 
-                                        value="@Model.Question.Options[i]" 
-                                        placeholder="Option @(i + 1)"
-                                        data-option-index="@i" 
-                                        data-question-id="@Model.Question.Id"
-                                    />
-                                </div>
-                                <button 
-                                    type="button" 
-                                    class="option-remove p-1 h-9 w-9 rounded-md hover:bg-gray-100 text-muted-foreground hover:text-red-500" 
+                <div class="options-list">
+                    @for (var i = 0; i < (Model.Question.Options?.Count ?? 0); i++)
+                    {
+                        <div class="option-item flex items-center gap-2 mb-2">
+                            <div class="flex-1">
+                                <input 
+                                    type="text" 
+                                    class="option-input w-full border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary" 
+                                    name="Questions[@Model.Index].Options[@i]"
+                                    value="@(Model.Question.Options != null && i < Model.Question.Options.Count ? Model.Question.Options[i] : "")" 
+                                    placeholder="Option @(i + 1)"
                                     data-option-index="@i" 
-                                    data-question-id="@Model.Question.Id"
-                                    @(Model.Question.Options.Count <= 2 ? "disabled" : "")
-                                >
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                    </svg>
-                                </button>
+                                    data-question-index="@Model.Index"
+                                />
                             </div>
-                        }
-                    </div>
-                }
+                            <button 
+                                type="button" 
+                                class="remove-option-btn h-9 w-9 text-muted-foreground hover:text-destructive bg-transparent border-none rounded-md hover:bg-gray-100" 
+                                @(Model.Question.Options == null || Model.Question.Options.Count <= 2 ? "disabled" : "")
+                                data-option-index="@i" 
+                                data-question-index="@Model.Index"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    }
+                </div>
                 <button 
                     type="button" 
-                    class="add-option-btn py-1 px-3 border border-primary text-primary rounded-md hover:bg-primary/5 text-sm inline-flex items-center"
-                    data-question-id="@Model.Question.Id"
+                    class="add-option-btn mt-2 py-1 px-3 bg-transparent border border-primary text-primary rounded-md hover:bg-primary/5 text-sm inline-flex items-center"
+                    data-question-index="@Model.Index"
                 >
                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -197,7 +209,7 @@
         {
             <div class="mt-4 border rounded-md p-4 bg-muted/20">
                 <label class="mb-2 block text-sm font-medium">Preview</label>
-                <div class="star-rating flex justify-between">
+                <div class="star-rating flex items-center justify-center gap-2">
                     @for (var i = 1; i <= 5; i++)
                     {
                         <div class="text-center">
@@ -212,13 +224,6 @@
                             </label>
                         </div>
                     }
-                </div>
-                <div class="star-labels grid grid-cols-5 text-xs text-muted-foreground mt-2">
-                    <div class="text-center">Extremely Dissatisfied</div>
-                    <div class="text-center">Dissatisfied</div>
-                    <div class="text-center">Neutral</div>
-                    <div class="text-center">Satisfied</div>
-                    <div class="text-center">Extremely Satisfied</div>
                 </div>
             </div>
         }
@@ -241,9 +246,9 @@
                     }
                 </div>
                 <div class="flex justify-between text-sm text-muted-foreground px-1 mt-2">
-                    <div>No es probable</div>
+                    <div>Not likely</div>
                     <div>Neutral</div>
-                    <div>Muy probable</div>
+                    <div>Very likely</div>
                 </div>
             </div>
         }
@@ -253,9 +258,10 @@
                 <input 
                     type="checkbox" 
                     id="question-@(Model.Question.Id)-required" 
+                    name="Questions[@Model.Index].Required"
                     class="question-required-toggle sr-only"
+                    value="true"
                     @(Model.Question.Required ? "checked" : "")
-                    data-question-id="@Model.Question.Id"
                 />
                 <label 
                     for="question-@(Model.Question.Id)-required" 
