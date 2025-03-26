@@ -28,5 +28,43 @@ namespace SurveyApp.Web.Models
             get { return Text; } 
             set { Text = value; } 
         }
+        
+        // Método para convertir a modelo de dominio
+        public SurveyApp.Domain.Models.Question ToDomainModel()
+        {
+            return new SurveyApp.Domain.Models.Question
+            {
+                Id = string.IsNullOrEmpty(Id) || Id.StartsWith("new-") ? 0 : int.Parse(Id),
+                Text = Text,
+                Type = Type,
+                Required = Required,
+                Description = Description ?? string.Empty,
+                Options = Options ?? new List<string>(),
+                Settings = Settings != null ? new SurveyApp.Domain.Models.QuestionSettings
+                {
+                    Min = Settings.Min,
+                    Max = Settings.Max
+                } : null
+            };
+        }
+        
+        // Método para crear desde modelo de dominio
+        public static QuestionViewModel FromDomainModel(SurveyApp.Domain.Models.Question question)
+        {
+            return new QuestionViewModel
+            {
+                Id = question.Id.ToString(),
+                Text = question.Text,
+                Type = question.Type,
+                Required = question.Required,
+                Description = question.Description,
+                Options = question.Options ?? new List<string>(),
+                Settings = question.Settings != null ? new QuestionSettingsViewModel
+                {
+                    Min = question.Settings.Min,
+                    Max = question.Settings.Max
+                } : null
+            };
+        }
     }
 }

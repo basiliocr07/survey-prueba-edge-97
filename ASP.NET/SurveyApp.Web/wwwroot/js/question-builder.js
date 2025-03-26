@@ -1,4 +1,3 @@
-
 /**
  * Question Builder JavaScript
  * Handles the interactive functionality for survey question editing
@@ -104,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
                        class="option-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" 
                        placeholder="Option ${newOptionIndex + 1}" />
             </div>
-            <button type="button" class="option-remove text-gray-500 hover:text-red-500 p-1 rounded-full" title="Remove Option">
+            <button type="button" class="remove-option-btn text-gray-500 hover:text-red-500 p-1 rounded-full" title="Remove Option">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
             </button>
         `;
@@ -113,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function() {
         optionsContainer.insertBefore(optionItem, addButton);
         
         // Add event listener to the remove button
-        const removeButton = optionItem.querySelector('.option-remove');
+        const removeButton = optionItem.querySelector('.remove-option-btn');
         removeButton.addEventListener('click', function() {
             removeOption(questionCard, this);
         });
@@ -209,7 +208,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateRemoveButtonsState(questionCard) {
         const optionsContainer = questionCard.querySelector('.question-options-container');
         const optionItems = optionsContainer.querySelectorAll('.option-item');
-        const removeButtons = optionsContainer.querySelectorAll('.option-remove');
+        const removeButtons = optionsContainer.querySelectorAll('.remove-option-btn');
         
         removeButtons.forEach(button => {
             if (optionItems.length <= 2) {
@@ -223,7 +222,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Initialize option remove buttons
-    document.querySelectorAll('.option-remove').forEach(button => {
+    document.querySelectorAll('.remove-option-btn').forEach(button => {
         button.addEventListener('click', function() {
             const questionCard = this.closest('.question-card');
             removeOption(questionCard, this);

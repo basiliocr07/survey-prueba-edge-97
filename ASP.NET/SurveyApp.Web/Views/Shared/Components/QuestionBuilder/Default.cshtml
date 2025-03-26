@@ -16,17 +16,17 @@
             <div class="flex items-center gap-1">
                 @if (!Model.IsFirst)
                 {
-                    <button type="button" class="move-up-btn text-gray-500 hover:text-gray-700 p-1 rounded-full" title="Move Up">
+                    <button type="button" class="move-up-btn text-gray-500 hover:text-gray-700 p-1 rounded-full" title="Move Up" onclick="moveQuestion(@Model.Index, 'up')">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
                     </button>
                 }
                 @if (!Model.IsLast)
                 {
-                    <button type="button" class="move-down-btn text-gray-500 hover:text-gray-700 p-1 rounded-full" title="Move Down">
+                    <button type="button" class="move-down-btn text-gray-500 hover:text-gray-700 p-1 rounded-full" title="Move Down" onclick="moveQuestion(@Model.Index, 'down')">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
                     </button>
                 }
-                <button type="button" class="delete-question-btn text-gray-500 hover:text-red-500 p-1 rounded-full" title="Delete Question">
+                <button type="button" class="delete-question-btn text-gray-500 hover:text-red-500 p-1 rounded-full" title="Delete Question" onclick="deleteQuestion(@Model.Index)">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                 </button>
             </div>
@@ -57,7 +57,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
                 </div>
                 <div class="question-types-dropdown hidden mt-2 border rounded-md shadow-sm bg-white p-2 space-y-1">
-                    @foreach (var type in new[] { "text", "textarea", "multiple-choice", "single-choice", "dropdown", "rating", "nps" })
+                    @foreach (var type in new[] { "text", "textarea", "multiple-choice", "single-choice", "dropdown", "rating", "nps", "matrix", "ranking", "date", "file-upload" })
                     {
                         <div class="question-type-option @(Model.Question.Type == type ? "selected" : "")" data-type="@type">
                             <div class="flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer">
@@ -82,7 +82,7 @@
                                        class="option-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" 
                                        placeholder="Option @(i + 1)" />
                             </div>
-                            <button type="button" class="option-remove text-gray-500 hover:text-red-500 p-1 rounded-full @(Model.Question.Options.Count <= 2 ? "opacity-50 cursor-not-allowed" : "")" 
+                            <button type="button" class="remove-option-btn text-gray-500 hover:text-red-500 p-1 rounded-full @(Model.Question.Options.Count <= 2 ? "opacity-50 cursor-not-allowed" : "")" 
                                     @(Model.Question.Options.Count <= 2 ? "disabled" : "") title="Remove Option">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                             </button>
