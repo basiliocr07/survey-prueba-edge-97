@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Application.Interfaces;
 using SurveyApp.Domain.Models;
@@ -139,71 +138,89 @@ namespace SurveyApp.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                var survey = new SurveyApp.Domain.Models.Survey
+                try
                 {
-                    Title = model.Title,
-                    Description = model.Description,
-                    CreatedAt = DateTime.Now,
-                    Status = model.Status,
-                    Questions = model.Questions.Select(q => new SurveyApp.Domain.Models.Question
+                    // Ensure all questions have valid settings based on their type
+                    foreach (var question in model.Questions)
                     {
-                        Text = q.Text,
-                        Type = q.Type,
-                        Required = q.Required,
-                        Description = q.Description,
-                        Options = q.Options,
-                        Settings = q.Settings != null 
-                            ? new SurveyApp.Domain.Models.QuestionSettings 
-                            { 
-                                Min = q.Settings.Min, 
-                                Max = q.Settings.Max 
-                            } 
-                            : null
-                    }).ToList(),
-                    DeliveryConfig = new SurveyApp.Domain.Models.DeliveryConfiguration
-                    {
-                        Type = model.DeliveryConfig.Type,
-                        EmailAddresses = model.DeliveryConfig.EmailAddresses,
-                        Schedule = model.DeliveryConfig.Schedule != null 
-                            ? new SurveyApp.Domain.Models.ScheduleSettings
-                            {
-                                Frequency = model.DeliveryConfig.Schedule.Frequency,
-                                DayOfMonth = model.DeliveryConfig.Schedule.DayOfMonth,
-                                Time = model.DeliveryConfig.Schedule.Time
-                            }
-                            : null,
-                        Trigger = model.DeliveryConfig.Trigger != null
-                            ? new SurveyApp.Domain.Models.TriggerSettings
-                            {
-                                Type = model.DeliveryConfig.Trigger.Type,
-                                DelayHours = model.DeliveryConfig.Trigger.DelayHours,
-                                SendAutomatically = model.DeliveryConfig.Trigger.SendAutomatically
-                            }
-                            : null
+                        // If options-based question type but no options provided, add default options
+                        if (new[] { "multiple-choice", "single-choice", "dropdown", "ranking" }.Contains(question.Type) 
+                            && (question.Options == null || question.Options.Count == 0))
+                        {
+                            question.Options = new List<string> { "Option 1", "Option 2" };
+                        }
+
+                        // If rating type but no settings, add default settings
+                        if (question.Type == "rating" && question.Settings == null)
+                        {
+                            question.Settings = new QuestionSettingsViewModel { Min = 1, Max = 5 };
+                        }
+                        
+                        // If NPS type but no settings, add default settings
+                        if (question.Type == "nps" && question.Settings == null)
+                        {
+                            question.Settings = new QuestionSettingsViewModel { Min = 0, Max = 10 };
+                        }
                     }
-                };
 
-                bool success;
-                if (model.Id > 0)
-                {
-                    survey.Id = model.Id;
-                    success = await _surveyService.UpdateSurveyAsync(survey);
-                    if (success)
-                        TempData["SuccessMessage"] = "Survey updated successfully.";
-                    else
-                        TempData["ErrorMessage"] = "Failed to update survey.";
-                }
-                else
-                {
-                    success = await _surveyService.CreateSurveyAsync(survey);
-                    if (success)
-                        TempData["SuccessMessage"] = "Survey created successfully.";
-                    else
-                        TempData["ErrorMessage"] = "Failed to create survey.";
-                }
+                    var survey = new SurveyApp.Domain.Models.Survey
+                    {
+                        Title = model.Title,
+                        Description = model.Description,
+                        CreatedAt = DateTime.Now,
+                        Status = model.Status,
+                        Questions = model.Questions.Select(q => q.ToDomainModel()).ToList(),
+                        DeliveryConfig = new SurveyApp.Domain.Models.DeliveryConfiguration
+                        {
+                            Type = model.DeliveryConfig.Type,
+                            EmailAddresses = model.DeliveryConfig.EmailAddresses ?? new List<string>(),
+                            Schedule = model.DeliveryConfig.Schedule != null 
+                                ? new SurveyApp.Domain.Models.ScheduleSettings
+                                {
+                                    Frequency = model.DeliveryConfig.Schedule.Frequency,
+                                    DayOfMonth = model.DeliveryConfig.Schedule.DayOfMonth ?? 1,
+                                    DayOfWeek = model.DeliveryConfig.Schedule.DayOfWeek,
+                                    Time = model.DeliveryConfig.Schedule.Time ?? "09:00"
+                                }
+                                : null,
+                            Trigger = model.DeliveryConfig.Trigger != null
+                                ? new SurveyApp.Domain.Models.TriggerSettings
+                                {
+                                    Type = model.DeliveryConfig.Trigger.Type,
+                                    DelayHours = model.DeliveryConfig.Trigger.DelayHours,
+                                    SendAutomatically = model.DeliveryConfig.Trigger.SendAutomatically
+                                }
+                                : null
+                        }
+                    };
 
-                if (success)
-                    return RedirectToAction(nameof(Index));
+                    bool success;
+                    if (model.Id > 0)
+                    {
+                        survey.Id = model.Id;
+                        success = await _surveyService.UpdateSurveyAsync(survey);
+                        if (success)
+                            TempData["SuccessMessage"] = "Survey updated successfully.";
+                        else
+                            TempData["ErrorMessage"] = "Failed to update survey.";
+                    }
+                    else
+                    {
+                        success = await _surveyService.CreateSurveyAsync(survey);
+                        if (success)
+                            TempData["SuccessMessage"] = "Survey created successfully.";
+                        else
+                            TempData["ErrorMessage"] = "Failed to create survey.";
+                    }
+
+                    if (success)
+                        return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", $"An error occurred: {ex.Message}");
+                    Console.WriteLine($"Error creating/updating survey: {ex}");
+                }
             }
 
             return View(model);

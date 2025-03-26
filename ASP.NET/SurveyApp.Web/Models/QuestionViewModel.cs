@@ -32,11 +32,24 @@ namespace SurveyApp.Web.Models
         // Método para convertir a modelo de dominio
         public SurveyApp.Domain.Models.Question ToDomainModel()
         {
+            int questionId = 0;
+            
+            // Try to parse the ID if it's not null/empty and doesn't start with "new-"
+            if (!string.IsNullOrEmpty(Id) && !Id.StartsWith("new-"))
+            {
+                // Try to parse as integer (Database ID)
+                if (!int.TryParse(Id, out questionId))
+                {
+                    // If not an integer, it's likely a GUID (temporary ID)
+                    questionId = 0;
+                }
+            }
+            
             return new SurveyApp.Domain.Models.Question
             {
-                Id = string.IsNullOrEmpty(Id) || Id.StartsWith("new-") ? 0 : int.Parse(Id),
-                Text = Text,
-                Type = Type,
+                Id = questionId,
+                Text = Text ?? string.Empty,
+                Type = Type ?? "text",
                 Required = Required,
                 Description = Description ?? string.Empty,
                 Options = Options ?? new List<string>(),

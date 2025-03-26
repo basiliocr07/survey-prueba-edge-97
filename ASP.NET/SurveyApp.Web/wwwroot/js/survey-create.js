@@ -27,6 +27,95 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // Question type selection
+    document.addEventListener('change', function(e) {
+        if (e.target && e.target.name && e.target.name.includes('.Type')) {
+            const questionType = e.target.value;
+            const questionId = e.target.id.split('_')[1]; // Extraer el ID de la pregunta
+            
+            // Mostrar u ocultar contenedores de opciones basados en el tipo de pregunta
+            const optionsContainer = document.getElementById(`options_${questionId}`);
+            const ratingContainer = document.getElementById(`rating_${questionId}`);
+            const npsContainer = document.getElementById(`nps_${questionId}`);
+            
+            if (optionsContainer) {
+                if (['multiple-choice', 'single-choice', 'dropdown', 'ranking'].includes(questionType)) {
+                    optionsContainer.classList.remove('hidden');
+                } else {
+                    optionsContainer.classList.add('hidden');
+                }
+            }
+            
+            if (ratingContainer) {
+                if (questionType === 'rating') {
+                    ratingContainer.classList.remove('hidden');
+                } else {
+                    ratingContainer.classList.add('hidden');
+                }
+            }
+            
+            if (npsContainer) {
+                if (questionType === 'nps') {
+                    npsContainer.classList.remove('hidden');
+                } else {
+                    npsContainer.classList.add('hidden');
+                }
+            }
+        }
+    });
+    
+    // Add option buttons
+    document.addEventListener('click', function(e) {
+        if (e.target && e.target.classList.contains('add-option-btn')) {
+            const questionId = e.target.dataset.questionId;
+            const optionsContainer = document.getElementById(`optionsList_${questionId}`);
+            const optionCount = optionsContainer.querySelectorAll('.option-item').length;
+            
+            const newOption = document.createElement('div');
+            newOption.className = 'option-item flex items-center gap-2 mb-2';
+            newOption.innerHTML = `
+                <input type="text" name="Questions[${questionId}].Options[${optionCount}]" class="flex-1 px-3 py-2 border border-gray-300 rounded-md" value="New Option">
+                <button type="button" class="remove-option-btn text-gray-500 hover:text-red-500 p-1 rounded-full" data-question-id="${questionId}" data-option-index="${optionCount}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                </button>
+            `;
+            
+            optionsContainer.appendChild(newOption);
+            updateOptionIndices(questionId);
+        }
+    });
+    
+    // Remove option buttons
+    document.addEventListener('click', function(e) {
+        if (e.target && (e.target.classList.contains('remove-option-btn') || e.target.closest('.remove-option-btn'))) {
+            const button = e.target.classList.contains('remove-option-btn') ? e.target : e.target.closest('.remove-option-btn');
+            const questionId = button.dataset.questionId;
+            const optionsContainer = document.getElementById(`optionsList_${questionId}`);
+            
+            // No eliminar si solo quedan 2 opciones
+            if (optionsContainer.querySelectorAll('.option-item').length <= 2) {
+                alert('Cannot remove option. At least 2 options are required.');
+                return;
+            }
+            
+            button.closest('.option-item').remove();
+            updateOptionIndices(questionId);
+        }
+    });
+    
+    function updateOptionIndices(questionId) {
+        const optionsContainer = document.getElementById(`optionsList_${questionId}`);
+        const options = optionsContainer.querySelectorAll('.option-item');
+        
+        options.forEach((item, index) => {
+            const input = item.querySelector('input');
+            input.name = `Questions[${questionId}].Options[${index}]`;
+            
+            const removeBtn = item.querySelector('.remove-option-btn');
+            removeBtn.dataset.optionIndex = index;
+        });
+    }
+    
     // Delivery method selection
     const deliveryTypeRadios = document.querySelectorAll('input[name="DeliveryConfig.Type"]');
     const deliverySettings = {
@@ -156,6 +245,121 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // Add question button
+    const addQuestionBtn = document.getElementById('addQuestionBtn');
+    if (addQuestionBtn) {
+        addQuestionBtn.addEventListener('click', function() {
+            const questionCount = document.querySelectorAll('.question-card').length;
+            
+            // Use AJAX to add a new question
+            fetch(`/SurveyBuilder/AddQuestion?index=${questionCount}&id=new-${Date.now()}`)
+                .then(response => response.text())
+                .then(html => {
+                    const questionsContainer = document.getElementById('questionsContainer');
+                    
+                    if (questionsContainer) {
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = html.trim();
+                        
+                        // Append the new question to the container
+                        questionsContainer.appendChild(tempDiv.firstChild);
+                    }
+                })
+                .catch(error => console.error('Error adding question:', error));
+        });
+    }
+    
+    // Add sample questions button
+    const addSampleQuestionsBtn = document.getElementById('addSampleQuestionsBtn');
+    if (addSampleQuestionsBtn) {
+        addSampleQuestionsBtn.addEventListener('click', function() {
+            const questionCount = document.querySelectorAll('.question-card').length;
+            
+            // Use AJAX to add sample questions
+            fetch(`/SurveyBuilder/AddSampleQuestions?startIndex=${questionCount}`)
+                .then(response => response.text())
+                .then(html => {
+                    const questionsContainer = document.getElementById('questionsContainer');
+                    
+                    if (questionsContainer) {
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = html.trim();
+                        
+                        // Append each sample question to the container
+                        while (tempDiv.firstChild) {
+                            questionsContainer.appendChild(tempDiv.firstChild);
+                        }
+                    }
+                })
+                .catch(error => console.error('Error adding sample questions:', error));
+        });
+    }
+    
+    // Question deletion
+    document.addEventListener('click', function(e) {
+        if (e.target && (e.target.classList.contains('delete-question-btn') || e.target.closest('.delete-question-btn'))) {
+            const button = e.target.classList.contains('delete-question-btn') ? e.target : e.target.closest('.delete-question-btn');
+            const questionCard = button.closest('.question-card');
+            
+            if (document.querySelectorAll('.question-card').length <= 1) {
+                alert('Cannot delete the last question. At least one question is required.');
+                return;
+            }
+            
+            if (confirm('Are you sure you want to delete this question?')) {
+                questionCard.remove();
+                updateQuestionIndices();
+            }
+        }
+    });
+    
+    // Question movement (up/down)
+    document.addEventListener('click', function(e) {
+        if (e.target && (e.target.classList.contains('move-question-up') || e.target.closest('.move-question-up'))) {
+            const button = e.target.classList.contains('move-question-up') ? e.target : e.target.closest('.move-question-up');
+            const questionCard = button.closest('.question-card');
+            const prevQuestion = questionCard.previousElementSibling;
+            
+            if (prevQuestion && prevQuestion.classList.contains('question-card')) {
+                questionCard.parentNode.insertBefore(questionCard, prevQuestion);
+                updateQuestionIndices();
+            }
+        }
+        
+        if (e.target && (e.target.classList.contains('move-question-down') || e.target.closest('.move-question-down'))) {
+            const button = e.target.classList.contains('move-question-down') ? e.target : e.target.closest('.move-question-down');
+            const questionCard = button.closest('.question-card');
+            const nextQuestion = questionCard.nextElementSibling;
+            
+            if (nextQuestion && nextQuestion.classList.contains('question-card')) {
+                questionCard.parentNode.insertBefore(nextQuestion, questionCard);
+                updateQuestionIndices();
+            }
+        }
+    });
+    
+    function updateQuestionIndices() {
+        const questionCards = document.querySelectorAll('.question-card');
+        
+        questionCards.forEach((card, index) => {
+            const inputs = card.querySelectorAll('input, textarea, select');
+            
+            inputs.forEach(input => {
+                const name = input.name;
+                if (name && name.startsWith('Questions[')) {
+                    const newName = name.replace(/Questions\[\d+\]/, `Questions[${index}]`);
+                    input.name = newName;
+                }
+            });
+            
+            // Update question number display if it exists
+            const questionNumber = card.querySelector('.question-number');
+            if (questionNumber) {
+                questionNumber.textContent = `Question ${index + 1}`;
+            }
+        });
+    }
+    
     // Form validation
     const createSurveyForm = document.getElementById('createSurveyForm');
     
@@ -174,6 +378,22 @@ document.addEventListener('DOMContentLoaded', function() {
             if (questions.length === 0) {
                 e.preventDefault();
                 alert('Please add at least one question to your survey');
+                return false;
+            }
+            
+            // Validate required fields for each question
+            let isValid = true;
+            questions.forEach((questionCard, index) => {
+                const questionText = questionCard.querySelector(`[name="Questions[${index}].Text"]`).value.trim();
+                if (!questionText) {
+                    isValid = false;
+                    const questionNumber = index + 1;
+                    alert(`Question ${questionNumber} text is required`);
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
                 return false;
             }
             
