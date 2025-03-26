@@ -206,6 +206,8 @@ a[href="#delivery"].bg-primary::after {
     font-weight: 500;
     border-bottom: 2px solid transparent;
     transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
 }
 
 .tab-button.active {
@@ -251,4 +253,29 @@ button {
 
 .question-required-toggle:checked + label span {
     transform: translateX(1.25rem);
+}
+
+/* Root variables for color consistency */
+:root {
+    --primary-color: #8b5cf6;
+    --primary-rgb: 139, 92, 246;
+}
+
+/* Tab content transitions */
+.tab-content {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Move buttons styling */
+.move-up-btn:disabled, .move-down-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* Question types dropdown styling */
+.question-types-dropdown {
+    position: relative;
+    z-index: 10;
+    max-height: 300px;
+    overflow-y: auto;
 }

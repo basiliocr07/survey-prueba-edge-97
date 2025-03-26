@@ -1,0 +1,4 @@
+
+@model Tuple<SurveyApp.Web.Models.QuestionViewModel, int, int>
+
+@await Component.InvokeAsync("QuestionBuilder", new { question = Model.Item1, index = Model.Item2, total = Model.Item3 })

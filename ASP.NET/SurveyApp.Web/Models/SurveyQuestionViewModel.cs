@@ -6,75 +6,44 @@ namespace SurveyApp.Web.Models
     public class SurveyQuestionViewModel
     {
         public string Id { get; set; }
-        public string Type { get; set; }
-        public string Text { get; set; }
-        
-        // Alias for Text to maintain compatibility with React version
-        public string Title { 
-            get { return Text; } 
-            set { Text = value; } 
-        }
-        
+        public string Title { get; set; }
         public string Description { get; set; }
-        public List<string> Options { get; set; } = new List<string>();
+        public string Type { get; set; }
         public bool Required { get; set; }
+        public List<string> Options { get; set; } = new List<string>();
         public QuestionSettingsViewModel Settings { get; set; }
-        
-        // Conversion methods to ensure compatibility with React version
-        public static SurveyQuestionViewModel FromQuestionViewModel(QuestionViewModel model)
+
+        public static SurveyQuestionViewModel FromQuestionViewModel(QuestionViewModel question)
         {
-            if (model == null) return null;
-            
             return new SurveyQuestionViewModel
             {
-                Id = model.Id,
-                Type = model.Type,
-                Text = model.Text ?? model.Title, // Handle both naming conventions
-                Description = model.Description,
-                Options = model.Options ?? new List<string>(),
-                Required = model.Required,
-                Settings = model.Settings
+                Id = question.Id,
+                Title = question.Text, // Map Text to Title
+                Description = question.Description,
+                Type = question.Type,
+                Required = question.Required,
+                Options = question.Options ?? new List<string>(),
+                Settings = question.Settings
             };
         }
-        
-        public QuestionViewModel ToQuestionViewModel()
-        {
-            return new QuestionViewModel
-            {
-                Id = this.Id,
-                Type = this.Type,
-                Text = this.Text,
-                Title = this.Text, // Ensure both properties are set
-                Description = this.Description,
-                Options = this.Options ?? new List<string>(),
-                Required = this.Required,
-                Settings = this.Settings
-            };
-        }
-        
-        // Helper method to ensure all properties are properly set
+
         public void EnsureConsistency()
         {
-            // Make sure Text and Title are in sync
-            if (string.IsNullOrEmpty(Text) && !string.IsNullOrEmpty(Title))
+            // Add sample options for choice-based questions if none exist
+            if ((Type == "multiple-choice" || Type == "single-choice" || Type == "dropdown" || Type == "ranking") && 
+                (Options == null || Options.Count == 0))
             {
-                Text = Title;
+                Options = new List<string> { "Option 1", "Option 2" };
             }
-            else if (string.IsNullOrEmpty(Title) && !string.IsNullOrEmpty(Text))
+
+            // Create default settings for special question types
+            if (Type == "rating" && Settings == null)
             {
-                Title = Text;
+                Settings = new QuestionSettingsViewModel { Min = 1, Max = 5 };
             }
-            
-            // Initialize collections if they're null
-            if (Options == null)
+            else if (Type == "nps" && Settings == null)
             {
-                Options = new List<string>();
-            }
-            
-            // Default type if not set
-            if (string.IsNullOrEmpty(Type))
-            {
-                Type = "text";
+                Settings = new QuestionSettingsViewModel { Min = 0, Max = 10 };
             }
         }
     }
