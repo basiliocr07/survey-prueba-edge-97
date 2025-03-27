@@ -380,6 +380,63 @@ namespace SurveyApp.Web.Controllers
             return View();
         }
 
+        // GET: Surveys/AddQuestion
+        [HttpGet]
+        public IActionResult AddQuestion(int index, string id)
+        {
+            var question = new QuestionViewModel
+            {
+                Id = id,
+                Text = "New Question",
+                Type = "single-choice",
+                Required = true,
+                Options = new List<string> { "Option 1", "Option 2", "Option 3" }
+            };
+            
+            return PartialView("_QuestionBuilderPartial", Tuple.Create(question, index, index + 1));
+        }
+
+        // GET: Surveys/AddSampleQuestions
+        [HttpGet]
+        public IActionResult AddSampleQuestions(int startIndex)
+        {
+            var sampleQuestions = new List<QuestionViewModel>
+            {
+                new QuestionViewModel
+                {
+                    Id = $"new-{Guid.NewGuid()}",
+                    Text = "How satisfied are you with our service?",
+                    Type = "rating",
+                    Required = true,
+                    Settings = new QuestionSettingsViewModel { Min = 1, Max = 5 }
+                },
+                new QuestionViewModel
+                {
+                    Id = $"new-{Guid.NewGuid()}",
+                    Text = "Would you recommend our product to others?",
+                    Type = "single-choice",
+                    Required = true,
+                    Options = new List<string> { "Yes, definitely", "Maybe", "No" }
+                },
+                new QuestionViewModel
+                {
+                    Id = $"new-{Guid.NewGuid()}",
+                    Text = "Please share any additional feedback",
+                    Type = "text",
+                    Required = false
+                }
+            };
+            
+            var result = new List<Tuple<QuestionViewModel, int, int>>();
+            
+            for (int i = 0; i < sampleQuestions.Count; i++)
+            {
+                result.Add(Tuple.Create(sampleQuestions[i], startIndex + i, startIndex + sampleQuestions.Count));
+            }
+            
+            return PartialView("_MultipleSampleQuestionsPartial", result);
+        }
+
         // Helper method to get real surveys from database
         private async Task<List<SurveyViewModel>> GetSurveys()
         {

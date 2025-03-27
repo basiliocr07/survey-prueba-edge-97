@@ -247,26 +247,47 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Add question button
     const addQuestionBtn = document.getElementById('addQuestionBtn');
-    if (addQuestionBtn) {
-        addQuestionBtn.addEventListener('click', function() {
-            const questionCount = document.querySelectorAll('.question-card').length;
-            
-            // Use AJAX to add a new question
-            fetch(`/SurveyBuilder/AddQuestion?index=${questionCount}&id=new-${Date.now()}`)
-                .then(response => response.text())
-                .then(html => {
-                    const questionsContainer = document.getElementById('questionsContainer');
-                    
-                    if (questionsContainer) {
-                        const tempDiv = document.createElement('div');
-                        tempDiv.innerHTML = html.trim();
-                        
-                        // Append the new question to the container
-                        questionsContainer.appendChild(tempDiv.firstChild);
+    const addFirstQuestionBtn = document.getElementById('addFirstQuestionBtn');
+    
+    function addNewQuestion() {
+        const questionCount = document.querySelectorAll('.question-card').length;
+        
+        // Use AJAX to add a new question
+        fetch(`/Surveys/AddQuestion?index=${questionCount}&id=new-${Date.now()}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok: ' + response.statusText);
+                }
+                return response.text();
+            })
+            .then(html => {
+                const questionsContainer = document.getElementById('questionsContainer');
+                
+                if (questionsContainer) {
+                    // Si no hay preguntas y hay un mensaje "No questions yet", reemplazarlo
+                    if (questionsContainer.querySelector('h3')?.textContent.includes('No questions yet')) {
+                        questionsContainer.innerHTML = '';
                     }
-                })
-                .catch(error => console.error('Error adding question:', error));
-        });
+                    
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = html.trim();
+                    
+                    // Append the new question to the container
+                    questionsContainer.appendChild(tempDiv.firstChild);
+                }
+            })
+            .catch(error => {
+                console.error('Error adding question:', error);
+                alert('Error adding question: ' + error.message);
+            });
+    }
+    
+    if (addQuestionBtn) {
+        addQuestionBtn.addEventListener('click', addNewQuestion);
+    }
+    
+    if (addFirstQuestionBtn) {
+        addFirstQuestionBtn.addEventListener('click', addNewQuestion);
     }
     
     // Add sample questions button
@@ -276,12 +297,22 @@ document.addEventListener('DOMContentLoaded', function() {
             const questionCount = document.querySelectorAll('.question-card').length;
             
             // Use AJAX to add sample questions
-            fetch(`/SurveyBuilder/AddSampleQuestions?startIndex=${questionCount}`)
-                .then(response => response.text())
+            fetch(`/Surveys/AddSampleQuestions?startIndex=${questionCount}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok: ' + response.statusText);
+                    }
+                    return response.text();
+                })
                 .then(html => {
                     const questionsContainer = document.getElementById('questionsContainer');
                     
                     if (questionsContainer) {
+                        // Si no hay preguntas y hay un mensaje "No questions yet", reemplazarlo
+                        if (questionsContainer.querySelector('h3')?.textContent.includes('No questions yet')) {
+                            questionsContainer.innerHTML = '';
+                        }
+                        
                         const tempDiv = document.createElement('div');
                         tempDiv.innerHTML = html.trim();
                         
@@ -291,7 +322,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }
                 })
-                .catch(error => console.error('Error adding sample questions:', error));
+                .catch(error => {
+                    console.error('Error adding sample questions:', error);
+                    alert('Error adding sample questions: ' + error.message);
+                });
         });
     }
     

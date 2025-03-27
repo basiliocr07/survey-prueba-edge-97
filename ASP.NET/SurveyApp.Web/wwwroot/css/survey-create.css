@@ -5,6 +5,7 @@
     margin-bottom: 1rem;
     background-color: white;
     border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
 }
 
 .question-card:hover {
@@ -80,8 +81,14 @@
 }
 
 /* Delivery method options */
-input[name="DeliveryConfig.Type"]:checked + div {
+input[name="DeliveryConfig.Type"] + label div {
+    border: 2px solid transparent;
+    transition: all 0.2s ease-in-out;
+}
+
+input[name="DeliveryConfig.Type"]:checked + label div {
     border-color: var(--primary-color);
+    background-color: rgba(var(--primary-rgb), 0.05);
 }
 
 /* Responsive improvements */
@@ -102,20 +109,18 @@ input[name="DeliveryConfig.Type"]:checked + div {
 }
 
 /* Tab navigation highlighting */
-a[href="#content"].bg-primary,
-a[href="#delivery"].bg-primary {
-    position: relative;
+.tab-button {
+    padding: 0.75rem 1.25rem;
+    font-weight: 500;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
 }
 
-a[href="#content"].bg-primary::after,
-a[href="#delivery"].bg-primary::after {
-    content: "";
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background-color: var(--primary-color);
+.tab-button.active {
+    border-bottom-color: var(--primary-color);
+    color: var(--primary-color);
 }
 
 /* Settings sections transitions */
@@ -161,21 +166,57 @@ a[href="#delivery"].bg-primary::after {
     background-color: #f3f4f6;
 }
 
-/* Question type dropdown */
+/* Question type selector styled similar to React version */
+.question-type-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.75rem;
+}
+
 .question-type-option {
     padding: 0.75rem;
     border-radius: 0.375rem;
     cursor: pointer;
     transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    border: 1px solid #e5e7eb;
 }
 
 .question-type-option:hover {
     background-color: rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
 }
 
 .question-type-option.selected {
     background-color: rgba(var(--primary-rgb), 0.1);
     color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.question-type-icon {
+    width: 40px;
+    height: 40px;
+    background-color: #f3f4f6;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+}
+
+.question-type-name {
+    font-weight: 500;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+
+.question-type-desc {
+    font-size: 0.75rem;
+    color: #6b7280;
 }
 
 /* Form validation styling */
@@ -193,26 +234,6 @@ a[href="#delivery"].bg-primary::after {
 /* Question builder specific styles */
 .question-builder-container {
     margin-bottom: 1.5rem;
-}
-
-/* Ensure consistency with React version's tabs */
-.tabs-container {
-    border-bottom: 1px solid #e5e7eb;
-    margin-bottom: 1.5rem;
-}
-
-.tab-button {
-    padding: 0.75rem 1.25rem;
-    font-weight: 500;
-    border-bottom: 2px solid transparent;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-}
-
-.tab-button.active {
-    border-bottom-color: var(--primary-color);
-    color: var(--primary-color);
 }
 
 /* Custom styling for buttons to match React shadcn UI */
@@ -238,6 +259,18 @@ button {
 .add-option-btn {
     font-size: 0.875rem;
     height: 2.25rem;
+    transition: all 0.2s ease;
+    background-color: white;
+    border: 1px solid #e5e7eb;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.add-option-btn:hover {
+    background-color: #f9fafb;
 }
 
 /* Ensure star rating looks like React version */
@@ -246,13 +279,8 @@ button {
     transition: color 0.2s ease;
 }
 
-/* Custom styling for switch toggle to match React version */
-.question-required-toggle:checked + label {
-    background-color: var(--primary-color);
-}
-
-.question-required-toggle:checked + label span {
-    transform: translateX(1.25rem);
+.star-rating svg.filled {
+    color: #facc15;
 }
 
 /* Root variables for color consistency */
@@ -278,4 +306,9 @@ button {
     z-index: 10;
     max-height: 300px;
     overflow-y: auto;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    background-color: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-top: 0.25rem;
 }

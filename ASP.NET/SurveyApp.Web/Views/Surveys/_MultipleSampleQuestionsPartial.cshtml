@@ -1,0 +1,7 @@
+
+@model List<Tuple<SurveyApp.Web.Models.QuestionViewModel, int, int>>
+
+@foreach (var question in Model)
+{
+    @await Html.PartialAsync("_QuestionBuilderPartial", question)
+}
