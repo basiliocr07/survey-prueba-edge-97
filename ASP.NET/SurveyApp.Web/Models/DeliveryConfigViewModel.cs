@@ -1,5 +1,6 @@
 
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace SurveyApp.Web.Models
 {
@@ -7,8 +8,8 @@ namespace SurveyApp.Web.Models
     {
         public string Type { get; set; } = "manual";
         public List<string> EmailAddresses { get; set; } = new List<string>();
-        public ScheduleSettingsViewModel Schedule { get; set; }
-        public TriggerSettingsViewModel Trigger { get; set; }
+        public ScheduleSettingsViewModel? Schedule { get; set; }
+        public TriggerSettingsViewModel? Trigger { get; set; }
     }
 
     public class ScheduleSettingsViewModel
