@@ -27,63 +27,150 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Question type selection
-    document.addEventListener('change', function(e) {
-        if (e.target && e.target.name && e.target.name.includes('.Type')) {
-            const questionType = e.target.value;
-            const questionId = e.target.id.split('_')[1]; // Extraer el ID de la pregunta
+    // Question type toggle dropdown
+    document.addEventListener('click', function(e) {
+        if (e.target && (e.target.classList.contains('question-type-toggle') || e.target.closest('.question-type-toggle'))) {
+            const button = e.target.classList.contains('question-type-toggle') ? e.target : e.target.closest('.question-type-toggle');
+            const dropdown = button.nextElementSibling;
             
-            // Mostrar u ocultar contenedores de opciones basados en el tipo de pregunta
-            const optionsContainer = document.getElementById(`options_${questionId}`);
-            const ratingContainer = document.getElementById(`rating_${questionId}`);
-            const npsContainer = document.getElementById(`nps_${questionId}`);
-            
-            if (optionsContainer) {
-                if (['multiple-choice', 'single-choice', 'dropdown', 'ranking'].includes(questionType)) {
-                    optionsContainer.classList.remove('hidden');
-                } else {
-                    optionsContainer.classList.add('hidden');
-                }
+            // Toggle this dropdown
+            if (dropdown.classList.contains('hidden')) {
+                dropdown.classList.remove('hidden');
+                
+                // Close all other dropdowns
+                document.querySelectorAll('.question-types-dropdown:not(.hidden)').forEach(otherDropdown => {
+                    if (otherDropdown !== dropdown) {
+                        otherDropdown.classList.add('hidden');
+                    }
+                });
+            } else {
+                dropdown.classList.add('hidden');
             }
+        } else if (e.target && e.target.classList.contains('question-type-option')) {
+            // Handle question type selection
+            const option = e.target;
+            const type = option.dataset.type;
+            const questionCard = option.closest('.question-card');
+            const questionIndex = questionCard.dataset.questionIndex;
             
-            if (ratingContainer) {
-                if (questionType === 'rating') {
-                    ratingContainer.classList.remove('hidden');
-                } else {
-                    ratingContainer.classList.add('hidden');
+            // Update the hidden type input
+            const typeInput = questionCard.querySelector(`[name="Questions[${questionIndex}].Type"]`);
+            if (typeInput) {
+                typeInput.value = type;
+                
+                // Update the display text
+                const typeToggle = questionCard.querySelector('.question-type-toggle');
+                if (typeToggle) {
+                    const typeText = typeToggle.querySelector('span');
+                    if (typeText) {
+                        typeText.innerHTML = `Question Type: <span class="font-medium">${type.replace('-', ' ')}</span>`;
+                    }
                 }
+                
+                // Update UI based on question type
+                updateQuestionTypeUI(questionCard, type);
+                
+                // Hide dropdown
+                option.closest('.question-types-dropdown').classList.add('hidden');
+                
+                // Mark this option as selected
+                option.closest('.question-types-dropdown').querySelectorAll('.question-type-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                option.classList.add('selected');
             }
+        } else if (!e.target.closest('.question-types-dropdown')) {
+            // Close all dropdowns when clicking outside
+            document.querySelectorAll('.question-types-dropdown:not(.hidden)').forEach(dropdown => {
+                dropdown.classList.add('hidden');
+            });
+        }
+    });
+    
+    // Toggle question card expand/collapse
+    document.addEventListener('click', function(e) {
+        if (e.target && (e.target.classList.contains('toggle-question-btn') || e.target.closest('.toggle-question-btn'))) {
+            const button = e.target.classList.contains('toggle-question-btn') ? e.target : e.target.closest('.toggle-question-btn');
+            const questionCard = button.closest('.question-card');
+            const content = questionCard.querySelector('.question-content');
             
-            if (npsContainer) {
-                if (questionType === 'nps') {
-                    npsContainer.classList.remove('hidden');
-                } else {
-                    npsContainer.classList.add('hidden');
-                }
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                button.querySelector('svg').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>';
+            } else {
+                content.classList.add('hidden');
+                button.querySelector('svg').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>';
             }
         }
     });
     
+    function updateQuestionTypeUI(questionCard, type) {
+        const index = questionCard.dataset.questionIndex;
+        const optionsContainer = questionCard.querySelector(`#options_${index}`);
+        const ratingContainer = questionCard.querySelector(`#rating_${index}`);
+        const npsContainer = questionCard.querySelector(`#nps_${index}`);
+        
+        // Hide all containers first
+        if (optionsContainer) optionsContainer.classList.add('hidden');
+        if (ratingContainer) ratingContainer.classList.add('hidden');
+        if (npsContainer) npsContainer.classList.add('hidden');
+        
+        // Show container based on question type
+        if (['multiple-choice', 'single-choice', 'dropdown', 'ranking'].includes(type)) {
+            if (optionsContainer) {
+                optionsContainer.classList.remove('hidden');
+                
+                // Ensure at least 2 options exist
+                const optionsList = questionCard.querySelector(`#optionsList_${index}`);
+                if (optionsList && optionsList.children.length < 2) {
+                    for (let i = optionsList.children.length; i < 2; i++) {
+                        addOptionToQuestion(index);
+                    }
+                }
+            }
+        } else if (type === 'rating') {
+            if (ratingContainer) {
+                ratingContainer.classList.remove('hidden');
+            }
+        } else if (type === 'nps') {
+            if (npsContainer) {
+                npsContainer.classList.remove('hidden');
+            }
+        }
+    }
+    
     // Add option buttons
     document.addEventListener('click', function(e) {
-        if (e.target && e.target.classList.contains('add-option-btn')) {
-            const questionId = e.target.dataset.questionId;
-            const optionsContainer = document.getElementById(`optionsList_${questionId}`);
-            const optionCount = optionsContainer.querySelectorAll('.option-item').length;
-            
-            const newOption = document.createElement('div');
-            newOption.className = 'option-item flex items-center gap-2 mb-2';
-            newOption.innerHTML = `
-                <input type="text" name="Questions[${questionId}].Options[${optionCount}]" class="flex-1 px-3 py-2 border border-gray-300 rounded-md" value="New Option">
-                <button type="button" class="remove-option-btn text-gray-500 hover:text-red-500 p-1 rounded-full" data-question-id="${questionId}" data-option-index="${optionCount}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                </button>
-            `;
-            
-            optionsContainer.appendChild(newOption);
-            updateOptionIndices(questionId);
+        if (e.target && (e.target.classList.contains('add-option-btn') || e.target.closest('.add-option-btn'))) {
+            const button = e.target.classList.contains('add-option-btn') ? e.target : e.target.closest('.add-option-btn');
+            const questionIndex = button.dataset.questionId;
+            addOptionToQuestion(questionIndex);
         }
     });
+    
+    function addOptionToQuestion(questionIndex) {
+        const optionsContainer = document.getElementById(`optionsList_${questionIndex}`);
+        if (!optionsContainer) return;
+        
+        const optionCount = optionsContainer.querySelectorAll('.option-item').length;
+        
+        const newOption = document.createElement('div');
+        newOption.className = 'option-item flex items-center gap-2 mb-2';
+        newOption.innerHTML = `
+            <input type="text" name="Questions[${questionIndex}].Options[${optionCount}]" 
+                  class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" 
+                  value="New Option">
+            <button type="button" class="remove-option-btn text-gray-500 hover:text-red-500 p-1 rounded-full" 
+                   data-question-id="${questionIndex}" data-option-index="${optionCount}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+            </button>
+        `;
+        
+        optionsContainer.appendChild(newOption);
+        updateOptionIndices(questionIndex);
+    }
     
     // Remove option buttons
     document.addEventListener('click', function(e) {
@@ -264,8 +351,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const questionsContainer = document.getElementById('questionsContainer');
                 
                 if (questionsContainer) {
-                    // Si no hay preguntas y hay un mensaje "No questions yet", reemplazarlo
-                    if (questionsContainer.querySelector('h3')?.textContent.includes('No questions yet')) {
+                    // If there are no questions and there's a "No questions yet" message, replace it
+                    if (questionsContainer.querySelector('h3') && questionsContainer.querySelector('h3').textContent.includes('No questions yet')) {
                         questionsContainer.innerHTML = '';
                     }
                     
@@ -308,8 +395,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     const questionsContainer = document.getElementById('questionsContainer');
                     
                     if (questionsContainer) {
-                        // Si no hay preguntas y hay un mensaje "No questions yet", reemplazarlo
-                        if (questionsContainer.querySelector('h3')?.textContent.includes('No questions yet')) {
+                        // If there are no questions and there's a "No questions yet" message, replace it
+                        if (questionsContainer.querySelector('h3') && questionsContainer.querySelector('h3').textContent.includes('No questions yet')) {
                             questionsContainer.innerHTML = '';
                         }
                         
@@ -335,14 +422,33 @@ document.addEventListener('DOMContentLoaded', function() {
             const button = e.target.classList.contains('delete-question-btn') ? e.target : e.target.closest('.delete-question-btn');
             const questionCard = button.closest('.question-card');
             
-            if (document.querySelectorAll('.question-card').length <= 1) {
-                alert('Cannot delete the last question. At least one question is required.');
-                return;
-            }
-            
             if (confirm('Are you sure you want to delete this question?')) {
                 questionCard.remove();
-                updateQuestionIndices();
+                
+                // If no questions remain, show the empty state
+                const questionsContainer = document.getElementById('questionsContainer');
+                if (questionsContainer && !questionsContainer.querySelector('.question-card')) {
+                    questionsContainer.innerHTML = `
+                        <div class="bg-white rounded-lg shadow-sm p-8 text-center">
+                            <div class="mx-auto rounded-full bg-primary/10 p-4 w-16 h-16 flex items-center justify-center mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            </div>
+                            <h3 class="text-lg font-semibold mb-1">No questions yet</h3>
+                            <p class="text-gray-500 mb-4">Add questions to your survey</p>
+                            <button type="button" id="addFirstQuestionBtn" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark">
+                                Add First Question
+                            </button>
+                        </div>
+                    `;
+                    
+                    // Re-attach event listener
+                    const newAddFirstBtn = document.getElementById('addFirstQuestionBtn');
+                    if (newAddFirstBtn) {
+                        newAddFirstBtn.addEventListener('click', addNewQuestion);
+                    }
+                } else {
+                    updateQuestionIndices();
+                }
             }
         }
     });
@@ -376,8 +482,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const questionCards = document.querySelectorAll('.question-card');
         
         questionCards.forEach((card, index) => {
-            const inputs = card.querySelectorAll('input, textarea, select');
+            // Update data attribute
+            card.dataset.questionIndex = index;
             
+            // Update question number in header
+            const questionNumber = card.querySelector('.question-number');
+            if (questionNumber) {
+                questionNumber.textContent = `Question ${index + 1}`;
+            }
+            
+            // Update input names
+            const inputs = card.querySelectorAll('input, textarea, select');
             inputs.forEach(input => {
                 const name = input.name;
                 if (name && name.startsWith('Questions[')) {
@@ -386,10 +501,50 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
             
-            // Update question number display if it exists
-            const questionNumber = card.querySelector('.question-number');
-            if (questionNumber) {
-                questionNumber.textContent = `Question ${index + 1}`;
+            // Update button data attributes
+            const buttons = card.querySelectorAll('button[data-question-id]');
+            buttons.forEach(button => {
+                button.dataset.questionId = index;
+            });
+            
+            // Update container IDs
+            const containersToUpdate = [
+                card.querySelector(`#options_${card.dataset.questionIndex}`),
+                card.querySelector(`#optionsList_${card.dataset.questionIndex}`),
+                card.querySelector(`#rating_${card.dataset.questionIndex}`),
+                card.querySelector(`#nps_${card.dataset.questionIndex}`)
+            ];
+            
+            containersToUpdate.forEach(container => {
+                if (container) {
+                    const oldId = container.id;
+                    const newId = oldId.replace(/\d+$/, index);
+                    container.id = newId;
+                }
+            });
+            
+            // Update move buttons state based on position
+            const moveUpBtn = card.querySelector('.move-question-up');
+            const moveDownBtn = card.querySelector('.move-question-down');
+            
+            if (moveUpBtn) {
+                if (index === 0) {
+                    moveUpBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    moveUpBtn.disabled = true;
+                } else {
+                    moveUpBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    moveUpBtn.disabled = false;
+                }
+            }
+            
+            if (moveDownBtn) {
+                if (index === questionCards.length - 1) {
+                    moveDownBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    moveDownBtn.disabled = true;
+                } else {
+                    moveDownBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    moveDownBtn.disabled = false;
+                }
             }
         });
     }
@@ -434,4 +589,14 @@ document.addEventListener('DOMContentLoaded', function() {
             return true;
         });
     }
+    
+    // Initialize UI state for existing questions
+    document.querySelectorAll('.question-card').forEach(questionCard => {
+        const questionIndex = questionCard.dataset.questionIndex;
+        const typeSelect = questionCard.querySelector(`[name="Questions[${questionIndex}].Type"]`);
+        
+        if (typeSelect) {
+            updateQuestionTypeUI(questionCard, typeSelect.value);
+        }
+    });
 });

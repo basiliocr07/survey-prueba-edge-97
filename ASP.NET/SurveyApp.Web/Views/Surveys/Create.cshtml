@@ -24,13 +24,13 @@
         </div>
     </div>
     
-    <div class="tabs-container mb-4">
+    <div class="mb-6">
         <div class="flex border-b">
-            <button type="button" class="tab-button active" data-tab="editContent">
+            <button type="button" class="tab-button active px-4 py-2 font-medium border-b-2 border-primary" data-tab="editContent">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 inline-block"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                 Survey Content
             </button>
-            <button type="button" class="tab-button" data-tab="deliverySettings">
+            <button type="button" class="tab-button px-4 py-2 font-medium border-b-2 border-transparent" data-tab="deliverySettings">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 inline-block"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path></svg>
                 Delivery Settings
             </button>
@@ -100,15 +100,15 @@
         
         <div id="deliverySettings" class="tab-content hidden">
             <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-                <h2 class="text-xl font-semibold mb-4">Survey Delivery Settings</h2>
+                <h2 class="text-xl font-semibold mb-6">Survey Delivery Settings</h2>
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div class="border rounded-md p-4 relative">
+                    <div class="border rounded-md p-2 relative transition-all">
                         <input type="radio" id="deliveryManual" name="DeliveryConfig.Type" value="manual" 
                                @(Model.DeliveryConfig?.Type == "manual" || Model.DeliveryConfig?.Type == null ? "checked" : "") 
                                class="absolute opacity-0" />
-                        <label for="deliveryManual" class="block cursor-pointer">
-                            <div class="border-2 rounded-md p-4 h-full transition-colors @(Model.DeliveryConfig?.Type == "manual" || Model.DeliveryConfig?.Type == null ? "border-primary" : "border-transparent")">
+                        <label for="deliveryManual" class="block cursor-pointer w-full h-full">
+                            <div class="border-2 rounded-md p-4 h-full transition-colors @(Model.DeliveryConfig?.Type == "manual" || Model.DeliveryConfig?.Type == null ? "border-primary bg-primary/5" : "border-transparent")">
                                 <div class="font-medium mb-2 flex items-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path></svg>
                                     Manual
@@ -120,12 +120,12 @@
                         </label>
                     </div>
                     
-                    <div class="border rounded-md p-4 relative">
+                    <div class="border rounded-md p-2 relative transition-all">
                         <input type="radio" id="deliveryScheduled" name="DeliveryConfig.Type" value="scheduled" 
                                @(Model.DeliveryConfig?.Type == "scheduled" ? "checked" : "") 
                                class="absolute opacity-0" />
-                        <label for="deliveryScheduled" class="block cursor-pointer">
-                            <div class="border-2 rounded-md p-4 h-full transition-colors @(Model.DeliveryConfig?.Type == "scheduled" ? "border-primary" : "border-transparent")">
+                        <label for="deliveryScheduled" class="block cursor-pointer w-full h-full">
+                            <div class="border-2 rounded-md p-4 h-full transition-colors @(Model.DeliveryConfig?.Type == "scheduled" ? "border-primary bg-primary/5" : "border-transparent")">
                                 <div class="font-medium mb-2 flex items-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                                     Scheduled
@@ -137,12 +137,12 @@
                         </label>
                     </div>
                     
-                    <div class="border rounded-md p-4 relative">
+                    <div class="border rounded-md p-2 relative transition-all">
                         <input type="radio" id="deliveryTriggered" name="DeliveryConfig.Type" value="triggered" 
                                @(Model.DeliveryConfig?.Type == "triggered" ? "checked" : "") 
                                class="absolute opacity-0" />
-                        <label for="deliveryTriggered" class="block cursor-pointer">
-                            <div class="border-2 rounded-md p-4 h-full transition-colors @(Model.DeliveryConfig?.Type == "triggered" ? "border-primary" : "border-transparent")">
+                        <label for="deliveryTriggered" class="block cursor-pointer w-full h-full">
+                            <div class="border-2 rounded-md p-4 h-full transition-colors @(Model.DeliveryConfig?.Type == "triggered" ? "border-primary bg-primary/5" : "border-transparent")">
                                 <div class="font-medium mb-2 flex items-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
                                     Triggered
@@ -155,130 +155,145 @@
                     </div>
                 </div>
                 
-                <div id="manualSettings" class="@(Model.DeliveryConfig?.Type != "scheduled" && Model.DeliveryConfig?.Type != "triggered" ? "" : "hidden")">
-                    <h3 class="font-medium mb-3">Email Recipients</h3>
-                    <div class="mb-4">
-                        <div class="flex">
-                            <input type="text" id="emailInput" placeholder="Enter email address" 
-                                class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary" />
-                            <button type="button" id="addEmailBtn" class="px-3 py-2 bg-primary text-white rounded-r-md hover:bg-primary-dark">
-                                Add
-                            </button>
+                <div class="border-t pt-6 mt-6">
+                    <div id="manualSettings" class="@(Model.DeliveryConfig?.Type != "scheduled" && Model.DeliveryConfig?.Type != "triggered" ? "" : "hidden")">
+                        <h3 class="font-medium text-lg mb-4">Email Recipients</h3>
+                        <div class="mb-4">
+                            <div class="flex">
+                                <input type="text" id="emailInput" placeholder="Enter email address" 
+                                    class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary" />
+                                <button type="button" id="addEmailBtn" class="px-3 py-2 bg-primary text-white rounded-r-md hover:bg-primary-dark">
+                                    Add
+                                </button>
+                            </div>
+                            <p class="text-sm text-gray-500 mt-1">
+                                Enter email addresses one by one to add them to the list.
+                            </p>
                         </div>
-                        <p class="text-sm text-gray-500 mt-1">
-                            Enter email addresses one by one to add them to the list.
-                        </p>
-                    </div>
-                    
-                    <div id="emailList" class="border rounded-md p-4 min-h-[100px] max-h-[300px] overflow-y-auto">
-                        @if (Model.DeliveryConfig?.EmailAddresses != null)
-                        {
-                            @for (var i = 0; i < Model.DeliveryConfig.EmailAddresses.Count; i++)
+                        
+                        <div id="emailList" class="border rounded-lg p-4 min-h-[100px] max-h-[300px] overflow-y-auto">
+                            @if (Model.DeliveryConfig?.EmailAddresses != null)
                             {
-                                <input type="hidden" name="DeliveryConfig.EmailAddresses[@i]" value="@Model.DeliveryConfig.EmailAddresses[i]" />
+                                @for (var i = 0; i < Model.DeliveryConfig.EmailAddresses.Count; i++)
+                                {
+                                    <input type="hidden" name="DeliveryConfig.EmailAddresses[@i]" value="@Model.DeliveryConfig.EmailAddresses[i]" />
+                                }
                             }
-                        }
+                        </div>
                     </div>
-                </div>
-                
-                <div id="scheduledSettings" class="@(Model.DeliveryConfig?.Type == "scheduled" ? "" : "hidden")">
-                    <h3 class="font-medium mb-3">Schedule Settings</h3>
                     
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium mb-2">Frequency</label>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div class="flex items-center">
-                                <input type="radio" id="frequencyDaily" name="DeliveryConfig.Schedule.Frequency" value="daily" 
-                                       @(Model.DeliveryConfig?.Schedule?.Frequency == "daily" || Model.DeliveryConfig?.Schedule?.Frequency == null ? "checked" : "") />
-                                <label for="frequencyDaily" class="ml-2">Daily</label>
+                    <div id="scheduledSettings" class="space-y-4 @(Model.DeliveryConfig?.Type == "scheduled" ? "" : "hidden")">
+                        <h3 class="font-medium text-lg mb-4">Schedule Settings</h3>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Frequency</label>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div class="flex items-center space-x-2">
+                                        <input type="radio" id="frequencyDaily" name="DeliveryConfig.Schedule.Frequency" value="daily" 
+                                              @(Model.DeliveryConfig?.Schedule?.Frequency == "daily" || Model.DeliveryConfig?.Schedule?.Frequency == null ? "checked" : "") 
+                                              class="h-4 w-4 text-primary" />
+                                        <label for="frequencyDaily">Daily</label>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <input type="radio" id="frequencyWeekly" name="DeliveryConfig.Schedule.Frequency" value="weekly" 
+                                              @(Model.DeliveryConfig?.Schedule?.Frequency == "weekly" ? "checked" : "") 
+                                              class="h-4 w-4 text-primary" />
+                                        <label for="frequencyWeekly">Weekly</label>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <input type="radio" id="frequencyMonthly" name="DeliveryConfig.Schedule.Frequency" value="monthly" 
+                                              @(Model.DeliveryConfig?.Schedule?.Frequency == "monthly" ? "checked" : "") 
+                                              class="h-4 w-4 text-primary" />
+                                        <label for="frequencyMonthly">Monthly</label>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="flex items-center">
-                                <input type="radio" id="frequencyWeekly" name="DeliveryConfig.Schedule.Frequency" value="weekly" 
-                                       @(Model.DeliveryConfig?.Schedule?.Frequency == "weekly" ? "checked" : "") />
-                                <label for="frequencyWeekly" class="ml-2">Weekly</label>
+                            
+                            <div id="dayOfWeekContainer" class="@(Model.DeliveryConfig?.Schedule?.Frequency == "weekly" ? "" : "hidden")">
+                                <label for="DayOfWeek" class="block text-sm font-medium mb-2">Day of Week</label>
+                                <select id="DayOfWeek" name="DeliveryConfig.Schedule.DayOfWeek" 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                                    <option value="1" @(Model.DeliveryConfig?.Schedule?.DayOfWeek == 1 ? "selected" : "")>Monday</option>
+                                    <option value="2" @(Model.DeliveryConfig?.Schedule?.DayOfWeek == 2 ? "selected" : "")>Tuesday</option>
+                                    <option value="3" @(Model.DeliveryConfig?.Schedule?.DayOfWeek == 3 ? "selected" : "")>Wednesday</option>
+                                    <option value="4" @(Model.DeliveryConfig?.Schedule?.DayOfWeek == 4 ? "selected" : "")>Thursday</option>
+                                    <option value="5" @(Model.DeliveryConfig?.Schedule?.DayOfWeek == 5 ? "selected" : "")>Friday</option>
+                                    <option value="6" @(Model.DeliveryConfig?.Schedule?.DayOfWeek == 6 ? "selected" : "")>Saturday</option>
+                                    <option value="0" @(Model.DeliveryConfig?.Schedule?.DayOfWeek == 0 ? "selected" : "")>Sunday</option>
+                                </select>
                             </div>
-                            <div class="flex items-center">
-                                <input type="radio" id="frequencyMonthly" name="DeliveryConfig.Schedule.Frequency" value="monthly" 
-                                       @(Model.DeliveryConfig?.Schedule?.Frequency == "monthly" ? "checked" : "") />
-                                <label for="frequencyMonthly" class="ml-2">Monthly</label>
+                            
+                            <div id="dayOfMonthContainer" class="@(Model.DeliveryConfig?.Schedule?.Frequency == "monthly" ? "" : "hidden")">
+                                <label for="DayOfMonth" class="block text-sm font-medium mb-2">Day of Month</label>
+                                <select id="DayOfMonth" name="DeliveryConfig.Schedule.DayOfMonth" 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                                    @for (var i = 1; i <= 28; i++)
+                                    {
+                                        <option value="@i" @(Model.DeliveryConfig?.Schedule?.DayOfMonth == i ? "selected" : "")>@i</option>
+                                    }
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label for="ScheduleTime" class="block text-sm font-medium mb-2">Time</label>
+                                <div class="flex items-center space-x-2 w-32">
+                                    <input type="time" id="ScheduleTime" name="DeliveryConfig.Schedule.Time" 
+                                          value="@(Model.DeliveryConfig?.Schedule?.Time ?? "09:00")" 
+                                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" />
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <polyline points="12 6 12 12 16 14"></polyline>
+                                    </svg>
+                                </div>
                             </div>
                         </div>
                     </div>
                     
-                    <div id="dayOfWeekContainer" class="mb-4 @(Model.DeliveryConfig?.Schedule?.Frequency == "weekly" ? "" : "hidden")">
-                        <label for="DayOfWeek" class="block text-sm font-medium mb-2">Day of Week</label>
-                        <select id="DayOfWeek" name="DeliveryConfig.Schedule.DayOfWeek" 
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                            <option value="1" @(Model.DeliveryConfig?.Schedule?.DayOfWeek == 1 ? "selected" : "")>Monday</option>
-                            <option value="2" @(Model.DeliveryConfig?.Schedule?.DayOfWeek == 2 ? "selected" : "")>Tuesday</option>
-                            <option value="3" @(Model.DeliveryConfig?.Schedule?.DayOfWeek == 3 ? "selected" : "")>Wednesday</option>
-                            <option value="4" @(Model.DeliveryConfig?.Schedule?.DayOfWeek == 4 ? "selected" : "")>Thursday</option>
-                            <option value="5" @(Model.DeliveryConfig?.Schedule?.DayOfWeek == 5 ? "selected" : "")>Friday</option>
-                            <option value="6" @(Model.DeliveryConfig?.Schedule?.DayOfWeek == 6 ? "selected" : "")>Saturday</option>
-                            <option value="0" @(Model.DeliveryConfig?.Schedule?.DayOfWeek == 0 ? "selected" : "")>Sunday</option>
-                        </select>
-                    </div>
-                    
-                    <div id="dayOfMonthContainer" class="mb-4 @(Model.DeliveryConfig?.Schedule?.Frequency == "monthly" ? "" : "hidden")">
-                        <label for="DayOfMonth" class="block text-sm font-medium mb-2">Day of Month</label>
-                        <select id="DayOfMonth" name="DeliveryConfig.Schedule.DayOfMonth" 
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                            @for (var i = 1; i <= 28; i++)
-                            {
-                                <option value="@i" @(Model.DeliveryConfig?.Schedule?.DayOfMonth == i ? "selected" : "")>@i</option>
-                            }
-                        </select>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label for="ScheduleTime" class="block text-sm font-medium mb-2">Time</label>
-                        <input type="time" id="ScheduleTime" name="DeliveryConfig.Schedule.Time" 
-                               value="@(Model.DeliveryConfig?.Schedule?.Time ?? "09:00")" 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" />
-                    </div>
-                </div>
-                
-                <div id="triggerSettings" class="@(Model.DeliveryConfig?.Type == "triggered" ? "" : "hidden")">
-                    <h3 class="font-medium mb-3">Trigger Settings</h3>
-                    
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium mb-2">Trigger Type</label>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="flex items-center">
-                                <input type="radio" id="triggerTypeTicket" name="DeliveryConfig.Trigger.Type" value="ticket-closed" 
-                                       @(Model.DeliveryConfig?.Trigger?.Type == "ticket-closed" || Model.DeliveryConfig?.Trigger?.Type == null ? "checked" : "") />
-                                <label for="triggerTypeTicket" class="ml-2">When a support ticket is closed</label>
+                    <div id="triggerSettings" class="space-y-4 @(Model.DeliveryConfig?.Type == "triggered" ? "" : "hidden")">
+                        <h3 class="font-medium text-lg mb-4">Trigger Settings</h3>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Trigger Event</label>
+                                <div class="space-y-2">
+                                    <div class="flex items-center space-x-2">
+                                        <input type="radio" id="triggerTypeTicket" name="DeliveryConfig.Trigger.Type" value="ticket-closed" 
+                                              @(Model.DeliveryConfig?.Trigger?.Type == "ticket-closed" || Model.DeliveryConfig?.Trigger?.Type == null ? "checked" : "") 
+                                              class="h-4 w-4 text-primary" />
+                                        <label for="triggerTypeTicket">After ticket is closed</label>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <input type="radio" id="triggerTypePurchase" name="DeliveryConfig.Trigger.Type" value="purchase-completed" 
+                                              @(Model.DeliveryConfig?.Trigger?.Type == "purchase-completed" ? "checked" : "") 
+                                              class="h-4 w-4 text-primary" />
+                                        <label for="triggerTypePurchase">After purchase is completed</label>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="flex items-center">
-                                <input type="radio" id="triggerTypePurchase" name="DeliveryConfig.Trigger.Type" value="purchase-completed" 
-                                       @(Model.DeliveryConfig?.Trigger?.Type == "purchase-completed" ? "checked" : "") />
-                                <label for="triggerTypePurchase" class="ml-2">When a purchase is completed</label>
+                            
+                            <div>
+                                <label for="DelayHours" class="block text-sm font-medium mb-2">Delay (hours)</label>
+                                <input type="number" id="DelayHours" name="DeliveryConfig.Trigger.DelayHours" 
+                                      value="@(Model.DeliveryConfig?.Trigger?.DelayHours ?? 24)" min="0" max="168" 
+                                      class="w-24 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" />
+                                <p class="text-sm text-gray-500 mt-1">
+                                    Number of hours to wait after the trigger event before sending the survey.
+                                </p>
                             </div>
+                            
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" id="SendAutomatically" name="DeliveryConfig.Trigger.SendAutomatically" 
+                                      @(Model.DeliveryConfig?.Trigger?.SendAutomatically != false ? "checked" : "") 
+                                      class="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary" />
+                                <label for="SendAutomatically" class="text-sm font-medium">
+                                    Send automatically
+                                </label>
+                            </div>
+                            <p class="text-sm text-gray-500 ml-6">
+                                If unchecked, you'll need to manually approve each triggered survey.
+                            </p>
                         </div>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label for="DelayHours" class="block text-sm font-medium mb-2">Delay (hours)</label>
-                        <input type="number" id="DelayHours" name="DeliveryConfig.Trigger.DelayHours" 
-                               value="@(Model.DeliveryConfig?.Trigger?.DelayHours ?? 24)" min="0" max="168" 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" />
-                        <p class="text-sm text-gray-500 mt-1">
-                            Number of hours to wait after the trigger event before sending the survey.
-                        </p>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <div class="flex items-center">
-                            <input type="checkbox" id="SendAutomatically" name="DeliveryConfig.Trigger.SendAutomatically" 
-                                   @(Model.DeliveryConfig?.Trigger?.SendAutomatically != false ? "checked" : "") 
-                                   class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary" />
-                            <label for="SendAutomatically" class="ml-2 block text-sm font-medium">
-                                Send automatically
-                            </label>
-                        </div>
-                        <p class="text-sm text-gray-500 mt-1 ml-6">
-                            If unchecked, you'll need to manually approve each triggered survey.
-                        </p>
                     </div>
                 </div>
             </div>
