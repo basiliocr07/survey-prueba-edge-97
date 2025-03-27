@@ -2,8 +2,14 @@
 @model List<Tuple<SurveyApp.Web.Models.QuestionViewModel, int, int>>
 
 <div class="space-y-4">
-    @foreach (var question in Model)
+    @foreach (var questionTuple in Model)
     {
-        @await Html.PartialAsync("_QuestionBuilderPartial", question)
+        var question = questionTuple.Item1;
+        var index = questionTuple.Item2;
+        var total = questionTuple.Item3;
+        
+        <div class="question-builder-container" data-question-index="@index">
+            @await Html.PartialAsync("_QuestionBuilderPartial", questionTuple)
+        </div>
     }
 </div>

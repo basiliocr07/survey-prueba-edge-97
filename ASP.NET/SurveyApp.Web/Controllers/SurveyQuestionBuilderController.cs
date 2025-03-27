@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Web.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SurveyApp.Web.Controllers
 {
@@ -27,7 +28,8 @@ namespace SurveyApp.Web.Controllers
         [HttpGet]
         public IActionResult AddSampleQuestions(int startIndex)
         {
-            var sampleQuestions = new List<QuestionViewModel>
+            var sampleQuestions = new List<Tuple<QuestionViewModel, int, int>>();
+            var questions = new List<QuestionViewModel>
             {
                 new QuestionViewModel
                 {
@@ -54,22 +56,16 @@ namespace SurveyApp.Web.Controllers
                 }
             };
             
-            var result = new List<IActionResult>();
-            
-            for (int i = 0; i < sampleQuestions.Count; i++)
+            for (int i = 0; i < questions.Count; i++)
             {
-                result.Add(ViewComponent("QuestionBuilder", new { 
-                    question = sampleQuestions[i], 
-                    index = startIndex + i, 
-                    total = startIndex + sampleQuestions.Count 
-                }));
+                sampleQuestions.Add(new Tuple<QuestionViewModel, int, int>(
+                    questions[i], 
+                    startIndex + i, 
+                    startIndex + questions.Count
+                ));
             }
             
-            return new ContentResult
-            {
-                Content = string.Join("", result.Select(r => r.ToString())),
-                ContentType = "text/html"
-            };
+            return PartialView("_MultipleSampleQuestionsPartial", sampleQuestions);
         }
     }
 }

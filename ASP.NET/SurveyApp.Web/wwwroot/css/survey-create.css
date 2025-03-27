@@ -45,6 +45,7 @@
 .star-rating {
     display: flex;
     justify-content: space-between;
+    margin-top: 0.5rem;
 }
 
 .star-labels {
@@ -117,6 +118,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    margin-bottom: 0.5rem;
 }
 
 .option-item:hover {
@@ -224,6 +226,12 @@ input[name="DeliveryConfig.Type"]:checked + .delivery-type {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 0.75rem;
+    background-color: white;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+    max-height: 400px;
+    overflow-y: auto;
 }
 
 .question-type-option {
@@ -287,6 +295,32 @@ input[name="DeliveryConfig.Type"]:checked + .delivery-type {
 /* Question builder specific styles */
 .question-builder-container {
     margin-bottom: 1.5rem;
+}
+
+/* Empty state styling - Make sure this matches the React version */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+    background-color: #f9fafb;
+    border-radius: 0.5rem;
+    border: 1px dashed #e5e7eb;
+    margin-top: 1rem;
+    margin-bottom: 2rem;
+}
+
+.empty-state-icon {
+    width: 3rem;
+    height: 3rem;
+    background-color: #f3f4f6;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
 }
 
 /* Custom styling for buttons to match React shadcn UI */
@@ -377,7 +411,7 @@ button {
     color: #ef4444;
 }
 
-/* Delivery tabs styling */
+/* Delivery tabs styling - Make sure these match React exactly */
 .delivery-tabs {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -406,26 +440,45 @@ button {
     --primary-rgb: 139, 92, 246;
 }
 
-/* Empty state styling */
-.empty-state {
+/* Preview container styles */
+.preview-container {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-top: 0.5rem;
+    background-color: #f9fafb;
+}
+
+/* Make sure the question content is visible */
+.question-content {
+    display: block !important;
+}
+
+/* Make delivery settings panels match React */
+.delivery-settings-panel {
+    background-color: white;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    border: 1px solid #e5e7eb;
+    margin-top: 1rem;
+}
+
+/* Survey builder empty state */
+.survey-builder-empty {
+    min-height: 200px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    border: 2px dashed #e5e7eb;
+    border-radius: 0.5rem;
     padding: 2rem;
     text-align: center;
     background-color: #f9fafb;
-    border-radius: 0.5rem;
-    border: 1px dashed #e5e7eb;
+    margin-bottom: 1.5rem;
 }
 
-.empty-state-icon {
-    width: 3rem;
-    height: 3rem;
-    background-color: #f3f4f6;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.survey-builder-empty p {
+    color: #6b7280;
     margin-bottom: 1rem;
 }
