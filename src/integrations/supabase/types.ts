@@ -53,6 +53,7 @@ export type Database = {
           contact_name: string
           contact_phone: string | null
           created_at: string
+          customer_type: string
           id: string
           updated_at: string
         }
@@ -63,6 +64,7 @@ export type Database = {
           contact_name: string
           contact_phone?: string | null
           created_at?: string
+          customer_type?: string
           id?: string
           updated_at?: string
         }
@@ -73,6 +75,7 @@ export type Database = {
           contact_name?: string
           contact_phone?: string | null
           created_at?: string
+          customer_type?: string
           id?: string
           updated_at?: string
         }
