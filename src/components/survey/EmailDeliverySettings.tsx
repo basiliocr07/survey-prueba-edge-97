@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,8 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { CalendarIcon, Clock, SendHorizontal, Settings } from "lucide-react";
+import { CalendarIcon, Clock, SendHorizontal, Settings, Users, Check } from "lucide-react";
 import { DeliveryConfig } from "@/domain/models/Survey";
+import { useCustomers } from "@/application/hooks/useCustomers";
+import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 
 interface EmailDeliverySettingsProps {
   deliveryConfig: DeliveryConfig;
@@ -19,6 +24,9 @@ interface EmailDeliverySettingsProps {
 export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }: EmailDeliverySettingsProps) {
   const [config, setConfig] = useState<DeliveryConfig>(deliveryConfig);
   const [emailInput, setEmailInput] = useState<string>("");
+  const [popoverOpen, setPopoverOpen] = useState(false);
+  
+  const { customerEmails, isLoading: isLoadingCustomers } = useCustomers();
 
   useEffect(() => {
     setConfig(deliveryConfig);
@@ -67,6 +75,17 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
 
   const isValidEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const addCustomerEmail = (email: string) => {
+    if (!email || !isValidEmail(email)) return;
+    
+    const newEmails = [...config.emailAddresses];
+    if (!newEmails.includes(email)) {
+      newEmails.push(email);
+      handleConfigChange({ ...config, emailAddresses: newEmails });
+    }
+    setPopoverOpen(false);
   };
 
   return (
@@ -268,16 +287,55 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
         <div className="space-y-4">
           <div>
             <Label>Email Recipients</Label>
-            <div className="flex items-center space-x-2 mt-2">
-              <Input
-                placeholder="Enter email address"
-                value={emailInput}
-                onChange={(e) => setEmailInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && addEmail()}
-                className="flex-1"
-              />
-              <Button onClick={addEmail} variant="outline" size="sm">Add</Button>
+            <div className="flex gap-2 mb-2">
+              <div className="flex items-center space-x-2 mt-2 flex-1">
+                <Input
+                  placeholder="Enter email address"
+                  value={emailInput}
+                  onChange={(e) => setEmailInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && addEmail()}
+                />
+                <Button onClick={addEmail} variant="outline" size="sm">Add</Button>
+              </div>
+              
+              <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="mt-2">
+                    <Users className="mr-2 h-4 w-4" />
+                    Customer Emails
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="p-0" side="bottom" align="start" alignOffset={0}>
+                  <Command>
+                    <CommandInput placeholder="Search customer emails..." />
+                    <CommandEmpty>No customers found.</CommandEmpty>
+                    <CommandGroup>
+                      {isLoadingCustomers ? (
+                        <div className="flex items-center justify-center p-4">
+                          <div className="animate-spin h-4 w-4 border-2 border-primary rounded-full border-t-transparent"></div>
+                        </div>
+                      ) : (
+                        customerEmails.map((email) => (
+                          <CommandItem
+                            key={email}
+                            value={email}
+                            onSelect={() => addCustomerEmail(email)}
+                          >
+                            <Check
+                              className={`mr-2 h-4 w-4 ${
+                                config.emailAddresses.includes(email) ? "opacity-100" : "opacity-0"
+                              }`}
+                            />
+                            {email}
+                          </CommandItem>
+                        ))
+                      )}
+                    </CommandGroup>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
+            
             {!isValidEmail(emailInput) && emailInput.trim() !== "" && (
               <p className="text-xs text-red-500 mt-1">Please enter a valid email address</p>
             )}
@@ -286,21 +344,25 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
           <div className="space-y-2">
             {config.emailAddresses.length > 0 ? (
               <div className="border rounded-lg p-4">
-                <ul className="space-y-2">
+                <div className="flex flex-wrap gap-2">
                   {config.emailAddresses.map((email, index) => (
-                    <li key={index} className="flex justify-between items-center text-sm">
+                    <Badge 
+                      key={index} 
+                      variant="secondary"
+                      className="py-1.5 px-2.5 flex items-center"
+                    >
                       <span>{email}</span>
                       <Button
                         onClick={() => removeEmail(email)}
                         variant="ghost"
                         size="sm"
-                        className="h-6 w-6 p-0"
+                        className="h-5 w-5 p-0 ml-1 rounded-full"
                       >
                         &times;
                       </Button>
-                    </li>
+                    </Badge>
                   ))}
-                </ul>
+                </div>
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">No email addresses added yet.</p>
