@@ -11,7 +11,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
-import { Check, Calendar as CalendarIcon, X, ChevronsUpDown, Search } from 'lucide-react';
+import { Check, Calendar as CalendarIcon, X, ChevronsUpDown, Search, CheckCircle, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DeliveryConfig } from '@/types/surveyTypes';
 import { useCustomers } from '@/application/hooks/useCustomers';
@@ -88,6 +88,34 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
       ...(type === 'triggered' && !deliveryConfig.trigger ? {
         trigger: { type: 'ticket-closed', delayHours: 24, sendAutomatically: true }
       } : {})
+    });
+  };
+
+  // Función para seleccionar todos los correos electrónicos de clientes
+  const handleSelectAllEmails = () => {
+    if (!Array.isArray(customerEmails) || customerEmails.length === 0) return;
+    
+    // Combinamos los correos ya seleccionados con todos los correos de clientes
+    const allEmails = [...(deliveryConfig.emailAddresses || [])];
+    
+    // Añadimos solo los correos que no están ya incluidos
+    customerEmails.forEach(email => {
+      if (!allEmails.includes(email)) {
+        allEmails.push(email);
+      }
+    });
+    
+    onConfigChange({
+      ...deliveryConfig,
+      emailAddresses: allEmails
+    });
+  };
+
+  // Función para deseleccionar todos los correos electrónicos
+  const handleDeselectAllEmails = () => {
+    onConfigChange({
+      ...deliveryConfig,
+      emailAddresses: []
     });
   };
 
@@ -228,7 +256,8 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
                     value={deliveryConfig.schedule?.time || '09:00'}
                     onChange={(e) => {
                       const currentSchedule = deliveryConfig.schedule || { 
-                        frequency: deliveryConfig.schedule?.frequency || 'weekly'
+                        frequency: deliveryConfig.schedule?.frequency || 'weekly',
+                        time: '09:00'
                       };
                       onConfigChange({
                         ...deliveryConfig,
@@ -256,6 +285,7 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
                     value={deliveryConfig.trigger?.type || 'ticket-closed'} 
                     onValueChange={(value) => {
                       const currentTrigger = deliveryConfig.trigger || { 
+                        type: 'ticket-closed',
                         delayHours: 24, 
                         sendAutomatically: true 
                       };
@@ -291,6 +321,7 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
                       const value = parseInt(e.target.value);
                       const currentTrigger = deliveryConfig.trigger || { 
                         type: 'ticket-closed', 
+                        delayHours: 24,
                         sendAutomatically: true 
                       };
                       onConfigChange({
@@ -312,7 +343,8 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
                     onCheckedChange={(checked) => {
                       const currentTrigger = deliveryConfig.trigger || { 
                         type: 'ticket-closed', 
-                        delayHours: 24
+                        delayHours: 24,
+                        sendAutomatically: true
                       };
                       onConfigChange({
                         ...deliveryConfig,
@@ -396,6 +428,28 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
             {(!isValidEmail(emailInput) && emailInput.trim() !== '') && (
               <p className="text-sm text-destructive">Please enter a valid email address</p>
             )}
+            
+            {/* Botones para seleccionar/deseleccionar todos los correos */}
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleSelectAllEmails}
+                className="flex items-center gap-1"
+              >
+                <CheckCircle className="h-4 w-4" />
+                Select All
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleDeselectAllEmails}
+                className="flex items-center gap-1"
+              >
+                <XCircle className="h-4 w-4" />
+                Deselect All
+              </Button>
+            </div>
             
             {(deliveryConfig.emailAddresses && deliveryConfig.emailAddresses.length > 0) ? (
               <div className="border rounded-md p-4">
