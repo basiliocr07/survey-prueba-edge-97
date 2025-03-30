@@ -12,7 +12,5 @@ namespace SurveyApp.Infrastructure.Data.Entities
         public Service Service { get; set; } = null!;
         
         public DateTime AssignedAt { get; set; }
-        
-        public string UserType { get; set; } = "client"; // "admin" o "client"
     }
 }
