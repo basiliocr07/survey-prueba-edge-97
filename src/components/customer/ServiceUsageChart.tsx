@@ -138,7 +138,11 @@ export default function ServiceUsageChart({
   // Obtener datos de crecimiento según el rango de tiempo seleccionado
   const brandGrowthData = calculateBrandGrowth ? calculateBrandGrowth(timeRange) : [];
   const monthlyGrowthData = calculateMonthlyGrowth ? calculateMonthlyGrowth(parseInt(timeRange)) : [];
-  const monthlyBrandData = calculateMonthlyGrowthByBrand ? calculateMonthlyGrowthByBrand(parseInt(timeRange)) : { months: [], brands: [] };
+  
+  // Safely get the monthly brand data with proper type checking
+  const monthlyBrandData = calculateMonthlyGrowthByBrand ? 
+    calculateMonthlyGrowthByBrand(parseInt(timeRange)) : 
+    { months: [], brands: [] };
 
   // Preparar datos para el gráfico de crecimiento mensual por marca
   const formattedMonthlyBrandData = monthlyBrandData.months.map((month, index) => {

@@ -126,8 +126,8 @@ export function useCustomers() {
     return monthsData;
   };
 
-  const calculateMonthlyGrowthByBrand = (months: number = 3) => {
-    if (!customers.length) return [];
+  const calculateMonthlyGrowthByBrand = (months: number = 3): { months: string[]; brands: { name: string; data: number[] }[] } => {
+    if (!customers.length) return { months: [], brands: [] };
     
     const now = new Date();
     const monthNames: string[] = [];
@@ -138,7 +138,7 @@ export function useCustomers() {
     brandNames.forEach(brand => {
       brandGrowthData[brand] = {
         name: brand,
-        data: Array(months).fill(0)
+        data: new Array(months).fill(0)
       };
     });
     
@@ -157,7 +157,10 @@ export function useCustomers() {
                  isWithinInterval(createdDate, { start: monthStart, end: monthEnd });
         }).length;
         
-        brandGrowthData[brand].data[months - 1 - i] = brandCustomersInMonth;
+        const idx = months - 1 - i;
+        if (idx >= 0 && idx < months) {
+          brandGrowthData[brand].data[idx] = brandCustomersInMonth;
+        }
       });
     }
     
