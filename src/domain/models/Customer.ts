@@ -8,6 +8,7 @@ export interface Customer {
   acquired_services?: string[];
   created_at: string;
   updated_at: string;
+  customer_type: 'admin' | 'client';  // Nuevo campo para tipo de cliente
 }
 
 export interface ServiceUsageData {

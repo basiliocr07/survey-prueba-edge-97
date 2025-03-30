@@ -4,6 +4,7 @@ import { User, ChevronRight } from 'lucide-react';
 import { Customer } from '@/domain/models/Customer';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { 
   Table,
   TableHeader,
@@ -79,6 +80,7 @@ export default function CustomerTable({ customers, isLoading }: CustomerTablePro
               <TableRow>
                 <TableHead>Brand Name</TableHead>
                 <TableHead>Contact</TableHead>
+                <TableHead>Type</TableHead>
                 <TableHead>Services</TableHead>
                 <TableHead>Since</TableHead>
                 <TableHead>Actions</TableHead>
@@ -91,6 +93,11 @@ export default function CustomerTable({ customers, isLoading }: CustomerTablePro
                   <TableCell>
                     <div>{customer.contact_email}</div>
                     <div className="text-muted-foreground text-sm">{customer.contact_phone}</div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={customer.customer_type === 'admin' ? 'destructive' : 'default'}>
+                      {customer.customer_type === 'admin' ? 'Admin' : 'Client'}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">

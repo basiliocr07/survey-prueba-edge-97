@@ -36,7 +36,8 @@ export default function CustomerFormDialog({ availableServices, onAddCustomer }:
     contact_name: '',
     contact_email: '',
     contact_phone: '',
-    acquired_services: []
+    acquired_services: [],
+    customer_type: 'client' // Valor por defecto
   });
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,6 +62,10 @@ export default function CustomerFormDialog({ availableServices, onAddCustomer }:
     });
   };
 
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -72,6 +77,7 @@ export default function CustomerFormDialog({ availableServices, onAddCustomer }:
       contact_email: formData.contact_email || '',
       contact_phone: formData.contact_phone,
       acquired_services: formData.acquired_services || [],
+      customer_type: formData.customer_type as 'admin' | 'client' || 'client',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
@@ -84,7 +90,8 @@ export default function CustomerFormDialog({ availableServices, onAddCustomer }:
       contact_name: '',
       contact_email: '',
       contact_phone: '',
-      acquired_services: []
+      acquired_services: [],
+      customer_type: 'client'
     });
     setOpen(false);
   };
@@ -145,6 +152,22 @@ export default function CustomerFormDialog({ availableServices, onAddCustomer }:
                 value={formData.contact_phone}
                 onChange={handleInputChange}
               />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="customer_type">Customer Type</Label>
+              <Select 
+                name="customer_type"
+                value={formData.customer_type || 'client'}
+                onValueChange={(value) => handleSelectChange('customer_type', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select customer type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="client">Client</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid gap-2">
               <Label>Acquired Services</Label>

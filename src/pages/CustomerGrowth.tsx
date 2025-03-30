@@ -24,7 +24,8 @@ export default function CustomerGrowth() {
           brand_name: newCustomer.brand_name,
           contact_name: newCustomer.contact_name,
           contact_email: newCustomer.contact_email,
-          contact_phone: newCustomer.contact_phone
+          contact_phone: newCustomer.contact_phone,
+          customer_type: newCustomer.customer_type || 'client' // Incluimos el nuevo campo
         })
         .select('id')
         .single();
