@@ -19,6 +19,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ServiceUsageData } from '@/domain/models/Customer';
 import { TimeRange } from '@/application/hooks/useCustomers';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ServiceUsageChartProps {
   serviceUsageData: ServiceUsageData[];
@@ -91,8 +94,9 @@ export default function ServiceUsageChart({
   calculateMonthlyGrowthByBrand
 }: ServiceUsageChartProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>('3');
-  const [chartType, setChartType] = useState<'services' | 'brands' | 'monthly' | 'monthlyByBrand'>('services');
-
+  const [chartType, setChartType] = useState<'services' | 'brands' | 'monthly' | 'monthlyByBrand' | 'singleBrand'>('services');
+  const [selectedBrand, setSelectedBrand] = useState<string>('');
+  
   if (isLoading) {
     return (
       <Card>
@@ -144,6 +148,24 @@ export default function ServiceUsageChart({
     calculateMonthlyGrowthByBrand(parseInt(timeRange)) : 
     { months: [], brands: [] };
 
+  // Get available brand names
+  const availableBrands = brandGrowthData.map(item => item.name);
+
+  // Get individual brand data for the selected brand
+  const getSingleBrandData = () => {
+    if (!selectedBrand || !monthlyBrandData.months.length) return [];
+    
+    const brandIndex = monthlyBrandData.brands.findIndex(b => b.name === selectedBrand);
+    if (brandIndex === -1) return [];
+    
+    return monthlyBrandData.months.map((month, index) => ({
+      name: month,
+      value: brandIndex >= 0 && index < monthlyBrandData.brands[brandIndex].data.length 
+        ? monthlyBrandData.brands[brandIndex].data[index] 
+        : 0
+    }));
+  };
+
   // Preparar datos para el gráfico de crecimiento mensual por marca
   const formattedMonthlyBrandData = monthlyBrandData.months.map((month, index) => {
     const dataPoint: any = { name: month };
@@ -166,28 +188,66 @@ export default function ServiceUsageChart({
         <CardDescription>
           Analyze service usage and brand growth
         </CardDescription>
-        <div className="flex items-center justify-between mt-4">
+        <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
           <Tabs value={chartType} onValueChange={(value) => setChartType(value as any)}>
             <TabsList>
               <TabsTrigger value="services">Service Usage</TabsTrigger>
               <TabsTrigger value="brands">Brand Growth</TabsTrigger>
               <TabsTrigger value="monthly">Monthly Growth</TabsTrigger>
-              <TabsTrigger value="monthlyByBrand">Growth by Brand</TabsTrigger>
+              <TabsTrigger value="monthlyByBrand">All Brands</TabsTrigger>
+              <TabsTrigger value="singleBrand">Single Brand</TabsTrigger>
             </TabsList>
           </Tabs>
           
-          <Select value={timeRange} onValueChange={(value) => setTimeRange(value as TimeRange)}>
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Time Range" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1">Last Month</SelectItem>
-              <SelectItem value="3">Last 3 Months</SelectItem>
-              <SelectItem value="12">Last Year</SelectItem>
-              <SelectItem value="all">All Time</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            {chartType === 'singleBrand' && (
+              <Select 
+                value={selectedBrand} 
+                onValueChange={setSelectedBrand}
+              >
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Select Brand" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableBrands.map(brand => (
+                    <SelectItem key={brand} value={brand}>{brand}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            
+            <Select value={timeRange} onValueChange={(value) => setTimeRange(value as TimeRange)}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Time Range" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">Last Month</SelectItem>
+                <SelectItem value="3">Last 3 Months</SelectItem>
+                <SelectItem value="12">Last Year</SelectItem>
+                <SelectItem value="all">All Time</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
+        
+        {chartType === 'monthlyByBrand' && (
+          <div className="mt-4">
+            <h4 className="text-sm font-medium mb-2">Brands:</h4>
+            <ScrollArea className="h-10 whitespace-nowrap">
+              <div className="flex gap-2 pb-2">
+                {monthlyBrandData.brands.slice(0, 8).map((brand, index) => (
+                  <Badge 
+                    key={brand.name} 
+                    style={{ backgroundColor: BRAND_COLORS[index % BRAND_COLORS.length] }}
+                    className="text-white"
+                  >
+                    {brand.name}
+                  </Badge>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         <div className="h-[300px] w-full">
@@ -265,6 +325,32 @@ export default function ServiceUsageChart({
                 ))}
               </LineChart>
             </ResponsiveContainer>
+          )}
+          
+          {chartType === 'singleBrand' && selectedBrand && (
+            <ResponsiveContainer width="100%" height="100%">
+              <RechartsBarChart
+                data={getSingleBrandData()}
+                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                <Bar 
+                  dataKey="value" 
+                  fill={BRAND_COLORS[0]} 
+                  name={`New Customers - ${selectedBrand}`} 
+                />
+              </RechartsBarChart>
+            </ResponsiveContainer>
+          )}
+          
+          {chartType === 'singleBrand' && !selectedBrand && (
+            <div className="h-full flex items-center justify-center">
+              <p className="text-muted-foreground">Select a brand to view its growth data</p>
+            </div>
           )}
         </div>
       </CardContent>
