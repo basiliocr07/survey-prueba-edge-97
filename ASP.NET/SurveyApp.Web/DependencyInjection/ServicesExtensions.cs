@@ -4,6 +4,7 @@ using SurveyApp.Application.Interfaces;
 using SurveyApp.Application.Services;
 using SurveyApp.Domain.Repositories;
 using SurveyApp.Infrastructure.Repositories;
+using System.Reflection;
 
 namespace SurveyApp.Web.DependencyInjection
 {
@@ -13,6 +14,10 @@ namespace SurveyApp.Web.DependencyInjection
         {
             services.AddScoped<ISurveyService, SurveyService>();
             services.AddScoped<ISurveyResponseService, SurveyResponseService>();
+            
+            // Add MediatR
+            services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(SurveyService).Assembly));
+            
             return services;
         }
 
