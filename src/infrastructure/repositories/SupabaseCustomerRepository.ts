@@ -27,6 +27,9 @@ export class SupabaseCustomerRepository implements CustomerRepository {
       return customers.map(customer => {
         // Extract service names from the nested services data
         const services = customer.services.map((serviceRel: any) => serviceRel.services.name);
+        
+        // Ensure customer_type is one of the allowed values, default to 'client' if invalid
+        const customerType = customer.customer_type === 'admin' ? 'admin' : 'client';
 
         return {
           id: customer.id,
@@ -37,7 +40,7 @@ export class SupabaseCustomerRepository implements CustomerRepository {
           created_at: customer.created_at,
           updated_at: customer.updated_at,
           acquired_services: services,
-          customer_type: customer.customer_type || 'client' // Map the customer_type field from the database
+          customer_type: customerType
         };
       });
     } catch (error) {
