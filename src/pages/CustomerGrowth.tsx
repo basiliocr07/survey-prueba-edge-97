@@ -11,7 +11,15 @@ import { Customer } from '@/domain/models/Customer';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function CustomerGrowth() {
-  const { customers, services, serviceUsageData, isLoading, error } = useCustomers();
+  const { 
+    customers, 
+    services, 
+    serviceUsageData, 
+    isLoading, 
+    error,
+    calculateBrandGrowth,
+    calculateMonthlyGrowth
+  } = useCustomers();
   const { toast } = useToast();
 
   // Handle form submission
@@ -108,7 +116,12 @@ export default function CustomerGrowth() {
           </div>
           
           <div className="grid grid-cols-1 gap-8">
-            <ServiceUsageChart serviceUsageData={serviceUsageData} isLoading={isLoading} />
+            <ServiceUsageChart 
+              serviceUsageData={serviceUsageData} 
+              isLoading={isLoading} 
+              calculateBrandGrowth={calculateBrandGrowth}
+              calculateMonthlyGrowth={calculateMonthlyGrowth}
+            />
             <CustomerTable customers={customers} isLoading={isLoading} />
           </div>
         </div>
