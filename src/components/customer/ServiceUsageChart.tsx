@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { BarChart2 } from 'lucide-react';
+import { BarChart2, PieChart } from 'lucide-react';
 import { 
   CartesianGrid, 
   Legend, 
@@ -12,7 +12,10 @@ import {
   Bar,
   ComposedChart,
   LineChart,
-  Line
+  Line,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -38,10 +41,10 @@ interface ServiceUsageChartProps {
 const BRAND_COLORS = [
   "#8884d8", // Morado principal
   "#82ca9d", // Verde claro
-  "#ffc658", // Amarillo
-  "#0088FE", // Azul
-  "#00C49F", // Verde azulado
-  "#FF8042", // Naranja
+  "#F97316", // Naranja brillante
+  "#0EA5E9", // Azul océano
+  "#D946EF", // Magenta rosa
+  "#8B5CF6", // Púrpura vívido
   "#FF6B8B", // Rosa
   "#9467BD", // Morado oscuro
   "#8C564B", // Marrón
@@ -94,7 +97,7 @@ export default function ServiceUsageChart({
   calculateMonthlyGrowthByBrand
 }: ServiceUsageChartProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>('3');
-  const [chartType, setChartType] = useState<'services' | 'brands' | 'monthly' | 'monthlyByBrand' | 'singleBrand'>('services');
+  const [chartType, setChartType] = useState<'services' | 'servicesPie' | 'brands' | 'monthly' | 'monthlyByBrand' | 'singleBrand'>('services');
   const [selectedBrand, setSelectedBrand] = useState<string>('');
   
   if (isLoading) {
@@ -191,7 +194,8 @@ export default function ServiceUsageChart({
         <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
           <Tabs value={chartType} onValueChange={(value) => setChartType(value as any)}>
             <TabsList>
-              <TabsTrigger value="services">Service Usage</TabsTrigger>
+              <TabsTrigger value="services">Service Usage (Bar)</TabsTrigger>
+              <TabsTrigger value="servicesPie">Service Usage (Pie)</TabsTrigger>
               <TabsTrigger value="brands">Brand Growth</TabsTrigger>
               <TabsTrigger value="monthly">Monthly Growth</TabsTrigger>
               <TabsTrigger value="monthlyByBrand">All Brands</TabsTrigger>
@@ -265,6 +269,29 @@ export default function ServiceUsageChart({
                 <Legend />
                 <Bar dataKey="count" fill="#8884d8" name="Number of Customers" />
               </RechartsBarChart>
+            </ResponsiveContainer>
+          )}
+          
+          {chartType === 'servicesPie' && (
+            <ResponsiveContainer width="100%" height="100%">
+              <RechartsPieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                <Pie
+                  data={serviceUsageData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={true}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  dataKey="count"
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                >
+                  {serviceUsageData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={BRAND_COLORS[index % BRAND_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </RechartsPieChart>
             </ResponsiveContainer>
           )}
           
