@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { GetAllCustomers } from '../useCases/customer/GetAllCustomers';
 import { GetAllServices } from '../useCases/customer/GetAllServices';
@@ -65,41 +64,34 @@ export function useCustomers() {
     }).sort((a, b) => b.count - a.count);
   };
 
-  // Nueva función para calcular el crecimiento por marca en períodos de tiempo
   const calculateBrandGrowth = (timeRange: TimeRange = 'all') => {
     if (!customers.length) return [];
     
     const now = new Date();
     let startDate = new Date(0); // Fecha muy antigua para incluir todo
     
-    // Determinar la fecha de inicio según el rango de tiempo seleccionado
     if (timeRange !== 'all') {
       const months = parseInt(timeRange);
       startDate = subMonths(now, months);
     }
     
-    // Agrupar marcas y contar clientes
     const brandGroups: Record<string, { total: number, recent: number }> = {};
     
     customers.forEach(customer => {
       const brandName = customer.brand_name;
       const createdDate = new Date(customer.created_at);
       
-      // Inicializar si no existe
       if (!brandGroups[brandName]) {
         brandGroups[brandName] = { total: 0, recent: 0 };
       }
       
-      // Aumentar contador total
       brandGroups[brandName].total += 1;
       
-      // Aumentar contador reciente si se creó dentro del rango de tiempo
       if (createdDate >= startDate) {
         brandGroups[brandName].recent += 1;
       }
     });
     
-    // Convertir a array y ordenar por total
     return Object.entries(brandGroups)
       .map(([name, data]) => ({
         name,
@@ -109,20 +101,17 @@ export function useCustomers() {
       .sort((a, b) => b.total - a.total);
   };
 
-  // Nueva función para generar datos de crecimiento mensual
   const calculateMonthlyGrowth = (months: number = 3) => {
     if (!customers.length) return [];
     
     const now = new Date();
     const monthsData: { name: string, new: number }[] = [];
     
-    // Generar últimos N meses
     for (let i = 0; i < months; i++) {
       const targetMonth = subMonths(now, i);
       const monthStart = startOfMonth(targetMonth);
       const monthEnd = endOfMonth(targetMonth);
       
-      // Contar clientes creados en este mes
       const newCustomers = customers.filter(customer => {
         const createdDate = new Date(customer.created_at);
         return isWithinInterval(createdDate, { start: monthStart, end: monthEnd });
@@ -137,6 +126,53 @@ export function useCustomers() {
     return monthsData;
   };
 
+  const calculateMonthlyGrowthByBrand = (months: number = 3) => {
+    if (!customers.length) return [];
+    
+    const now = new Date();
+    const monthNames: string[] = [];
+    const brandGrowthData: Record<string, { name: string, data: number[] }> = {};
+    
+    const brandNames = Array.from(new Set(customers.map(customer => customer.brand_name)));
+    
+    brandNames.forEach(brand => {
+      brandGrowthData[brand] = {
+        name: brand,
+        data: Array(months).fill(0)
+      };
+    });
+    
+    for (let i = 0; i < months; i++) {
+      const targetMonth = subMonths(now, i);
+      const monthStart = startOfMonth(targetMonth);
+      const monthEnd = endOfMonth(targetMonth);
+      const monthName = format(targetMonth, 'MMM yyyy');
+      
+      monthNames.unshift(monthName);
+      
+      brandNames.forEach(brand => {
+        const brandCustomersInMonth = customers.filter(customer => {
+          const createdDate = new Date(customer.created_at);
+          return customer.brand_name === brand && 
+                 isWithinInterval(createdDate, { start: monthStart, end: monthEnd });
+        }).length;
+        
+        brandGrowthData[brand].data[months - 1 - i] = brandCustomersInMonth;
+      });
+    }
+    
+    return {
+      months: monthNames,
+      brands: Object.values(brandGrowthData)
+        .filter(brand => brand.data.some(count => count > 0))
+        .sort((a, b) => {
+          const totalA = a.data.reduce((sum, count) => sum + count, 0);
+          const totalB = b.data.reduce((sum, count) => sum + count, 0);
+          return totalB - totalA;
+        })
+    };
+  };
+
   const isLoading = isLoadingCustomers || isLoadingServices || isLoadingEmails;
   const error = customersError || servicesError || emailsError;
 
@@ -148,6 +184,7 @@ export function useCustomers() {
     error,
     serviceUsageData: calculateServiceUsage(),
     calculateBrandGrowth,
-    calculateMonthlyGrowth
+    calculateMonthlyGrowth,
+    calculateMonthlyGrowthByBrand
   };
 }

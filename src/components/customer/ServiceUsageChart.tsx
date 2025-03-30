@@ -10,7 +10,9 @@ import {
   Tooltip, 
   BarChart as RechartsBarChart, 
   Bar,
-  ComposedChart
+  ComposedChart,
+  LineChart,
+  Line
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -23,7 +25,27 @@ interface ServiceUsageChartProps {
   isLoading?: boolean;
   calculateBrandGrowth?: (timeRange: TimeRange) => { name: string; total: number; recent: number }[];
   calculateMonthlyGrowth?: (months: number) => { name: string; new: number }[];
+  calculateMonthlyGrowthByBrand?: (months: number) => {
+    months: string[];
+    brands: { name: string; data: number[] }[];
+  };
 }
+
+// Colores para cada marca en el gráfico
+const BRAND_COLORS = [
+  "#8884d8", // Morado principal
+  "#82ca9d", // Verde claro
+  "#ffc658", // Amarillo
+  "#0088FE", // Azul
+  "#00C49F", // Verde azulado
+  "#FF8042", // Naranja
+  "#FF6B8B", // Rosa
+  "#9467BD", // Morado oscuro
+  "#8C564B", // Marrón
+  "#E377C2", // Rosa claro
+  "#7F7F7F", // Gris
+  "#BCBD22"  // Verde oliva
+];
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -44,14 +66,16 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       );
     }
     
-    // Para otras gráficas
+    // Para gráficas por marca
     return (
       <div className="bg-background border border-border p-3 rounded-md shadow-md">
         <p className="font-medium">{label}</p>
-        <p className="text-sm">
-          <span className="text-blue-500">Clientes: </span>
-          <span>{payload[0].value}</span>
-        </p>
+        {payload.map((entry: any, index: number) => (
+          <p key={`item-${index}`} className="text-sm">
+            <span style={{ color: entry.color }}>{entry.name}: </span>
+            <span>{entry.value}</span>
+          </p>
+        ))}
       </div>
     );
   }
@@ -63,10 +87,11 @@ export default function ServiceUsageChart({
   serviceUsageData, 
   isLoading,
   calculateBrandGrowth,
-  calculateMonthlyGrowth
+  calculateMonthlyGrowth,
+  calculateMonthlyGrowthByBrand
 }: ServiceUsageChartProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>('3');
-  const [chartType, setChartType] = useState<'services' | 'brands' | 'monthly'>('services');
+  const [chartType, setChartType] = useState<'services' | 'brands' | 'monthly' | 'monthlyByBrand'>('services');
 
   if (isLoading) {
     return (
@@ -113,6 +138,19 @@ export default function ServiceUsageChart({
   // Obtener datos de crecimiento según el rango de tiempo seleccionado
   const brandGrowthData = calculateBrandGrowth ? calculateBrandGrowth(timeRange) : [];
   const monthlyGrowthData = calculateMonthlyGrowth ? calculateMonthlyGrowth(parseInt(timeRange)) : [];
+  const monthlyBrandData = calculateMonthlyGrowthByBrand ? calculateMonthlyGrowthByBrand(parseInt(timeRange)) : { months: [], brands: [] };
+
+  // Preparar datos para el gráfico de crecimiento mensual por marca
+  const formattedMonthlyBrandData = monthlyBrandData.months.map((month, index) => {
+    const dataPoint: any = { name: month };
+    monthlyBrandData.brands.forEach((brand, brandIndex) => {
+      // Limitar a 8 marcas para no saturar el gráfico
+      if (brandIndex < 8) {
+        dataPoint[brand.name] = brand.data[index];
+      }
+    });
+    return dataPoint;
+  });
 
   return (
     <Card>
@@ -130,6 +168,7 @@ export default function ServiceUsageChart({
               <TabsTrigger value="services">Service Usage</TabsTrigger>
               <TabsTrigger value="brands">Brand Growth</TabsTrigger>
               <TabsTrigger value="monthly">Monthly Growth</TabsTrigger>
+              <TabsTrigger value="monthlyByBrand">Growth by Brand</TabsTrigger>
             </TabsList>
           </Tabs>
           
@@ -196,6 +235,31 @@ export default function ServiceUsageChart({
                 <Legend />
                 <Bar dataKey="new" fill="#82ca9d" name="New Customers" />
               </RechartsBarChart>
+            </ResponsiveContainer>
+          )}
+
+          {chartType === 'monthlyByBrand' && formattedMonthlyBrandData.length > 0 && (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={formattedMonthlyBrandData}
+                margin={{ top: 20, right: 50, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                {monthlyBrandData.brands.slice(0, 8).map((brand, index) => (
+                  <Line
+                    key={brand.name}
+                    type="monotone"
+                    dataKey={brand.name}
+                    stroke={BRAND_COLORS[index % BRAND_COLORS.length]}
+                    activeDot={{ r: 8 }}
+                    name={brand.name}
+                  />
+                ))}
+              </LineChart>
             </ResponsiveContainer>
           )}
         </div>

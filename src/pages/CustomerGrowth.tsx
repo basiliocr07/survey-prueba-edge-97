@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -18,14 +17,13 @@ export default function CustomerGrowth() {
     isLoading, 
     error,
     calculateBrandGrowth,
-    calculateMonthlyGrowth
+    calculateMonthlyGrowth,
+    calculateMonthlyGrowthByBrand
   } = useCustomers();
   const { toast } = useToast();
 
-  // Handle form submission
   const handleAddCustomer = async (newCustomer: Customer) => {
     try {
-      // Primero insertar el cliente
       const { data: insertedCustomer, error: customerError } = await supabase
         .from('customers')
         .insert({
@@ -33,16 +31,14 @@ export default function CustomerGrowth() {
           contact_name: newCustomer.contact_name,
           contact_email: newCustomer.contact_email,
           contact_phone: newCustomer.contact_phone,
-          customer_type: newCustomer.customer_type || 'client' // Incluimos el nuevo campo
+          customer_type: newCustomer.customer_type || 'client'
         })
         .select('id')
         .single();
 
       if (customerError || !insertedCustomer) throw customerError;
 
-      // Luego crear las relaciones con los servicios
       if (newCustomer.acquired_services && newCustomer.acquired_services.length > 0) {
-        // Obtener los IDs de los servicios por nombre
         const { data: serviceData, error: servicesError } = await supabase
           .from('services')
           .select('id, name')
@@ -50,7 +46,6 @@ export default function CustomerGrowth() {
         
         if (servicesError || !serviceData) throw servicesError;
         
-        // Crear las entradas en la tabla de relación
         const customerServiceEntries = serviceData.map(service => ({
           customer_id: insertedCustomer.id,
           service_id: service.id
@@ -77,7 +72,6 @@ export default function CustomerGrowth() {
     }
   };
 
-  // Show error message if data fetching failed
   if (error) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
@@ -121,6 +115,7 @@ export default function CustomerGrowth() {
               isLoading={isLoading} 
               calculateBrandGrowth={calculateBrandGrowth}
               calculateMonthlyGrowth={calculateMonthlyGrowth}
+              calculateMonthlyGrowthByBrand={calculateMonthlyGrowthByBrand}
             />
             <CustomerTable customers={customers} isLoading={isLoading} />
           </div>
