@@ -11,17 +11,56 @@ import {
   Bar 
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-
-interface ServiceUsageData {
-  name: string;
-  count: number;
-}
+import { ServiceUsageData } from '@/domain/models/Customer';
 
 interface ServiceUsageChartProps {
   serviceUsageData: ServiceUsageData[];
+  isLoading?: boolean;
 }
 
-export default function ServiceUsageChart({ serviceUsageData }: ServiceUsageChartProps) {
+export default function ServiceUsageChart({ serviceUsageData, isLoading }: ServiceUsageChartProps) {
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart2 className="h-5 w-5" />
+            Service Usage Analytics
+          </CardTitle>
+          <CardDescription>
+            Loading service usage data...
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[300px] w-full flex items-center justify-center">
+            <p className="text-muted-foreground">Loading chart data...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!serviceUsageData.length) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart2 className="h-5 w-5" />
+            Service Usage Analytics
+          </CardTitle>
+          <CardDescription>
+            No service usage data available
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[300px] w-full flex items-center justify-center">
+            <p className="text-muted-foreground">No data to display</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>

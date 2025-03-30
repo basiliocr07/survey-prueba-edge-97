@@ -1,20 +1,28 @@
 
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
-} from '@/components/ui/dialog';
-import { Customer } from '@/types/suggestions';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Customer } from '@/domain/models/Customer';
+import { v4 as uuidv4 } from 'uuid';
+import { PlusCircle } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface CustomerFormDialogProps {
   availableServices: string[];
@@ -22,135 +30,140 @@ interface CustomerFormDialogProps {
 }
 
 export default function CustomerFormDialog({ availableServices, onAddCustomer }: CustomerFormDialogProps) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [newCustomer, setNewCustomer] = useState<Partial<Customer>>({
-    brandName: '',
-    contactEmail: '',
-    contactPhone: '',
-    acquiredServices: []
+  const [open, setOpen] = useState(false);
+  const [formData, setFormData] = useState<Partial<Customer>>({
+    brand_name: '',
+    contact_name: '',
+    contact_email: '',
+    contact_phone: '',
+    acquired_services: []
   });
-  const [selectedServices, setSelectedServices] = useState<Record<string, boolean>>({});
-  const { toast } = useToast();
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
-  const handleServiceToggle = (service: string) => {
-    setSelectedServices(prev => ({
-      ...prev,
-      [service]: !prev[service]
-    }));
+  const toggleService = (service: string) => {
+    setFormData(prev => {
+      const currentServices = prev.acquired_services || [];
+      if (currentServices.includes(service)) {
+        return {
+          ...prev,
+          acquired_services: currentServices.filter(s => s !== service)
+        };
+      } else {
+        return {
+          ...prev,
+          acquired_services: [...currentServices, service]
+        };
+      }
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const acquiredServices = Object.entries(selectedServices)
-      .filter(([_, isSelected]) => isSelected)
-      .map(([service]) => service);
-      
-    const customer: Customer = {
-      id: String(Date.now()),
-      brandName: newCustomer.brandName || '',
-      contactEmail: newCustomer.contactEmail || '',
-      contactPhone: newCustomer.contactPhone || '',
-      acquiredServices,
-      createdAt: new Date().toISOString()
+    // Create new customer object
+    const newCustomer: Customer = {
+      id: uuidv4(),
+      brand_name: formData.brand_name || '',
+      contact_name: formData.contact_name || '',
+      contact_email: formData.contact_email || '',
+      contact_phone: formData.contact_phone,
+      acquired_services: formData.acquired_services || [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
     
-    onAddCustomer(customer);
+    onAddCustomer(newCustomer);
     
-    setNewCustomer({
-      brandName: '',
-      contactEmail: '',
-      contactPhone: '',
-      acquiredServices: []
+    // Reset form and close dialog
+    setFormData({
+      brand_name: '',
+      contact_name: '',
+      contact_email: '',
+      contact_phone: '',
+      acquired_services: []
     });
-    setSelectedServices({});
-    setIsDialogOpen(false);
-    
-    toast({
-      title: "Customer created",
-      description: `${customer.brandName} has been added successfully.`
-    });
+    setOpen(false);
   };
 
   return (
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
+        <Button className="gap-2">
+          <PlusCircle className="h-4 w-4" />
           Add Customer
         </Button>
       </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add New Customer</DialogTitle>
-          <DialogDescription>
-            Enter the details of your new customer below.
-          </DialogDescription>
-        </DialogHeader>
-        
+      <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>
+          <DialogHeader>
+            <DialogTitle>Add New Customer</DialogTitle>
+            <DialogDescription>
+              Enter the customer details and the services they've acquired.
+            </DialogDescription>
+          </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="brandName" className="text-right">
-                Brand Name
-              </Label>
+            <div className="grid gap-2">
+              <Label htmlFor="brand_name">Brand Name</Label>
               <Input
-                id="brandName"
-                value={newCustomer.brandName}
-                onChange={(e) => setNewCustomer({...newCustomer, brandName: e.target.value})}
-                className="col-span-3"
+                id="brand_name"
+                name="brand_name"
+                value={formData.brand_name}
+                onChange={handleInputChange}
                 required
               />
             </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="contactEmail" className="text-right">
-                Email
-              </Label>
+            <div className="grid gap-2">
+              <Label htmlFor="contact_name">Contact Person</Label>
               <Input
-                id="contactEmail"
+                id="contact_name"
+                name="contact_name"
+                value={formData.contact_name}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="contact_email">Contact Email</Label>
+              <Input
+                id="contact_email"
+                name="contact_email"
                 type="email"
-                value={newCustomer.contactEmail}
-                onChange={(e) => setNewCustomer({...newCustomer, contactEmail: e.target.value})}
-                className="col-span-3"
+                value={formData.contact_email}
+                onChange={handleInputChange}
                 required
               />
             </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="contactPhone" className="text-right">
-                Phone
-              </Label>
+            <div className="grid gap-2">
+              <Label htmlFor="contact_phone">Contact Phone</Label>
               <Input
-                id="contactPhone"
-                value={newCustomer.contactPhone}
-                onChange={(e) => setNewCustomer({...newCustomer, contactPhone: e.target.value})}
-                className="col-span-3"
-                required
+                id="contact_phone"
+                name="contact_phone"
+                value={formData.contact_phone}
+                onChange={handleInputChange}
               />
             </div>
-            
-            <div className="grid grid-cols-4 items-start gap-4">
-              <Label className="text-right pt-2">
-                Services
-              </Label>
-              <div className="col-span-3 flex flex-wrap gap-2">
+            <div className="grid gap-2">
+              <Label>Acquired Services</Label>
+              <div className="grid grid-cols-2 gap-2">
                 {availableServices.map(service => (
-                  <Button
-                    key={service}
-                    type="button"
-                    variant={selectedServices[service] ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => handleServiceToggle(service)}
-                    className="mb-2"
-                  >
-                    {service}
-                  </Button>
+                  <div key={service} className="flex items-center space-x-2">
+                    <Checkbox 
+                      id={`service-${service}`}
+                      checked={(formData.acquired_services || []).includes(service)}
+                      onCheckedChange={() => toggleService(service)}
+                    />
+                    <Label htmlFor={`service-${service}`} className="text-sm">
+                      {service}
+                    </Label>
+                  </div>
                 ))}
               </div>
             </div>
           </div>
-          
           <DialogFooter>
             <Button type="submit">Add Customer</Button>
           </DialogFooter>

@@ -9,6 +9,171 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      customers: {
+        Row: {
+          acquired_services: Json | null
+          brand_name: string
+          contact_email: string
+          contact_name: string
+          contact_phone: string | null
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          acquired_services?: Json | null
+          brand_name: string
+          contact_email: string
+          contact_name: string
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          acquired_services?: Json | null
+          brand_name?: string
+          contact_email?: string
+          contact_name?: string
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      requirements: {
+        Row: {
+          category: string | null
+          completion_percentage: number | null
+          content: string
+          created_at: string
+          customer_id: string | null
+          customer_name: string | null
+          id: string
+          is_anonymous: boolean | null
+          priority: string | null
+          project_area: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          completion_percentage?: number | null
+          content: string
+          created_at?: string
+          customer_id?: string | null
+          customer_name?: string | null
+          id?: string
+          is_anonymous?: boolean | null
+          priority?: string | null
+          project_area?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          completion_percentage?: number | null
+          content?: string
+          created_at?: string
+          customer_id?: string | null
+          customer_name?: string | null
+          id?: string
+          is_anonymous?: boolean | null
+          priority?: string | null
+          project_area?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requirements_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      response_completion_rates: {
+        Row: {
+          average_completion_time: number | null
+          created_at: string
+          id: string
+          survey_id: string
+          total_completed: number
+          total_started: number
+          updated_at: string
+        }
+        Insert: {
+          average_completion_time?: number | null
+          created_at?: string
+          id?: string
+          survey_id: string
+          total_completed?: number
+          total_started?: number
+          updated_at?: string
+        }
+        Update: {
+          average_completion_time?: number | null
+          created_at?: string
+          id?: string
+          survey_id?: string
+          total_completed?: number
+          total_started?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "response_completion_rates_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "surveys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      survey_email_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          recipients: Json
+          sent_at: string
+          status: string
+          survey_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          recipients: Json
+          sent_at?: string
+          status: string
+          survey_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          recipients?: Json
+          sent_at?: string
+          status?: string
+          survey_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_email_logs_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "surveys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       survey_responses: {
         Row: {
           answers: Json
@@ -57,6 +222,7 @@ export type Database = {
           description: string | null
           id: string
           questions: Json
+          status: string | null
           title: string
           updated_at: string
         }
@@ -66,6 +232,7 @@ export type Database = {
           description?: string | null
           id?: string
           questions: Json
+          status?: string | null
           title: string
           updated_at?: string
         }
@@ -75,6 +242,7 @@ export type Database = {
           description?: string | null
           id?: string
           questions?: Json
+          status?: string | null
           title?: string
           updated_at?: string
         }
