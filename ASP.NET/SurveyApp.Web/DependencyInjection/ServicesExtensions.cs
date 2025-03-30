@@ -25,6 +25,10 @@ namespace SurveyApp.Web.DependencyInjection
         {
             services.AddScoped<ISurveyRepository, SurveyRepository>();
             services.AddScoped<ISurveyResponseRepository, SurveyResponseRepository>();
+            
+            // Repositorio de clientes
+            services.AddScoped<ICustomerRepository, CustomerRepository>();
+            
             return services;
         }
     }

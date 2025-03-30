@@ -1,0 +1,46 @@
+
+@model SurveyApp.Web.Models.CustomerGrowthViewModel
+@{
+    ViewData["Title"] = "Seguimiento de Crecimiento de Clientes";
+}
+
+<div class="min-h-screen bg-white">
+    <main class="p-6">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+                @TempData["SuccessMessage"]
+            </div>
+        }
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                @TempData["ErrorMessage"]
+            </div>
+        }
+
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold mb-2">Seguimiento de Crecimiento de Clientes</h1>
+                <p class="text-gray-600">
+                    Seguimiento y gestión de sus clientes y métricas de crecimiento
+                </p>
+            </div>
+            
+            <button type="button" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center gap-2" data-bs-toggle="modal" data-bs-target="#customerFormModal">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Add Customer
+            </button>
+        </div>
+        
+        <div class="grid grid-cols-1 gap-8">
+            <partial name="_ServiceUsageChart" model="Model.ServiceUsageData" />
+            <partial name="_CustomerTable" model="Model.Customers" />
+        </div>
+    </main>
+</div>
+
+<partial name="_CustomerFormModal" model="new { Services = Model.Services, CustomerForm = Model.CustomerForm }" />

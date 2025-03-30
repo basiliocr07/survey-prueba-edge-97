@@ -1,0 +1,65 @@
+
+@model IEnumerable<SurveyApp.Domain.Models.ServiceUsageData>
+
+<div class="bg-white border rounded-lg shadow-sm">
+    <div class="p-4 border-b">
+        <h5 class="text-lg font-semibold flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            Service Usage Analytics
+        </h5>
+        <div class="text-sm text-gray-600">
+            Breakdown of services used by customers
+        </div>
+    </div>
+    <div class="p-4">
+        <div class="h-[300px] w-full" id="serviceUsageChart">
+            @if (Model.Any())
+            {
+                <!-- Aquí irá el gráfico usando Chart.js -->
+            }
+            else
+            {
+                <div class="flex items-center justify-center h-full">
+                    <p class="text-gray-500">No data to display</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@if (Model.Any())
+{
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var ctx = document.getElementById('serviceUsageChart').getContext('2d');
+            var chartData = @Json.Serialize(Model);
+            
+            var chart = new Chart(ctx, {
+                type: 'horizontalBar',
+                data: {
+                    labels: chartData.map(item => item.name),
+                    datasets: [{
+                        label: 'Number of Customers',
+                        data: chartData.map(item => item.count),
+                        backgroundColor: '#8884d8',
+                        borderColor: '#8884d8',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                beginAtZero: true
+                            }
+                        }]
+                    }
+                }
+            });
+        });
+    </script>
+}
