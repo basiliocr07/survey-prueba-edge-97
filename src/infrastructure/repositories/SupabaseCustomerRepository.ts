@@ -40,7 +40,7 @@ export class SupabaseCustomerRepository implements CustomerRepository {
           created_at: customer.created_at,
           updated_at: customer.updated_at,
           acquired_services: services,
-          customer_type: customerType
+          customer_type: customerType as 'admin' | 'client'
         };
       });
     } catch (error) {
