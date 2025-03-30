@@ -36,7 +36,8 @@ export class SupabaseCustomerRepository implements CustomerRepository {
           contact_phone: customer.contact_phone,
           created_at: customer.created_at,
           updated_at: customer.updated_at,
-          acquired_services: services
+          acquired_services: services,
+          customer_type: customer.customer_type || 'client' // Add the customer_type field with a default value
         };
       });
     } catch (error) {
