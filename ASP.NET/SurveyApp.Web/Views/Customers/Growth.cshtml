@@ -28,19 +28,165 @@
                 </p>
             </div>
             
-            <button type="button" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center gap-2" data-bs-toggle="modal" data-bs-target="#customerFormModal">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Add Customer
-            </button>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center space-x-2">
+                    <label class="text-sm font-medium text-gray-700">Ver como:</label>
+                    <select id="userTypeSelector" 
+                            class="border border-gray-300 rounded px-3 py-1"
+                            onchange="window.location.href='@Url.Action("Growth", "Customers")?userType=' + this.value">
+                        <option value="client" @(Model.UserType == "client" ? "selected" : "")>Cliente</option>
+                        <option value="admin" @(Model.UserType == "admin" ? "selected" : "")>Administrador</option>
+                    </select>
+                </div>
+                
+                <button type="button" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center gap-2" data-bs-toggle="modal" data-bs-target="#customerFormModal">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Add Customer
+                </button>
+            </div>
         </div>
         
         <div class="grid grid-cols-1 gap-8">
             <partial name="_ServiceUsageChart" model="Model.ServiceUsageData" />
-            <partial name="_CustomerTable" model="Model.Customers" />
+            <partial name="_CustomerTable" model='new { Customers = Model.Customers, IsAdmin = Model.IsAdmin, UserType = Model.UserType }' />
         </div>
     </main>
 </div>
 
-<partial name="_CustomerFormModal" model="new { Services = Model.Services, CustomerForm = Model.CustomerForm }" />
+<partial name="_CustomerFormModal" model="new { Services = Model.Services, CustomerForm = Model.CustomerForm, UserType = Model.UserType }" />
+
+<!-- Modal para editar clientes -->
+<div class="modal fade" id="editCustomerModal" tabindex="-1" aria-labelledby="editCustomerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editCustomerModalLabel">Editar Cliente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editCustomerForm" method="post" asp-action="UpdateCustomer" asp-controller="Customers">
+                    <input type="hidden" id="editCustomerId" name="id" value="" />
+                    <input type="hidden" id="editUserType" name="UserType" value="@Model.UserType" />
+                    
+                    <div class="mb-4">
+                        <label for="editBrandName" class="form-label">Nombre de la Marca</label>
+                        <input type="text" class="form-control" id="editBrandName" name="BrandName" required>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="editContactName" class="form-label">Nombre de Contacto</label>
+                        <input type="text" class="form-control" id="editContactName" name="ContactName" required>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="editContactEmail" class="form-label">Email de Contacto</label>
+                        <input type="email" class="form-control" id="editContactEmail" name="ContactEmail" required>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="editContactPhone" class="form-label">Teléfono de Contacto</label>
+                        <input type="tel" class="form-control" id="editContactPhone" name="ContactPhone">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label">Servicios Adquiridos</label>
+                        <div class="mt-2">
+                            @foreach (var service in Model.Services)
+                            {
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input edit-service-checkbox" 
+                                           type="checkbox" 
+                                           name="SelectedServices" 
+                                           value="@service.Id" 
+                                           id="edit_service_@service.Id"
+                                           @(service.UserType != Model.UserType ? "disabled" : "")>
+                                    <label class="form-check-label" for="edit_service_@service.Id">
+                                        @service.Name
+                                        @if (service.UserType != Model.UserType)
+                                        {
+                                            <span class="text-sm text-gray-500">(@service.UserType)</span>
+                                        }
+                                    </label>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación para eliminar -->
+<div class="modal fade" id="deleteCustomerModal" tabindex="-1" aria-labelledby="deleteCustomerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteCustomerModalLabel">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro que desea eliminar este cliente? Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="deleteCustomerForm" method="post" asp-action="DeleteCustomer" asp-controller="Customers">
+                    <input type="hidden" id="deleteCustomerId" name="id" value="" />
+                    <input type="hidden" id="deleteUserType" name="userType" value="@Model.UserType" />
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Función para cargar datos de cliente al modal de edición
+        function openEditModal(customerId) {
+            // Realizar petición AJAX para obtener datos del cliente
+            fetch('@Url.Action("GetCustomer", "Customers")/' + customerId)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error al cargar los datos del cliente');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Rellenar el formulario con los datos del cliente
+                    document.getElementById('editCustomerId').value = data.id;
+                    document.getElementById('editBrandName').value = data.brandName;
+                    document.getElementById('editContactName').value = data.contactName;
+                    document.getElementById('editContactEmail').value = data.contactEmail;
+                    document.getElementById('editContactPhone').value = data.contactPhone || '';
+                    
+                    // Marcar los servicios adquiridos
+                    document.querySelectorAll('.edit-service-checkbox').forEach(checkbox => {
+                        checkbox.checked = data.services.some(s => s.id === checkbox.value);
+                    });
+                    
+                    // Abrir el modal
+                    var editModal = new bootstrap.Modal(document.getElementById('editCustomerModal'));
+                    editModal.show();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al cargar los datos del cliente');
+                });
+        }
+        
+        // Función para abrir el modal de confirmación de eliminación
+        function openDeleteModal(customerId) {
+            document.getElementById('deleteCustomerId').value = customerId;
+            var deleteModal = new bootstrap.Modal(document.getElementById('deleteCustomerModal'));
+            deleteModal.show();
+        }
+    </script>
+}
