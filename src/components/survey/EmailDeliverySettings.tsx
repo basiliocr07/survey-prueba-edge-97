@@ -77,7 +77,7 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
     setCommandOpen(false);
   };
 
-  const handleTypeChange = (type: string) => {
+  const handleTypeChange = (type: 'manual' | 'scheduled' | 'triggered') => {
     onConfigChange({
       ...deliveryConfig,
       type,
@@ -105,7 +105,7 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
           <h3 className="text-lg font-medium mb-3">Delivery Method</h3>
           <Tabs 
             defaultValue={deliveryConfig.type || 'manual'} 
-            onValueChange={handleTypeChange}
+            onValueChange={(value) => handleTypeChange(value as 'manual' | 'scheduled' | 'triggered')}
             className="w-full"
           >
             <TabsList className="grid grid-cols-3 mb-4">
@@ -131,10 +131,14 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
                   <RadioGroup 
                     value={deliveryConfig.schedule?.frequency || 'weekly'} 
                     onValueChange={(value) => {
+                      const currentSchedule = deliveryConfig.schedule || { 
+                        frequency: 'weekly', 
+                        time: '09:00' 
+                      };
                       onConfigChange({
                         ...deliveryConfig,
                         schedule: {
-                          ...(deliveryConfig.schedule || {}),
+                          ...currentSchedule,
                           frequency: value as 'daily' | 'weekly' | 'monthly'
                         }
                       });
@@ -162,10 +166,14 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
                     <RadioGroup 
                       value={String(deliveryConfig.schedule?.dayOfWeek || 1)} 
                       onValueChange={(value) => {
+                        const currentSchedule = deliveryConfig.schedule || { 
+                          frequency: 'weekly',
+                          time: '09:00' 
+                        };
                         onConfigChange({
                           ...deliveryConfig,
                           schedule: {
-                            ...(deliveryConfig.schedule || {}),
+                            ...currentSchedule,
                             dayOfWeek: parseInt(value)
                           }
                         });
@@ -194,10 +202,14 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
                         onChange={(e) => {
                           const value = parseInt(e.target.value);
                           if (value >= 1 && value <= 31) {
+                            const currentSchedule = deliveryConfig.schedule || { 
+                              frequency: 'monthly', 
+                              time: '09:00' 
+                            };
                             onConfigChange({
                               ...deliveryConfig,
                               schedule: {
-                                ...(deliveryConfig.schedule || {}),
+                                ...currentSchedule,
                                 dayOfMonth: value
                               }
                             });
@@ -215,10 +227,13 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
                     type="time" 
                     value={deliveryConfig.schedule?.time || '09:00'}
                     onChange={(e) => {
+                      const currentSchedule = deliveryConfig.schedule || { 
+                        frequency: deliveryConfig.schedule?.frequency || 'weekly'
+                      };
                       onConfigChange({
                         ...deliveryConfig,
                         schedule: {
-                          ...(deliveryConfig.schedule || {}),
+                          ...currentSchedule,
                           time: e.target.value
                         }
                       });
@@ -240,10 +255,14 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
                   <RadioGroup 
                     value={deliveryConfig.trigger?.type || 'ticket-closed'} 
                     onValueChange={(value) => {
+                      const currentTrigger = deliveryConfig.trigger || { 
+                        delayHours: 24, 
+                        sendAutomatically: true 
+                      };
                       onConfigChange({
                         ...deliveryConfig,
                         trigger: {
-                          ...(deliveryConfig.trigger || {}),
+                          ...currentTrigger,
                           type: value as 'ticket-closed' | 'purchase-completed'
                         }
                       });
@@ -270,10 +289,14 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
                     value={deliveryConfig.trigger?.delayHours || 24}
                     onChange={(e) => {
                       const value = parseInt(e.target.value);
+                      const currentTrigger = deliveryConfig.trigger || { 
+                        type: 'ticket-closed', 
+                        sendAutomatically: true 
+                      };
                       onConfigChange({
                         ...deliveryConfig,
                         trigger: {
-                          ...(deliveryConfig.trigger || {}),
+                          ...currentTrigger,
                           delayHours: value
                         }
                       });
@@ -287,10 +310,14 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
                     id="send-automatically"
                     checked={deliveryConfig.trigger?.sendAutomatically || false}
                     onCheckedChange={(checked) => {
+                      const currentTrigger = deliveryConfig.trigger || { 
+                        type: 'ticket-closed', 
+                        delayHours: 24
+                      };
                       onConfigChange({
                         ...deliveryConfig,
                         trigger: {
-                          ...(deliveryConfig.trigger || {}),
+                          ...currentTrigger,
                           sendAutomatically: checked
                         }
                       });
@@ -342,7 +369,7 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
                     <CommandEmpty>No customer found.</CommandEmpty>
                     <CommandGroup>
                       <CommandList>
-                        {Array.isArray(customerEmails) && customerEmails.map((email) => (
+                        {Array.isArray(customerEmails) && customerEmails.length > 0 ? customerEmails.map((email) => (
                           <CommandItem
                             key={email}
                             value={email}
@@ -356,7 +383,9 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
                             />
                             {email}
                           </CommandItem>
-                        ))}
+                        )) : (
+                          <CommandItem disabled>No customers available</CommandItem>
+                        )}
                       </CommandList>
                     </CommandGroup>
                   </Command>
