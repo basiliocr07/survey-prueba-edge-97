@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,20 +10,38 @@ import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
-import { Check, Calendar as CalendarIcon, X, ChevronsUpDown, Search, CheckCircle, XCircle } from 'lucide-react';
+import { 
+  Check, 
+  Calendar as CalendarIcon, 
+  X, 
+  ChevronsUpDown, 
+  Search, 
+  CheckCircle, 
+  XCircle,
+  ChevronDown,
+  ChevronUp,
+  User
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DeliveryConfig } from '@/types/surveyTypes';
 import { useCustomers } from '@/application/hooks/useCustomers';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface EmailDeliverySettingsProps {
   deliveryConfig: DeliveryConfig;
   onConfigChange: (config: DeliveryConfig) => void;
 }
 
+interface CustomerEmail {
+  email: string;
+  name?: string;
+}
+
 export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }: EmailDeliverySettingsProps) {
   const { customerEmails = [], isLoading } = useCustomers();
   const [emailInput, setEmailInput] = useState('');
   const [commandOpen, setCommandOpen] = useState(false);
+  const [isEmailListOpen, setIsEmailListOpen] = useState(false);
   
   // Ensure emailAddresses is always an array
   useEffect(() => {
@@ -121,6 +138,22 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
 
   const isValidEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  // Simulated customer data - in a real app, this would come from your backend
+  // This is just to demonstrate showing names with emails
+  const getCustomerName = (email: string): string => {
+    // This is a placeholder - in a real app, you would look up the customer name from your data
+    const emailParts = email.split('@');
+    if (emailParts.length > 0) {
+      // Convert john.doe to John Doe
+      const namePart = emailParts[0];
+      return namePart
+        .split(/[._-]/)
+        .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ');
+    }
+    return 'Unknown User';
   };
 
   return (
@@ -400,25 +433,25 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
                     <CommandInput placeholder="Search by email..." className="h-9" />
                     <CommandEmpty>No customer found.</CommandEmpty>
                     <CommandGroup>
-                      <CommandList>
-                        {Array.isArray(customerEmails) && customerEmails.length > 0 ? customerEmails.map((email) => (
-                          <CommandItem
-                            key={email}
-                            value={email}
-                            onSelect={handleSelectCustomerEmail}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                (deliveryConfig.emailAddresses || []).includes(email) ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            {email}
-                          </CommandItem>
-                        )) : (
-                          <CommandItem disabled>No customers available</CommandItem>
-                        )}
-                      </CommandList>
+                      {Array.isArray(customerEmails) && customerEmails.length > 0 && (
+                        <CommandList>
+                          {customerEmails.map((email) => (
+                            <CommandItem
+                              key={email}
+                              value={email}
+                              onSelect={handleSelectCustomerEmail}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  (deliveryConfig.emailAddresses || []).includes(email) ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {email}
+                            </CommandItem>
+                          ))}
+                        </CommandList>
+                      )}
                     </CommandGroup>
                   </Command>
                 </PopoverContent>
@@ -453,24 +486,70 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
             
             {(deliveryConfig.emailAddresses && deliveryConfig.emailAddresses.length > 0) ? (
               <div className="border rounded-md p-4">
-                <div className="flex flex-wrap gap-2">
-                  {(deliveryConfig.emailAddresses || []).map((email) => (
-                    <Badge key={email} variant="secondary" className="flex items-center gap-1">
-                      {email}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-4 w-4 rounded-full"
-                        onClick={() => handleRemoveEmail(email)}
-                      >
-                        <X className="h-3 w-3" />
+                <Collapsible
+                  open={isEmailListOpen}
+                  onOpenChange={setIsEmailListOpen}
+                  className="w-full"
+                >
+                  <div className="flex items-center justify-between px-2">
+                    <h4 className="text-sm font-medium">
+                      {deliveryConfig.emailAddresses.length} Email Recipients
+                    </h4>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        {isEmailListOpen ? (
+                          <ChevronUp className="h-4 w-4" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4" />
+                        )}
                       </Button>
-                    </Badge>
-                  ))}
-                </div>
+                    </CollapsibleTrigger>
+                  </div>
+                  
+                  <CollapsibleContent className="mt-2">
+                    <div className="flex flex-col space-y-2">
+                      {(deliveryConfig.emailAddresses || []).map((email) => (
+                        <div key={email} className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
+                          <div className="flex items-center">
+                            <User className="h-4 w-4 mr-2 text-muted-foreground" />
+                            <div>
+                              <div className="font-medium">{getCustomerName(email)}</div>
+                              <div className="text-sm text-muted-foreground">{email}</div>
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 rounded-full"
+                            onClick={() => handleRemoveEmail(email)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No email addresses added yet.</p>
+              <Collapsible className="border rounded-md p-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">No email addresses added yet.</p>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 rounded-full">
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </CollapsibleTrigger>
+                </div>
+                <CollapsibleContent className="mt-2">
+                  <div className="bg-muted/50 p-4 rounded-md">
+                    <p className="text-sm">
+                      Add email addresses to send the survey to specific recipients. 
+                      You can add them manually or select from your customer list.
+                    </p>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
             )}
           </div>
         </div>
