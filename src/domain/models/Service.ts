@@ -4,4 +4,5 @@ export interface Service {
   name: string;
   description?: string;
   created_at: string;
+  active: boolean;
 }
