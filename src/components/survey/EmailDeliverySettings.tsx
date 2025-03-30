@@ -1,20 +1,20 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-import { CalendarIcon, Clock, SendHorizontal, Settings, Users, Check } from "lucide-react";
-import { DeliveryConfig } from "@/domain/models/Survey";
-import { useCustomers } from "@/application/hooks/useCustomers";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Switch } from "@/components/ui/switch";
+import { Check, Calendar as CalendarIcon, X, ChevronsUpDown, Search } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { DeliveryConfig } from '@/types/surveyTypes';
+import { useCustomers } from '@/application/hooks/useCustomers';
 
 interface EmailDeliverySettingsProps {
   deliveryConfig: DeliveryConfig;
@@ -22,343 +22,365 @@ interface EmailDeliverySettingsProps {
 }
 
 export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }: EmailDeliverySettingsProps) {
-  const [config, setConfig] = useState<DeliveryConfig>(deliveryConfig);
-  const [emailInput, setEmailInput] = useState<string>("");
-  const [popoverOpen, setPopoverOpen] = useState(false);
+  const { customerEmails = [], isLoading } = useCustomers();
+  const [emailInput, setEmailInput] = useState('');
+  const [commandOpen, setCommandOpen] = useState(false);
   
-  const { customerEmails, isLoading: isLoadingCustomers } = useCustomers();
-
+  // Ensure emailAddresses is always an array
   useEffect(() => {
-    setConfig(deliveryConfig);
-  }, [deliveryConfig]);
-
-  const handleConfigChange = (newConfig: DeliveryConfig) => {
-    setConfig(newConfig);
-    onConfigChange(newConfig);
-  };
-
-  const handleTypeChange = (value: 'manual' | 'scheduled' | 'triggered') => {
-    const newConfig = { ...config, type: value };
-    
-    if (value === 'scheduled' && !newConfig.schedule) {
-      newConfig.schedule = {
-        frequency: 'monthly',
-        dayOfMonth: 1,
-        time: '09:00',
-      };
-    } else if (value === 'triggered' && !newConfig.trigger) {
-      newConfig.trigger = {
-        type: 'ticket-closed',
-        delayHours: 24,
-        sendAutomatically: false,
-      };
+    if (!deliveryConfig.emailAddresses) {
+      onConfigChange({
+        ...deliveryConfig,
+        emailAddresses: []
+      });
     }
-    
-    handleConfigChange(newConfig);
-  };
+  }, [deliveryConfig, onConfigChange]);
 
-  const addEmail = () => {
+  const handleAddEmail = () => {
     if (!emailInput.trim() || !isValidEmail(emailInput)) return;
     
-    const newEmails = [...config.emailAddresses];
-    if (!newEmails.includes(emailInput)) {
-      newEmails.push(emailInput);
-      handleConfigChange({ ...config, emailAddresses: newEmails });
+    const email = emailInput.trim();
+    const updatedEmails = [...(deliveryConfig.emailAddresses || [])];
+    
+    if (!updatedEmails.includes(email)) {
+      updatedEmails.push(email);
+      onConfigChange({
+        ...deliveryConfig,
+        emailAddresses: updatedEmails
+      });
     }
-    setEmailInput("");
+    
+    setEmailInput('');
   };
 
-  const removeEmail = (email: string) => {
-    const newEmails = config.emailAddresses.filter(e => e !== email);
-    handleConfigChange({ ...config, emailAddresses: newEmails });
+  const handleRemoveEmail = (email: string) => {
+    const updatedEmails = (deliveryConfig.emailAddresses || []).filter(e => e !== email);
+    onConfigChange({
+      ...deliveryConfig,
+      emailAddresses: updatedEmails
+    });
+  };
+
+  const handleSelectCustomerEmail = (email: string) => {
+    if (!email) return;
+    
+    const updatedEmails = [...(deliveryConfig.emailAddresses || [])];
+    
+    if (!updatedEmails.includes(email)) {
+      updatedEmails.push(email);
+      onConfigChange({
+        ...deliveryConfig,
+        emailAddresses: updatedEmails
+      });
+    }
+    
+    setCommandOpen(false);
+  };
+
+  const handleTypeChange = (type: string) => {
+    onConfigChange({
+      ...deliveryConfig,
+      type,
+      // Initialize sub-settings if needed
+      ...(type === 'scheduled' && !deliveryConfig.schedule ? {
+        schedule: { frequency: 'weekly', dayOfWeek: 1, time: '09:00' }
+      } : {}),
+      ...(type === 'triggered' && !deliveryConfig.trigger ? {
+        trigger: { type: 'ticket-closed', delayHours: 24, sendAutomatically: true }
+      } : {})
+    });
   };
 
   const isValidEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  const addCustomerEmail = (email: string) => {
-    if (!email || !isValidEmail(email)) return;
-    
-    const newEmails = [...config.emailAddresses];
-    if (!newEmails.includes(email)) {
-      newEmails.push(email);
-      handleConfigChange({ ...config, emailAddresses: newEmails });
-    }
-    setPopoverOpen(false);
-  };
-
   return (
-    <Card className="mt-6">
+    <Card>
       <CardHeader>
-        <CardTitle className="flex items-center">
-          <SendHorizontal className="h-5 w-5 mr-2" />
-          Email Delivery Settings
-        </CardTitle>
+        <CardTitle>Delivery Settings</CardTitle>
       </CardHeader>
-      <CardContent>
-        <Tabs defaultValue={config.type} onValueChange={(value) => handleTypeChange(value as any)}>
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="manual">Manual</TabsTrigger>
-            <TabsTrigger value="scheduled">Scheduled</TabsTrigger>
-            <TabsTrigger value="triggered">Triggered</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="manual" className="space-y-4 mt-4">
-            <p className="text-sm text-muted-foreground">
-              Send this survey manually to specific email addresses.
-            </p>
-          </TabsContent>
-          
-          <TabsContent value="scheduled" className="space-y-4 mt-4">
-            <p className="text-sm text-muted-foreground mb-4">
-              Schedule this survey to be sent automatically at regular intervals.
-            </p>
+      <CardContent className="space-y-6">
+        <div>
+          <h3 className="text-lg font-medium mb-3">Delivery Method</h3>
+          <Tabs 
+            defaultValue={deliveryConfig.type || 'manual'} 
+            onValueChange={handleTypeChange}
+            className="w-full"
+          >
+            <TabsList className="grid grid-cols-3 mb-4">
+              <TabsTrigger value="manual">Manual</TabsTrigger>
+              <TabsTrigger value="scheduled">Scheduled</TabsTrigger>
+              <TabsTrigger value="triggered">Triggered</TabsTrigger>
+            </TabsList>
             
-            <div className="space-y-4">
-              <div>
-                <Label>Frequency</Label>
-                <Select 
-                  value={config.schedule?.frequency || 'monthly'} 
-                  onValueChange={(value) => handleConfigChange({
-                    ...config,
-                    schedule: {
-                      ...config.schedule!,
-                      frequency: value as 'daily' | 'weekly' | 'monthly'
-                    }
-                  })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select frequency" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="daily">Daily</SelectItem>
-                    <SelectItem value="weekly">Weekly</SelectItem>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <TabsContent value="manual" className="space-y-4">
+              <p className="text-muted-foreground">
+                Send this survey manually to specific email addresses.
+              </p>
+            </TabsContent>
+            
+            <TabsContent value="scheduled" className="space-y-4">
+              <p className="text-muted-foreground mb-4">
+                Schedule this survey to be sent automatically at regular intervals.
+              </p>
               
-              {config.schedule?.frequency === 'monthly' && (
+              <div className="space-y-4">
                 <div>
-                  <Label>Day of Month</Label>
-                  <Select 
-                    value={String(config.schedule?.dayOfMonth || 1)} 
-                    onValueChange={(value) => handleConfigChange({
-                      ...config,
-                      schedule: {
-                        ...config.schedule!,
-                        dayOfMonth: parseInt(value, 10)
-                      }
-                    })}
+                  <Label className="mb-2 block">Frequency</Label>
+                  <RadioGroup 
+                    value={deliveryConfig.schedule?.frequency || 'weekly'} 
+                    onValueChange={(value) => {
+                      onConfigChange({
+                        ...deliveryConfig,
+                        schedule: {
+                          ...(deliveryConfig.schedule || {}),
+                          frequency: value as 'daily' | 'weekly' | 'monthly'
+                        }
+                      });
+                    }}
+                    className="flex flex-col space-y-2"
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select day" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.from({ length: 31 }, (_, i) => (
-                        <SelectItem key={i + 1} value={String(i + 1)}>
-                          {i + 1}
-                        </SelectItem>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="daily" id="daily" />
+                      <Label htmlFor="daily">Daily</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="weekly" id="weekly" />
+                      <Label htmlFor="weekly">Weekly</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="monthly" id="monthly" />
+                      <Label htmlFor="monthly">Monthly</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                
+                {deliveryConfig.schedule?.frequency === 'weekly' && (
+                  <div>
+                    <Label className="mb-2 block">Day of Week</Label>
+                    <RadioGroup 
+                      value={String(deliveryConfig.schedule?.dayOfWeek || 1)} 
+                      onValueChange={(value) => {
+                        onConfigChange({
+                          ...deliveryConfig,
+                          schedule: {
+                            ...(deliveryConfig.schedule || {}),
+                            dayOfWeek: parseInt(value)
+                          }
+                        });
+                      }}
+                      className="grid grid-cols-2 md:grid-cols-4 gap-2"
+                    >
+                      {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day, index) => (
+                        <div key={day} className="flex items-center space-x-2">
+                          <RadioGroupItem value={String(index + 1)} id={`day-${index + 1}`} />
+                          <Label htmlFor={`day-${index + 1}`}>{day}</Label>
+                        </div>
                       ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-              
-              {config.schedule?.frequency === 'weekly' && (
+                    </RadioGroup>
+                  </div>
+                )}
+                
+                {deliveryConfig.schedule?.frequency === 'monthly' && (
+                  <div>
+                    <Label className="mb-2 block">Day of Month</Label>
+                    <div className="flex space-x-2">
+                      <Input 
+                        type="number" 
+                        min="1" 
+                        max="31" 
+                        value={deliveryConfig.schedule?.dayOfMonth || 1}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value);
+                          if (value >= 1 && value <= 31) {
+                            onConfigChange({
+                              ...deliveryConfig,
+                              schedule: {
+                                ...(deliveryConfig.schedule || {}),
+                                dayOfMonth: value
+                              }
+                            });
+                          }
+                        }}
+                        className="w-20"
+                      />
+                    </div>
+                  </div>
+                )}
+                
                 <div>
-                  <Label>Day of Week</Label>
-                  <Select 
-                    value={String(config.schedule?.dayOfWeek || 1)} 
-                    onValueChange={(value) => handleConfigChange({
-                      ...config,
-                      schedule: {
-                        ...config.schedule!,
-                        dayOfWeek: parseInt(value, 10)
-                      }
-                    })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select day" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">Monday</SelectItem>
-                      <SelectItem value="2">Tuesday</SelectItem>
-                      <SelectItem value="3">Wednesday</SelectItem>
-                      <SelectItem value="4">Thursday</SelectItem>
-                      <SelectItem value="5">Friday</SelectItem>
-                      <SelectItem value="6">Saturday</SelectItem>
-                      <SelectItem value="0">Sunday</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-              
-              <div>
-                <Label>Time</Label>
-                <div className="flex items-center space-x-2">
-                  <Input
-                    type="time"
-                    value={config.schedule?.time || "09:00"}
-                    onChange={(e) => handleConfigChange({
-                      ...config,
-                      schedule: {
-                        ...config.schedule!,
-                        time: e.target.value
-                      }
-                    })}
+                  <Label className="mb-2 block">Time</Label>
+                  <Input 
+                    type="time" 
+                    value={deliveryConfig.schedule?.time || '09:00'}
+                    onChange={(e) => {
+                      onConfigChange({
+                        ...deliveryConfig,
+                        schedule: {
+                          ...(deliveryConfig.schedule || {}),
+                          time: e.target.value
+                        }
+                      });
+                    }}
                     className="w-32"
                   />
-                  <Clock className="h-4 w-4 text-muted-foreground" />
                 </div>
               </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="triggered" className="space-y-4 mt-4">
-            <p className="text-sm text-muted-foreground mb-4">
-              Send this survey when specific events occur in your system.
-            </p>
+            </TabsContent>
             
-            <div className="space-y-4">
-              <div>
-                <Label>Trigger Event</Label>
-                <RadioGroup 
-                  value={config.trigger?.type || "ticket-closed"}
-                  onValueChange={(value) => handleConfigChange({
-                    ...config,
-                    trigger: {
-                      ...config.trigger!,
-                      type: value as 'ticket-closed' | 'purchase-completed'
-                    }
-                  })}
-                  className="mt-2"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="ticket-closed" id="ticket-closed" />
-                    <Label htmlFor="ticket-closed">After ticket is closed</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="purchase-completed" id="purchase-completed" />
-                    <Label htmlFor="purchase-completed">After purchase is completed</Label>
-                  </div>
-                </RadioGroup>
-              </div>
+            <TabsContent value="triggered" className="space-y-4">
+              <p className="text-muted-foreground mb-4">
+                Send this survey when specific events occur in your system.
+              </p>
               
-              <div>
-                <Label>Delay (hours)</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  max="168"
-                  value={config.trigger?.delayHours || 24}
-                  onChange={(e) => handleConfigChange({
-                    ...config,
-                    trigger: {
-                      ...config.trigger!,
-                      delayHours: parseInt(e.target.value, 10) || 0
-                    }
-                  })}
-                  className="w-24"
-                />
+              <div className="space-y-4">
+                <div>
+                  <Label className="mb-2 block">Trigger Event</Label>
+                  <RadioGroup 
+                    value={deliveryConfig.trigger?.type || 'ticket-closed'} 
+                    onValueChange={(value) => {
+                      onConfigChange({
+                        ...deliveryConfig,
+                        trigger: {
+                          ...(deliveryConfig.trigger || {}),
+                          type: value as 'ticket-closed' | 'purchase-completed'
+                        }
+                      });
+                    }}
+                    className="flex flex-col space-y-2"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="ticket-closed" id="ticket-closed" />
+                      <Label htmlFor="ticket-closed">After ticket is closed</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="purchase-completed" id="purchase-completed" />
+                      <Label htmlFor="purchase-completed">After purchase is completed</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                
+                <div>
+                  <Label className="mb-2 block">Delay (hours)</Label>
+                  <Input 
+                    type="number" 
+                    min="0" 
+                    max="168" 
+                    value={deliveryConfig.trigger?.delayHours || 24}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value);
+                      onConfigChange({
+                        ...deliveryConfig,
+                        trigger: {
+                          ...(deliveryConfig.trigger || {}),
+                          delayHours: value
+                        }
+                      });
+                    }}
+                    className="w-20"
+                  />
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Switch 
+                    id="send-automatically"
+                    checked={deliveryConfig.trigger?.sendAutomatically || false}
+                    onCheckedChange={(checked) => {
+                      onConfigChange({
+                        ...deliveryConfig,
+                        trigger: {
+                          ...(deliveryConfig.trigger || {}),
+                          sendAutomatically: checked
+                        }
+                      });
+                    }}
+                  />
+                  <Label htmlFor="send-automatically">Send automatically</Label>
+                </div>
               </div>
-              
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="auto-send"
-                  checked={config.trigger?.sendAutomatically || false}
-                  onCheckedChange={(checked) => handleConfigChange({
-                    ...config,
-                    trigger: {
-                      ...config.trigger!,
-                      sendAutomatically: checked
-                    }
-                  })}
-                />
-                <Label htmlFor="auto-send">Send automatically</Label>
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
+            </TabsContent>
+          </Tabs>
+        </div>
         
-        <Separator className="my-6" />
-        
-        <div className="space-y-4">
-          <div>
-            <Label>Email Recipients</Label>
-            <div className="flex gap-2 mb-2">
-              <div className="flex items-center space-x-2 mt-2 flex-1">
+        <div className="border-t pt-6">
+          <h3 className="text-lg font-medium mb-3">Email Recipients</h3>
+          
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <div className="flex-1 flex gap-2">
                 <Input
                   placeholder="Enter email address"
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && addEmail()}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddEmail();
+                    }
+                  }}
                 />
-                <Button onClick={addEmail} variant="outline" size="sm">Add</Button>
+                <Button 
+                  variant="outline" 
+                  onClick={handleAddEmail}
+                >
+                  Add
+                </Button>
               </div>
               
-              <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+              <Popover open={commandOpen} onOpenChange={setCommandOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="mt-2">
-                    <Users className="mr-2 h-4 w-4" />
-                    Customer Emails
+                  <Button variant="outline" className="w-[220px]">
+                    <Search className="mr-2 h-4 w-4" />
+                    <span>Search Customers</span>
+                    <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="p-0" side="bottom" align="start" alignOffset={0}>
+                <PopoverContent className="w-[220px] p-0">
                   <Command>
-                    <CommandInput placeholder="Search customer emails..." />
-                    <CommandEmpty>No customers found.</CommandEmpty>
+                    <CommandInput placeholder="Search by email..." className="h-9" />
+                    <CommandEmpty>No customer found.</CommandEmpty>
                     <CommandGroup>
-                      {isLoadingCustomers ? (
-                        <div className="flex items-center justify-center p-4">
-                          <div className="animate-spin h-4 w-4 border-2 border-primary rounded-full border-t-transparent"></div>
-                        </div>
-                      ) : (
-                        customerEmails.map((email) => (
+                      <CommandList>
+                        {Array.isArray(customerEmails) && customerEmails.map((email) => (
                           <CommandItem
                             key={email}
                             value={email}
-                            onSelect={() => addCustomerEmail(email)}
+                            onSelect={handleSelectCustomerEmail}
                           >
                             <Check
-                              className={`mr-2 h-4 w-4 ${
-                                config.emailAddresses.includes(email) ? "opacity-100" : "opacity-0"
-                              }`}
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                (deliveryConfig.emailAddresses || []).includes(email) ? "opacity-100" : "opacity-0"
+                              )}
                             />
                             {email}
                           </CommandItem>
-                        ))
-                      )}
+                        ))}
+                      </CommandList>
                     </CommandGroup>
                   </Command>
                 </PopoverContent>
               </Popover>
             </div>
             
-            {!isValidEmail(emailInput) && emailInput.trim() !== "" && (
-              <p className="text-xs text-red-500 mt-1">Please enter a valid email address</p>
+            {(!isValidEmail(emailInput) && emailInput.trim() !== '') && (
+              <p className="text-sm text-destructive">Please enter a valid email address</p>
             )}
-          </div>
-          
-          <div className="space-y-2">
-            {config.emailAddresses.length > 0 ? (
-              <div className="border rounded-lg p-4">
+            
+            {(deliveryConfig.emailAddresses && deliveryConfig.emailAddresses.length > 0) ? (
+              <div className="border rounded-md p-4">
                 <div className="flex flex-wrap gap-2">
-                  {config.emailAddresses.map((email, index) => (
-                    <Badge 
-                      key={index} 
-                      variant="secondary"
-                      className="py-1.5 px-2.5 flex items-center"
-                    >
-                      <span>{email}</span>
+                  {(deliveryConfig.emailAddresses || []).map((email) => (
+                    <Badge key={email} variant="secondary" className="flex items-center gap-1">
+                      {email}
                       <Button
-                        onClick={() => removeEmail(email)}
                         variant="ghost"
-                        size="sm"
-                        className="h-5 w-5 p-0 ml-1 rounded-full"
+                        size="icon"
+                        className="h-4 w-4 rounded-full"
+                        onClick={() => handleRemoveEmail(email)}
                       >
-                        &times;
+                        <X className="h-3 w-3" />
                       </Button>
                     </Badge>
                   ))}
