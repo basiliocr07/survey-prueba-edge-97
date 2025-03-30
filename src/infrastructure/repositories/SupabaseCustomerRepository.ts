@@ -15,16 +15,29 @@ export class SupabaseCustomerRepository implements CustomerRepository {
       throw new Error('Failed to fetch customers');
     }
     
-    return data.map(customer => ({
-      ...customer,
-      acquired_services: customer.acquired_services || [],
-      id: customer.id,
-      brand_name: customer.brand_name,
-      contact_name: customer.contact_name,
-      contact_email: customer.contact_email,
-      contact_phone: customer.contact_phone,
-      created_at: customer.created_at,
-      updated_at: customer.updated_at
-    }));
+    return data.map(customer => {
+      // Ensure acquired_services is always an array of strings
+      let services: string[] = [];
+      
+      if (customer.acquired_services) {
+        if (Array.isArray(customer.acquired_services)) {
+          services = customer.acquired_services.map(service => String(service));
+        } else if (typeof customer.acquired_services === 'string') {
+          services = [customer.acquired_services];
+        }
+        // Ignore other types that cannot be reasonably converted to string[]
+      }
+      
+      return {
+        id: customer.id,
+        brand_name: customer.brand_name,
+        contact_name: customer.contact_name,
+        contact_email: customer.contact_email,
+        contact_phone: customer.contact_phone,
+        acquired_services: services,
+        created_at: customer.created_at,
+        updated_at: customer.updated_at
+      };
+    });
   }
 }
