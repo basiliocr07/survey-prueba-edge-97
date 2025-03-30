@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { GetAllCustomers } from '../useCases/customer/GetAllCustomers';
 import { GetAllServices } from '../useCases/customer/GetAllServices';
@@ -47,7 +48,7 @@ export function useCustomers() {
       }
     });
     
-    const serviceUsageData = Array.from(allServices).map(service => {
+    return Array.from(allServices).map(service => {
       const count = customers.filter(customer => 
         customer.acquired_services && 
         Array.isArray(customer.acquired_services) && 
@@ -58,9 +59,7 @@ export function useCustomers() {
         name: service,
         count
       };
-    });
-    
-    return serviceUsageData.sort((a, b) => b.count - a.count);
+    }).sort((a, b) => b.count - a.count);
   };
 
   const isLoading = isLoadingCustomers || isLoadingServices || isLoadingEmails;
