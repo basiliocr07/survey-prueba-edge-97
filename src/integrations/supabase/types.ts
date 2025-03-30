@@ -9,6 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      customer_services: {
+        Row: {
+          created_at: string
+          customer_id: string
+          id: string
+          service_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          id?: string
+          service_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          id?: string
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_services_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           acquired_services: Json | null
@@ -135,6 +171,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      services: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
       }
       survey_email_logs: {
         Row: {
