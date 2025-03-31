@@ -2,6 +2,9 @@
 using MediatR;
 using SurveyApp.Domain.Models;
 using SurveyApp.Domain.Repositories;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SurveyApp.Application.Customers.Commands.AddCustomer
 {
@@ -18,6 +21,18 @@ namespace SurveyApp.Application.Customers.Commands.AddCustomer
         {
             try
             {
+                // Validación de la solicitud
+                if (string.IsNullOrWhiteSpace(request.BrandName) || 
+                    string.IsNullOrWhiteSpace(request.ContactName) || 
+                    string.IsNullOrWhiteSpace(request.ContactEmail))
+                {
+                    return new AddCustomerResult
+                    {
+                        Success = false,
+                        Message = "Los campos Nombre de Marca, Nombre de Contacto y Email son obligatorios"
+                    };
+                }
+
                 // Crear el objeto Customer a partir del comando
                 var customer = new Customer
                 {
@@ -46,6 +61,7 @@ namespace SurveyApp.Application.Customers.Commands.AddCustomer
                     }
                 }
 
+                // Retornar resultado exitoso
                 return new AddCustomerResult
                 {
                     Success = true,
@@ -55,6 +71,10 @@ namespace SurveyApp.Application.Customers.Commands.AddCustomer
             }
             catch (Exception ex)
             {
+                // Log the exception (idealmente usar un servicio de logging)
+                Console.WriteLine($"Error adding customer: {ex.Message}");
+                
+                // Retornar resultado con error
                 return new AddCustomerResult
                 {
                     Success = false,

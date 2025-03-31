@@ -1,6 +1,10 @@
 
 using MediatR;
 using SurveyApp.Domain.Repositories;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SurveyApp.Application.Customers.Queries.GetCustomerGrowthData
 {
@@ -15,10 +19,14 @@ namespace SurveyApp.Application.Customers.Queries.GetCustomerGrowthData
 
         public async Task<CustomerGrowthDataViewModel> Handle(GetCustomerGrowthDataQuery request, CancellationToken cancellationToken)
         {
+            // Obtener datos necesarios de los repositorios
             var customers = await _customerRepository.GetAllCustomersAsync();
             var services = await _customerRepository.GetAllServicesAsync();
+            
+            // Procesar y calcular los datos
             var serviceUsageData = CalculateServiceUsage(customers);
 
+            // Construir el ViewModel para la vista
             return new CustomerGrowthDataViewModel
             {
                 Customers = customers,
