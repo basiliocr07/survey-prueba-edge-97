@@ -11,5 +11,6 @@ namespace SurveyApp.Domain.Models
         public List<string> AcquiredServices { get; set; } = new List<string>();
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+        public string CustomerType { get; set; } = "client"; // Puede ser "admin" o "client"
     }
 }

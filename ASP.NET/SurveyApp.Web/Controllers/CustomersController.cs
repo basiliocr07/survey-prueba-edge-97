@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Application.Customers.Commands.AddCustomer;
 using SurveyApp.Application.Customers.Queries.GetCustomerGrowthData;
 using SurveyApp.Web.Models;
+using System;
 using System.Threading.Tasks;
 
 namespace SurveyApp.Web.Controllers
@@ -17,17 +18,29 @@ namespace SurveyApp.Web.Controllers
             _mediator = mediator;
         }
 
-        public async Task<IActionResult> Growth()
+        public async Task<IActionResult> Growth(string timeRange = "3", string chartType = "services", string customerType = null)
         {
             try
             {
-                var growthData = await _mediator.Send(new GetCustomerGrowthDataQuery());
+                int? timeRangeInMonths = timeRange != "all" ? int.Parse(timeRange) : null;
+
+                var query = new GetCustomerGrowthDataQuery
+                {
+                    TimeRangeInMonths = timeRangeInMonths,
+                    CustomerType = customerType
+                };
+
+                var growthData = await _mediator.Send(query);
                 
                 var viewModel = new CustomerGrowthViewModel
                 {
                     Customers = growthData.Customers,
                     Services = growthData.Services,
-                    ServiceUsageData = growthData.ServiceUsageData
+                    ServiceUsageData = growthData.ServiceUsageData,
+                    MonthlyGrowthData = growthData.MonthlyGrowthData,
+                    BrandGrowthData = growthData.BrandGrowthData,
+                    SelectedTimeRange = timeRange,
+                    SelectedChartType = chartType
                 };
 
                 return View(viewModel);
@@ -57,6 +70,7 @@ namespace SurveyApp.Web.Controllers
                     ContactName = form.ContactName,
                     ContactEmail = form.ContactEmail,
                     ContactPhone = form.ContactPhone,
+                    CustomerType = form.CustomerType,
                     AcquiredServices = form.SelectedServices
                 };
 

@@ -36,11 +36,219 @@
             </button>
         </div>
         
+        <div class="mb-6">
+            <div class="bg-white border rounded-lg shadow-sm">
+                <div class="p-4 border-b">
+                    <h5 class="text-lg font-semibold flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        Service Analytics
+                    </h5>
+                    <div class="text-sm text-gray-600">
+                        Analyze service usage and growth
+                    </div>
+                </div>
+                <div class="p-4">
+                    <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+                        <div class="flex items-center gap-2">
+                            <a href="@Url.Action("Growth", new { chartType = "services", timeRange = Model.SelectedTimeRange })" 
+                               class="px-3 py-1 rounded @(Model.SelectedChartType == "services" ? "bg-blue-500 text-white" : "bg-gray-200")">
+                                Service Usage (Bar)
+                            </a>
+                            <a href="@Url.Action("Growth", new { chartType = "servicesPie", timeRange = Model.SelectedTimeRange })" 
+                               class="px-3 py-1 rounded @(Model.SelectedChartType == "servicesPie" ? "bg-blue-500 text-white" : "bg-gray-200")">
+                                Service Usage (Pie)
+                            </a>
+                            <a href="@Url.Action("Growth", new { chartType = "servicesGrowth", timeRange = Model.SelectedTimeRange })" 
+                               class="px-3 py-1 rounded @(Model.SelectedChartType == "servicesGrowth" ? "bg-blue-500 text-white" : "bg-gray-200")">
+                                Service Growth
+                            </a>
+                            <a href="@Url.Action("Growth", new { chartType = "servicesMonthly", timeRange = Model.SelectedTimeRange })" 
+                               class="px-3 py-1 rounded @(Model.SelectedChartType == "servicesMonthly" ? "bg-blue-500 text-white" : "bg-gray-200")">
+                                Monthly Growth
+                            </a>
+                        </div>
+                        
+                        <div class="flex items-center gap-2">
+                            <select id="timeRangeSelect" 
+                                    class="border border-gray-300 rounded px-2 py-1" 
+                                    onchange="window.location.href = '@Url.Action("Growth")?chartType=@Model.SelectedChartType&timeRange=' + this.value">
+                                <option value="1" @(Model.SelectedTimeRange == "1" ? "selected" : "")>Last Month</option>
+                                <option value="3" @(Model.SelectedTimeRange == "3" ? "selected" : "")>Last 3 Months</option>
+                                <option value="12" @(Model.SelectedTimeRange == "12" ? "selected" : "")>Last Year</option>
+                                <option value="all" @(Model.SelectedTimeRange == "all" ? "selected" : "")>All Time</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="h-[300px] w-full">
+                        <canvas id="chartContainer"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <div class="grid grid-cols-1 gap-8">
-            <partial name="_ServiceUsageChart" model="Model.ServiceUsageData" />
             <partial name="_CustomerTable" model="Model.Customers" />
         </div>
     </main>
 </div>
 
 <partial name="_CustomerFormModal" model="new { Services = Model.Services, CustomerForm = Model.CustomerForm }" />
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const ctx = document.getElementById('chartContainer').getContext('2d');
+            let chart;
+            
+            const chartType = '@Model.SelectedChartType';
+            
+            if (chartType === 'services') {
+                // Barra horizontal para uso de servicios
+                const serviceData = @Json.Serialize(Model.ServiceUsageData);
+                
+                chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: serviceData.map(item => item.name),
+                        datasets: [{
+                            label: 'Number of Customers',
+                            data: serviceData.map(item => item.count),
+                            backgroundColor: '#8884d8',
+                            borderColor: '#8884d8',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            } 
+            else if (chartType === 'servicesPie') {
+                // Gráfico de pastel para uso de servicios
+                const serviceData = @Json.Serialize(Model.ServiceUsageData);
+                
+                chart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: serviceData.map(item => item.name),
+                        datasets: [{
+                            data: serviceData.map(item => item.count),
+                            backgroundColor: [
+                                '#8884d8', '#82ca9d', '#F97316', '#0EA5E9', 
+                                '#D946EF', '#8B5CF6', '#FF6B8B', '#9467BD',
+                                '#8C564B', '#E377C2', '#7F7F7F', '#BCBD22'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right'
+                            }
+                        }
+                    }
+                });
+            }
+            else if (chartType === 'servicesGrowth') {
+                // Crecimiento de servicios
+                const brandData = @Json.Serialize(Model.BrandGrowthData);
+                
+                chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: brandData.map(item => item.brandName),
+                        datasets: [
+                            {
+                                label: 'Total Customers',
+                                data: brandData.map(item => item.totalCustomers),
+                                backgroundColor: '#8884d8'
+                            },
+                            {
+                                label: 'New Customers',
+                                data: brandData.map(item => item.recentCustomers),
+                                backgroundColor: '#82ca9d'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+            else if (chartType === 'servicesMonthly') {
+                // Crecimiento mensual
+                const monthlyData = @Json.Serialize(Model.MonthlyGrowthData);
+                
+                chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: monthlyData.map(item => item.month),
+                        datasets: [{
+                            label: 'New Customers',
+                            data: monthlyData.map(item => item.newCustomers),
+                            fill: false,
+                            borderColor: '#82ca9d',
+                            tension: 0.1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+            else {
+                // Gráfico predeterminado
+                const serviceData = @Json.Serialize(Model.ServiceUsageData);
+                
+                chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: serviceData.map(item => item.name),
+                        datasets: [{
+                            label: 'Number of Customers',
+                            data: serviceData.map(item => item.count),
+                            backgroundColor: '#8884d8',
+                            borderColor: '#8884d8',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+}

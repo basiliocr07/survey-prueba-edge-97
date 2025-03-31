@@ -11,5 +11,8 @@ namespace SurveyApp.Domain.Repositories
         Task AddCustomerServiceAsync(string customerId, string serviceId);
         Task<string> GetServiceIdByNameAsync(string serviceName);
         Task<IEnumerable<string>> GetCustomerEmailsAsync();
+        Task<Customer> GetCustomerByIdAsync(string id);
+        Task UpdateCustomerAsync(Customer customer);
+        Task DeleteCustomerAsync(string id);
     }
 }

@@ -19,6 +19,11 @@ namespace SurveyApp.Application.Customers.Queries.GetCustomerGrowthData
         /// Categoría de servicio opcional para filtrar
         /// </summary>
         public string? ServiceCategory { get; set; }
+        
+        /// <summary>
+        /// Tipo de cliente opcional para filtrar (admin o client)
+        /// </summary>
+        public string? CustomerType { get; set; }
     }
 
     /// <summary>
@@ -40,5 +45,52 @@ namespace SurveyApp.Application.Customers.Queries.GetCustomerGrowthData
         /// Datos de uso de servicios por cliente
         /// </summary>
         public IEnumerable<ServiceUsageData> ServiceUsageData { get; set; } = new List<ServiceUsageData>();
+        
+        /// <summary>
+        /// Datos de crecimiento mensual de clientes
+        /// </summary>
+        public IEnumerable<MonthlyGrowthData> MonthlyGrowthData { get; set; } = new List<MonthlyGrowthData>();
+        
+        /// <summary>
+        /// Datos de crecimiento por marca
+        /// </summary>
+        public IEnumerable<BrandGrowthData> BrandGrowthData { get; set; } = new List<BrandGrowthData>();
+    }
+    
+    /// <summary>
+    /// Datos de crecimiento mensual
+    /// </summary>
+    public class MonthlyGrowthData
+    {
+        /// <summary>
+        /// Nombre del mes (formato: MMM yyyy)
+        /// </summary>
+        public string Month { get; set; } = string.Empty;
+        
+        /// <summary>
+        /// Cantidad de nuevos clientes en ese mes
+        /// </summary>
+        public int NewCustomers { get; set; }
+    }
+    
+    /// <summary>
+    /// Datos de crecimiento por marca
+    /// </summary>
+    public class BrandGrowthData
+    {
+        /// <summary>
+        /// Nombre de la marca
+        /// </summary>
+        public string BrandName { get; set; } = string.Empty;
+        
+        /// <summary>
+        /// Total de clientes de esta marca
+        /// </summary>
+        public int TotalCustomers { get; set; }
+        
+        /// <summary>
+        /// Nuevos clientes recientes (según el período de tiempo seleccionado)
+        /// </summary>
+        public int RecentCustomers { get; set; }
     }
 }
