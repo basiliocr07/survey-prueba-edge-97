@@ -41,6 +41,7 @@ namespace SurveyApp.Application.Customers.Commands.AddCustomer
                     ContactEmail = request.ContactEmail,
                     ContactPhone = request.ContactPhone,
                     AcquiredServices = request.AcquiredServices,
+                    CustomerType = request.CustomerType, // Asegurar que se establece el CustomerType
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
@@ -66,7 +67,7 @@ namespace SurveyApp.Application.Customers.Commands.AddCustomer
                 {
                     Success = true,
                     Message = "Cliente añadido exitosamente",
-                    CustomerId = customerId
+                    CustomerId = customerId.ToString()
                 };
             }
             catch (Exception ex)

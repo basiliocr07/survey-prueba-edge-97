@@ -21,14 +21,19 @@ namespace SurveyApp.Application.Customers.Queries.GetCustomerGrowthData
         public async Task<CustomerGrowthDataViewModel> Handle(GetCustomerGrowthDataQuery request, CancellationToken cancellationToken)
         {
             // Obtener datos necesarios de los repositorios
-            var customers = await _customerRepository.GetAllCustomersAsync();
-            var services = await _customerRepository.GetAllServicesAsync();
+            IEnumerable<Domain.Models.Customer> customers;
             
-            // Aplicar filtrado opcional si se especifica un tipo de cliente
+            // Obtener clientes por tipo si se especifica, de lo contrario todos los clientes
             if (!string.IsNullOrEmpty(request.CustomerType))
             {
-                customers = customers.Where(c => c.CustomerType.Equals(request.CustomerType, StringComparison.OrdinalIgnoreCase));
+                customers = await _customerRepository.GetCustomersByTypeAsync(request.CustomerType);
             }
+            else 
+            {
+                customers = await _customerRepository.GetAllCustomersAsync();
+            }
+            
+            var services = await _customerRepository.GetAllServicesAsync();
             
             // Filtrar por período de tiempo si está especificado
             if (request.TimeRangeInMonths.HasValue)

@@ -11,7 +11,7 @@ namespace SurveyApp.Infrastructure.Data.Entities
         public string ContactName { get; set; } = string.Empty;
         public string ContactEmail { get; set; } = string.Empty;
         public string? ContactPhone { get; set; }
-        public string CustomerType { get; set; } = "client";
+        public string CustomerType { get; set; } = "client"; // Valor predeterminado
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
 

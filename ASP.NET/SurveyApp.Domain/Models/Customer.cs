@@ -3,7 +3,7 @@ namespace SurveyApp.Domain.Models
 {
     public class Customer
     {
-        public string Id { get; set; } = string.Empty;
+        public int Id { get; set; } // Cambiado de string a int para coincidir con la infraestructura
         public string BrandName { get; set; } = string.Empty;
         public string ContactName { get; set; } = string.Empty;
         public string ContactEmail { get; set; } = string.Empty;
