@@ -4,93 +4,121 @@
     ViewData["Title"] = "Seguimiento de Crecimiento de Clientes";
 }
 
-<div class="min-h-screen bg-white">
-    <main class="p-6">
+<div class="min-h-screen bg-gradient-to-b from-white to-gray-50">
+    <main class="p-6 mx-auto max-w-7xl">
         @if (TempData["SuccessMessage"] != null)
         {
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                @TempData["SuccessMessage"]
+            <div class="bg-green-100 border-l-4 border-green-500 text-green-700 px-4 py-3 rounded shadow-sm mb-6 animate-fade-in">
+                <div class="flex">
+                    <div class="py-1">
+                        <svg class="h-6 w-6 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                    <div>@TempData["SuccessMessage"]</div>
+                </div>
             </div>
         }
 
         @if (TempData["ErrorMessage"] != null)
         {
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                @TempData["ErrorMessage"]
+            <div class="bg-red-100 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded shadow-sm mb-6 animate-fade-in">
+                <div class="flex">
+                    <div class="py-1">
+                        <svg class="h-6 w-6 text-red-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </div>
+                    <div>@TempData["ErrorMessage"]</div>
+                </div>
             </div>
         }
 
-        <div class="flex justify-between items-center mb-8">
-            <div>
-                <h1 class="text-3xl font-bold mb-2">Seguimiento de Crecimiento de Clientes</h1>
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div class="animate-slide-down">
+                <h1 class="text-3xl font-bold mb-2 text-gray-800">Seguimiento de Crecimiento de Clientes</h1>
                 <p class="text-gray-600">
                     Seguimiento y gestión de sus clientes y métricas de crecimiento
                 </p>
             </div>
             
-            <button type="button" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center gap-2" data-bs-toggle="modal" data-bs-target="#customerFormModal">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <button type="button" class="bg-primary hover:bg-primary/80 text-white px-6 py-3 rounded-lg shadow-md flex items-center gap-2 transition-all hover-lift" data-bs-toggle="modal" data-bs-target="#customerFormModal">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                Add Customer
+                Agregar Cliente
             </button>
         </div>
         
-        <div class="mb-6">
-            <div class="bg-white border rounded-lg shadow-sm">
-                <div class="p-4 border-b">
-                    <h5 class="text-lg font-semibold flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div class="mb-8 glass animate-fade-in">
+            <div class="bg-white border rounded-xl shadow-sm overflow-hidden">
+                <div class="p-5 border-b">
+                    <h5 class="text-xl font-semibold flex items-center text-gray-800">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                         </svg>
-                        Service Analytics
+                        Análisis de Servicios
                     </h5>
-                    <div class="text-sm text-gray-600">
-                        Analyze service usage and growth
+                    <div class="text-sm text-gray-600 mt-1">
+                        Analice el uso de servicios y el crecimiento
                     </div>
                 </div>
-                <div class="p-4">
-                    <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
-                        <div class="flex items-center gap-2">
+                <div class="p-5">
+                    <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
+                        <div class="flex flex-wrap items-center gap-2">
                             <a href="@Url.Action("Growth", new { chartType = "services", timeRange = Model.SelectedTimeRange })" 
-                               class="px-3 py-1 rounded @(Model.SelectedChartType == "services" ? "bg-blue-500 text-white" : "bg-gray-200")">
-                                Service Usage (Bar)
+                               class="px-4 py-2 rounded-lg transition-all @(Model.SelectedChartType == "services" ? "bg-primary text-white shadow-md" : "bg-gray-100 hover:bg-gray-200")">
+                                Uso de Servicios (Barra)
                             </a>
                             <a href="@Url.Action("Growth", new { chartType = "servicesPie", timeRange = Model.SelectedTimeRange })" 
-                               class="px-3 py-1 rounded @(Model.SelectedChartType == "servicesPie" ? "bg-blue-500 text-white" : "bg-gray-200")">
-                                Service Usage (Pie)
+                               class="px-4 py-2 rounded-lg transition-all @(Model.SelectedChartType == "servicesPie" ? "bg-primary text-white shadow-md" : "bg-gray-100 hover:bg-gray-200")">
+                                Uso de Servicios (Pie)
                             </a>
                             <a href="@Url.Action("Growth", new { chartType = "servicesGrowth", timeRange = Model.SelectedTimeRange })" 
-                               class="px-3 py-1 rounded @(Model.SelectedChartType == "servicesGrowth" ? "bg-blue-500 text-white" : "bg-gray-200")">
-                                Service Growth
+                               class="px-4 py-2 rounded-lg transition-all @(Model.SelectedChartType == "servicesGrowth" ? "bg-primary text-white shadow-md" : "bg-gray-100 hover:bg-gray-200")">
+                                Crecimiento de Servicios
                             </a>
                             <a href="@Url.Action("Growth", new { chartType = "servicesMonthly", timeRange = Model.SelectedTimeRange })" 
-                               class="px-3 py-1 rounded @(Model.SelectedChartType == "servicesMonthly" ? "bg-blue-500 text-white" : "bg-gray-200")">
-                                Monthly Growth
+                               class="px-4 py-2 rounded-lg transition-all @(Model.SelectedChartType == "servicesMonthly" ? "bg-primary text-white shadow-md" : "bg-gray-100 hover:bg-gray-200")">
+                                Crecimiento Mensual
                             </a>
                         </div>
                         
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 ml-auto">
+                            <label for="timeRangeSelect" class="text-sm font-medium text-gray-700">Período:</label>
                             <select id="timeRangeSelect" 
-                                    class="border border-gray-300 rounded px-2 py-1" 
+                                    class="border border-gray-300 rounded-lg px-3 py-2 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" 
                                     onchange="window.location.href = '@Url.Action("Growth")?chartType=@Model.SelectedChartType&timeRange=' + this.value">
-                                <option value="1" @(Model.SelectedTimeRange == "1" ? "selected" : "")>Last Month</option>
-                                <option value="3" @(Model.SelectedTimeRange == "3" ? "selected" : "")>Last 3 Months</option>
-                                <option value="12" @(Model.SelectedTimeRange == "12" ? "selected" : "")>Last Year</option>
-                                <option value="all" @(Model.SelectedTimeRange == "all" ? "selected" : "")>All Time</option>
+                                <option value="1" @(Model.SelectedTimeRange == "1" ? "selected" : "")>Último Mes</option>
+                                <option value="3" @(Model.SelectedTimeRange == "3" ? "selected" : "")>Últimos 3 Meses</option>
+                                <option value="12" @(Model.SelectedTimeRange == "12" ? "selected" : "")>Último Año</option>
+                                <option value="all" @(Model.SelectedTimeRange == "all" ? "selected" : "")>Todo el Tiempo</option>
                             </select>
                         </div>
                     </div>
                     
-                    <div class="h-[300px] w-full">
-                        <canvas id="chartContainer"></canvas>
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-inner">
+                        <div class="h-[400px] w-full" id="chartContainer">
+                            <canvas id="chartCanvas"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <div class="grid grid-cols-1 gap-8">
-            <partial name="_CustomerTable" model="Model.Customers" />
+        <div class="animate-slide-up">
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden border">
+                <div class="p-5 border-b">
+                    <h5 class="text-xl font-semibold flex items-center text-gray-800">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        Listado de Clientes
+                    </h5>
+                </div>
+                
+                <partial name="_CustomerTable" model="Model.Customers" />
+            </div>
         </div>
     </main>
 </div>
@@ -99,15 +127,30 @@
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const ctx = document.getElementById('chartContainer').getContext('2d');
+            const ctx = document.getElementById('chartCanvas').getContext('2d');
             let chart;
             
             const chartType = '@Model.SelectedChartType';
             
+            // Configurar animaciones y estilos comunes
+            Chart.defaults.font.family = "'Inter', 'Helvetica', 'Arial', sans-serif";
+            Chart.defaults.font.size = 12;
+            Chart.defaults.color = "#6B7280";
+            Chart.defaults.animation.duration = 1000;
+            Chart.defaults.animation.easing = 'easeOutQuart';
+            
+            // Colores personalizados para gráficos
+            const customColors = [
+                '#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088FE', 
+                '#00C49F', '#FFBB28', '#FF8042', '#a4de6c', '#d0ed57', 
+                '#8dd1e1', '#83a6ed', '#8884d8', '#a4de6c', '#d0ed57'
+            ];
+            
             if (chartType === 'services') {
-                // Barra horizontal para uso de servicios
+                // Gráfico de barras horizontal para uso de servicios
                 const serviceData = @Json.Serialize(Model.ServiceUsageData);
                 
                 chart = new Chart(ctx, {
@@ -115,10 +158,10 @@
                     data: {
                         labels: serviceData.map(item => item.name),
                         datasets: [{
-                            label: 'Number of Customers',
+                            label: 'Número de Clientes',
                             data: serviceData.map(item => item.count),
-                            backgroundColor: '#8884d8',
-                            borderColor: '#8884d8',
+                            backgroundColor: customColors,
+                            borderColor: customColors.map(color => color),
                             borderWidth: 1
                         }]
                     },
@@ -126,12 +169,68 @@
                         indexAxis: 'y',
                         responsive: true,
                         maintainAspectRatio: false,
+                        animation: {
+                            delay: (context) => {
+                                return context.dataIndex * 100;
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 15
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                titleColor: '#111827',
+                                bodyColor: '#4B5563',
+                                titleFont: {
+                                    size: 14,
+                                    weight: 'bold'
+                                },
+                                bodyFont: {
+                                    size: 13
+                                },
+                                borderColor: 'rgba(0, 0, 0, 0.1)',
+                                borderWidth: 1,
+                                padding: 10,
+                                boxPadding: 5,
+                                usePointStyle: true,
+                                callbacks: {
+                                    label: function(context) {
+                                        return `Clientes: ${context.parsed.x}`;
+                                    }
+                                }
+                            },
+                            datalabels: {
+                                color: '#fff',
+                                font: {
+                                    weight: 'bold'
+                                },
+                                formatter: (value) => {
+                                    return value > 0 ? value : '';
+                                }
+                            }
+                        },
                         scales: {
                             x: {
-                                beginAtZero: true
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                },
+                                ticks: {
+                                    precision: 0
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    display: false
+                                }
                             }
                         }
-                    }
+                    },
                 });
             } 
             else if (chartType === 'servicesPie') {
@@ -144,11 +243,9 @@
                         labels: serviceData.map(item => item.name),
                         datasets: [{
                             data: serviceData.map(item => item.count),
-                            backgroundColor: [
-                                '#8884d8', '#82ca9d', '#F97316', '#0EA5E9', 
-                                '#D946EF', '#8B5CF6', '#FF6B8B', '#9467BD',
-                                '#8C564B', '#E377C2', '#7F7F7F', '#BCBD22'
-                            ]
+                            backgroundColor: customColors,
+                            borderColor: 'white',
+                            borderWidth: 2
                         }]
                     },
                     options: {
@@ -156,8 +253,69 @@
                         maintainAspectRatio: false,
                         plugins: {
                             legend: {
-                                position: 'right'
+                                position: 'right',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 15,
+                                    generateLabels: function(chart) {
+                                        const data = chart.data;
+                                        if (data.labels.length && data.datasets.length) {
+                                            return data.labels.map(function(label, i) {
+                                                const dataset = data.datasets[0];
+                                                const value = dataset.data[i];
+                                                return {
+                                                    text: `${label}: ${value}`,
+                                                    fillStyle: dataset.backgroundColor[i],
+                                                    strokeStyle: dataset.borderColor,
+                                                    lineWidth: dataset.borderWidth,
+                                                    hidden: isNaN(dataset.data[i]) || chart.getDatasetMeta(0).data[i].hidden,
+                                                    index: i
+                                                };
+                                            });
+                                        }
+                                        return [];
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                titleColor: '#111827',
+                                bodyColor: '#4B5563',
+                                titleFont: {
+                                    size: 14,
+                                    weight: 'bold'
+                                },
+                                bodyFont: {
+                                    size: 13
+                                },
+                                borderColor: 'rgba(0, 0, 0, 0.1)',
+                                borderWidth: 1,
+                                padding: 10,
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label;
+                                        const value = context.raw;
+                                        const total = context.dataset.data.reduce((acc, val) => acc + val, 0);
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        return `${label}: ${value} (${percentage}%)`;
+                                    }
+                                }
+                            },
+                            datalabels: {
+                                color: '#fff',
+                                font: {
+                                    weight: 'bold'
+                                },
+                                formatter: (value, context) => {
+                                    const total = context.dataset.data.reduce((acc, val) => acc + val, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return percentage > 5 ? `${percentage}%` : '';
+                                }
                             }
+                        },
+                        animation: {
+                            animateRotate: true,
+                            animateScale: true
                         }
                     }
                 });
@@ -172,23 +330,74 @@
                         labels: brandData.map(item => item.brandName),
                         datasets: [
                             {
-                                label: 'Total Customers',
+                                label: 'Total Clientes',
                                 data: brandData.map(item => item.totalCustomers),
-                                backgroundColor: '#8884d8'
+                                backgroundColor: '#8884d8',
+                                borderColor: '#8884d8',
+                                borderWidth: 1
                             },
                             {
-                                label: 'New Customers',
+                                label: 'Clientes Nuevos',
                                 data: brandData.map(item => item.recentCustomers),
-                                backgroundColor: '#82ca9d'
+                                backgroundColor: '#82ca9d',
+                                borderColor: '#82ca9d',
+                                borderWidth: 1
                             }
                         ]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        animation: {
+                            delay: (context) => {
+                                return context.datasetIndex * 300 + context.dataIndex * 100;
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 15
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                titleColor: '#111827',
+                                bodyColor: '#4B5563',
+                                titleFont: {
+                                    size: 14,
+                                    weight: 'bold'
+                                },
+                                bodyFont: {
+                                    size: 13
+                                },
+                                borderColor: 'rgba(0, 0, 0, 0.1)',
+                                borderWidth: 1,
+                                padding: 10,
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.dataset.label || '';
+                                        const value = context.parsed.y;
+                                        return `${label}: ${value}`;
+                                    }
+                                }
+                            }
+                        },
                         scales: {
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            },
                             y: {
-                                beginAtZero: true
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                },
+                                ticks: {
+                                    precision: 0
+                                }
                             }
                         }
                     }
@@ -203,19 +412,77 @@
                     data: {
                         labels: monthlyData.map(item => item.month),
                         datasets: [{
-                            label: 'New Customers',
+                            label: 'Clientes Nuevos',
                             data: monthlyData.map(item => item.newCustomers),
-                            fill: false,
+                            fill: {
+                                target: 'origin',
+                                above: 'rgba(130, 202, 157, 0.2)',
+                            },
                             borderColor: '#82ca9d',
-                            tension: 0.1
+                            borderWidth: 3,
+                            pointBackgroundColor: '#82ca9d',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 6,
+                            pointHoverRadius: 8,
+                            tension: 0.4
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        animation: {
+                            tension: {
+                                duration: 1000,
+                                easing: 'linear',
+                                from: 0.8,
+                                to: 0.4,
+                                loop: false
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 15
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                titleColor: '#111827',
+                                bodyColor: '#4B5563',
+                                titleFont: {
+                                    size: 14,
+                                    weight: 'bold'
+                                },
+                                bodyFont: {
+                                    size: 13
+                                },
+                                borderColor: 'rgba(0, 0, 0, 0.1)',
+                                borderWidth: 1,
+                                padding: 10,
+                                callbacks: {
+                                    label: function(context) {
+                                        return `Clientes Nuevos: ${context.parsed.y}`;
+                                    }
+                                }
+                            }
+                        },
                         scales: {
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            },
                             y: {
-                                beginAtZero: true
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                },
+                                ticks: {
+                                    precision: 0
+                                }
                             }
                         }
                     }
@@ -230,10 +497,10 @@
                     data: {
                         labels: serviceData.map(item => item.name),
                         datasets: [{
-                            label: 'Number of Customers',
+                            label: 'Número de Clientes',
                             data: serviceData.map(item => item.count),
-                            backgroundColor: '#8884d8',
-                            borderColor: '#8884d8',
+                            backgroundColor: customColors,
+                            borderColor: customColors.map(color => color),
                             borderWidth: 1
                         }]
                     },
@@ -241,6 +508,11 @@
                         indexAxis: 'y',
                         responsive: true,
                         maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            }
+                        },
                         scales: {
                             x: {
                                 beginAtZero: true
@@ -249,6 +521,34 @@
                     }
                 });
             }
+
+            // Añadir efectos de animación a la carga de la página
+            const animateElements = document.querySelectorAll('.animate-fade-in, .animate-slide-down, .animate-slide-up');
+            animateElements.forEach((element, index) => {
+                element.style.opacity = '0';
+                element.style.transform = element.classList.contains('animate-slide-down') ? 'translateY(-20px)' : 
+                                          element.classList.contains('animate-slide-up') ? 'translateY(20px)' : 'translateY(0)';
+                
+                setTimeout(() => {
+                    element.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    element.style.opacity = '1';
+                    element.style.transform = 'translateY(0)';
+                }, 100 * index);
+            });
+
+            // Añadir efecto hover a botones y tarjetas
+            const hoverElements = document.querySelectorAll('.hover-lift');
+            hoverElements.forEach(element => {
+                element.addEventListener('mouseenter', () => {
+                    element.style.transform = 'translateY(-3px)';
+                    element.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
+                });
+                
+                element.addEventListener('mouseleave', () => {
+                    element.style.transform = 'translateY(0)';
+                    element.style.boxShadow = '';
+                });
+            });
         });
     </script>
 }
