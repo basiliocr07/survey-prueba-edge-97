@@ -10,6 +10,7 @@ namespace SurveyApp.Domain.Models
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
         public string Status { get; set; } = "active"; // Can be "active", "draft", or "archived"
         public int ResponseCount { get; set; }
         public int CompletionRate { get; set; }
@@ -29,6 +30,13 @@ namespace SurveyApp.Domain.Models
         public string Description { get; set; } = string.Empty;
         public List<string> Options { get; set; } = new List<string>();
         public QuestionSettings? Settings { get; set; }
+        
+        // Propiedad Title para compatibilidad con la versión React
+        public string Title
+        {
+            get { return Text; }
+            set { Text = value; }
+        }
     }
 
     public class QuestionSettings
@@ -49,7 +57,9 @@ namespace SurveyApp.Domain.Models
     {
         public string Frequency { get; set; } = "monthly"; // Can be "daily", "weekly", "monthly"
         public int DayOfMonth { get; set; } = 1;
+        public int? DayOfWeek { get; set; }
         public string Time { get; set; } = "09:00";
+        public DateTime? StartDate { get; set; }
     }
 
     public class TriggerSettings
