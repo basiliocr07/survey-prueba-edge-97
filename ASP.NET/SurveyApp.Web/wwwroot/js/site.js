@@ -4,7 +4,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const menuToggle = document.getElementById('menu-toggle');
     const closeMenu = document.getElementById('close-menu');
     const mobileMenu = document.getElementById('mobile-menu');
+    const userMenuButton = document.getElementById('user-menu-button');
+    const userDropdown = document.getElementById('user-dropdown');
     
+    // Mobile menu functionality
     if (menuToggle && closeMenu && mobileMenu) {
         menuToggle.addEventListener('click', function() {
             mobileMenu.classList.remove('hidden');
@@ -16,6 +19,20 @@ document.addEventListener('DOMContentLoaded', function() {
             mobileMenu.classList.add('hidden');
             mobileMenu.classList.remove('flex');
             document.body.style.overflow = '';
+        });
+    }
+    
+    // User dropdown functionality
+    if (userMenuButton && userDropdown) {
+        userMenuButton.addEventListener('click', function() {
+            userDropdown.classList.toggle('hidden');
+        });
+        
+        // Close when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!userMenuButton.contains(event.target) && !userDropdown.contains(event.target)) {
+                userDropdown.classList.add('hidden');
+            }
         });
     }
     
