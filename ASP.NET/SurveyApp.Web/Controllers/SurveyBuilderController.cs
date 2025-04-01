@@ -1,6 +1,10 @@
 
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Application.Interfaces;
+using SurveyApp.Application.Surveys.Commands.CreateSurvey;
+using SurveyApp.Application.Surveys.Commands.UpdateSurvey;
+using SurveyApp.Application.Surveys.Queries.GetSurveyById;
 using SurveyApp.Domain.Models;
 using SurveyApp.Web.Models;
 using System;
@@ -13,10 +17,12 @@ namespace SurveyApp.Web.Controllers
     public class SurveyBuilderController : Controller
     {
         private readonly ISurveyService _surveyService;
+        private readonly IMediator _mediator;
 
-        public SurveyBuilderController(ISurveyService surveyService)
+        public SurveyBuilderController(ISurveyService surveyService, IMediator mediator)
         {
             _surveyService = surveyService;
+            _mediator = mediator;
         }
 
         [HttpGet]
@@ -55,53 +61,22 @@ namespace SurveyApp.Web.Controllers
 
             try
             {
-                // Mapear de ViewModel a entidad de dominio
-                var survey = new SurveyApp.Domain.Models.Survey
-                {
-                    Id = model.Id,
-                    Title = model.Title,
-                    Description = model.Description,
-                    Status = model.Status,
-                    CreatedAt = DateTime.Now,
-                    Questions = model.Questions.Select(q => new SurveyApp.Domain.Models.Question
-                    {
-                        Id = string.IsNullOrEmpty(q.Id) || q.Id.StartsWith("new-") 
-                            ? 0 
-                            : int.Parse(q.Id),
-                        Text = q.Text,
-                        Type = q.Type,
-                        Required = q.Required,
-                        Description = q.Description ?? string.Empty,
-                        Options = q.Options ?? new List<string>(),
-                        Settings = q.Settings != null ? new SurveyApp.Domain.Models.QuestionSettings
-                        {
-                            Min = q.Settings.Min,
-                            Max = q.Settings.Max
-                        } : null
-                    }).ToList(),
-                    DeliveryConfig = new SurveyApp.Domain.Models.DeliveryConfiguration
-                    {
-                        Type = model.DeliveryConfig?.Type ?? "manual",
-                        EmailAddresses = model.DeliveryConfig?.EmailAddresses ?? new List<string>(),
-                        Schedule = model.DeliveryConfig?.Schedule != null ? new SurveyApp.Domain.Models.ScheduleSettings
-                        {
-                            Frequency = model.DeliveryConfig.Schedule.Frequency,
-                            DayOfMonth = model.DeliveryConfig.Schedule.DayOfMonth,
-                            Time = model.DeliveryConfig.Schedule.Time
-                        } : null,
-                        Trigger = model.DeliveryConfig?.Trigger != null ? new SurveyApp.Domain.Models.TriggerSettings
-                        {
-                            Type = model.DeliveryConfig.Trigger.Type,
-                            DelayHours = model.DeliveryConfig.Trigger.DelayHours,
-                            SendAutomatically = model.DeliveryConfig.Trigger.SendAutomatically
-                        } : null
-                    }
-                };
-
-                bool success;
+                // Mapear de ViewModel a entidad de dominio o comando
                 if (model.Id > 0)
                 {
-                    success = await _surveyService.UpdateSurveyAsync(survey);
+                    // Actualización
+                    var updateCommand = new UpdateSurveyCommand
+                    {
+                        Id = model.Id,
+                        Title = model.Title,
+                        Description = model.Description,
+                        Status = model.Status,
+                        Questions = model.Questions.Select(q => q.ToDomainModel()).ToList(),
+                        DeliveryConfig = MapDeliveryConfig(model.DeliveryConfig)
+                    };
+
+                    var success = await _mediator.Send(updateCommand);
+                    
                     if (success)
                     {
                         TempData["SuccessMessage"] = "Encuesta actualizada exitosamente.";
@@ -113,8 +88,19 @@ namespace SurveyApp.Web.Controllers
                 }
                 else
                 {
-                    success = await _surveyService.CreateSurveyAsync(survey);
-                    if (success)
+                    // Creación
+                    var createCommand = new CreateSurveyCommand
+                    {
+                        Title = model.Title,
+                        Description = model.Description,
+                        Status = model.Status,
+                        Questions = model.Questions.Select(q => q.ToDomainModel()).ToList(),
+                        DeliveryConfig = MapDeliveryConfig(model.DeliveryConfig)
+                    };
+
+                    var surveyId = await _mediator.Send(createCommand);
+                    
+                    if (surveyId > 0)
                     {
                         TempData["SuccessMessage"] = "Encuesta creada exitosamente.";
                     }
@@ -124,10 +110,7 @@ namespace SurveyApp.Web.Controllers
                     }
                 }
 
-                if (success)
-                {
-                    return RedirectToAction("Index", "Surveys");
-                }
+                return RedirectToAction("Index", "Surveys");
             }
             catch (Exception ex)
             {
@@ -141,7 +124,7 @@ namespace SurveyApp.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
-            var survey = await _surveyService.GetSurveyByIdAsync(id);
+            var survey = await _mediator.Send(new GetSurveyByIdQuery(id));
             if (survey == null)
             {
                 TempData["ErrorMessage"] = "No se encontró la encuesta solicitada.";
@@ -169,23 +152,7 @@ namespace SurveyApp.Web.Controllers
                         Max = q.Settings.Max
                     } : null
                 }).ToList(),
-                DeliveryConfig = survey.DeliveryConfig != null ? new DeliveryConfigViewModel
-                {
-                    Type = survey.DeliveryConfig.Type,
-                    EmailAddresses = survey.DeliveryConfig.EmailAddresses,
-                    Schedule = survey.DeliveryConfig.Schedule != null ? new ScheduleSettingsViewModel
-                    {
-                        Frequency = survey.DeliveryConfig.Schedule.Frequency,
-                        DayOfMonth = survey.DeliveryConfig.Schedule.DayOfMonth,
-                        Time = survey.DeliveryConfig.Schedule.Time
-                    } : null,
-                    Trigger = survey.DeliveryConfig.Trigger != null ? new TriggerSettingsViewModel
-                    {
-                        Type = survey.DeliveryConfig.Trigger.Type,
-                        DelayHours = survey.DeliveryConfig.Trigger.DelayHours,
-                        SendAutomatically = survey.DeliveryConfig.Trigger.SendAutomatically
-                    } : null
-                } : new DeliveryConfigViewModel()
+                DeliveryConfig = MapDeliveryConfigToViewModel(survey.DeliveryConfig)
             };
 
             return View("Create", model);
@@ -228,6 +195,53 @@ namespace SurveyApp.Web.Controllers
             }
 
             return RedirectToAction("Edit", new { id = surveyId });
+        }
+
+        // Métodos auxiliares para mapeo
+        private DeliveryConfiguration? MapDeliveryConfig(DeliveryConfigViewModel? viewModel)
+        {
+            if (viewModel == null) return null;
+
+            return new DeliveryConfiguration
+            {
+                Type = viewModel.Type ?? "manual",
+                EmailAddresses = viewModel.EmailAddresses ?? new List<string>(),
+                Schedule = viewModel.Schedule != null ? new ScheduleSettings
+                {
+                    Frequency = viewModel.Schedule.Frequency,
+                    DayOfMonth = viewModel.Schedule.DayOfMonth ?? 1,
+                    Time = viewModel.Schedule.Time ?? "09:00"
+                } : null,
+                Trigger = viewModel.Trigger != null ? new TriggerSettings
+                {
+                    Type = viewModel.Trigger.Type,
+                    DelayHours = viewModel.Trigger.DelayHours,
+                    SendAutomatically = viewModel.Trigger.SendAutomatically
+                } : null
+            };
+        }
+
+        private DeliveryConfigViewModel? MapDeliveryConfigToViewModel(DeliveryConfiguration? config)
+        {
+            if (config == null) return new DeliveryConfigViewModel();
+
+            return new DeliveryConfigViewModel
+            {
+                Type = config.Type,
+                EmailAddresses = config.EmailAddresses,
+                Schedule = config.Schedule != null ? new ScheduleSettingsViewModel
+                {
+                    Frequency = config.Schedule.Frequency,
+                    DayOfMonth = config.Schedule.DayOfMonth,
+                    Time = config.Schedule.Time
+                } : null,
+                Trigger = config.Trigger != null ? new TriggerSettingsViewModel
+                {
+                    Type = config.Trigger.Type,
+                    DelayHours = config.Trigger.DelayHours,
+                    SendAutomatically = config.Trigger.SendAutomatically
+                } : null
+            };
         }
     }
 }
