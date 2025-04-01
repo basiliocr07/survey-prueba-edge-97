@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Application.Interfaces;
 using SurveyApp.Domain.Models;
@@ -227,65 +228,6 @@ namespace SurveyApp.Web.Controllers
             }
 
             return RedirectToAction("Edit", new { id = surveyId });
-        }
-
-        [HttpGet]
-        public IActionResult GetQuestionTemplate(int index, string id)
-        {
-            var question = new QuestionViewModel
-            {
-                Id = id,
-                Text = "New Question",
-                Type = "text",
-                Required = true
-            };
-            
-            return ViewComponent("QuestionBuilder", new { question, index, total = index + 1 });
-        }
-
-        [HttpGet]
-        public IActionResult GetSampleQuestions()
-        {
-            var questions = new List<QuestionViewModel>
-            {
-                new QuestionViewModel
-                {
-                    Id = $"new-{Guid.NewGuid().ToString()}",
-                    Text = "How satisfied are you with our service?",
-                    Type = "rating",
-                    Required = true,
-                    Settings = new QuestionSettingsViewModel
-                    {
-                        Min = 1,
-                        Max = 5
-                    }
-                },
-                new QuestionViewModel
-                {
-                    Id = $"new-{Guid.NewGuid().ToString()}",
-                    Text = "What features do you like most?",
-                    Type = "multiple-choice",
-                    Required = true,
-                    Options = new List<string> { "User Interface", "Performance", "Customer Support", "Price" }
-                },
-                new QuestionViewModel
-                {
-                    Id = $"new-{Guid.NewGuid().ToString()}",
-                    Text = "Please provide any additional feedback",
-                    Type = "text",
-                    Required = false
-                }
-            };
-            
-            var result = new System.Text.StringBuilder();
-            for (int i = 0; i < questions.Count; i++)
-            {
-                var vc = ViewComponent("QuestionBuilder", new { question = questions[i], index = i, total = questions.Count });
-                var htmlContent = vc.ToString();
-                result.Append(htmlContent);
-            }
-            
-            return Content(result.ToString());
         }
     }
 }

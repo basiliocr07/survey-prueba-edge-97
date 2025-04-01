@@ -1,22 +1,29 @@
 
 using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Web.Models;
+using System.Threading.Tasks;
 
 namespace SurveyApp.Web.ViewComponents
 {
     public class QuestionBuilderViewComponent : ViewComponent
     {
-        public IViewComponentResult Invoke(QuestionViewModel question, int index, int total)
+        public async Task<IViewComponentResult> InvokeAsync(QuestionViewModel question, int index, int total = 0)
         {
-            // Asegurar que la pregunta tenga las propiedades necesarias
-            question.EnsureConsistency();
+            // Safely convert QuestionViewModel to SurveyQuestionViewModel
+            // and ensure all properties are properly mapped
+            var surveyQuestion = SurveyQuestionViewModel.FromQuestionViewModel(question);
             
-            ViewData["QuestionIndex"] = index;
-            ViewData["TotalQuestions"] = total;
-            ViewData["IsFirst"] = index == 0;
-            ViewData["IsLast"] = index == total - 1;
+            // Ensure consistency across all fields
+            surveyQuestion.EnsureConsistency();
             
-            return View(question);
+            return View(new QuestionBuilderViewModel
+            {
+                Question = surveyQuestion,
+                Index = index,
+                Total = total,
+                IsFirst = index == 0,
+                IsLast = index == total - 1
+            });
         }
     }
 }

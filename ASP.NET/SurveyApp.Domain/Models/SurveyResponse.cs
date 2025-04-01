@@ -14,11 +14,11 @@ namespace SurveyApp.Domain.Models
         public string? RespondentCompany { get; set; }
         public DateTime SubmittedAt { get; set; }
         public List<QuestionResponse> Answers { get; set; } = new List<QuestionResponse>();
-        public bool IsExistingClient { get; set; }
-        public int? ExistingClientId { get; set; }
+        public bool? IsExistingClient { get; set; }
+        public string? ExistingClientId { get; set; }
         public int? CompletionTime { get; set; }
 
-        // Navegación
+        // Navigation property
         public Survey? Survey { get; set; }
     }
 
@@ -30,9 +30,9 @@ namespace SurveyApp.Domain.Models
         public string QuestionTitle { get; set; } = string.Empty;
         public string QuestionType { get; set; } = string.Empty;
         public string Value { get; set; } = string.Empty;
-        public bool IsValid { get; set; } = true;
+        public bool IsValid { get; set; }
 
-        // Navegación
+        // Navigation property
         public SurveyResponse? SurveyResponse { get; set; }
     }
 }

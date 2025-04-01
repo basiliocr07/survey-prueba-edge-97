@@ -1,229 +1,214 @@
 
-@model QuestionViewModel
-@{
-    var index = (int)ViewData["QuestionIndex"];
-    var total = (int)ViewData["TotalQuestions"];
-    var isFirst = (bool)ViewData["IsFirst"];
-    var isLast = (bool)ViewData["IsLast"];
-}
+@model SurveyApp.Web.ViewComponents.QuestionBuilderViewModel
 
-<div class="question-card shadow-sm mb-4" data-question-index="@index">
+<div class="question-card shadow-sm rounded-lg mb-4" id="question_@Model.Index" data-question-index="@Model.Index">
     <div class="flex items-center px-4 py-3 border-b bg-muted/30">
-        <div class="mr-2 text-muted-foreground cursor-grab draggable-handle">
-            <i class="fas fa-grip-vertical"></i>
+        <div class="mr-2 text-muted-foreground">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 cursor-grab" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h16M4 16h16" />
+            </svg>
         </div>
-        <button type="button" class="toggle-question-btn p-0 h-auto mr-2 bg-transparent border-0">
-            <i class="fas fa-chevron-up h-4 w-4"></i>
+        
+        <button type="button" class="toggle-question-btn p-0 h-auto mr-2" aria-label="Toggle question">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+            </svg>
         </button>
-        <div class="flex-1 font-medium truncate question-title-display">
-            @(string.IsNullOrEmpty(Model.Text) ? "Untitled Question" : Model.Text)
+        
+        <div class="flex-1 font-medium truncate">
+            @(string.IsNullOrEmpty(Model.Question.Title) ? "Untitled Question" : Model.Question.Title)
         </div>
+        
         <div class="flex items-center gap-1">
-            @if (!isFirst)
+            @if (!Model.IsFirst)
             {
-                <button type="button" class="btn btn-ghost btn-icon h-8 w-8 move-up-btn">
-                    <i class="fas fa-chevron-up"></i>
+                <button type="button" class="move-question-up p-1 rounded-md hover:bg-muted h-8 w-8">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                    </svg>
                 </button>
             }
-            @if (!isLast)
+            
+            @if (!Model.IsLast)
             {
-                <button type="button" class="btn btn-ghost btn-icon h-8 w-8 move-down-btn">
-                    <i class="fas fa-chevron-down"></i>
+                <button type="button" class="move-question-down p-1 rounded-md hover:bg-muted h-8 w-8">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
                 </button>
             }
-            <button type="button" class="btn btn-ghost btn-icon h-8 w-8 text-muted-foreground hover:text-danger delete-question-btn">
-                <i class="fas fa-trash-alt"></i>
+            
+            <button type="button" class="delete-question-btn p-1 rounded-md hover:bg-muted h-8 w-8 text-muted-foreground hover:text-red-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
             </button>
         </div>
     </div>
-
-    <div class="question-content p-4 space-y-4">
-        <input type="hidden" name="Questions[@index].Id" value="@Model.Id" />
+    
+    <div class="question-content p-4 space-y-4 animate-slide-down">
+        <input type="hidden" name="Questions[@Model.Index].Id" value="@Model.Question.Id" />
         
         <div class="space-y-2">
             <div>
-                <label for="question-@index-title" class="form-label">Question</label>
-                <input type="text" id="question-@index-title" name="Questions[@index].Text" value="@Model.Text"
-                       class="form-control question-title-input" placeholder="Enter your question" />
+                <label for="question_text_@Model.Index" class="block text-sm font-medium mb-1">Question</label>
+                <input type="text" id="question_text_@Model.Index" name="Questions[@Model.Index].Text" value="@Model.Question.Title" 
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" 
+                      placeholder="Enter your question" />
             </div>
             
             <div>
-                <label for="question-@index-description" class="form-label">Description (optional)</label>
-                <textarea id="question-@index-description" name="Questions[@index].Description" 
-                          class="form-control" placeholder="Add a description to provide more context" rows="2">@Model.Description</textarea>
+                <label for="question_desc_@Model.Index" class="block text-sm font-medium mb-1">Description (optional)</label>
+                <textarea id="question_desc_@Model.Index" name="Questions[@Model.Index].Description" 
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary min-h-[80px]" 
+                          placeholder="Add a description to provide more context">@Model.Question.Description</textarea>
             </div>
         </div>
 
         <div>
-            <button type="button" class="question-type-toggle btn btn-outline w-full justify-between">
-                <span>Question Type: <span class="font-medium question-type-display">@Model.Type.Replace("-", " ")</span></span>
-                <i class="fas fa-chevron-down transition-transform"></i>
+            <button type="button" class="question-type-toggle w-full justify-between flex items-center p-2 border rounded-md bg-white">
+                <span>Question Type: <span class="font-medium">@Model.Question.Type.Replace("-", " ")</span></span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
             </button>
             
-            <div class="question-types-dropdown mt-3 p-3 border rounded-md hidden">
-                <div class="question-type-grid">
-                    <div class="question-type-option @(Model.Type == "multiple-choice" ? "selected" : "")" data-type="multiple-choice">
-                        <input type="radio" name="Questions[@index].Type" value="multiple-choice" class="sr-only" @(Model.Type == "multiple-choice" ? "checked" : "") />
+            <div class="question-types-dropdown hidden mt-2 shadow-md">
+                <div class="p-3 question-type-grid">
+                    <div class="question-type-option @(Model.Question.Type == "text" ? "selected" : "")" data-type="text">
                         <div class="question-type-icon">
-                            <i class="fas fa-check-square"></i>
-                        </div>
-                        <div class="question-type-name">Multiple Choice</div>
-                        <div class="question-type-desc">Allow multiple selections</div>
-                    </div>
-                    
-                    <div class="question-type-option @(Model.Type == "single-choice" ? "selected" : "")" data-type="single-choice">
-                        <input type="radio" name="Questions[@index].Type" value="single-choice" class="sr-only" @(Model.Type == "single-choice" ? "checked" : "") />
-                        <div class="question-type-icon">
-                            <i class="fas fa-circle"></i>
-                        </div>
-                        <div class="question-type-name">Single Choice</div>
-                        <div class="question-type-desc">Allow one selection only</div>
-                    </div>
-                    
-                    <div class="question-type-option @(Model.Type == "text" ? "selected" : "")" data-type="text">
-                        <input type="radio" name="Questions[@index].Type" value="text" class="sr-only" @(Model.Type == "text" ? "checked" : "") />
-                        <div class="question-type-icon">
-                            <i class="fas fa-align-left"></i>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                            </svg>
                         </div>
                         <div class="question-type-name">Text Input</div>
                         <div class="question-type-desc">Collect open-ended responses</div>
                     </div>
-                    
-                    <div class="question-type-option @(Model.Type == "rating" ? "selected" : "")" data-type="rating">
-                        <input type="radio" name="Questions[@index].Type" value="rating" class="sr-only" @(Model.Type == "rating" ? "checked" : "") />
+                    <div class="question-type-option @(Model.Question.Type == "single-choice" ? "selected" : "")" data-type="single-choice">
                         <div class="question-type-icon">
-                            <i class="fas fa-star"></i>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <circle cx="12" cy="12" r="10" stroke-width="2" />
+                            </svg>
+                        </div>
+                        <div class="question-type-name">Single Choice</div>
+                        <div class="question-type-desc">Allow selecting one option</div>
+                    </div>
+                    <div class="question-type-option @(Model.Question.Type == "multiple-choice" ? "selected" : "")" data-type="multiple-choice">
+                        <div class="question-type-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <rect width="18" height="18" x="3" y="3" rx="2" stroke-width="2" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4" />
+                            </svg>
+                        </div>
+                        <div class="question-type-name">Multiple Choice</div>
+                        <div class="question-type-desc">Allow selecting multiple options</div>
+                    </div>
+                    <div class="question-type-option @(Model.Question.Type == "rating" ? "selected" : "")" data-type="rating">
+                        <div class="question-type-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                            </svg>
                         </div>
                         <div class="question-type-name">Rating Scale</div>
-                        <div class="question-type-desc">Collect feedback with stars</div>
+                        <div class="question-type-desc">Collect star ratings</div>
                     </div>
-                    
-                    <div class="question-type-option @(Model.Type == "dropdown" ? "selected" : "")" data-type="dropdown">
-                        <input type="radio" name="Questions[@index].Type" value="dropdown" class="sr-only" @(Model.Type == "dropdown" ? "checked" : "") />
+                    <div class="question-type-option @(Model.Question.Type == "nps" ? "selected" : "")" data-type="nps">
                         <div class="question-type-icon">
-                            <i class="fas fa-chevron-down"></i>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16" />
+                            </svg>
                         </div>
-                        <div class="question-type-name">Dropdown</div>
-                        <div class="question-type-desc">Selection from a dropdown</div>
-                    </div>
-                    
-                    <div class="question-type-option @(Model.Type == "matrix" ? "selected" : "")" data-type="matrix">
-                        <input type="radio" name="Questions[@index].Type" value="matrix" class="sr-only" @(Model.Type == "matrix" ? "checked" : "") />
-                        <div class="question-type-icon">
-                            <i class="fas fa-th"></i>
-                        </div>
-                        <div class="question-type-name">Matrix / Likert</div>
-                        <div class="question-type-desc">Multiple criteria rating</div>
-                    </div>
-                    
-                    <div class="question-type-option @(Model.Type == "ranking" ? "selected" : "")" data-type="ranking">
-                        <input type="radio" name="Questions[@index].Type" value="ranking" class="sr-only" @(Model.Type == "ranking" ? "checked" : "") />
-                        <div class="question-type-icon">
-                            <i class="fas fa-sort"></i>
-                        </div>
-                        <div class="question-type-name">Ranking</div>
-                        <div class="question-type-desc">Order items by preference</div>
-                    </div>
-                    
-                    <div class="question-type-option @(Model.Type == "nps" ? "selected" : "")" data-type="nps">
-                        <input type="radio" name="Questions[@index].Type" value="nps" class="sr-only" @(Model.Type == "nps" ? "checked" : "") />
-                        <div class="question-type-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <div class="question-type-name">NPS Score</div>
-                        <div class="question-type-desc">Net Promoter Score (0-10)</div>
-                    </div>
-                    
-                    <div class="question-type-option @(Model.Type == "date" ? "selected" : "")" data-type="date">
-                        <input type="radio" name="Questions[@index].Type" value="date" class="sr-only" @(Model.Type == "date" ? "checked" : "") />
-                        <div class="question-type-icon">
-                            <i class="fas fa-calendar"></i>
-                        </div>
-                        <div class="question-type-name">Date</div>
-                        <div class="question-type-desc">Collect date information</div>
-                    </div>
-                    
-                    <div class="question-type-option @(Model.Type == "file-upload" ? "selected" : "")" data-type="file-upload">
-                        <input type="radio" name="Questions[@index].Type" value="file-upload" class="sr-only" @(Model.Type == "file-upload" ? "checked" : "") />
-                        <div class="question-type-icon">
-                            <i class="fas fa-upload"></i>
-                        </div>
-                        <div class="question-type-name">File Upload</div>
-                        <div class="question-type-desc">Allow file uploads</div>
+                        <div class="question-type-name">Net Promoter Score</div>
+                        <div class="question-type-desc">Measure satisfaction on a 0-10 scale</div>
                     </div>
                 </div>
-                
-                <input type="hidden" class="current-question-type" value="@Model.Type" />
             </div>
         </div>
-
-        <div class="question-options-container @((Model.Type == "multiple-choice" || Model.Type == "single-choice" || Model.Type == "dropdown" || Model.Type == "ranking") ? "" : "hidden")">
-            <label class="form-label">Options</label>
-            @if (Model.Options != null)
-            {
-                for (var i = 0; i < Model.Options.Count; i++)
+        
+        <div id="options_@Model.Index" class="@(new[] { "multiple-choice", "single-choice", "dropdown", "ranking" }.Contains(Model.Question.Type) ? "" : "hidden")">
+            <label class="block text-sm font-medium mb-2">Options</label>
+            <div id="optionsList_@Model.Index" class="space-y-2 mb-2">
+                @if (Model.Question.Options != null)
                 {
-                    <div class="option-item flex items-center gap-2 mb-2">
-                        <div class="flex-1">
-                            <input type="text" name="Questions[@index].Options[@i]" value="@Model.Options[i]"
-                                   class="form-control" placeholder="Option @(i + 1)" />
+                    @for (var i = 0; i < Model.Question.Options.Count; i++)
+                    {
+                        <div class="option-item flex items-center gap-2">
+                            <input type="text" name="Questions[@Model.Index].Options[@i]" 
+                                   value="@Model.Question.Options[i]" 
+                                   class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" />
+                            <button type="button" class="remove-option-btn text-gray-500 hover:text-red-500 p-1 rounded-full" 
+                                    data-question-id="@Model.Index" data-option-index="@i">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
                         </div>
-                        <button type="button" class="remove-option-btn text-muted hover:text-danger p-1 rounded">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </div>
+                    }
                 }
-            }
-            <button type="button" class="add-option-btn">
-                <i class="fas fa-plus mr-1"></i> Add Option
+            </div>
+            <button type="button" class="add-option-btn flex items-center px-4 py-2 border rounded-md text-sm" data-question-id="@Model.Index">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Add Option
             </button>
         </div>
-
-        <div class="question-preview-container @((Model.Type == "rating" || Model.Type == "nps") ? "" : "hidden")">
-            <label class="form-label">Preview</label>
-            @if (Model.Type == "rating")
-            {
-                <div class="star-rating-preview">
-                    @for (int i = 1; i <= 5; i++)
-                    {
-                        <svg class="@(i <= 3 ? "filled" : "")" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
-                        </svg>
-                    }
-                </div>
-                
-                <input type="hidden" name="Questions[@index].Settings.Min" value="1" />
-                <input type="hidden" name="Questions[@index].Settings.Max" value="5" />
-            }
-            else if (Model.Type == "nps")
-            {
-                <div class="nps-rating-preview">
-                    <div class="nps-grid">
-                        @for (int i = 0; i <= 10; i++)
+        
+        <div id="rating_@Model.Index" class="@(Model.Question.Type == "rating" ? "" : "hidden")">
+            <label class="block text-sm font-medium mb-2">Rating Preview</label>
+            <div class="mt-2 border rounded-md p-4 bg-muted/20">
+                <div class="space-y-3">
+                    <div class="star-labels">
+                        <div class="text-center">Extremely Dissatisfied</div>
+                        <div class="text-center">Dissatisfied</div>
+                        <div class="text-center">Neutral</div>
+                        <div class="text-center">Satisfied</div>
+                        <div class="text-center">Extremely Satisfied</div>
+                    </div>
+                    <div class="star-rating">
+                        @for (var i = 1; i <= 5; i++)
                         {
-                            <div class="nps-option @(i == 7 ? "selected" : "")">
-                                @i
+                            <div class="text-center">
+                                <label class="cursor-pointer block">
+                                    <svg class="w-10 h-10 @(i <= 3 ? "text-yellow-400 fill-yellow-400" : "text-gray-300")" 
+                                         fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                    </svg>
+                                </label>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="nps_@Model.Index" class="@(Model.Question.Type == "nps" ? "" : "hidden")">
+            <label class="block text-sm font-medium mb-2">NPS Preview</label>
+            <div class="mt-2 border rounded-md p-4 bg-muted/20">
+                <div class="space-y-4">
+                    <div class="nps-grid">
+                        @for (var i = 0; i <= 10; i++)
+                        {
+                            <div class="text-center">
+                                <label class="nps-label @(i == 7 ? "selected" : "")">
+                                    @i
+                                </label>
                             </div>
                         }
                     </div>
                     <div class="nps-labels">
-                        <div>Not likely</div>
+                        <div>Not at all likely</div>
                         <div>Neutral</div>
-                        <div>Very likely</div>
+                        <div>Extremely likely</div>
                     </div>
                 </div>
-                
-                <input type="hidden" name="Questions[@index].Settings.Min" value="0" />
-                <input type="hidden" name="Questions[@index].Settings.Max" value="10" />
-            }
-        </div>
-
-        <div class="flex items-center pt-2">
-            <div class="form-check form-switch">
-                <input type="checkbox" class="form-check-input question-required-toggle" id="Questions[@index].Required" 
-                       name="Questions[@index].Required" value="true" @(Model.Required ? "checked" : "") />
-                <label class="form-check-label" for="Questions[@index].Required">Required question</label>
             </div>
+        </div>
+        
+        <div class="flex items-center space-x-2 pt-2">
+            <input type="checkbox" id="question_required_@Model.Index" name="Questions[@Model.Index].Required" 
+                   class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary" @(Model.Question.Required ? "checked" : "") />
+            <label for="question_required_@Model.Index" class="text-sm font-medium">Required question</label>
         </div>
     </div>
 </div>

@@ -7,9 +7,11 @@ namespace SurveyApp.Domain.Repositories
 {
     public interface ISurveyResponseRepository
     {
-        Task<IEnumerable<SurveyResponse>> GetBySurveyIdAsync(int surveyId);
+        Task<IEnumerable<SurveyResponse>> GetAllAsync();
         Task<SurveyResponse?> GetByIdAsync(int id);
-        Task<bool> AddAsync(SurveyResponse response);
+        Task<IEnumerable<SurveyResponse>> GetBySurveyIdAsync(int surveyId);
+        Task<bool> AddAsync(SurveyResponse surveyResponse);
+        Task<bool> UpdateAsync(SurveyResponse surveyResponse);
         Task<bool> DeleteAsync(int id);
     }
 }
