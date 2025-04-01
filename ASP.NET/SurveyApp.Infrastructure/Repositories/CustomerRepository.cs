@@ -1,203 +1,230 @@
 
-using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Threading.Tasks;
+using Dapper;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 using SurveyApp.Domain.Models;
 using SurveyApp.Domain.Repositories;
-using SurveyApp.Infrastructure.Data;
 
 namespace SurveyApp.Infrastructure.Repositories
 {
     public class CustomerRepository : ICustomerRepository
     {
-        private readonly AppDbContext _context;
+        private readonly string _connectionString;
 
-        public CustomerRepository(AppDbContext context)
+        public CustomerRepository(IConfiguration configuration)
         {
-            _context = context;
+            _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
         public async Task<IEnumerable<Customer>> GetAllCustomersAsync()
         {
-            var customers = await _context.Customers
-                .Include(c => c.CustomerServices)
-                .ThenInclude(cs => cs.Service)
-                .ToListAsync();
-
-            // Mapeo de entidades de infraestructura a entidades de dominio
-            return customers.Select(c => new Customer
+            using (IDbConnection db = new SqlConnection(_connectionString))
             {
-                Id = c.Id.ToString(),
-                BrandName = c.BrandName,
-                ContactName = c.ContactName,
-                ContactEmail = c.ContactEmail,
-                ContactPhone = c.ContactPhone,
-                CustomerType = c.CustomerType,
-                AcquiredServices = c.CustomerServices.Select(cs => cs.Service.Name).ToList(),
-                CreatedAt = c.CreatedAt,
-                UpdatedAt = c.UpdatedAt
-            });
+                const string sql = @"
+                    SELECT c.Id, c.BrandName, c.ContactName, c.ContactEmail, c.ContactPhone, 
+                           c.CreatedAt, c.UpdatedAt, c.CustomerType,
+                           s.Name as ServiceName
+                    FROM Customers c
+                    LEFT JOIN CustomerServices cs ON c.Id = cs.CustomerId
+                    LEFT JOIN Services s ON cs.ServiceId = s.Id
+                    ORDER BY c.CreatedAt DESC";
+
+                var customerDict = new Dictionary<int, Customer>();
+
+                await db.QueryAsync<Customer, string, Customer>(
+                    sql,
+                    (customer, serviceName) => {
+                        if (!customerDict.TryGetValue(customer.Id, out var customerEntry))
+                        {
+                            customerEntry = customer;
+                            customerEntry.AcquiredServices = new List<string>();
+                            customerDict.Add(customer.Id, customerEntry);
+                        }
+
+                        if (!string.IsNullOrEmpty(serviceName) && 
+                            !customerEntry.AcquiredServices.Contains(serviceName))
+                        {
+                            customerEntry.AcquiredServices.Add(serviceName);
+                        }
+
+                        return customerEntry;
+                    },
+                    splitOn: "ServiceName");
+
+                return customerDict.Values;
+            }
+        }
+
+        public async Task<IEnumerable<Customer>> GetCustomersByTypeAsync(string customerType)
+        {
+            using (IDbConnection db = new SqlConnection(_connectionString))
+            {
+                const string sql = @"
+                    SELECT c.Id, c.BrandName, c.ContactName, c.ContactEmail, c.ContactPhone, 
+                           c.CreatedAt, c.UpdatedAt, c.CustomerType,
+                           s.Name as ServiceName
+                    FROM Customers c
+                    LEFT JOIN CustomerServices cs ON c.Id = cs.CustomerId
+                    LEFT JOIN Services s ON cs.ServiceId = s.Id
+                    WHERE c.CustomerType = @CustomerType
+                    ORDER BY c.CreatedAt DESC";
+
+                var customerDict = new Dictionary<int, Customer>();
+
+                await db.QueryAsync<Customer, string, Customer>(
+                    sql,
+                    (customer, serviceName) => {
+                        if (!customerDict.TryGetValue(customer.Id, out var customerEntry))
+                        {
+                            customerEntry = customer;
+                            customerEntry.AcquiredServices = new List<string>();
+                            customerDict.Add(customer.Id, customerEntry);
+                        }
+
+                        if (!string.IsNullOrEmpty(serviceName) && 
+                            !customerEntry.AcquiredServices.Contains(serviceName))
+                        {
+                            customerEntry.AcquiredServices.Add(serviceName);
+                        }
+
+                        return customerEntry;
+                    },
+                    new { CustomerType = customerType },
+                    splitOn: "ServiceName");
+
+                return customerDict.Values;
+            }
         }
 
         public async Task<IEnumerable<Service>> GetAllServicesAsync()
         {
-            var services = await _context.Services.ToListAsync();
-
-            return services.Select(s => new Service
+            using (IDbConnection db = new SqlConnection(_connectionString))
             {
-                Id = s.Id.ToString(),
-                Name = s.Name,
-                Description = s.Description,
-                CreatedAt = s.CreatedAt
-            });
+                return await db.QueryAsync<Service>("SELECT * FROM Services WHERE IsActive = 1");
+            }
         }
 
-        public async Task<string> AddCustomerAsync(Customer customer)
+        public async Task<int> AddCustomerAsync(Customer customer)
         {
-            var customerEntity = new Data.Entities.Customer
+            using (IDbConnection db = new SqlConnection(_connectionString))
             {
-                BrandName = customer.BrandName,
-                ContactName = customer.ContactName,
-                ContactEmail = customer.ContactEmail,
-                ContactPhone = customer.ContactPhone,
-                CustomerType = customer.CustomerType,
-                CreatedAt = customer.CreatedAt,
-                UpdatedAt = customer.UpdatedAt
-            };
+                const string sql = @"
+                    INSERT INTO Customers (BrandName, ContactName, ContactEmail, ContactPhone, CustomerType, CreatedAt, UpdatedAt)
+                    VALUES (@BrandName, @ContactName, @ContactEmail, @ContactPhone, @CustomerType, @CreatedAt, @UpdatedAt);
+                    SELECT CAST(SCOPE_IDENTITY() as int)";
 
-            _context.Customers.Add(customerEntity);
-            await _context.SaveChangesAsync();
+                customer.CreatedAt = DateTime.UtcNow;
+                customer.UpdatedAt = DateTime.UtcNow;
 
-            return customerEntity.Id.ToString();
+                return await db.QuerySingleAsync<int>(sql, customer);
+            }
         }
 
-        public async Task AddCustomerServiceAsync(string customerId, string serviceId)
+        public async Task<Customer> GetCustomerByIdAsync(int id)
         {
-            if (int.TryParse(customerId, out int custId) && int.TryParse(serviceId, out int servId))
+            using (IDbConnection db = new SqlConnection(_connectionString))
             {
-                var customerServiceEntity = new Data.Entities.CustomerService
-                {
-                    CustomerId = custId,
-                    ServiceId = servId,
-                    AssignedAt = DateTime.UtcNow
-                };
+                const string sql = @"
+                    SELECT c.Id, c.BrandName, c.ContactName, c.ContactEmail, c.ContactPhone, 
+                           c.CreatedAt, c.UpdatedAt, c.CustomerType,
+                           s.Name as ServiceName
+                    FROM Customers c
+                    LEFT JOIN CustomerServices cs ON c.Id = cs.CustomerId
+                    LEFT JOIN Services s ON cs.ServiceId = s.Id
+                    WHERE c.Id = @Id";
 
-                _context.CustomerServices.Add(customerServiceEntity);
-                await _context.SaveChangesAsync();
+                var customerDict = new Dictionary<int, Customer>();
+
+                await db.QueryAsync<Customer, string, Customer>(
+                    sql,
+                    (customer, serviceName) => {
+                        if (!customerDict.TryGetValue(customer.Id, out var customerEntry))
+                        {
+                            customerEntry = customer;
+                            customerEntry.AcquiredServices = new List<string>();
+                            customerDict.Add(customer.Id, customerEntry);
+                        }
+
+                        if (!string.IsNullOrEmpty(serviceName) && 
+                            !customerEntry.AcquiredServices.Contains(serviceName))
+                        {
+                            customerEntry.AcquiredServices.Add(serviceName);
+                        }
+
+                        return customerEntry;
+                    },
+                    new { Id = id },
+                    splitOn: "ServiceName");
+
+                return customerDict.Values.FirstOrDefault();
+            }
+        }
+
+        public async Task UpdateCustomerAsync(Customer customer)
+        {
+            using (IDbConnection db = new SqlConnection(_connectionString))
+            {
+                const string sql = @"
+                    UPDATE Customers 
+                    SET BrandName = @BrandName, 
+                        ContactName = @ContactName, 
+                        ContactEmail = @ContactEmail, 
+                        ContactPhone = @ContactPhone, 
+                        CustomerType = @CustomerType, 
+                        UpdatedAt = @UpdatedAt
+                    WHERE Id = @Id";
+
+                customer.UpdatedAt = DateTime.UtcNow;
+
+                await db.ExecuteAsync(sql, customer);
+            }
+        }
+
+        public async Task DeleteCustomerAsync(int id)
+        {
+            using (IDbConnection db = new SqlConnection(_connectionString))
+            {
+                // Primero eliminamos las relaciones con servicios
+                await db.ExecuteAsync("DELETE FROM CustomerServices WHERE CustomerId = @Id", new { Id = id });
+                
+                // Luego eliminamos el cliente
+                await db.ExecuteAsync("DELETE FROM Customers WHERE Id = @Id", new { Id = id });
+            }
+        }
+
+        public async Task AddCustomerServiceAsync(int customerId, string serviceId)
+        {
+            using (IDbConnection db = new SqlConnection(_connectionString))
+            {
+                const string sql = @"
+                    INSERT INTO CustomerServices (CustomerId, ServiceId)
+                    VALUES (@CustomerId, @ServiceId)";
+
+                await db.ExecuteAsync(sql, new { CustomerId = customerId, ServiceId = serviceId });
             }
         }
 
         public async Task<string> GetServiceIdByNameAsync(string serviceName)
         {
-            var service = await _context.Services.FirstOrDefaultAsync(s => s.Name == serviceName);
-            return service?.Id.ToString() ?? string.Empty;
+            using (IDbConnection db = new SqlConnection(_connectionString))
+            {
+                return await db.QuerySingleOrDefaultAsync<string>(
+                    "SELECT Id FROM Services WHERE Name = @Name", 
+                    new { Name = serviceName });
+            }
         }
 
         public async Task<IEnumerable<string>> GetCustomerEmailsAsync()
         {
-            return await _context.Customers.Select(c => c.ContactEmail).ToListAsync();
-        }
-        
-        public async Task<Customer> GetCustomerByIdAsync(string id)
-        {
-            if (!int.TryParse(id, out int customerId))
+            using (IDbConnection db = new SqlConnection(_connectionString))
             {
-                return null;
+                return await db.QueryAsync<string>("SELECT ContactEmail FROM Customers");
             }
-            
-            var customerEntity = await _context.Customers
-                .Include(c => c.CustomerServices)
-                .ThenInclude(cs => cs.Service)
-                .FirstOrDefaultAsync(c => c.Id == customerId);
-                
-            if (customerEntity == null)
-            {
-                return null;
-            }
-            
-            return new Customer
-            {
-                Id = customerEntity.Id.ToString(),
-                BrandName = customerEntity.BrandName,
-                ContactName = customerEntity.ContactName,
-                ContactEmail = customerEntity.ContactEmail,
-                ContactPhone = customerEntity.ContactPhone,
-                CustomerType = customerEntity.CustomerType,
-                AcquiredServices = customerEntity.CustomerServices.Select(cs => cs.Service.Name).ToList(),
-                CreatedAt = customerEntity.CreatedAt,
-                UpdatedAt = customerEntity.UpdatedAt
-            };
-        }
-        
-        public async Task UpdateCustomerAsync(Customer customer)
-        {
-            if (!int.TryParse(customer.Id, out int customerId))
-            {
-                throw new ArgumentException("ID de cliente inválido");
-            }
-            
-            var customerEntity = await _context.Customers.FindAsync(customerId);
-            
-            if (customerEntity == null)
-            {
-                throw new KeyNotFoundException($"Cliente con ID {customer.Id} no encontrado");
-            }
-            
-            // Actualizar propiedades
-            customerEntity.BrandName = customer.BrandName;
-            customerEntity.ContactName = customer.ContactName;
-            customerEntity.ContactEmail = customer.ContactEmail;
-            customerEntity.ContactPhone = customer.ContactPhone;
-            customerEntity.CustomerType = customer.CustomerType;
-            customerEntity.UpdatedAt = DateTime.UtcNow;
-            
-            await _context.SaveChangesAsync();
-            
-            // Actualizar servicios si es necesario
-            if (customer.AcquiredServices != null && customer.AcquiredServices.Any())
-            {
-                // Eliminar asignaciones existentes
-                var existingServices = await _context.CustomerServices
-                    .Where(cs => cs.CustomerId == customerId)
-                    .ToListAsync();
-                
-                _context.CustomerServices.RemoveRange(existingServices);
-                
-                // Añadir nuevas asignaciones
-                foreach (var serviceName in customer.AcquiredServices)
-                {
-                    var serviceId = await GetServiceIdByNameAsync(serviceName);
-                    if (!string.IsNullOrEmpty(serviceId) && int.TryParse(serviceId, out int servId))
-                    {
-                        var customerServiceEntity = new Data.Entities.CustomerService
-                        {
-                            CustomerId = customerId,
-                            ServiceId = servId,
-                            AssignedAt = DateTime.UtcNow
-                        };
-                        
-                        _context.CustomerServices.Add(customerServiceEntity);
-                    }
-                }
-                
-                await _context.SaveChangesAsync();
-            }
-        }
-        
-        public async Task DeleteCustomerAsync(string id)
-        {
-            if (!int.TryParse(id, out int customerId))
-            {
-                throw new ArgumentException("ID de cliente inválido");
-            }
-            
-            var customerEntity = await _context.Customers.FindAsync(customerId);
-            
-            if (customerEntity == null)
-            {
-                throw new KeyNotFoundException($"Cliente con ID {id} no encontrado");
-            }
-            
-            _context.Customers.Remove(customerEntity);
-            await _context.SaveChangesAsync();
         }
     }
 }

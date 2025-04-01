@@ -1,0 +1,73 @@
+
+@model dynamic
+
+<div class="modal fade" id="customerFormModal" tabindex="-1" aria-labelledby="customerFormModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="customerFormModalLabel">Agregar Nuevo Cliente</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form asp-action="AddCustomer" asp-controller="Customers" method="post" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label for="BrandName" class="form-label">Nombre de la Marca *</label>
+                            <input type="text" class="form-control" id="BrandName" name="BrandName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="ContactName" class="form-label">Nombre de Contacto *</label>
+                            <input type="text" class="form-control" id="ContactName" name="ContactName" required>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label for="ContactEmail" class="form-label">Email de Contacto *</label>
+                            <input type="email" class="form-control" id="ContactEmail" name="ContactEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="ContactPhone" class="form-label">Teléfono de Contacto</label>
+                            <input type="tel" class="form-control" id="ContactPhone" name="ContactPhone">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label d-block">Tipo de Cliente *</label>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="CustomerType" id="customerTypeClient" value="client" checked>
+                            <label class="form-check-label" for="customerTypeClient">Cliente</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="CustomerType" id="customerTypeAdmin" value="admin">
+                            <label class="form-check-label" for="customerTypeAdmin">Administrador</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Servicios Adquiridos</label>
+                        <div class="border rounded-lg p-3 max-h-40 overflow-y-auto">
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                @if (Model.Services != null)
+                                {
+                                    foreach (var service in Model.Services)
+                                    {
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="SelectedServices" id="service-@service.Id" value="@service.Name">
+                                            <label class="form-check-label" for="service-@service.Id">@service.Name</label>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar Cliente</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

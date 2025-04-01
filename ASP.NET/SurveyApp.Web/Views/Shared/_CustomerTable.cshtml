@@ -1,0 +1,70 @@
+
+@model IEnumerable<SurveyApp.Domain.Models.Customer>
+
+<div class="overflow-x-auto">
+    <table class="w-full">
+        <thead class="bg-gray-50 border-b">
+            <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Marca</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contacto</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Servicios</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Desde</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+            @if (Model != null && Model.Any())
+            {
+                foreach (var customer in Model)
+                {
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="font-medium text-gray-900">@customer.BrandName</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">@customer.ContactEmail</div>
+                            <div class="text-sm text-gray-500">@customer.ContactPhone</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full @(customer.CustomerType == "admin" ? "bg-red-100 text-red-800" : "bg-blue-100 text-blue-800")">
+                                @(customer.CustomerType == "admin" ? "Admin" : "Cliente")
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex flex-wrap gap-1">
+                                @if (customer.AcquiredServices != null)
+                                {
+                                    foreach (var service in customer.AcquiredServices)
+                                    {
+                                        <span class="inline-block px-2 py-1 text-xs bg-primary/10 text-primary rounded-full">
+                                            @service
+                                        </span>
+                                    }
+                                }
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            @customer.CreatedAt.ToString("MMM yyyy")
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <a href="#" class="text-primary hover:text-primary/80">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                </svg>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
+                        No hay clientes para mostrar
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

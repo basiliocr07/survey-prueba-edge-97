@@ -1,10 +1,10 @@
 
-using MediatR;
-using SurveyApp.Domain.Models;
-using SurveyApp.Domain.Repositories;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using MediatR;
+using SurveyApp.Domain.Models;
+using SurveyApp.Domain.Repositories;
 
 namespace SurveyApp.Application.Customers.Commands.AddCustomer
 {
@@ -21,7 +21,7 @@ namespace SurveyApp.Application.Customers.Commands.AddCustomer
         {
             try
             {
-                // Validación de la solicitud
+                // Validar entrada
                 if (string.IsNullOrWhiteSpace(request.BrandName) || 
                     string.IsNullOrWhiteSpace(request.ContactName) || 
                     string.IsNullOrWhiteSpace(request.ContactEmail))
@@ -29,32 +29,31 @@ namespace SurveyApp.Application.Customers.Commands.AddCustomer
                     return new AddCustomerResult
                     {
                         Success = false,
-                        Message = "Los campos Nombre de Marca, Nombre de Contacto y Email son obligatorios"
+                        Message = "Los campos Marca, Nombre de Contacto y Email son obligatorios."
                     };
                 }
 
-                // Crear el objeto Customer a partir del comando
+                // Crear entidad de cliente
                 var customer = new Customer
                 {
                     BrandName = request.BrandName,
                     ContactName = request.ContactName,
                     ContactEmail = request.ContactEmail,
                     ContactPhone = request.ContactPhone,
-                    AcquiredServices = request.AcquiredServices,
-                    CustomerType = request.CustomerType, // Asegurar que se establece el CustomerType
+                    CustomerType = request.CustomerType,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
 
-                // Guardar el cliente
+                // Agregar cliente a la base de datos
                 var customerId = await _customerRepository.AddCustomerAsync(customer);
 
-                // Relacionar con servicios
-                if (request.AcquiredServices.Any())
+                // Agregar relaciones con servicios
+                if (request.AcquiredServices != null && request.AcquiredServices.Count > 0)
                 {
-                    foreach (var service in request.AcquiredServices)
+                    foreach (var serviceName in request.AcquiredServices)
                     {
-                        var serviceId = await _customerRepository.GetServiceIdByNameAsync(service);
+                        var serviceId = await _customerRepository.GetServiceIdByNameAsync(serviceName);
                         if (!string.IsNullOrEmpty(serviceId))
                         {
                             await _customerRepository.AddCustomerServiceAsync(customerId, serviceId);
@@ -62,24 +61,19 @@ namespace SurveyApp.Application.Customers.Commands.AddCustomer
                     }
                 }
 
-                // Retornar resultado exitoso
                 return new AddCustomerResult
                 {
                     Success = true,
-                    Message = "Cliente añadido exitosamente",
-                    CustomerId = customerId.ToString()
+                    Message = "Cliente agregado con éxito.",
+                    CustomerId = customerId
                 };
             }
             catch (Exception ex)
             {
-                // Log the exception (idealmente usar un servicio de logging)
-                Console.WriteLine($"Error adding customer: {ex.Message}");
-                
-                // Retornar resultado con error
                 return new AddCustomerResult
                 {
                     Success = false,
-                    Message = $"Error: {ex.Message}"
+                    Message = $"Error al agregar cliente: {ex.Message}"
                 };
             }
         }
