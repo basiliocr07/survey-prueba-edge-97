@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Menu, X, MessageSquare, FileText, Home, LogIn, LogOut, LayoutDashboard, FileBarChart, BarChart3, Users } from "lucide-react";
+import { Menu, X, MessageSquare, FileText, Home, LogIn, LogOut, LayoutDashboard, FileBarChart, BarChart3, Users, Mail } from "lucide-react";
 import { cn } from '@/lib/utils';
 import { useToast } from "@/components/ui/use-toast";
 import {
@@ -69,6 +70,7 @@ export default function Navbar() {
       { path: '/suggestions', label: 'Suggestions', icon: <MessageSquare className="w-4 h-4 mr-2" /> },
       { path: '/customers', label: 'Customer Growth', icon: <Users className="w-4 h-4 mr-2" /> },
       { path: '/requirements', label: 'Requirements', icon: <FileText className="w-4 h-4 mr-2" /> },
+      { path: '/email-settings', label: 'Email Settings', icon: <Mail className="w-4 h-4 mr-2" /> },
     ];
   };
 
@@ -147,6 +149,12 @@ export default function Navbar() {
           { name: 'New Requirement', description: 'Submit a new requirement', href: '/requirements#new' },
           { name: 'Documentation', description: 'Project documentation', href: '/requirements#docs' },
         ]
+      },
+      {
+        label: 'Email Settings',
+        icon: <Mail className="w-4 h-4 mr-2" />,
+        href: '/email-settings',
+        description: 'Configure email delivery settings'
       },
       {
         label: 'About',

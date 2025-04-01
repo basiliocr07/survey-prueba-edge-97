@@ -20,6 +20,7 @@ import About from "./pages/About";
 import ClientAccess from "./pages/ClientAccess";
 import ClientLogin from "./pages/ClientLogin";
 import SurveyExample from "./pages/SurveyExample";
+import EmailSettings from "./pages/EmailSettings";
 
 // Create a new QueryClient with explicit options
 const queryClient = new QueryClient({
@@ -55,6 +56,7 @@ const App = () => (
                 <Route path="/client" element={<ClientAccess />} />
                 <Route path="/login" element={<ClientLogin />} />
                 <Route path="/hexagonal-example" element={<SurveyExample />} />
+                <Route path="/email-settings" element={<EmailSettings />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </div>
