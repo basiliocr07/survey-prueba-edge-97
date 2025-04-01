@@ -19,7 +19,6 @@ export default function EmailSettings() {
   });
   
   const handleSaveSettings = () => {
-    // Aquí puedes implementar la lógica para guardar la configuración
     localStorage.setItem('emailDeliveryConfig', JSON.stringify(deliveryConfig));
     
     toast({

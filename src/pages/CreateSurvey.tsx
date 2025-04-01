@@ -6,15 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import QuestionBuilder, { Question } from '@/components/survey/QuestionBuilder';
-import EmailDeliverySettings from '@/components/survey/EmailDeliverySettings';
 import { useSurvey } from '@/application/hooks/useSurvey';
-import { Survey, SurveyQuestion, DeliveryConfig } from '@/types/surveyTypes';
-import { FilePlus, Save, Send } from 'lucide-react';
+import { Survey, SurveyQuestion } from '@/types/surveyTypes';
+import { FilePlus, Save } from 'lucide-react';
 
 export default function CreateSurvey() {
   const navigate = useNavigate();
@@ -24,16 +22,11 @@ export default function CreateSurvey() {
   const query = new URLSearchParams(location.search);
   const editSurveyId = query.get('edit');
   
-  const { survey, isLoading, createSurvey, updateSurvey, isCreating, isUpdating, sendSurveyEmails, isSendingEmails } = useSurvey(editSurveyId || undefined);
+  const { survey, isLoading, createSurvey, updateSurvey, isCreating, isUpdating } = useSurvey(editSurveyId || undefined);
   
   const [title, setTitle] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [activeTab, setActiveTab] = useState<string>('edit');
-  const [deliveryConfig, setDeliveryConfig] = useState<DeliveryConfig>({
-    type: 'manual',
-    emailAddresses: [],
-  });
   
   useEffect(() => {
     if (survey) {
@@ -43,14 +36,6 @@ export default function CreateSurvey() {
         ...q,
         type: q.type as any
       })));
-      
-      if (survey.deliveryConfig) {
-        const config = {...survey.deliveryConfig};
-        if (config.schedule && !config.schedule.time) {
-          config.schedule.time = '09:00';
-        }
-        setDeliveryConfig(config);
-      }
     }
   }, [survey]);
   
@@ -142,11 +127,6 @@ export default function CreateSurvey() {
     }
     
     try {
-      const finalDeliveryConfig = {...deliveryConfig};
-      if (finalDeliveryConfig.schedule && !finalDeliveryConfig.schedule.time) {
-        finalDeliveryConfig.schedule.time = '09:00';
-      }
-      
       const surveyQuestions: SurveyQuestion[] = questions.map(q => ({
         id: q.id,
         title: q.title,
@@ -161,7 +141,8 @@ export default function CreateSurvey() {
         title,
         description: description || undefined,
         questions: surveyQuestions,
-        deliveryConfig: finalDeliveryConfig
+        // Usamos la configuración global de email si existe
+        deliveryConfig: JSON.parse(localStorage.getItem('emailDeliveryConfig') || '{"type":"manual","emailAddresses":[]}')
       };
       
       // Log the survey data as JSON to the browser console
@@ -182,27 +163,11 @@ export default function CreateSurvey() {
         console.log('Survey created with result:', result);
       }
       
-      if (
-        finalDeliveryConfig.type === 'manual' && 
-        finalDeliveryConfig.emailAddresses.length > 0 &&
-        result && 'id' in result
-      ) {
-        const shouldSendEmails = window.confirm(
-          `¿Quieres enviar la encuesta a ${finalDeliveryConfig.emailAddresses.length} direcciones de correo ahora?`
-        );
-        
-        if (shouldSendEmails) {
-          console.log('Sending survey emails to:', finalDeliveryConfig.emailAddresses);
-          await sendSurveyEmails(result.id, finalDeliveryConfig.emailAddresses);
-          console.log('Emails sent successfully');
-        }
-      }
-      
       toast({
         title: editSurveyId ? "Encuesta actualizada" : "Encuesta creada",
         description: editSurveyId 
           ? "La encuesta ha sido actualizada exitosamente" 
-          : "La encuesta ha sido creada exitosamente"
+          : "La encuesta ha sido creada exitosamente. Puedes configurar el envío por email en la sección de Email Settings."
       });
       
       navigate("/surveys");
@@ -216,7 +181,7 @@ export default function CreateSurvey() {
     }
   };
   
-  const isFormLoading = isLoading || isCreating || isUpdating || isSendingEmails;
+  const isFormLoading = isLoading || isCreating || isUpdating;
   
   if (isLoading && editSurveyId) {
     return (
@@ -270,139 +235,105 @@ export default function CreateSurvey() {
           </div>
         </div>
         
-        <Tabs 
-          defaultValue="edit" 
-          value={activeTab} 
-          onValueChange={setActiveTab}
-          className="space-y-4"
-        >
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="edit" disabled={isFormLoading}>
-              <FilePlus className="h-4 w-4 mr-2" />
-              Survey Content
-            </TabsTrigger>
-            <TabsTrigger value="delivery" disabled={isFormLoading}>
-              <Send className="h-4 w-4 mr-2" />
-              Delivery Settings
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="edit" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Survey Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <label htmlFor="title" className="block text-sm font-medium mb-1">
-                    Title <span className="text-destructive">*</span>
-                  </label>
-                  <Input
-                    id="title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Enter survey title"
-                    className="w-full"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="description" className="block text-sm font-medium mb-1">
-                    Description (optional)
-                  </label>
-                  <Textarea
-                    id="description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Enter a description for your survey"
-                    className="min-h-[100px]"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-            
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Questions</h2>
-              <div className="flex space-x-2">
-                <Button 
-                  variant="outline" 
-                  onClick={addSampleQuestions}
-                  disabled={isFormLoading}
-                >
-                  Add Sample Questions
-                </Button>
-                <Button 
-                  onClick={addQuestion}
-                  disabled={isFormLoading}
-                >
-                  Add Question
-                </Button>
-              </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Survey Details</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label htmlFor="title" className="block text-sm font-medium mb-1">
+                Title <span className="text-destructive">*</span>
+              </label>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Enter survey title"
+                className="w-full"
+              />
             </div>
-            
-            {questions.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center p-8 text-center">
-                  <div className="rounded-full bg-primary/10 p-4 mb-4">
-                    <FilePlus className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="text-lg font-semibold mb-1">No questions yet</h3>
-                  <p className="text-muted-foreground mb-4">Add questions to your survey</p>
-                  <Button onClick={addQuestion} disabled={isFormLoading}>
-                    Add First Question
-                  </Button>
-                </CardContent>
-              </Card>
+            <div>
+              <label htmlFor="description" className="block text-sm font-medium mb-1">
+                Description (optional)
+              </label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Enter a description for your survey"
+                className="min-h-[100px]"
+              />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <div className="flex justify-between items-center mt-8 mb-4">
+          <h2 className="text-xl font-semibold">Questions</h2>
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline" 
+              onClick={addSampleQuestions}
+              disabled={isFormLoading}
+            >
+              Add Sample Questions
+            </Button>
+            <Button 
+              onClick={addQuestion}
+              disabled={isFormLoading}
+            >
+              Add Question
+            </Button>
+          </div>
+        </div>
+        
+        {questions.length === 0 ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center p-8 text-center">
+              <div className="rounded-full bg-primary/10 p-4 mb-4">
+                <FilePlus className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="text-lg font-semibold mb-1">No questions yet</h3>
+              <p className="text-muted-foreground mb-4">Add questions to your survey</p>
+              <Button onClick={addQuestion} disabled={isFormLoading}>
+                Add First Question
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {questions.map((question, index) => (
+              <QuestionBuilder
+                key={question.id}
+                question={question}
+                onUpdate={(updatedQuestion) => updateQuestion(question.id, updatedQuestion as Question)}
+                onDelete={() => removeQuestion(question.id)}
+                onMoveUp={() => moveQuestion(question.id, 'up')}
+                onMoveDown={() => moveQuestion(question.id, 'down')}
+                isFirst={index === 0}
+                isLast={index === questions.length - 1}
+              />
+            ))}
+          </div>
+        )}
+        
+        <div className="mt-8 flex justify-end">
+          <Button 
+            onClick={handleSubmit}
+            disabled={isFormLoading}
+          >
+            {isFormLoading ? (
+              <>
+                <span className="animate-spin mr-2">⏳</span>
+                {editSurveyId ? 'Updating...' : 'Creating...'}
+              </>
             ) : (
-              <div className="space-y-4">
-                {questions.map((question, index) => (
-                  <QuestionBuilder
-                    key={question.id}
-                    question={question}
-                    onUpdate={(updatedQuestion) => updateQuestion(question.id, updatedQuestion as Question)}
-                    onDelete={() => removeQuestion(question.id)}
-                    onMoveUp={() => moveQuestion(question.id, 'up')}
-                    onMoveDown={() => moveQuestion(question.id, 'down')}
-                    isFirst={index === 0}
-                    isLast={index === questions.length - 1}
-                  />
-                ))}
-              </div>
+              <>
+                <Save className="mr-2 h-4 w-4" />
+                {editSurveyId ? 'Update Survey' : 'Create Survey'}
+              </>
             )}
-          </TabsContent>
-          
-          <TabsContent value="delivery">
-            <EmailDeliverySettings 
-              deliveryConfig={deliveryConfig as any}
-              onConfigChange={(config) => setDeliveryConfig(config)}
-            />
-            
-            <div className="mt-6 flex justify-end">
-              <Button 
-                onClick={() => setActiveTab('edit')}
-                variant="outline"
-                className="mr-2"
-              >
-                Back to Questions
-              </Button>
-              <Button 
-                onClick={handleSubmit}
-                disabled={isFormLoading}
-              >
-                {isFormLoading ? (
-                  <>
-                    <span className="animate-spin mr-2">⏳</span>
-                    {editSurveyId ? 'Updating...' : 'Creating...'}
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    {editSurveyId ? 'Update Survey' : 'Create Survey'}
-                  </>
-                )}
-              </Button>
-            </div>
-          </TabsContent>
-        </Tabs>
+          </Button>
+        </div>
       </main>
       
       <Footer />
