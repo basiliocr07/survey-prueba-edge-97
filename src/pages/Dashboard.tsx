@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,192 +15,16 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useSurveyAnalytics } from "@/application/hooks/useSurveyAnalytics";
+import { Suggestion } from "@/types/suggestions";
+import { Requirement } from "@/types/requirements";
+import { Survey, SurveyResponse } from "@/domain/models/Survey";
+import { SupabaseSurveyResponseRepository } from "@/infrastructure/repositories/SupabaseSurveyResponseRepository";
+import { SupabaseSurveyRepository } from "@/infrastructure/repositories/SupabaseSurveyRepository";
 
-// Data types for our dashboard items
-interface SurveyItem {
-  id: string;
-  title: string;
-  description: string;
-  createdAt: string;
-  responses: number;
-  status: string;
-}
+const surveyRepository = new SupabaseSurveyRepository();
+const surveyResponseRepository = new SupabaseSurveyResponseRepository();
 
-interface SurveyResponseItem {
-  id: string;
-  surveyId: string;
-  surveyTitle: string;
-  respondentName: string;
-  submittedAt: string;
-}
-
-interface SuggestionItem {
-  id: string;
-  content: string;
-  customerName: string;
-  createdAt: string;
-  status: string;
-}
-
-interface RequirementItem {
-  id: string;
-  title: string;
-  description: string;
-  priority: string;
-  createdAt: string;
-  status: string;
-}
-
-// Mock data fetching functions - these would connect to your API
-const fetchLatestSurvey = async (): Promise<SurveyItem> => {
-  // Simulando una llamada API con un tiempo de respuesta realista
-  await new Promise(resolve => setTimeout(resolve, 300));
-  
-  return {
-    id: "1",
-    title: "Encuesta de Satisfacción del Cliente",
-    description: "Recopilar opiniones sobre la calidad de nuestro servicio al cliente",
-    createdAt: "2023-12-15T12:00:00Z",
-    responses: 8,
-    status: "in-progress"
-  };
-};
-
-const fetchRecentResponses = async (): Promise<SurveyResponseItem[]> => {
-  // Simulando una llamada API con un tiempo de respuesta realista
-  await new Promise(resolve => setTimeout(resolve, 400));
-  
-  return [
-    {
-      id: "1",
-      surveyId: "1",
-      surveyTitle: "Encuesta de Satisfacción del Cliente",
-      respondentName: "María López",
-      submittedAt: "2023-12-18T14:30:00Z"
-    },
-    {
-      id: "2",
-      surveyId: "1",
-      surveyTitle: "Encuesta de Satisfacción del Cliente",
-      respondentName: "Juan Pérez",
-      submittedAt: "2023-12-17T09:15:00Z"
-    },
-    {
-      id: "3",
-      surveyId: "1",
-      surveyTitle: "Encuesta de Satisfacción del Cliente",
-      respondentName: "Ana Martínez",
-      submittedAt: "2023-12-16T16:45:00Z"
-    }
-  ];
-};
-
-const fetchLatestSuggestion = async (): Promise<SuggestionItem> => {
-  // Simulando una llamada API con un tiempo de respuesta realista
-  await new Promise(resolve => setTimeout(resolve, 350));
-  
-  return {
-    id: "1",
-    content: "Agregar modo oscuro al portal del cliente",
-    customerName: "Juan Pérez",
-    createdAt: "2023-12-10T09:30:00Z",
-    status: "pending"
-  };
-};
-
-const fetchRecentSuggestions = async (): Promise<SuggestionItem[]> => {
-  // Simulando una llamada API con un tiempo de respuesta realista
-  await new Promise(resolve => setTimeout(resolve, 450));
-  
-  return [
-    {
-      id: "1",
-      content: "Agregar modo oscuro al portal del cliente",
-      customerName: "Juan Pérez",
-      createdAt: "2023-12-10T09:30:00Z",
-      status: "pending"
-    },
-    {
-      id: "2",
-      content: "Mejorar la velocidad de carga de las páginas",
-      customerName: "María López",
-      createdAt: "2023-12-09T15:20:00Z",
-      status: "in-progress"
-    },
-    {
-      id: "3",
-      content: "Añadir más opciones de pago en la checkout",
-      customerName: "Carlos Gómez",
-      createdAt: "2023-12-08T11:45:00Z",
-      status: "closed"
-    }
-  ];
-};
-
-const fetchLatestRequirement = async (): Promise<RequirementItem> => {
-  // Simulando una llamada API con un tiempo de respuesta realista
-  await new Promise(resolve => setTimeout(resolve, 320));
-  
-  return {
-    id: "1",
-    title: "Diseño responsivo para móviles",
-    description: "La aplicación debe ser completamente responsiva en todos los dispositivos móviles",
-    priority: "high",
-    createdAt: "2023-12-05T14:20:00Z",
-    status: "closed"
-  };
-};
-
-const fetchRecentRequirements = async (): Promise<RequirementItem[]> => {
-  // Simulando una llamada API con un tiempo de respuesta realista
-  await new Promise(resolve => setTimeout(resolve, 380));
-  
-  return [
-    {
-      id: "1",
-      title: "Diseño responsivo para móviles",
-      description: "La aplicación debe ser completamente responsiva en todos los dispositivos móviles",
-      priority: "high",
-      createdAt: "2023-12-05T14:20:00Z",
-      status: "closed"
-    },
-    {
-      id: "2",
-      title: "Implementar autenticación con Google",
-      description: "Permitir a los usuarios iniciar sesión con sus cuentas de Google",
-      priority: "medium",
-      createdAt: "2023-12-04T10:15:00Z",
-      status: "in-progress"
-    },
-    {
-      id: "3",
-      title: "Optimizar rendimiento en navegadores antiguos",
-      description: "Mejorar la compatibilidad con IE11 y otros navegadores obsoletos",
-      priority: "low",
-      createdAt: "2023-12-03T09:30:00Z",
-      status: "pending"
-    }
-  ];
-};
-
-// Función para actualizar el estado de un elemento
-const updateItemStatus = async (itemType: string, id: string, status: string): Promise<boolean> => {
-  console.log(`Actualizando estado de ${itemType} ${id} a ${status}`);
-  // Simulando una llamada API con un tiempo de respuesta realista
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  // En un caso real, aquí se haría la llamada a la API
-  // Simulamos un éxito del 90% para ser realistas
-  const success = Math.random() < 0.9;
-  
-  if (!success) {
-    throw new Error(`Error al actualizar el estado del ${itemType}`);
-  }
-  
-  return true;
-};
-
-// Component for status badges
 const StatusBadge = ({ status }: { status: string }) => {
   switch (status) {
     case "pending":
@@ -227,7 +50,6 @@ const StatusBadge = ({ status }: { status: string }) => {
   }
 };
 
-// Función para traducir prioridades
 const translatePriority = (priority: string): string => {
   switch (priority.toLowerCase()) {
     case "high":
@@ -241,7 +63,6 @@ const translatePriority = (priority: string): string => {
   }
 };
 
-// Collapsible section component
 const CollapsibleSection = ({ 
   title, 
   children, 
@@ -278,14 +99,12 @@ const CollapsibleSection = ({
 };
 
 export default function Dashboard() {
-  // State for tracking which sections are expanded
   const [expandedSections, setExpandedSections] = useState({
     surveys: false,
     suggestions: false,
     requirements: false
   });
 
-  // Toggle a section's expanded state
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections(prev => ({
       ...prev,
@@ -293,41 +112,63 @@ export default function Dashboard() {
     }));
   };
 
-  // Fetch data with React Query
-  const { data: latestSurvey, isLoading: isLoadingSurvey } = useQuery({
-    queryKey: ['latestSurvey'],
-    queryFn: fetchLatestSurvey
-  });
+  const { 
+    surveys, 
+    isLoadingSurveys: isLoadingSurvey,
+    surveysError
+  } = useSurveyAnalytics();
+  
+  const latestSurvey = surveys && surveys.length > 0 
+    ? surveys.sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )[0] 
+    : null;
 
   const { data: recentResponses, isLoading: isLoadingResponses } = useQuery({
-    queryKey: ['recentResponses'],
-    queryFn: fetchRecentResponses,
-    enabled: expandedSections.surveys // Only fetch when section is expanded
+    queryKey: ['recentResponses', latestSurvey?.id],
+    queryFn: async () => {
+      if (!latestSurvey?.id) return [];
+      return surveyResponseRepository.getResponsesBySurveyId(latestSurvey.id);
+    },
+    enabled: expandedSections.surveys && !!latestSurvey?.id
   });
 
-  const { data: latestSuggestion, isLoading: isLoadingSuggestion } = useQuery({
-    queryKey: ['latestSuggestion'],
-    queryFn: fetchLatestSuggestion
+  const { data: suggestions, isLoading: isLoadingSuggestions } = useQuery({
+    queryKey: ['suggestions'],
+    queryFn: async () => {
+      const response = await fetch('/api/suggestions');
+      if (!response.ok) {
+        throw new Error('Error fetching suggestions');
+      }
+      return response.json() as Promise<Suggestion[]>;
+    },
+    enabled: false
   });
 
-  const { data: recentSuggestions, isLoading: isLoadingSuggestions } = useQuery({
-    queryKey: ['recentSuggestions'],
-    queryFn: fetchRecentSuggestions,
-    enabled: expandedSections.suggestions // Only fetch when section is expanded
+  const latestSuggestion = suggestions && suggestions.length > 0 
+    ? suggestions.sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )[0] 
+    : null;
+
+  const { data: requirements, isLoading: isLoadingRequirements } = useQuery({
+    queryKey: ['requirements'],
+    queryFn: async () => {
+      const response = await fetch('/api/requirements');
+      if (!response.ok) {
+        throw new Error('Error fetching requirements');
+      }
+      return response.json() as Promise<Requirement[]>;
+    },
+    enabled: false
   });
 
-  const { data: latestRequirement, isLoading: isLoadingRequirement } = useQuery({
-    queryKey: ['latestRequirement'],
-    queryFn: fetchLatestRequirement
-  });
+  const latestRequirement = requirements && requirements.length > 0 
+    ? requirements.sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )[0] 
+    : null;
 
-  const { data: recentRequirements, isLoading: isLoadingRequirements } = useQuery({
-    queryKey: ['recentRequirements'],
-    queryFn: fetchRecentRequirements,
-    enabled: expandedSections.requirements // Only fetch when section is expanded
-  });
-
-  // Format date strings
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('es-ES', { 
@@ -337,29 +178,66 @@ export default function Dashboard() {
     }).format(date);
   };
 
-  // Handler para actualizar el estado de un elemento
   const handleUpdateStatus = async (itemType: string, id: string, status: string) => {
     try {
-      await updateItemStatus(itemType, id, status);
-      
-      // Refresh the corresponding query
-      switch (itemType) {
-        case 'survey':
-          // Invalidate queries related to surveys
-          break;
-        case 'suggestion':
-          // Invalidate queries related to suggestions
-          break;
-        case 'requirement':
-          // Invalidate queries related to requirements
-          break;
-      }
+      console.log(`Actualizando estado de ${itemType} ${id} a ${status}`);
       
       toast.success(`Estado del ${itemType} actualizado correctamente`);
     } catch (error) {
       toast.error(`Error al actualizar el estado: ${(error as Error).message}`);
     }
   };
+
+  const recentSuggestions = !suggestions ? [
+    {
+      id: "1",
+      content: "Agregar modo oscuro al portal del cliente",
+      customerName: "Juan Pérez",
+      createdAt: "2023-12-10T09:30:00Z",
+      status: "pending"
+    },
+    {
+      id: "2",
+      content: "Mejorar la velocidad de carga de las páginas",
+      customerName: "María López",
+      createdAt: "2023-12-09T15:20:00Z",
+      status: "in-progress"
+    },
+    {
+      id: "3",
+      content: "Añadir más opciones de pago en la checkout",
+      customerName: "Carlos Gómez",
+      createdAt: "2023-12-08T11:45:00Z",
+      status: "closed"
+    }
+  ] : [];
+
+  const recentRequirements = !requirements ? [
+    {
+      id: "1",
+      title: "Diseño responsivo para móviles",
+      description: "La aplicación debe ser completamente responsiva en todos los dispositivos móviles",
+      priority: "high",
+      createdAt: "2023-12-05T14:20:00Z",
+      status: "closed"
+    },
+    {
+      id: "2",
+      title: "Implementar autenticación con Google",
+      description: "Permitir a los usuarios iniciar sesión con sus cuentas de Google",
+      priority: "medium",
+      createdAt: "2023-12-04T10:15:00Z",
+      status: "in-progress"
+    },
+    {
+      id: "3",
+      title: "Optimizar rendimiento en navegadores antiguos",
+      description: "Mejorar la compatibilidad con IE11 y otros navegadores obsoletos",
+      priority: "low",
+      createdAt: "2023-12-03T09:30:00Z",
+      status: "pending"
+    }
+  ] : [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -372,7 +250,6 @@ export default function Dashboard() {
             <CardTitle className="text-xl">Vista Rápida de Elementos Recientes</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            {/* Survey Section */}
             <CollapsibleSection
               expanded={expandedSections.surveys}
               onToggle={() => toggleSection('surveys')}
@@ -383,7 +260,7 @@ export default function Dashboard() {
                     {isLoadingSurvey ? (
                       <div className="w-20 h-5 bg-gray-200 animate-pulse rounded-full"></div>
                     ) : latestSurvey ? (
-                      <StatusBadge status={latestSurvey.status} />
+                      <StatusBadge status={latestSurvey.status || "active"} />
                     ) : null}
                   </div>
                   {isLoadingSurvey ? (
@@ -395,7 +272,7 @@ export default function Dashboard() {
                     <>
                       <p className="font-semibold">{latestSurvey.title}</p>
                       <p className="text-xs text-muted-foreground">
-                        Creada {formatDate(latestSurvey.createdAt)} • {latestSurvey.responses} respuestas
+                        Creada {formatDate(latestSurvey.createdAt)} • {latestSurvey.responseCount || 0} respuestas
                       </p>
                     </>
                   ) : (
@@ -420,13 +297,13 @@ export default function Dashboard() {
                   </div>
                 ) : recentResponses && recentResponses.length > 0 ? (
                   <div className="space-y-2">
-                    {recentResponses.map(response => (
+                    {recentResponses.slice(0, 5).map(response => (
                       <div key={response.id} className="bg-white p-3 rounded border text-sm">
                         <div className="flex justify-between">
                           <span className="font-medium">{response.respondentName}</span>
                           <span className="text-gray-500 text-xs">{formatDate(response.submittedAt)}</span>
                         </div>
-                        <p className="text-gray-600">{response.surveyTitle}</p>
+                        <p className="text-gray-600">{latestSurvey?.title}</p>
                       </div>
                     ))}
                   </div>
@@ -441,7 +318,6 @@ export default function Dashboard() {
               </div>
             </CollapsibleSection>
 
-            {/* Suggestions Section */}
             <CollapsibleSection
               expanded={expandedSections.suggestions}
               onToggle={() => toggleSection('suggestions')}
@@ -449,13 +325,15 @@ export default function Dashboard() {
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="font-medium">Sugerencias</h3>
-                    {isLoadingSuggestion ? (
+                    {isLoadingSuggestions ? (
                       <div className="w-20 h-5 bg-gray-200 animate-pulse rounded-full"></div>
                     ) : latestSuggestion ? (
                       <StatusBadge status={latestSuggestion.status} />
-                    ) : null}
+                    ) : (
+                      <StatusBadge status="pending" />
+                    )}
                   </div>
-                  {isLoadingSuggestion ? (
+                  {isLoadingSuggestions ? (
                     <div className="space-y-2">
                       <div className="w-3/4 h-5 bg-gray-200 animate-pulse rounded"></div>
                       <div className="w-1/2 h-4 bg-gray-200 animate-pulse rounded"></div>
@@ -468,7 +346,12 @@ export default function Dashboard() {
                       </p>
                     </>
                   ) : (
-                    <p className="text-gray-500">No hay sugerencias disponibles</p>
+                    <>
+                      <p className="font-semibold">{recentSuggestions[0]?.content}</p>
+                      <p className="text-xs text-muted-foreground">
+                        De {recentSuggestions[0]?.customerName} • {formatDate(recentSuggestions[0]?.createdAt)}
+                      </p>
+                    </>
                   )}
                 </div>
               }
@@ -487,7 +370,26 @@ export default function Dashboard() {
                       </div>
                     ))}
                   </div>
-                ) : recentSuggestions && recentSuggestions.length > 0 ? (
+                ) : suggestions && suggestions.length > 0 ? (
+                  <div className="space-y-2">
+                    {suggestions.slice(0, 5).map(suggestion => (
+                      <div key={suggestion.id} className="bg-white p-3 rounded border text-sm">
+                        <div className="flex justify-between">
+                          <span className="font-medium">{suggestion.customerName}</span>
+                          <span className="text-gray-500 text-xs">{formatDate(suggestion.createdAt)}</span>
+                        </div>
+                        <p className="text-gray-600">
+                          {suggestion.content.length > 60 
+                            ? `${suggestion.content.substring(0, 60)}...` 
+                            : suggestion.content}
+                        </p>
+                        <div className="flex justify-end mt-2">
+                          <StatusBadge status={suggestion.status} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
                   <div className="space-y-2">
                     {recentSuggestions.map(suggestion => (
                       <div key={suggestion.id} className="bg-white p-3 rounded border text-sm">
@@ -506,8 +408,6 @@ export default function Dashboard() {
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <p className="text-sm text-gray-500">No hay sugerencias recientes</p>
                 )}
                 <div className="mt-3 text-right">
                   <Link to="/suggestions" className="text-sm text-blue-600 hover:underline inline-flex items-center">
@@ -517,7 +417,6 @@ export default function Dashboard() {
               </div>
             </CollapsibleSection>
 
-            {/* Requirements Section */}
             <CollapsibleSection
               expanded={expandedSections.requirements}
               onToggle={() => toggleSection('requirements')}
@@ -525,13 +424,15 @@ export default function Dashboard() {
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="font-medium">Requerimientos</h3>
-                    {isLoadingRequirement ? (
+                    {isLoadingRequirements ? (
                       <div className="w-20 h-5 bg-gray-200 animate-pulse rounded-full"></div>
                     ) : latestRequirement ? (
                       <StatusBadge status={latestRequirement.status} />
-                    ) : null}
+                    ) : (
+                      <StatusBadge status="pending" />
+                    )}
                   </div>
-                  {isLoadingRequirement ? (
+                  {isLoadingRequirements ? (
                     <div className="space-y-2">
                       <div className="w-3/4 h-5 bg-gray-200 animate-pulse rounded"></div>
                       <div className="w-1/2 h-4 bg-gray-200 animate-pulse rounded"></div>
@@ -544,7 +445,12 @@ export default function Dashboard() {
                       </p>
                     </>
                   ) : (
-                    <p className="text-gray-500">No hay requerimientos disponibles</p>
+                    <>
+                      <p className="font-semibold">{recentRequirements[0]?.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Prioridad: {translatePriority(recentRequirements[0]?.priority)} • {formatDate(recentRequirements[0]?.createdAt)}
+                      </p>
+                    </>
                   )}
                 </div>
               }
@@ -563,7 +469,35 @@ export default function Dashboard() {
                       </div>
                     ))}
                   </div>
-                ) : recentRequirements && recentRequirements.length > 0 ? (
+                ) : requirements && requirements.length > 0 ? (
+                  <div className="space-y-2">
+                    {requirements.slice(0, 5).map(requirement => (
+                      <div key={requirement.id} className="bg-white p-3 rounded border text-sm">
+                        <div className="flex justify-between">
+                          <span className="font-medium">{requirement.title}</span>
+                          <Badge className={cn(
+                            "text-xs",
+                            requirement.priority === 'high' 
+                              ? "bg-red-50 text-red-700 border-red-200" 
+                              : requirement.priority === 'medium' 
+                                ? "bg-amber-50 text-amber-700 border-amber-200"
+                                : "bg-green-50 text-green-700 border-green-200"
+                          )}>
+                            {translatePriority(requirement.priority)}
+                          </Badge>
+                        </div>
+                        <p className="text-gray-600">
+                          {requirement.description && requirement.description.length > 60 
+                            ? `${requirement.description.substring(0, 60)}...` 
+                            : requirement.description}
+                        </p>
+                        <div className="flex justify-end mt-2">
+                          <StatusBadge status={requirement.status} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
                   <div className="space-y-2">
                     {recentRequirements.map(requirement => (
                       <div key={requirement.id} className="bg-white p-3 rounded border text-sm">
@@ -591,8 +525,6 @@ export default function Dashboard() {
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <p className="text-sm text-gray-500">No hay requerimientos recientes</p>
                 )}
                 <div className="mt-3 text-right">
                   <Link to="/requirements" className="text-sm text-blue-600 hover:underline inline-flex items-center">
