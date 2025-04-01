@@ -1,3 +1,4 @@
+
 /**
  * Question Builder JavaScript
  * Handles the interactive functionality for survey question editing
@@ -29,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Question type selection
     document.querySelectorAll('.question-type-option').forEach(option => {
         option.addEventListener('click', function() {
-            const type = this.dataset.type;
+            const type = this.dataset.type || this.querySelector('input[type="radio"]').dataset.type;
             const questionCard = this.closest('.question-card');
             const typeDisplay = questionCard.querySelector('.question-type-display');
             const typeInput = questionCard.querySelector('.current-question-type');

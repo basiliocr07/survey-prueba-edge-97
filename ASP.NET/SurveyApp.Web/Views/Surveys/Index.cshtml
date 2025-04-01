@@ -24,16 +24,16 @@
             <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
                 <div class="border-b p-3">
                     <div class="flex gap-2 overflow-x-auto pb-1">
-                        <a asp-controller="Surveys" asp-action="Filter" asp-route-filter="all" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 h-10 px-4 py-2 @(ViewBag.FilterActive == "all" ? "bg-primary text-primary-foreground hover:bg-primary/90" : "border border-input bg-background hover:bg-accent hover:text-accent-foreground")">
+                        <a asp-controller="Surveys" asp-action="Index" asp-route-filter="all" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 h-10 px-4 py-2 @(ViewBag.FilterActive == "all" || ViewBag.FilterActive == null ? "bg-primary text-primary-foreground hover:bg-primary/90" : "border border-input bg-background hover:bg-accent hover:text-accent-foreground")">
                             All Surveys
                         </a>
-                        <a asp-controller="Surveys" asp-action="Filter" asp-route-filter="active" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 h-10 px-4 py-2 @(ViewBag.FilterActive == "active" ? "bg-primary text-primary-foreground hover:bg-primary/90" : "border border-input bg-background hover:bg-accent hover:text-accent-foreground")">
+                        <a asp-controller="Surveys" asp-action="Index" asp-route-filter="active" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 h-10 px-4 py-2 @(ViewBag.FilterActive == "active" ? "bg-primary text-primary-foreground hover:bg-primary/90" : "border border-input bg-background hover:bg-accent hover:text-accent-foreground")">
                             Active
                         </a>
-                        <a asp-controller="Surveys" asp-action="Filter" asp-route-filter="draft" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 h-10 px-4 py-2 @(ViewBag.FilterActive == "draft" ? "bg-primary text-primary-foreground hover:bg-primary/90" : "border border-input bg-background hover:bg-accent hover:text-accent-foreground")">
+                        <a asp-controller="Surveys" asp-action="Index" asp-route-filter="draft" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 h-10 px-4 py-2 @(ViewBag.FilterActive == "draft" ? "bg-primary text-primary-foreground hover:bg-primary/90" : "border border-input bg-background hover:bg-accent hover:text-accent-foreground")">
                             Draft
                         </a>
-                        <a asp-controller="Surveys" asp-action="Filter" asp-route-filter="archived" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 h-10 px-4 py-2 @(ViewBag.FilterActive == "archived" ? "bg-primary text-primary-foreground hover:bg-primary/90" : "border border-input bg-background hover:bg-accent hover:text-accent-foreground")">
+                        <a asp-controller="Surveys" asp-action="Index" asp-route-filter="archived" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 h-10 px-4 py-2 @(ViewBag.FilterActive == "archived" ? "bg-primary text-primary-foreground hover:bg-primary/90" : "border border-input bg-background hover:bg-accent hover:text-accent-foreground")">
                             Archived
                         </a>
                     </div>
@@ -51,7 +51,7 @@
                                             <div class="flex items-center justify-between mb-1">
                                                 <h3 class="font-medium">@survey.Title</h3>
                                                 <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary/10 text-primary">
-                                                    @survey.Responses responses
+                                                    @survey.ResponseCount responses
                                                 </span>
                                             </div>
                                             <p class="text-xs text-muted-foreground line-clamp-1 mb-1">
@@ -116,8 +116,7 @@
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Any client-side JavaScript logic would go here
-            // This mimics the interactivity from the React version
+            // Client-side JavaScript to match functionality from React version
             
             // Example: Hover effects for buttons
             const buttons = document.querySelectorAll('.hover\\:bg-accent');

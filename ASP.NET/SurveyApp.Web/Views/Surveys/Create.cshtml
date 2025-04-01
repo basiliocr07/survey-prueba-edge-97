@@ -1,745 +1,322 @@
 
-@model SurveyApp.Web.Models.CreateSurveyViewModel
+@model SurveyApp.Web.Models.SurveyViewModel
 @{
-    ViewData["Title"] = "Create Survey";
-    var showTabs = Model.Id > 0;
+    ViewData["Title"] = Model?.Id != null ? "Edit Survey" : "Create Survey";
+    var isEdit = Model?.Id != null;
 }
 
-<div class="container mx-auto px-4 py-8 max-w-5xl">
-    <div class="flex justify-between items-center mb-8">
-        <div>
-            <h1 class="text-3xl font-bold">@(Model.Id > 0 ? "Edit Survey" : "Create Survey")</h1>
-            <p class="text-muted-foreground">
-                @(Model.Id > 0 ? "Update your existing survey" : "Design a new survey for your users")
-            </p>
-        </div>
-        
-        <div class="flex gap-3">
-            <a href="@Url.Action("Index")" class="bg-white hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 border border-gray-300 rounded-md shadow-sm focus:outline-none">
-                Cancel
-            </a>
-            <button type="submit" form="surveyForm" class="bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-md shadow-sm focus:outline-none flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                @(Model.Id > 0 ? "Update Survey" : "Create Survey")
-            </button>
-        </div>
-    </div>
+<div class="min-h-screen flex flex-col bg-background">
+    <main class="flex-1 w-full max-w-7xl mx-auto pt-24 px-6 pb-16">
+        <form id="survey-form" method="post" asp-controller="Surveys" asp-action="@(isEdit ? "Edit" : "Create")">
+            @if (isEdit)
+            {
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="CreatedAt" />
+            }
 
-    <div class="survey-tabs mb-6">
-        <div class="border-b">
-            <div class="flex">
-                <button type="button" id="tab-content" class="tab-button active" data-tab="survey-content">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    Survey Content
-                </button>
-                <button type="button" id="tab-delivery" class="tab-button" data-tab="delivery-settings">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                    Delivery Settings
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <form id="surveyForm" asp-action="Create" method="post" class="space-y-6">
-        <input type="hidden" asp-for="Id" />
-        <input type="hidden" asp-for="Status" value="@Model.Status" />
-        
-        <div id="survey-content" class="tab-content">
-            <div class="bg-white rounded-lg shadow-sm p-6 mb-6 border">
-                <h2 class="text-xl font-bold mb-4">Survey Details</h2>
-                
-                <div class="mb-4">
-                    <label asp-for="Title" class="block text-sm font-medium mb-1">Title <span class="text-red-500">*</span></label>
-                    <input asp-for="Title" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-20" placeholder="Enter survey title" />
-                    <span asp-validation-for="Title" class="text-red-500 text-sm"></span>
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold">@(isEdit ? "Edit Survey" : "Create Survey")</h1>
+                    <p class="text-muted-foreground">
+                        @(isEdit 
+                            ? "Update your existing survey" 
+                            : "Design a new survey for your users")
+                    </p>
                 </div>
                 
-                <div class="mb-4">
-                    <label asp-for="Description" class="block text-sm font-medium mb-1">Description (optional)</label>
-                    <textarea asp-for="Description" rows="3" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-20" placeholder="Provide a description for your survey"></textarea>
-                    <span asp-validation-for="Description" class="text-red-500 text-sm"></span>
+                <div class="flex space-x-3">
+                    <a asp-controller="Surveys" asp-action="Index" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+                        Cancel
+                    </a>
+                    <button type="submit" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                        @(isEdit ? "Update Survey" : "Create Survey")
+                    </button>
                 </div>
             </div>
-
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold">Questions</h2>
-                <div class="flex gap-2">
-                    <button type="button" id="addSampleQuestions" class="bg-white hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 border border-gray-300 rounded-md shadow-sm focus:outline-none">
+            
+            <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
+                <div class="p-6">
+                    <h2 class="text-xl font-semibold mb-4">Survey Details</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label asp-for="Title" class="block text-sm font-medium mb-1">
+                                Title <span class="text-destructive">*</span>
+                            </label>
+                            <input asp-for="Title" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" placeholder="Enter survey title" required />
+                            <span asp-validation-for="Title" class="text-sm text-destructive"></span>
+                        </div>
+                        <div>
+                            <label asp-for="Description" class="block text-sm font-medium mb-1">
+                                Description (optional)
+                            </label>
+                            <textarea asp-for="Description" class="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" placeholder="Enter a description for your survey"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-between items-center mt-8 mb-4">
+                <h2 class="text-xl font-semibold">Questions</h2>
+                <div class="flex space-x-2">
+                    <button type="button" id="add-sample-questions-btn" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
                         Add Sample Questions
                     </button>
-                    <button type="button" id="addQuestion" class="bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-md shadow-sm focus:outline-none">
+                    <button type="button" id="add-question-btn" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
                         Add Question
                     </button>
                 </div>
             </div>
-
-            <div id="questionsContainer" class="space-y-4">
-                @if (Model.Questions.Count == 0)
-                {
-                    <div id="empty-questions-state" class="empty-state">
-                        <div class="empty-state-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                        </div>
-                        <h3 class="text-lg font-semibold mb-1">No questions yet</h3>
-                        <p class="text-gray-500 mb-4">Add questions to your survey</p>
-                        <button type="button" id="addFirstQuestion" class="bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-md shadow-sm focus:outline-none">
-                            Add First Question
-                        </button>
-                    </div>
-                }
-                else
+            
+            <div id="questions-container" class="space-y-4">
+                @if (Model?.Questions != null && Model.Questions.Any())
                 {
                     @for (var i = 0; i < Model.Questions.Count; i++)
                     {
-                        @await Html.PartialAsync("_QuestionBuilderPartial", new Tuple<QuestionViewModel, int, int>(Model.Questions[i], i, Model.Questions.Count))
+                        var question = Model.Questions[i];
+                        <partial name="_QuestionBuilder" model="@question" view-data="@(new ViewDataDictionary(ViewData) { { "Index", i }, { "Total", Model.Questions.Count } })" />
                     }
                 }
-            </div>
-        </div>
-
-        <div id="delivery-settings" class="tab-content hidden">
-            <div class="bg-white rounded-lg shadow-sm p-6 border">
-                <h2 class="text-xl font-bold mb-4">Delivery Method</h2>
-                
-                <div class="delivery-tabs">
-                    <label class="flex items-center">
-                        <input type="radio" name="DeliveryConfig.Type" value="manual" @(Model.DeliveryConfig?.Type == "manual" ? "checked" : "") class="hidden" />
-                        <div class="delivery-type @(Model.DeliveryConfig?.Type == "manual" ? "border-primary bg-primary-50" : "")">
-                            <div class="font-medium mb-1">Manual</div>
-                            <div class="text-sm text-gray-500">Send manually to specific people</div>
-                        </div>
-                    </label>
-                    
-                    <label class="flex items-center">
-                        <input type="radio" name="DeliveryConfig.Type" value="scheduled" @(Model.DeliveryConfig?.Type == "scheduled" ? "checked" : "") class="hidden" />
-                        <div class="delivery-type @(Model.DeliveryConfig?.Type == "scheduled" ? "border-primary bg-primary-50" : "")">
-                            <div class="font-medium mb-1">Scheduled</div>
-                            <div class="text-sm text-gray-500">Send on a repeating schedule</div>
-                        </div>
-                    </label>
-                    
-                    <label class="flex items-center">
-                        <input type="radio" name="DeliveryConfig.Type" value="triggered" @(Model.DeliveryConfig?.Type == "triggered" ? "checked" : "") class="hidden" />
-                        <div class="delivery-type @(Model.DeliveryConfig?.Type == "triggered" ? "border-primary bg-primary-50" : "")">
-                            <div class="font-medium mb-1">Triggered</div>
-                            <div class="text-sm text-gray-500">Send after specific events</div>
-                        </div>
-                    </label>
-                </div>
-
-                <div id="delivery-sections" class="mt-6">
-                    <div id="manual-settings" class="settings-section @(Model.DeliveryConfig?.Type != "manual" ? "hidden" : "")">
-                        <p class="text-gray-500 mb-4">
-                            Send this survey manually to specific email addresses.
-                        </p>
-                    </div>
-                    
-                    <div id="scheduled-settings" class="settings-section @(Model.DeliveryConfig?.Type != "scheduled" ? "hidden" : "")">
-                        <p class="text-gray-500 mb-4">
-                            Schedule this survey to be sent automatically at regular intervals.
-                        </p>
-                        
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium mb-1">Frequency</label>
-                                <select name="DeliveryConfig.Schedule.Frequency" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-20">
-                                    <option value="daily" @(Model.DeliveryConfig?.Schedule?.Frequency == "daily" ? "selected" : "")>Daily</option>
-                                    <option value="weekly" @(Model.DeliveryConfig?.Schedule?.Frequency == "weekly" ? "selected" : "")>Weekly</option>
-                                    <option value="monthly" @(Model.DeliveryConfig?.Schedule?.Frequency == "monthly" ? "selected" : "")>Monthly</option>
-                                </select>
+                @if (Model?.Questions == null || !Model.Questions.Any())
+                {
+                    <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
+                        <div class="flex flex-col items-center justify-center p-8 text-center">
+                            <div class="rounded-full bg-primary/10 p-4 mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-primary"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
                             </div>
-                            
-                            <div id="monthly-settings" class="@(Model.DeliveryConfig?.Schedule?.Frequency != "monthly" ? "hidden" : "")">
-                                <label class="block text-sm font-medium mb-1">Day of Month</label>
-                                <select name="DeliveryConfig.Schedule.DayOfMonth" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-20">
-                                    @for (var i = 1; i <= 31; i++)
-                                    {
-                                        <option value="@i" @(Model.DeliveryConfig?.Schedule?.DayOfMonth == i ? "selected" : "")>@i</option>
-                                    }
-                                </select>
-                            </div>
-                            
-                            <div id="weekly-settings" class="@(Model.DeliveryConfig?.Schedule?.Frequency != "weekly" ? "hidden" : "")">
-                                <label class="block text-sm font-medium mb-1">Day of Week</label>
-                                <select name="DeliveryConfig.Schedule.DayOfWeek" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-20">
-                                    <option value="1" @(Model.DeliveryConfig?.Schedule?.DayOfWeek == 1 ? "selected" : "")>Monday</option>
-                                    <option value="2" @(Model.DeliveryConfig?.Schedule?.DayOfWeek == 2 ? "selected" : "")>Tuesday</option>
-                                    <option value="3" @(Model.DeliveryConfig?.Schedule?.DayOfWeek == 3 ? "selected" : "")>Wednesday</option>
-                                    <option value="4" @(Model.DeliveryConfig?.Schedule?.DayOfWeek == 4 ? "selected" : "")>Thursday</option>
-                                    <option value="5" @(Model.DeliveryConfig?.Schedule?.DayOfWeek == 5 ? "selected" : "")>Friday</option>
-                                    <option value="6" @(Model.DeliveryConfig?.Schedule?.DayOfWeek == 6 ? "selected" : "")>Saturday</option>
-                                    <option value="0" @(Model.DeliveryConfig?.Schedule?.DayOfWeek == 0 ? "selected" : "")>Sunday</option>
-                                </select>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium mb-1">Time</label>
-                                <input type="time" name="DeliveryConfig.Schedule.Time" value="@(Model.DeliveryConfig?.Schedule?.Time ?? "09:00")" 
-                                       class="w-40 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-20" />
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div id="triggered-settings" class="settings-section @(Model.DeliveryConfig?.Type != "triggered" ? "hidden" : "")">
-                        <p class="text-gray-500 mb-4">
-                            Send this survey when specific events occur in your system.
-                        </p>
-                        
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium mb-2">Trigger Event</label>
-                                <div class="space-y-2">
-                                    <label class="flex items-center space-x-2">
-                                        <input type="radio" name="DeliveryConfig.Trigger.Type" value="ticket-closed" 
-                                               @(Model.DeliveryConfig?.Trigger?.Type == "ticket-closed" ? "checked" : "") 
-                                               class="rounded-full text-primary focus:ring-primary" />
-                                        <span>After ticket is closed</span>
-                                    </label>
-                                    <label class="flex items-center space-x-2">
-                                        <input type="radio" name="DeliveryConfig.Trigger.Type" value="purchase-completed" 
-                                               @(Model.DeliveryConfig?.Trigger?.Type == "purchase-completed" ? "checked" : "") 
-                                               class="rounded-full text-primary focus:ring-primary" />
-                                        <span>After purchase is completed</span>
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium mb-1">Delay (hours)</label>
-                                <input type="number" name="DeliveryConfig.Trigger.DelayHours" min="0" max="168" 
-                                       value="@(Model.DeliveryConfig?.Trigger?.DelayHours ?? 24)" 
-                                       class="w-24 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-20" />
-                            </div>
-                            
-                            <div>
-                                <label class="flex items-center space-x-2">
-                                    <input type="checkbox" name="DeliveryConfig.Trigger.SendAutomatically" 
-                                           @(Model.DeliveryConfig?.Trigger?.SendAutomatically == true ? "checked" : "") 
-                                           class="rounded text-primary focus:ring-primary" />
-                                    <span>Send automatically</span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mt-6 pt-6 border-t">
-                    <h3 class="text-lg font-medium mb-3">Email Recipients</h3>
-                    
-                    <div class="space-y-4">
-                        <div class="flex gap-2">
-                            <input type="text" id="emailInput" placeholder="Enter email address" 
-                                   class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-20" />
-                            <button type="button" id="addEmail" class="bg-white hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 border border-gray-300 rounded-md shadow-sm focus:outline-none">
-                                Add
+                            <h3 class="text-lg font-semibold mb-1">No questions yet</h3>
+                            <p class="text-muted-foreground mb-4">Add questions to your survey</p>
+                            <button type="button" class="add-first-question-btn inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                                Add First Question
                             </button>
                         </div>
-                        
-                        <div id="emailError" class="text-red-500 text-sm hidden">Please enter a valid email address</div>
-                        
-                        <div id="emailsContainer" class="border rounded-lg p-4 @(Model.DeliveryConfig?.EmailAddresses?.Count > 0 ? "" : "hidden")">
-                            <ul id="emailsList" class="space-y-2">
-                                @if (Model.DeliveryConfig?.EmailAddresses != null)
-                                {
-                                    @foreach (var email in Model.DeliveryConfig.EmailAddresses)
-                                    {
-                                        <li class="email-recipient">
-                                            <span>@email</span>
-                                            <input type="hidden" name="DeliveryConfig.EmailAddresses" value="@email" />
-                                            <button type="button" class="remove-email" data-email="@email">&times;</button>
-                                        </li>
-                                    }
-                                }
-                            </ul>
-                        </div>
-                        
-                        <div id="noEmailsMessage" class="text-gray-500 text-sm @(Model.DeliveryConfig?.EmailAddresses?.Count > 0 ? "hidden" : "")">
-                            No email addresses added yet.
-                        </div>
                     </div>
-                </div>
-
-                <div class="mt-6 flex justify-end">
-                    <button type="button" id="back-to-content" class="bg-white hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 border border-gray-300 rounded-md shadow-sm focus:outline-none mr-2">
-                        Back to Questions
-                    </button>
-                    <button type="submit" class="bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-md shadow-sm focus:outline-none flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        @(Model.Id > 0 ? "Update Survey" : "Create Survey")
-                    </button>
-                </div>
+                }
             </div>
-        </div>
-    </form>
+            
+            <div class="mt-8 flex justify-end">
+                <button type="submit" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    @(isEdit ? "Update Survey" : "Create Survey")
+                </button>
+            </div>
+        </form>
+    </main>
 </div>
 
 @section Scripts {
+    <script src="~/js/uuid-v4.min.js"></script>
+    <script src="~/js/survey-builder.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Tab navigation
-            const tabs = document.querySelectorAll('.tab-button');
-            const tabContents = document.querySelectorAll('.tab-content');
-            
-            tabs.forEach(tab => {
-                tab.addEventListener('click', function() {
-                    const target = this.dataset.tab;
-                    
-                    // Update active tab
-                    tabs.forEach(t => t.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    // Show/hide tab content
-                    tabContents.forEach(content => {
-                        content.classList.add('hidden');
-                        if (content.id === target) {
-                            content.classList.remove('hidden');
-                        }
-                    });
-                });
-            });
-            
-            // Add question button
-            const addQuestionBtn = document.getElementById('addQuestion');
-            const addFirstQuestionBtn = document.getElementById('addFirstQuestion');
-            const questionsContainer = document.getElementById('questionsContainer');
-            const emptyQuestionsState = document.getElementById('empty-questions-state');
-            
-            function addQuestion() {
-                const questionCount = document.querySelectorAll('.question-card').length;
-                const questionId = `new-${Date.now()}`;
-                
-                fetch(`/Surveys/AddQuestion?index=${questionCount}&id=${questionId}`)
-                    .then(response => response.text())
-                    .then(html => {
-                        if (emptyQuestionsState) {
-                            emptyQuestionsState.remove();
-                        }
-                        
-                        questionsContainer.insertAdjacentHTML('beforeend', html);
-                        initQuestionCard(document.querySelector(`#question_${questionCount}`));
-                    });
-            }
-            
-            if (addQuestionBtn) {
-                addQuestionBtn.addEventListener('click', addQuestion);
-            }
-            
+            // Handle Add First Question button
+            const addFirstQuestionBtn = document.querySelector('.add-first-question-btn');
             if (addFirstQuestionBtn) {
-                addFirstQuestionBtn.addEventListener('click', addQuestion);
+                addFirstQuestionBtn.addEventListener('click', function() {
+                    // Remove the empty state message
+                    const emptyState = this.closest('.rounded-lg');
+                    if (emptyState) {
+                        emptyState.remove();
+                    }
+                    
+                    // Call the add question function
+                    if (typeof SurveyBuilder !== 'undefined') {
+                        SurveyBuilder.addQuestion();
+                    }
+                });
             }
             
-            // Add sample questions button
-            const addSampleQuestionsBtn = document.getElementById('addSampleQuestions');
-            
+            // Handle Add Sample Questions button
+            const addSampleQuestionsBtn = document.getElementById('add-sample-questions-btn');
             if (addSampleQuestionsBtn) {
                 addSampleQuestionsBtn.addEventListener('click', function() {
-                    const questionCount = document.querySelectorAll('.question-card').length;
-                    
-                    fetch(`/Surveys/AddSampleQuestions?startIndex=${questionCount}`)
-                        .then(response => response.text())
-                        .then(html => {
-                            if (emptyQuestionsState) {
-                                emptyQuestionsState.remove();
-                            }
-                            
-                            questionsContainer.insertAdjacentHTML('beforeend', html);
-                            document.querySelectorAll('.question-card').forEach(initQuestionCard);
-                        });
-                });
-            }
-            
-            // Back to content button
-            const backToContentBtn = document.getElementById('back-to-content');
-            
-            if (backToContentBtn) {
-                backToContentBtn.addEventListener('click', function() {
-                    document.getElementById('tab-content').click();
-                });
-            }
-            
-            // Initialize existing question cards
-            document.querySelectorAll('.question-card').forEach(initQuestionCard);
-            
-            // Initialize question card functionality
-            function initQuestionCard(card) {
-                if (!card) return;
-                
-                const cardIndex = card.dataset.questionIndex;
-                const toggleBtn = card.querySelector('.toggle-question-btn');
-                const content = card.querySelector('.question-content');
-                const deleteBtn = card.querySelector('.delete-question-btn');
-                const typeToggle = card.querySelector('.question-type-toggle');
-                const typesDropdown = card.querySelector('.question-types-dropdown');
-                const typeOptions = card.querySelectorAll('.question-type-option');
-                const addOptionBtn = card.querySelector('.add-option-btn');
-                const optionsList = card.querySelector(`#optionsList_${cardIndex}`);
-                
-                // Toggle question collapse/expand
-                if (toggleBtn && content) {
-                    toggleBtn.addEventListener('click', function() {
-                        content.classList.toggle('hidden');
-                        const icon = toggleBtn.querySelector('svg');
-                        if (icon) {
-                            if (content.classList.contains('hidden')) {
-                                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />';
-                            } else {
-                                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />';
-                            }
-                        }
-                    });
-                }
-                
-                // Delete question
-                if (deleteBtn) {
-                    deleteBtn.addEventListener('click', function() {
-                        if (confirm('Are you sure you want to delete this question?')) {
-                            card.remove();
-                            
-                            // Update indices for remaining questions
-                            document.querySelectorAll('.question-card').forEach((c, i) => {
-                                const inputs = c.querySelectorAll('input, textarea, select');
-                                inputs.forEach(input => {
-                                    if (input.name) {
-                                        input.name = input.name.replace(/Questions\[\d+\]/, `Questions[${i}]`);
-                                    }
-                                });
-                                
-                                // Update question card index data attribute
-                                c.dataset.questionIndex = i;
-                            });
-                            
-                            // Show empty state if no questions left
-                            if (document.querySelectorAll('.question-card').length === 0) {
-                                questionsContainer.innerHTML = `
-                                    <div id="empty-questions-state" class="empty-state">
-                                        <div class="empty-state-icon">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                            </svg>
-                                        </div>
-                                        <h3 class="text-lg font-semibold mb-1">No questions yet</h3>
-                                        <p class="text-gray-500 mb-4">Add questions to your survey</p>
-                                        <button type="button" id="addFirstQuestion" class="bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-md shadow-sm focus:outline-none">
-                                            Add First Question
-                                        </button>
-                                    </div>
-                                `;
-                                document.getElementById('addFirstQuestion').addEventListener('click', addQuestion);
-                            }
-                        }
-                    });
-                }
-                
-                // Question type dropdown
-                if (typeToggle && typesDropdown) {
-                    typeToggle.addEventListener('click', function() {
-                        typesDropdown.classList.toggle('hidden');
-                        const icon = typeToggle.querySelector('svg');
-                        if (icon) {
-                            icon.style.transform = typesDropdown.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
-                        }
-                    });
-                    
-                    // Close dropdown when clicking outside
-                    document.addEventListener('click', function(e) {
-                        if (!typeToggle.contains(e.target) && !typesDropdown.contains(e.target)) {
-                            typesDropdown.classList.add('hidden');
-                            const icon = typeToggle.querySelector('svg');
-                            if (icon) {
-                                icon.style.transform = 'rotate(0deg)';
-                            }
-                        }
-                    });
-                }
-                
-                // Question type selection
-                if (typeOptions) {
-                    typeOptions.forEach(option => {
-                        option.addEventListener('click', function() {
-                            const questionType = this.dataset.type;
-                            const optionsDiv = card.querySelector(`#options_${cardIndex}`);
-                            const ratingDiv = card.querySelector(`#rating_${cardIndex}`);
-                            const npsDiv = card.querySelector(`#nps_${cardIndex}`);
-                            
-                            // Update type text
-                            const typeText = typeToggle.querySelector('span span');
-                            if (typeText) {
-                                typeText.textContent = questionType.replace('-', ' ');
-                            }
-                            
-                            // Update hidden input for question type
-                            const typeInput = document.createElement('input');
-                            typeInput.type = 'hidden';
-                            typeInput.name = `Questions[${cardIndex}].Type`;
-                            typeInput.value = questionType;
-                            
-                            // Remove existing type input if any
-                            const existingTypeInput = card.querySelector(`input[name="Questions[${cardIndex}].Type"]`);
-                            if (existingTypeInput) {
-                                existingTypeInput.remove();
-                            }
-                            
-                            card.appendChild(typeInput);
-                            
-                            // Show/hide options based on question type
-                            if (optionsDiv) {
-                                optionsDiv.classList.toggle('hidden', !['multiple-choice', 'single-choice', 'dropdown', 'ranking'].includes(questionType));
-                            }
-                            
-                            if (ratingDiv) {
-                                ratingDiv.classList.toggle('hidden', questionType !== 'rating');
-                            }
-                            
-                            if (npsDiv) {
-                                npsDiv.classList.toggle('hidden', questionType !== 'nps');
-                            }
-                            
-                            // Add default options if needed
-                            if (['multiple-choice', 'single-choice', 'dropdown', 'ranking'].includes(questionType) && (!optionsList || optionsList.children.length === 0)) {
-                                if (optionsList) {
-                                    optionsList.innerHTML = `
-                                        <div class="option-item flex items-center gap-2">
-                                            <input type="text" name="Questions[${cardIndex}].Options[0]" value="Option 1" 
-                                                class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" />
-                                            <button type="button" class="remove-option-btn text-gray-500 hover:text-red-500 p-1 rounded-full" 
-                                                    data-question-id="${cardIndex}" data-option-index="0">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                        <div class="option-item flex items-center gap-2">
-                                            <input type="text" name="Questions[${cardIndex}].Options[1]" value="Option 2" 
-                                                class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" />
-                                            <button type="button" class="remove-option-btn text-gray-500 hover:text-red-500 p-1 rounded-full" 
-                                                    data-question-id="${cardIndex}" data-option-index="1">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    `;
-                                    
-                                    // Initialize remove option buttons
-                                    optionsList.querySelectorAll('.remove-option-btn').forEach(initRemoveOptionBtn);
-                                }
-                            }
-                            
-                            // Update selected state in options
-                            typeOptions.forEach(opt => {
-                                opt.classList.toggle('selected', opt.dataset.type === questionType);
-                            });
-                            
-                            // Hide dropdown
-                            typesDropdown.classList.add('hidden');
-                            const icon = typeToggle.querySelector('svg');
-                            if (icon) {
-                                icon.style.transform = 'rotate(0deg)';
-                            }
-                        });
-                    });
-                }
-                
-                // Add option button
-                if (addOptionBtn && optionsList) {
-                    addOptionBtn.addEventListener('click', function() {
-                        const optionCount = optionsList.querySelectorAll('.option-item').length;
-                        const newOption = document.createElement('div');
-                        newOption.className = 'option-item flex items-center gap-2';
-                        newOption.innerHTML = `
-                            <input type="text" name="Questions[${cardIndex}].Options[${optionCount}]" value="New option" 
-                                   class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" />
-                            <button type="button" class="remove-option-btn text-gray-500 hover:text-red-500 p-1 rounded-full" 
-                                    data-question-id="${cardIndex}" data-option-index="${optionCount}">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                            </button>
-                        `;
-                        
-                        optionsList.appendChild(newOption);
-                        initRemoveOptionBtn(newOption.querySelector('.remove-option-btn'));
-                    });
-                }
-                
-                // Remove option buttons
-                card.querySelectorAll('.remove-option-btn').forEach(initRemoveOptionBtn);
-                
-                function initRemoveOptionBtn(btn) {
-                    if (!btn) return;
-                    
-                    btn.addEventListener('click', function() {
-                        const questionId = this.dataset.questionId;
-                        const optionsList = document.querySelector(`#optionsList_${questionId}`);
-                        const options = optionsList.querySelectorAll('.option-item');
-                        
-                        if (options.length <= 2) {
-                            alert('A choice question must have at least 2 options.');
-                            return;
-                        }
-                        
-                        this.closest('.option-item').remove();
-                        
-                        // Update indices for remaining options
-                        optionsList.querySelectorAll('.option-item').forEach((item, i) => {
-                            const input = item.querySelector('input');
-                            const removeBtn = item.querySelector('.remove-option-btn');
-                            
-                            if (input) {
-                                input.name = `Questions[${questionId}].Options[${i}]`;
-                            }
-                            
-                            if (removeBtn) {
-                                removeBtn.dataset.optionIndex = i;
-                            }
-                        });
-                    });
-                }
-            }
-            
-            // Delivery method selection
-            const deliveryTypeInputs = document.querySelectorAll('input[name="DeliveryConfig.Type"]');
-            const deliverySections = {
-                'manual': document.getElementById('manual-settings'),
-                'scheduled': document.getElementById('scheduled-settings'),
-                'triggered': document.getElementById('triggered-settings')
-            };
-            
-            deliveryTypeInputs.forEach(input => {
-                input.addEventListener('change', function() {
-                    // Update styling for delivery type boxes
-                    deliveryTypeInputs.forEach(inp => {
-                        const box = inp.nextElementSibling;
-                        if (box) {
-                            if (inp.checked) {
-                                box.classList.add('border-primary', 'bg-primary-50');
-                            } else {
-                                box.classList.remove('border-primary', 'bg-primary-50');
-                            }
-                        }
-                    });
-                    
-                    // Show/hide delivery sections
-                    Object.keys(deliverySections).forEach(type => {
-                        if (deliverySections[type]) {
-                            deliverySections[type].classList.toggle('hidden', type !== this.value);
-                        }
-                    });
-                });
-            });
-            
-            // Schedule frequency settings
-            const frequencySelect = document.querySelector('select[name="DeliveryConfig.Schedule.Frequency"]');
-            const monthlySettings = document.getElementById('monthly-settings');
-            const weeklySettings = document.getElementById('weekly-settings');
-            
-            if (frequencySelect) {
-                frequencySelect.addEventListener('change', function() {
-                    if (monthlySettings) {
-                        monthlySettings.classList.toggle('hidden', this.value !== 'monthly');
+                    // Remove the empty state if present
+                    const emptyState = document.querySelector('#questions-container .rounded-lg');
+                    if (emptyState) {
+                        emptyState.remove();
                     }
                     
-                    if (weeklySettings) {
-                        weeklySettings.classList.toggle('hidden', this.value !== 'weekly');
-                    }
-                });
-            }
-            
-            // Email management
-            const emailInput = document.getElementById('emailInput');
-            const addEmailBtn = document.getElementById('addEmail');
-            const emailsContainer = document.getElementById('emailsContainer');
-            const emailsList = document.getElementById('emailsList');
-            const noEmailsMessage = document.getElementById('noEmailsMessage');
-            const emailError = document.getElementById('emailError');
-            
-            function isValidEmail(email) {
-                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-            }
-            
-            function addEmail() {
-                if (!emailInput || !emailInput.value.trim()) return;
-                
-                const email = emailInput.value.trim();
-                
-                if (!isValidEmail(email)) {
-                    if (emailError) emailError.classList.remove('hidden');
-                    return;
-                }
-                
-                if (emailError) emailError.classList.add('hidden');
-                
-                // Check if email already exists
-                const existingEmails = Array.from(document.querySelectorAll('input[name="DeliveryConfig.EmailAddresses"]')).map(input => input.value);
-                if (existingEmails.includes(email)) {
-                    emailInput.value = '';
-                    return;
-                }
-                
-                const emailItem = document.createElement('li');
-                emailItem.className = 'email-recipient';
-                emailItem.innerHTML = `
-                    <span>${email}</span>
-                    <input type="hidden" name="DeliveryConfig.EmailAddresses" value="${email}" />
-                    <button type="button" class="remove-email" data-email="${email}">&times;</button>
-                `;
-                
-                emailsList.appendChild(emailItem);
-                emailInput.value = '';
-                
-                // Show email container, hide no emails message
-                if (emailsContainer) emailsContainer.classList.remove('hidden');
-                if (noEmailsMessage) noEmailsMessage.classList.add('hidden');
-                
-                // Initialize remove button
-                initRemoveEmailBtn(emailItem.querySelector('.remove-email'));
-            }
-            
-            if (addEmailBtn) {
-                addEmailBtn.addEventListener('click', addEmail);
-            }
-            
-            if (emailInput) {
-                emailInput.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        addEmail();
-                    }
-                    
-                    if (emailError && !emailError.classList.contains('hidden')) {
-                        emailError.classList.add('hidden');
-                    }
-                });
-            }
-            
-            // Initialize existing remove email buttons
-            document.querySelectorAll('.remove-email').forEach(initRemoveEmailBtn);
-            
-            function initRemoveEmailBtn(btn) {
-                if (!btn) return;
-                
-                btn.addEventListener('click', function() {
-                    this.closest('.email-recipient').remove();
-                    
-                    // Show/hide elements based on remaining emails
-                    const remainingEmails = document.querySelectorAll('.email-recipient').length;
-                    
-                    if (remainingEmails === 0) {
-                        if (emailsContainer) emailsContainer.classList.add('hidden');
-                        if (noEmailsMessage) noEmailsMessage.classList.remove('hidden');
+                    // Add sample questions
+                    if (typeof SurveyBuilder !== 'undefined') {
+                        // First sample question: Rating
+                        const ratingQuestion = {
+                            id: uuidv4(),
+                            title: 'How satisfied are you with our service?',
+                            type: 'rating',
+                            required: true,
+                            settings: { min: 1, max: 5 }
+                        };
+                        
+                        // Second sample question: Multiple Choice
+                        const mcQuestion = {
+                            id: uuidv4(),
+                            title: 'What features do you like most?',
+                            type: 'multiple-choice',
+                            required: true,
+                            options: ['User Interface', 'Performance', 'Customer Support', 'Price']
+                        };
+                        
+                        // Third sample question: Text
+                        const textQuestion = {
+                            id: uuidv4(),
+                            title: 'Please provide any additional feedback',
+                            type: 'text',
+                            required: false
+                        };
+                        
+                        // Add the questions through the builder
+                        const questions = SurveyBuilder.getQuestions();
+                        
+                        // Add each sample question if it doesn't exist
+                        if (!questions.find(q => q.title === ratingQuestion.title)) {
+                            SurveyBuilder.addQuestion(ratingQuestion);
+                        }
+                        
+                        if (!questions.find(q => q.title === mcQuestion.title)) {
+                            SurveyBuilder.addQuestion(mcQuestion);
+                        }
+                        
+                        if (!questions.find(q => q.title === textQuestion.title)) {
+                            SurveyBuilder.addQuestion(textQuestion);
+                        }
                     }
                 });
             }
         });
     </script>
 }
+
+<!-- Question Template -->
+<template id="question-template">
+    <div class="question-card rounded-lg border bg-card text-card-foreground shadow-sm w-full transition-all duration-300 mb-4">
+        <div class="flex items-center px-4 py-3 border-b bg-muted/30">
+            <div class="mr-2 text-muted-foreground cursor-grab">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>
+            </div>
+            <button type="button" class="toggle-question-btn p-0 h-auto mr-2" onclick="toggleQuestionExpand(this)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15l7-7 7 7" /></svg>
+            </button>
+            <div class="flex-1 font-medium truncate question-title-display">
+                Untitled Question
+            </div>
+            <div class="flex items-center gap-1">
+                <button type="button" class="move-up-btn inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-background h-8 w-8 p-0 border border-input hover:bg-accent hover:text-accent-foreground" title="Move Up">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                </button>
+                <button type="button" class="move-down-btn inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-background h-8 w-8 p-0 border border-input hover:bg-accent hover:text-accent-foreground" title="Move Down">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <button type="button" class="delete-question-btn inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-background h-8 w-8 p-0 border border-input hover:bg-accent hover:text-destructive" title="Delete Question">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-destructive"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="question-content p-4 space-y-4 animate-slide-down">
+            <div class="space-y-2">
+                <div>
+                    <label class="text-sm font-medium">Question</label>
+                    <input type="text" class="question-title-input flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1" placeholder="Enter your question" value="Untitled Question" />
+                </div>
+                
+                <div>
+                    <label class="text-sm font-medium">Description (optional)</label>
+                    <textarea class="question-description-input flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1" placeholder="Add a description to provide more context"></textarea>
+                </div>
+            </div>
+
+            <div>
+                <button type="button" class="question-type-toggle inline-flex items-center justify-between rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 w-full group">
+                    <span>Question Type: <span class="font-medium question-type-display">text</span></span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="transition-transform"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                
+                <div class="question-types-dropdown mt-3 p-3 border rounded-md hidden animate-fade-in">
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="question-type-option flex items-start p-3 rounded-md border cursor-pointer hover:bg-accent/10 transition-colors">
+                            <input type="radio" name="question-type" class="mt-1 mr-2" value="text" data-type="text" />
+                            <div>
+                                <div class="font-medium">Text</div>
+                                <div class="text-xs text-muted-foreground">Free text response</div>
+                            </div>
+                        </label>
+                        <label class="question-type-option flex items-start p-3 rounded-md border cursor-pointer hover:bg-accent/10 transition-colors">
+                            <input type="radio" name="question-type" class="mt-1 mr-2" value="multiple-choice" data-type="multiple-choice" />
+                            <div>
+                                <div class="font-medium">Multiple Choice</div>
+                                <div class="text-xs text-muted-foreground">Select multiple options</div>
+                            </div>
+                        </label>
+                        <label class="question-type-option flex items-start p-3 rounded-md border cursor-pointer hover:bg-accent/10 transition-colors">
+                            <input type="radio" name="question-type" class="mt-1 mr-2" value="single-choice" data-type="single-choice" />
+                            <div>
+                                <div class="font-medium">Single Choice</div>
+                                <div class="text-xs text-muted-foreground">Select one option</div>
+                            </div>
+                        </label>
+                        <label class="question-type-option flex items-start p-3 rounded-md border cursor-pointer hover:bg-accent/10 transition-colors">
+                            <input type="radio" name="question-type" class="mt-1 mr-2" value="rating" data-type="rating" />
+                            <div>
+                                <div class="font-medium">Rating</div>
+                                <div class="text-xs text-muted-foreground">Star rating scale</div>
+                            </div>
+                        </label>
+                        <label class="question-type-option flex items-start p-3 rounded-md border cursor-pointer hover:bg-accent/10 transition-colors">
+                            <input type="radio" name="question-type" class="mt-1 mr-2" value="dropdown" data-type="dropdown" />
+                            <div>
+                                <div class="font-medium">Dropdown</div>
+                                <div class="text-xs text-muted-foreground">Select from a dropdown</div>
+                            </div>
+                        </label>
+                        <label class="question-type-option flex items-start p-3 rounded-md border cursor-pointer hover:bg-accent/10 transition-colors">
+                            <input type="radio" name="question-type" class="mt-1 mr-2" value="nps" data-type="nps" />
+                            <div>
+                                <div class="font-medium">NPS</div>
+                                <div class="text-xs text-muted-foreground">Net Promoter Score</div>
+                            </div>
+                        </label>
+                        <label class="question-type-option flex items-start p-3 rounded-md border cursor-pointer hover:bg-accent/10 transition-colors">
+                            <input type="radio" name="question-type" class="mt-1 mr-2" value="ranking" data-type="ranking" />
+                            <div>
+                                <div class="font-medium">Ranking</div>
+                                <div class="text-xs text-muted-foreground">Order options by preference</div>
+                            </div>
+                        </label>
+                        <label class="question-type-option flex items-start p-3 rounded-md border cursor-pointer hover:bg-accent/10 transition-colors">
+                            <input type="radio" name="question-type" class="mt-1 mr-2" value="date" data-type="date" />
+                            <div>
+                                <div class="font-medium">Date</div>
+                                <div class="text-xs text-muted-foreground">Date picker response</div>
+                            </div>
+                        </label>
+                    </div>
+                    <input type="hidden" class="current-question-type" value="text" />
+                </div>
+            </div>
+
+            <div class="question-options-container space-y-3 mt-4 hidden">
+                <!-- Options will be dynamically added here -->
+                <label class="block text-sm font-medium">Options</label>
+                <button type="button" class="add-option-btn inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 mt-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1 h-4 w-4"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                    Add Option
+                </button>
+            </div>
+
+            <div class="question-preview-container mt-4 border rounded-md p-4 bg-muted/20 hidden">
+                <!-- Preview will be dynamically added here -->
+                <label class="block text-sm font-medium mb-2">Preview</label>
+            </div>
+
+            <div class="flex items-center space-x-2 pt-2">
+                <label class="inline-flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" class="question-required-toggle sr-only peer" checked />
+                    <span class="relative inline-flex h-5 w-10 items-center rounded-full bg-input transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 peer-checked:bg-primary peer-disabled:cursor-not-allowed peer-disabled:opacity-50">
+                        <span class="inline-block h-4 w-4 translate-x-0.5 rounded-full bg-background transition-transform peer-checked:translate-x-5"></span>
+                    </span>
+                    <span class="text-sm font-medium">Required question</span>
+                </label>
+            </div>
+        </div>
+    </div>
+</template>
