@@ -1,0 +1,280 @@
+
+@model SurveyPreviewViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="min-h-screen flex flex-col bg-background">
+    <div class="container mx-auto pt-24 px-6 pb-16">
+        <div class="mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <a asp-controller="Surveys" asp-action="Index" class="text-primary hover:underline mb-2 inline-flex items-center">
+                        <i class="fas fa-arrow-left mr-1"></i> Back to surveys
+                    </a>
+                    <h1 class="text-3xl font-bold">@Model.Title</h1>
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <p class="text-muted-foreground mt-2">@Model.Description</p>
+                    }
+                </div>
+                <div class="flex gap-2">
+                    <a asp-controller="SurveyBuilder" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">
+                        <i class="fas fa-edit mr-2"></i> Edit
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow mb-6">
+            <div class="card-header bg-light p-4 border-bottom">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-semibold">Survey Preview</h2>
+                </div>
+            </div>
+            <div class="card-body p-6">
+                <form id="survey-response-form" method="post">
+                    <input type="hidden" name="SurveyId" value="@Model.Id" />
+                    
+                    <div class="space-y-8">
+                        <div class="card bg-light border p-4 mb-4">
+                            <div class="text-sm text-muted-foreground">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                This is a preview of your survey. You can test how it looks and works before publishing.
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-6">
+                            @foreach (var question in Model.Questions)
+                            {
+                                <div class="question-preview-item p-4 border rounded-md shadow-sm">
+                                    <div class="mb-2">
+                                        <h3 class="text-lg font-medium">
+                                            @question.Text
+                                            @if (question.Required)
+                                            {
+                                                <span class="text-danger ml-1">*</span>
+                                            }
+                                        </h3>
+                                        @if (!string.IsNullOrEmpty(question.Description))
+                                        {
+                                            <p class="text-sm text-muted-foreground mt-1">@question.Description</p>
+                                        }
+                                    </div>
+                                    
+                                    <div class="mt-3">
+                                        @switch (question.Type)
+                                        {
+                                            case "text":
+                                                <textarea name="Answers[@question.Id]" class="form-control" rows="3" placeholder="Enter your answer here"
+                                                          @(question.Required ? "required" : "")></textarea>
+                                                break;
+                                                
+                                            case "single-choice":
+                                                if (question.Options != null)
+                                                {
+                                                    <div class="space-y-2">
+                                                        @foreach (var option in question.Options)
+                                                        {
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="Answers[@question.Id]" 
+                                                                       value="@option" id="@($"q{question.Id}_opt_{option.GetHashCode()}")"
+                                                                       @(question.Required ? "required" : "") />
+                                                                <label class="form-check-label" for="@($"q{question.Id}_opt_{option.GetHashCode()}")">
+                                                                    @option
+                                                                </label>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                }
+                                                break;
+                                                
+                                            case "multiple-choice":
+                                                if (question.Options != null)
+                                                {
+                                                    <div class="space-y-2">
+                                                        @foreach (var option in question.Options)
+                                                        {
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" name="Answers[@question.Id][]" 
+                                                                       value="@option" id="@($"q{question.Id}_opt_{option.GetHashCode()}")" />
+                                                                <label class="form-check-label" for="@($"q{question.Id}_opt_{option.GetHashCode()}")">
+                                                                    @option
+                                                                </label>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                }
+                                                break;
+                                                
+                                            case "dropdown":
+                                                if (question.Options != null)
+                                                {
+                                                    <select name="Answers[@question.Id]" class="form-select" @(question.Required ? "required" : "")>
+                                                        <option value="">Select an option</option>
+                                                        @foreach (var option in question.Options)
+                                                        {
+                                                            <option value="@option">@option</option>
+                                                        }
+                                                    </select>
+                                                }
+                                                break;
+                                                
+                                            case "rating":
+                                                <div class="star-rating-display">
+                                                    <div class="star-labels grid grid-cols-5 text-xs text-muted-foreground mb-1">
+                                                        <div class="text-center">Extremely Dissatisfied</div>
+                                                        <div class="text-center">Dissatisfied</div>
+                                                        <div class="text-center">Neutral</div>
+                                                        <div class="text-center">Satisfied</div>
+                                                        <div class="text-center">Extremely Satisfied</div>
+                                                    </div>
+                                                    <div class="flex justify-between">
+                                                        @for (int i = 1; i <= 5; i++)
+                                                        {
+                                                            <div class="text-center">
+                                                                <input type="radio" name="Answers[@question.Id]" value="@i" 
+                                                                       id="@($"q{question.Id}_star{i}")" class="sr-only"
+                                                                       @(question.Required ? "required" : "") />
+                                                                <label for="@($"q{question.Id}_star{i}")" class="cursor-pointer block">
+                                                                    <svg class="w-10 h-10 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                                                    </svg>
+                                                                </label>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                                break;
+                                                
+                                            case "nps":
+                                                <div class="nps-rating-display">
+                                                    <div class="grid grid-cols-11 gap-1 w-full">
+                                                        @for (int i = 0; i <= 10; i++)
+                                                        {
+                                                            <div class="text-center">
+                                                                <input type="radio" name="Answers[@question.Id]" value="@i" 
+                                                                       id="@($"q{question.Id}_nps{i}")" class="sr-only"
+                                                                       @(question.Required ? "required" : "") />
+                                                                <label for="@($"q{question.Id}_nps{i}")" 
+                                                                       class="flex items-center justify-center h-10 rounded-md cursor-pointer border transition-all">
+                                                                    @i
+                                                                </label>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                    <div class="flex justify-between text-sm text-muted-foreground px-1 mt-2">
+                                                        <div>Not likely</div>
+                                                        <div>Neutral</div>
+                                                        <div>Very likely</div>
+                                                    </div>
+                                                </div>
+                                                break;
+                                                
+                                            case "date":
+                                                <input type="date" name="Answers[@question.Id]" class="form-control" 
+                                                       @(question.Required ? "required" : "") />
+                                                break;
+                                                
+                                            default:
+                                                <div class="text-muted-foreground">
+                                                    (Preview for @question.Type is not available)
+                                                </div>
+                                                break;
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        
+                        <div class="border-t pt-6 flex justify-end gap-3">
+                            <button type="button" class="btn btn-primary" disabled>
+                                Submit (Preview Mode)
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle star rating display
+            document.querySelectorAll('.star-rating-display input[type="radio"]').forEach(input => {
+                const label = input.nextElementSibling;
+                const star = label.querySelector('svg');
+                
+                input.addEventListener('change', function() {
+                    // Reset all stars
+                    const allStars = this.closest('.star-rating-display').querySelectorAll('svg');
+                    allStars.forEach(s => s.classList.remove('text-yellow-400', 'fill-yellow-400'));
+                    allStars.forEach(s => s.classList.add('text-gray-300'));
+                    
+                    // Fill stars up to selected
+                    const value = parseInt(this.value);
+                    const container = this.closest('.star-rating-display');
+                    for (let i = 1; i <= value; i++) {
+                        const selectedStar = container.querySelector(`label[for="q${this.name.replace('Answers[', '').replace(']', '')}_star${i}"] svg`);
+                        if (selectedStar) {
+                            selectedStar.classList.remove('text-gray-300');
+                            selectedStar.classList.add('text-yellow-400', 'fill-yellow-400');
+                        }
+                    }
+                });
+                
+                // Hover effect
+                label.addEventListener('mouseenter', function() {
+                    const value = parseInt(input.value);
+                    const container = input.closest('.star-rating-display');
+                    
+                    // If not already selected, highlight on hover
+                    if (!input.checked) {
+                        const allPreviousStars = [];
+                        let current = input;
+                        while (current = current.previousElementSibling?.previousElementSibling) {
+                            allPreviousStars.push(current.nextElementSibling.querySelector('svg'));
+                        }
+                        allPreviousStars.push(star);
+                        
+                        allPreviousStars.forEach(s => {
+                            s.classList.remove('text-gray-300');
+                            s.classList.add('text-yellow-400', 'fill-yellow-400');
+                        });
+                    }
+                });
+                
+                label.addEventListener('mouseleave', function() {
+                    // Reset hover effect if not selected
+                    if (!input.checked) {
+                        const allStars = input.closest('.star-rating-display').querySelectorAll('svg');
+                        allStars.forEach(s => {
+                            if (!s.closest('label').control.checked) {
+                                s.classList.remove('text-yellow-400', 'fill-yellow-400');
+                                s.classList.add('text-gray-300');
+                            }
+                        });
+                    }
+                });
+            });
+            
+            // Handle NPS rating display
+            document.querySelectorAll('.nps-rating-display input[type="radio"]').forEach(input => {
+                const label = input.nextElementSibling;
+                
+                input.addEventListener('change', function() {
+                    // Reset all options
+                    const allOptions = this.closest('.nps-rating-display').querySelectorAll('label');
+                    allOptions.forEach(o => {
+                        o.classList.remove('bg-primary', 'text-white', 'border-primary');
+                    });
+                    
+                    // Highlight selected
+                    label.classList.add('bg-primary', 'text-white', 'border-primary');
+                });
+            });
+        });
+    </script>
+}

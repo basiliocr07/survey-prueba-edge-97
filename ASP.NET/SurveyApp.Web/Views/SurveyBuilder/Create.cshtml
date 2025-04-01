@@ -1,0 +1,535 @@
+
+@model CreateSurveyViewModel
+@{
+    ViewData["Title"] = Model.Id > 0 ? "Edit Survey" : "Create Survey";
+    var isEditMode = Model.Id > 0;
+}
+
+<div class="min-h-screen flex flex-col bg-background">
+    <div class="container mx-auto pt-24 px-6 pb-16">
+        <div class="mb-8">
+            <div class="flex justify-between items-center">
+                <h1 class="text-3xl font-bold">@(isEditMode ? "Edit Survey" : "Create Survey")</h1>
+                <div class="flex gap-2">
+                    <a asp-controller="Surveys" asp-action="Index" class="btn btn-outline-secondary">
+                        Cancel
+                    </a>
+                    <button type="button" id="save-survey-btn" class="btn btn-primary">
+                        <i class="fas fa-save mr-2"></i>
+                        Save Survey
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <form id="survey-form" asp-action="@(isEditMode ? "Edit" : "Create")" method="post">
+            <input type="hidden" asp-for="Id" />
+
+            <div class="card shadow mb-6">
+                <div class="card-body p-6">
+                    <h2 class="text-xl font-semibold mb-4">Survey Details</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label asp-for="Title" class="form-label">Survey Title</label>
+                            <input asp-for="Title" class="form-control" placeholder="Enter your survey title" required />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+                        <div>
+                            <label asp-for="Description" class="form-label">Description (optional)</label>
+                            <textarea asp-for="Description" class="form-control" rows="3" placeholder="Enter survey description"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                        <div>
+                            <label class="form-label">Status</label>
+                            <div class="flex flex-wrap gap-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" asp-for="Status" id="status-draft" value="draft" checked="@(Model.Status == "draft")" />
+                                    <label class="form-check-label" for="status-draft">Draft</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" asp-for="Status" id="status-active" value="active" checked="@(Model.Status == "active")" />
+                                    <label class="form-check-label" for="status-active">Active</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" asp-for="Status" id="status-archived" value="archived" checked="@(Model.Status == "archived")" />
+                                    <label class="form-check-label" for="status-archived">Archived</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow mb-6">
+                <div class="card-header bg-light p-4 border-bottom">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-xl font-semibold">Survey Questions</h2>
+                        <button type="button" id="add-question-btn" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-plus mr-1"></i> Add Question
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <div id="questions-container">
+                        @if (Model.Questions == null || !Model.Questions.Any())
+                        {
+                            <div class="survey-builder-empty">
+                                <div class="rounded-full bg-light p-3 mb-3">
+                                    <i class="fas fa-list-ul fa-xl text-muted"></i>
+                                </div>
+                                <p>Your survey doesn't have any questions yet.</p>
+                                <button type="button" class="btn btn-primary add-sample-questions-btn">
+                                    <i class="fas fa-plus mr-1"></i> Add Sample Questions
+                                </button>
+                            </div>
+                        }
+                        else
+                        {
+                            @for (int i = 0; i < Model.Questions.Count; i++)
+                            {
+                                @await Component.InvokeAsync("QuestionBuilder", new { question = Model.Questions[i], index = i, total = Model.Questions.Count })
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow mb-6">
+                <div class="card-header bg-light p-4 border-bottom">
+                    <h2 class="text-xl font-semibold">Delivery Configuration</h2>
+                </div>
+                <div class="card-body p-6">
+                    <div class="delivery-method-options">
+                        <div class="delivery-method-option @(Model.DeliveryConfig?.Type == "manual" ? "selected" : "")">
+                            <input type="radio" name="DeliveryConfig.Type" id="delivery-manual" value="manual" 
+                                   @(Model.DeliveryConfig?.Type == "manual" ? "checked" : "") class="form-check-input" />
+                            <label for="delivery-manual" class="w-100 cursor-pointer">
+                                <div class="text-center">
+                                    <div class="delivery-type-icon mb-2">
+                                        <i class="fas fa-paper-plane fa-lg"></i>
+                                    </div>
+                                    <h3 class="font-semibold mb-1">Manual Distribution</h3>
+                                    <p class="text-sm text-muted-foreground">Send your survey via link or embed it</p>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <div class="delivery-method-option @(Model.DeliveryConfig?.Type == "scheduled" ? "selected" : "")">
+                            <input type="radio" name="DeliveryConfig.Type" id="delivery-scheduled" value="scheduled" 
+                                   @(Model.DeliveryConfig?.Type == "scheduled" ? "checked" : "") class="form-check-input" />
+                            <label for="delivery-scheduled" class="w-100 cursor-pointer">
+                                <div class="text-center">
+                                    <div class="delivery-type-icon mb-2">
+                                        <i class="fas fa-calendar-alt fa-lg"></i>
+                                    </div>
+                                    <h3 class="font-semibold mb-1">Scheduled Emails</h3>
+                                    <p class="text-sm text-muted-foreground">Send your survey at specific scheduled times</p>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <div class="delivery-method-option @(Model.DeliveryConfig?.Type == "triggered" ? "selected" : "")">
+                            <input type="radio" name="DeliveryConfig.Type" id="delivery-triggered" value="triggered" 
+                                   @(Model.DeliveryConfig?.Type == "triggered" ? "checked" : "") class="form-check-input" />
+                            <label for="delivery-triggered" class="w-100 cursor-pointer">
+                                <div class="text-center">
+                                    <div class="delivery-type-icon mb-2">
+                                        <i class="fas fa-bolt fa-lg"></i>
+                                    </div>
+                                    <h3 class="font-semibold mb-1">Event Triggers</h3>
+                                    <p class="text-sm text-muted-foreground">Send survey after specific events occur</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="delivery-manual-settings" class="delivery-settings mt-4 @(Model.DeliveryConfig?.Type != "manual" ? "d-none" : "")">
+                        <div class="card bg-light">
+                            <div class="card-body p-4">
+                                <h3 class="font-semibold mb-3">Email Recipients</h3>
+                                <p class="text-sm text-muted-foreground mb-3">
+                                    Add email addresses to send your survey to:
+                                </p>
+                                <div class="mb-3">
+                                    <div class="input-group">
+                                        <input type="email" id="email-recipient" class="form-control" placeholder="name@example.com">
+                                        <button type="button" id="add-email-btn" class="btn btn-primary">Add</button>
+                                    </div>
+                                    <div class="form-text">Press Enter or click Add after each email</div>
+                                </div>
+                                <div id="email-recipients-container" class="email-recipients">
+                                    @if (Model.DeliveryConfig?.EmailAddresses != null)
+                                    {
+                                        @foreach (var email in Model.DeliveryConfig.EmailAddresses)
+                                        {
+                                            <div class="email-recipient">
+                                                <span>@email</span>
+                                                <input type="hidden" name="DeliveryConfig.EmailAddresses" value="@email" />
+                                                <button type="button" class="remove-email" aria-label="Remove">×</button>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="delivery-scheduled-settings" class="delivery-settings mt-4 @(Model.DeliveryConfig?.Type != "scheduled" ? "d-none" : "")">
+                        <div class="card bg-light">
+                            <div class="card-body p-4">
+                                <h3 class="font-semibold mb-3">Schedule Settings</h3>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Frequency</label>
+                                        <select name="DeliveryConfig.Schedule.Frequency" class="form-select">
+                                            <option value="daily" selected="@(Model.DeliveryConfig?.Schedule?.Frequency == "daily")">Daily</option>
+                                            <option value="weekly" selected="@(Model.DeliveryConfig?.Schedule?.Frequency == "weekly")">Weekly</option>
+                                            <option value="monthly" selected="@(Model.DeliveryConfig?.Schedule?.Frequency == "monthly" || Model.DeliveryConfig?.Schedule == null)">Monthly</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Day of Month</label>
+                                        <input type="number" name="DeliveryConfig.Schedule.DayOfMonth" class="form-control" min="1" max="31" 
+                                               value="@(Model.DeliveryConfig?.Schedule?.DayOfMonth ?? 1)" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Time</label>
+                                        <input type="time" name="DeliveryConfig.Schedule.Time" class="form-control" 
+                                               value="@(Model.DeliveryConfig?.Schedule?.Time ?? "09:00")" />
+                                    </div>
+                                </div>
+                                
+                                <h3 class="font-semibold mt-4 mb-3">Email Recipients</h3>
+                                <div class="mb-3">
+                                    <div class="input-group">
+                                        <input type="email" id="scheduled-email-recipient" class="form-control" placeholder="name@example.com">
+                                        <button type="button" id="add-scheduled-email-btn" class="btn btn-primary">Add</button>
+                                    </div>
+                                </div>
+                                <div id="scheduled-email-recipients-container" class="email-recipients">
+                                    @if (Model.DeliveryConfig?.EmailAddresses != null)
+                                    {
+                                        @foreach (var email in Model.DeliveryConfig.EmailAddresses)
+                                        {
+                                            <div class="email-recipient">
+                                                <span>@email</span>
+                                                <input type="hidden" name="DeliveryConfig.EmailAddresses" value="@email" />
+                                                <button type="button" class="remove-email" aria-label="Remove">×</button>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="delivery-triggered-settings" class="delivery-settings mt-4 @(Model.DeliveryConfig?.Type != "triggered" ? "d-none" : "")">
+                        <div class="card bg-light">
+                            <div class="card-body p-4">
+                                <h3 class="font-semibold mb-3">Trigger Settings</h3>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Trigger Event</label>
+                                        <select name="DeliveryConfig.Trigger.Type" class="form-select">
+                                            <option value="ticket-closed" selected="@(Model.DeliveryConfig?.Trigger?.Type == "ticket-closed" || Model.DeliveryConfig?.Trigger == null)">Ticket Closed</option>
+                                            <option value="purchase-completed" selected="@(Model.DeliveryConfig?.Trigger?.Type == "purchase-completed")">Purchase Completed</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Delay (hours)</label>
+                                        <input type="number" name="DeliveryConfig.Trigger.DelayHours" class="form-control" min="0" 
+                                               value="@(Model.DeliveryConfig?.Trigger?.DelayHours ?? 24)" />
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="trigger-auto-send" name="DeliveryConfig.Trigger.SendAutomatically" 
+                                                   value="true" checked="@(Model.DeliveryConfig?.Trigger?.SendAutomatically ?? false)" />
+                                            <label class="form-check-label" for="trigger-auto-send">
+                                                Send automatically when triggered
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <h3 class="font-semibold mt-4 mb-3">Test Email Recipients</h3>
+                                <p class="text-sm text-muted-foreground mb-3">
+                                    Add email addresses to test your triggered survey:
+                                </p>
+                                <div class="mb-3">
+                                    <div class="input-group">
+                                        <input type="email" id="triggered-email-recipient" class="form-control" placeholder="name@example.com">
+                                        <button type="button" id="add-triggered-email-btn" class="btn btn-primary">Add</button>
+                                    </div>
+                                </div>
+                                <div id="triggered-email-recipients-container" class="email-recipients">
+                                    @if (Model.DeliveryConfig?.EmailAddresses != null)
+                                    {
+                                        @foreach (var email in Model.DeliveryConfig.EmailAddresses)
+                                        {
+                                            <div class="email-recipient">
+                                                <span>@email</span>
+                                                <input type="hidden" name="DeliveryConfig.EmailAddresses" value="@email" />
+                                                <button type="button" class="remove-email" aria-label="Remove">×</button>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2">
+                <a asp-controller="Surveys" asp-action="Index" class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save mr-2"></i>
+                    Save Survey
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/question-builder.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle add question button
+            document.getElementById('add-question-btn').addEventListener('click', function() {
+                addNewQuestion();
+            });
+
+            // Handle delivery type selection
+            document.querySelectorAll('input[name="DeliveryConfig.Type"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const type = this.value;
+                    document.querySelectorAll('.delivery-settings').forEach(settings => {
+                        settings.classList.add('d-none');
+                    });
+                    document.getElementById(`delivery-${type}-settings`).classList.remove('d-none');
+                    
+                    document.querySelectorAll('.delivery-method-option').forEach(option => {
+                        option.classList.remove('selected');
+                    });
+                    this.closest('.delivery-method-option').classList.add('selected');
+                });
+            });
+
+            // Handle add email functionality for all delivery types
+            const setupEmailInput = (inputId, btnId, containerId) => {
+                const input = document.getElementById(inputId);
+                const button = document.getElementById(btnId);
+                const container = document.getElementById(containerId);
+
+                const addEmail = () => {
+                    const email = input.value.trim();
+                    if (email && isValidEmail(email)) {
+                        const emailElement = document.createElement('div');
+                        emailElement.className = 'email-recipient';
+                        emailElement.innerHTML = `
+                            <span>${email}</span>
+                            <input type="hidden" name="DeliveryConfig.EmailAddresses" value="${email}" />
+                            <button type="button" class="remove-email" aria-label="Remove">×</button>
+                        `;
+                        container.appendChild(emailElement);
+                        input.value = '';
+                        
+                        // Add event listener to the remove button
+                        emailElement.querySelector('.remove-email').addEventListener('click', function() {
+                            this.closest('.email-recipient').remove();
+                        });
+                    } else if (email) {
+                        alert('Please enter a valid email address');
+                    }
+                };
+
+                button.addEventListener('click', addEmail);
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addEmail();
+                    }
+                });
+            };
+
+            // Setup email inputs for all delivery types
+            setupEmailInput('email-recipient', 'add-email-btn', 'email-recipients-container');
+            setupEmailInput('scheduled-email-recipient', 'add-scheduled-email-btn', 'scheduled-email-recipients-container');
+            setupEmailInput('triggered-email-recipient', 'add-triggered-email-btn', 'triggered-email-recipients-container');
+
+            // Setup existing remove email buttons
+            document.querySelectorAll('.remove-email').forEach(button => {
+                button.addEventListener('click', function() {
+                    this.closest('.email-recipient').remove();
+                });
+            });
+            
+            // Add sample questions
+            document.querySelectorAll('.add-sample-questions-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    addSampleQuestions();
+                });
+            });
+            
+            // Make save button trigger form submit
+            document.getElementById('save-survey-btn').addEventListener('click', function() {
+                document.getElementById('survey-form').submit();
+            });
+        });
+
+        // Helper functions
+        function isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        function addNewQuestion() {
+            const questionCount = document.querySelectorAll('.question-card').length;
+            const newQuestionId = `new-${Date.now()}`;
+            
+            fetch(`/SurveyBuilder/GetQuestionTemplate?index=${questionCount}&id=${newQuestionId}`)
+                .then(response => response.text())
+                .then(html => {
+                    const questionsContainer = document.getElementById('questions-container');
+                    const emptyState = questionsContainer.querySelector('.survey-builder-empty');
+                    
+                    if (emptyState) {
+                        emptyState.remove();
+                    }
+                    
+                    // Create a container for the new HTML
+                    const tempContainer = document.createElement('div');
+                    tempContainer.innerHTML = html;
+                    
+                    // Append the new question
+                    questionsContainer.appendChild(tempContainer.firstElementChild);
+                    
+                    // Initialize the new question
+                    initializeQuestionCard(tempContainer.firstElementChild);
+                });
+        }
+
+        function addSampleQuestions() {
+            // Add a satisfaction rating question
+            fetch(`/SurveyBuilder/GetSampleQuestions`)
+                .then(response => response.text())
+                .then(html => {
+                    const questionsContainer = document.getElementById('questions-container');
+                    const emptyState = questionsContainer.querySelector('.survey-builder-empty');
+                    
+                    if (emptyState) {
+                        emptyState.remove();
+                    }
+                    
+                    // Create a container for the new HTML
+                    const tempContainer = document.createElement('div');
+                    tempContainer.innerHTML = html;
+                    
+                    // Append all sample questions
+                    questionsContainer.innerHTML = tempContainer.innerHTML;
+                    
+                    // Initialize all question cards
+                    document.querySelectorAll('.question-card').forEach(card => {
+                        initializeQuestionCard(card);
+                    });
+                });
+        }
+
+        function initializeQuestionCard(questionCard) {
+            // Add event listeners to the new card
+            const toggleButton = questionCard.querySelector('.toggle-question-btn');
+            toggleButton.addEventListener('click', function() {
+                window.toggleQuestionExpand(this);
+            });
+            
+            // Initialize question type toggle
+            const typeToggle = questionCard.querySelector('.question-type-toggle');
+            if (typeToggle) {
+                typeToggle.addEventListener('click', function() {
+                    const dropdown = this.nextElementSibling;
+                    dropdown.classList.toggle('hidden');
+                });
+            }
+            
+            // Initialize option buttons
+            const addOptionBtn = questionCard.querySelector('.add-option-btn');
+            if (addOptionBtn) {
+                addOptionBtn.addEventListener('click', function() {
+                    const questionIndex = this.closest('.question-card').dataset.questionIndex;
+                    const optionItems = this.closest('.question-options-container').querySelectorAll('.option-item');
+                    const newOptionIndex = optionItems.length;
+                    
+                    const optionItem = document.createElement('div');
+                    optionItem.className = 'option-item flex items-center gap-2 mb-2';
+                    optionItem.innerHTML = `
+                        <div class="flex-1">
+                            <input type="text" name="Questions[${questionIndex}].Options[${newOptionIndex}]" value="New option" 
+                                   class="option-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" 
+                                   placeholder="Option ${newOptionIndex + 1}" />
+                        </div>
+                        <button type="button" class="remove-option-btn text-gray-500 hover:text-red-500 p-1 rounded-full" title="Remove Option">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    `;
+                    
+                    this.parentNode.insertBefore(optionItem, this);
+                    
+                    // Add event listener to the remove button
+                    const removeButton = optionItem.querySelector('.remove-option-btn');
+                    removeButton.addEventListener('click', function() {
+                        if (optionItems.length > 2) {
+                            this.closest('.option-item').remove();
+                        }
+                    });
+                });
+            }
+            
+            // Initialize remove buttons
+            questionCard.querySelectorAll('.remove-option-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const optionItems = this.closest('.question-options-container').querySelectorAll('.option-item');
+                    if (optionItems.length > 2) {
+                        this.closest('.option-item').remove();
+                    }
+                });
+            });
+            
+            // Initialize question type options
+            questionCard.querySelectorAll('.question-type-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const type = this.dataset.type;
+                    const questionCard = this.closest('.question-card');
+                    const typeDisplay = questionCard.querySelector('.question-type-display');
+                    const typeInput = questionCard.querySelector('.current-question-type');
+                    const optionsContainer = questionCard.querySelector('.question-options-container');
+                    const previewContainer = questionCard.querySelector('.question-preview-container');
+                    
+                    // Update visible type
+                    typeDisplay.textContent = type.replace('-', ' ');
+                    
+                    // Update hidden input
+                    typeInput.value = type;
+                    
+                    // Toggle options container visibility
+                    if (['multiple-choice', 'single-choice', 'dropdown', 'ranking'].includes(type)) {
+                        optionsContainer.classList.remove('hidden');
+                    } else {
+                        optionsContainer.classList.add('hidden');
+                    }
+                    
+                    // Toggle preview container visibility
+                    if (['rating', 'nps'].includes(type)) {
+                        previewContainer.classList.remove('hidden');
+                    } else {
+                        previewContainer.classList.add('hidden');
+                    }
+                    
+                    // Hide the dropdown
+                    this.closest('.question-types-dropdown').classList.add('hidden');
+                });
+            });
+        }
+    </script>
+}

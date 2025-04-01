@@ -1,6 +1,5 @@
 
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 
 namespace SurveyApp.Web.Models
 {
@@ -14,17 +13,15 @@ namespace SurveyApp.Web.Models
 
     public class ScheduleSettingsViewModel
     {
-        public string Frequency { get; set; } = "daily";
-        public int? DayOfMonth { get; set; }
-        public int? DayOfWeek { get; set; }
+        public string Frequency { get; set; } = "monthly";
+        public int DayOfMonth { get; set; } = 1;
         public string Time { get; set; } = "09:00";
-        public string StartDate { get; set; }
     }
 
     public class TriggerSettingsViewModel
     {
         public string Type { get; set; } = "ticket-closed";
         public int DelayHours { get; set; } = 24;
-        public bool SendAutomatically { get; set; } = true;
+        public bool SendAutomatically { get; set; } = false;
     }
 }
