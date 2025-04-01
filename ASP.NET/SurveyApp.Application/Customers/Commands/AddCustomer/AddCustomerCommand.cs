@@ -10,7 +10,7 @@ namespace SurveyApp.Application.Customers.Commands.AddCustomer
         public string ContactName { get; set; } = string.Empty;
         public string ContactEmail { get; set; } = string.Empty;
         public string? ContactPhone { get; set; }
-        public string CustomerType { get; set; } = "client";
+        public string? CustomerType { get; set; } = "client";
         public List<string> AcquiredServices { get; set; } = new List<string>();
     }
 

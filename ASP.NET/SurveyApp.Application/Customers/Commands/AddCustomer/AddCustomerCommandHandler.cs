@@ -40,7 +40,7 @@ namespace SurveyApp.Application.Customers.Commands.AddCustomer
                     ContactName = request.ContactName,
                     ContactEmail = request.ContactEmail,
                     ContactPhone = request.ContactPhone,
-                    CustomerType = request.CustomerType,
+                    CustomerType = request.CustomerType ?? "client", // Valor por defecto si es nulo
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
@@ -53,10 +53,13 @@ namespace SurveyApp.Application.Customers.Commands.AddCustomer
                 {
                     foreach (var serviceName in request.AcquiredServices)
                     {
-                        var serviceId = await _customerRepository.GetServiceIdByNameAsync(serviceName);
-                        if (!string.IsNullOrEmpty(serviceId))
+                        if (!string.IsNullOrEmpty(serviceName))
                         {
-                            await _customerRepository.AddCustomerServiceAsync(customerId, serviceId);
+                            var serviceId = await _customerRepository.GetServiceIdByNameAsync(serviceName);
+                            if (!string.IsNullOrEmpty(serviceId))
+                            {
+                                await _customerRepository.AddCustomerServiceAsync(customerId, serviceId);
+                            }
                         }
                     }
                 }
