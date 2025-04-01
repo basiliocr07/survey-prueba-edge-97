@@ -71,7 +71,7 @@ namespace SurveyApp.Web.Controllers
                     ContactEmail = form.ContactEmail,
                     ContactPhone = form.ContactPhone,
                     CustomerType = form.CustomerType,
-                    AcquiredServices = form.SelectedServices
+                    AcquiredServices = form.SelectedServices ?? new List<string>()
                 };
 
                 var result = await _mediator.Send(command);

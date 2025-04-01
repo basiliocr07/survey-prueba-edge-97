@@ -23,6 +23,6 @@ namespace SurveyApp.Web.Models
         public string ContactEmail { get; set; } = string.Empty;
         public string? ContactPhone { get; set; }
         public List<string> SelectedServices { get; set; } = new List<string>();
-        public string CustomerType { get; set; } = "client";
+        public string? CustomerType { get; set; } = "client";
     }
 }
