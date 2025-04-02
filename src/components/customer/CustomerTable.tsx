@@ -26,15 +26,15 @@ export default function CustomerTable({ customers, isLoading }: CustomerTablePro
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
-            Customer Directory
+            Directorio de Clientes
           </CardTitle>
           <CardDescription>
-            Loading customer data...
+            Cargando datos de clientes...
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[200px] flex items-center justify-center">
-            <p className="text-muted-foreground">Loading customers...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         </CardContent>
       </Card>
@@ -47,15 +47,15 @@ export default function CustomerTable({ customers, isLoading }: CustomerTablePro
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
-            Customer Directory
+            Directorio de Clientes
           </CardTitle>
           <CardDescription>
-            No customers found
+            No se encontraron clientes
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[200px] flex items-center justify-center">
-            <p className="text-muted-foreground">No customers to display</p>
+            <p className="text-muted-foreground">No hay clientes para mostrar</p>
           </div>
         </CardContent>
       </Card>
@@ -67,10 +67,10 @@ export default function CustomerTable({ customers, isLoading }: CustomerTablePro
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <User className="h-5 w-5" />
-          Customer Directory
+          Directorio de Clientes
         </CardTitle>
         <CardDescription>
-          List of all customers and their information
+          Lista de todos los clientes y su información
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -78,12 +78,12 @@ export default function CustomerTable({ customers, isLoading }: CustomerTablePro
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Brand Name</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Services</TableHead>
-                <TableHead>Since</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>Marca</TableHead>
+                <TableHead>Contacto</TableHead>
+                <TableHead>Tipo</TableHead>
+                <TableHead>Servicios</TableHead>
+                <TableHead>Desde</TableHead>
+                <TableHead>Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -96,7 +96,7 @@ export default function CustomerTable({ customers, isLoading }: CustomerTablePro
                   </TableCell>
                   <TableCell>
                     <Badge variant={customer.customer_type === 'admin' ? 'destructive' : 'default'}>
-                      {customer.customer_type === 'admin' ? 'Admin' : 'Client'}
+                      {customer.customer_type === 'admin' ? 'Admin' : 'Cliente'}
                     </Badge>
                   </TableCell>
                   <TableCell>

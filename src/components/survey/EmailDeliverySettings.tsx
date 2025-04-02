@@ -32,11 +32,6 @@ interface EmailDeliverySettingsProps {
   onConfigChange: (config: DeliveryConfig) => void;
 }
 
-interface CustomerEmail {
-  email: string;
-  name?: string;
-}
-
 export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }: EmailDeliverySettingsProps) {
   const { customerEmails = [], isLoading } = useCustomers();
   const [emailInput, setEmailInput] = useState('');
@@ -140,20 +135,10 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  // Simulated customer data - in a real app, this would come from your backend
-  // This is just to demonstrate showing names with emails
+  // Get customer name from email - for real customers
   const getCustomerName = (email: string): string => {
-    // This is a placeholder - in a real app, you would look up the customer name from your data
-    const emailParts = email.split('@');
-    if (emailParts.length > 0) {
-      // Convert john.doe to John Doe
-      const namePart = emailParts[0];
-      return namePart
-        .split(/[._-]/)
-        .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-        .join(' ');
-    }
-    return 'Unknown User';
+    // This would ideally come from a lookup of real customer data
+    return email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
   return (
@@ -433,7 +418,11 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
                     <CommandInput placeholder="Search by email..." className="h-9" />
                     <CommandEmpty>No customer found.</CommandEmpty>
                     <CommandGroup>
-                      {Array.isArray(customerEmails) && customerEmails.length > 0 && (
+                      {isLoading ? (
+                        <div className="py-6 text-center">
+                          <p className="text-sm text-muted-foreground">Loading customers...</p>
+                        </div>
+                      ) : Array.isArray(customerEmails) && customerEmails.length > 0 ? (
                         <CommandList>
                           {customerEmails.map((email) => (
                             <CommandItem
@@ -451,6 +440,10 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
                             </CommandItem>
                           ))}
                         </CommandList>
+                      ) : (
+                        <div className="py-6 text-center">
+                          <p className="text-sm text-muted-foreground">No customers found</p>
+                        </div>
                       )}
                     </CommandGroup>
                   </Command>
@@ -469,6 +462,7 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
                 size="sm"
                 onClick={handleSelectAllEmails}
                 className="flex items-center gap-1"
+                disabled={isLoading || !Array.isArray(customerEmails) || customerEmails.length === 0}
               >
                 <CheckCircle className="h-4 w-4" />
                 Select All
@@ -478,6 +472,7 @@ export default function EmailDeliverySettings({ deliveryConfig, onConfigChange }
                 size="sm"
                 onClick={handleDeselectAllEmails}
                 className="flex items-center gap-1"
+                disabled={!deliveryConfig.emailAddresses || deliveryConfig.emailAddresses.length === 0}
               >
                 <XCircle className="h-4 w-4" />
                 Deselect All

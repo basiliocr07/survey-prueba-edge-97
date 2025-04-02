@@ -20,9 +20,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Customer } from '@/domain/models/Customer';
-import { v4 as uuidv4 } from 'uuid';
 import { PlusCircle } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useToast } from '@/components/ui/use-toast';
 
 interface CustomerFormDialogProps {
   availableServices: string[];
@@ -30,7 +30,9 @@ interface CustomerFormDialogProps {
 }
 
 export default function CustomerFormDialog({ availableServices, onAddCustomer }: CustomerFormDialogProps) {
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<Partial<Customer>>({
     brand_name: '',
     contact_name: '',
@@ -66,34 +68,61 @@ export default function CustomerFormDialog({ availableServices, onAddCustomer }:
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Create new customer object
-    const newCustomer: Customer = {
-      id: uuidv4(),
-      brand_name: formData.brand_name || '',
-      contact_name: formData.contact_name || '',
-      contact_email: formData.contact_email || '',
-      contact_phone: formData.contact_phone,
-      acquired_services: formData.acquired_services || [],
-      customer_type: formData.customer_type as 'admin' | 'client' || 'client',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
+    if (!formData.brand_name || !formData.contact_name || !formData.contact_email) {
+      toast({
+        title: "Error en el formulario",
+        description: "Por favor complete todos los campos requeridos.",
+        variant: "destructive"
+      });
+      return;
+    }
     
-    onAddCustomer(newCustomer);
+    setIsSubmitting(true);
     
-    // Reset form and close dialog
-    setFormData({
-      brand_name: '',
-      contact_name: '',
-      contact_email: '',
-      contact_phone: '',
-      acquired_services: [],
-      customer_type: 'client'
-    });
-    setOpen(false);
+    try {
+      // Create new customer object with real data
+      const newCustomer: Customer = {
+        id: '0', // Will be replaced by the backend
+        brand_name: formData.brand_name || '',
+        contact_name: formData.contact_name || '',
+        contact_email: formData.contact_email || '',
+        contact_phone: formData.contact_phone,
+        acquired_services: formData.acquired_services || [],
+        customer_type: formData.customer_type as 'admin' | 'client' || 'client',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      await onAddCustomer(newCustomer);
+      
+      toast({
+        title: "Cliente añadido",
+        description: "El cliente ha sido creado exitosamente",
+      });
+      
+      // Reset form and close dialog
+      setFormData({
+        brand_name: '',
+        contact_name: '',
+        contact_email: '',
+        contact_phone: '',
+        acquired_services: [],
+        customer_type: 'client'
+      });
+      setOpen(false);
+    } catch (error) {
+      console.error("Error adding customer:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo añadir el cliente. Por favor intente nuevamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -101,20 +130,20 @@ export default function CustomerFormDialog({ availableServices, onAddCustomer }:
       <DialogTrigger asChild>
         <Button className="gap-2">
           <PlusCircle className="h-4 w-4" />
-          Add Customer
+          Añadir Cliente
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Add New Customer</DialogTitle>
+            <DialogTitle>Añadir Nuevo Cliente</DialogTitle>
             <DialogDescription>
-              Enter the customer details and the services they've acquired.
+              Ingrese los datos del cliente y los servicios que ha adquirido.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="brand_name">Brand Name</Label>
+              <Label htmlFor="brand_name">Nombre de Marca</Label>
               <Input
                 id="brand_name"
                 name="brand_name"
@@ -124,7 +153,7 @@ export default function CustomerFormDialog({ availableServices, onAddCustomer }:
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="contact_name">Contact Person</Label>
+              <Label htmlFor="contact_name">Persona de Contacto</Label>
               <Input
                 id="contact_name"
                 name="contact_name"
@@ -134,7 +163,7 @@ export default function CustomerFormDialog({ availableServices, onAddCustomer }:
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="contact_email">Contact Email</Label>
+              <Label htmlFor="contact_email">Email de Contacto</Label>
               <Input
                 id="contact_email"
                 name="contact_email"
@@ -145,7 +174,7 @@ export default function CustomerFormDialog({ availableServices, onAddCustomer }:
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="contact_phone">Contact Phone</Label>
+              <Label htmlFor="contact_phone">Teléfono de Contacto</Label>
               <Input
                 id="contact_phone"
                 name="contact_phone"
@@ -154,23 +183,23 @@ export default function CustomerFormDialog({ availableServices, onAddCustomer }:
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="customer_type">Customer Type</Label>
+              <Label htmlFor="customer_type">Tipo de Cliente</Label>
               <Select 
                 name="customer_type"
                 value={formData.customer_type || 'client'}
                 onValueChange={(value) => handleSelectChange('customer_type', value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select customer type" />
+                  <SelectValue placeholder="Seleccionar tipo de cliente" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="client">Client</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="client">Cliente</SelectItem>
+                  <SelectItem value="admin">Administrador</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label>Acquired Services</Label>
+              <Label>Servicios Adquiridos</Label>
               <div className="grid grid-cols-2 gap-2">
                 {availableServices.map(service => (
                   <div key={service} className="flex items-center space-x-2">
@@ -188,7 +217,9 @@ export default function CustomerFormDialog({ availableServices, onAddCustomer }:
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit">Add Customer</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Añadiendo..." : "Añadir Cliente"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

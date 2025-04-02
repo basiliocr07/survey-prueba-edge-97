@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { GetAllCustomers } from '../useCases/customer/GetAllCustomers';
 import { GetAllServices } from '../useCases/customer/GetAllServices';
+import { GetCustomerEmails } from '../useCases/customer/GetCustomerEmails';
 import { SupabaseCustomerRepository } from '@/infrastructure/repositories/SupabaseCustomerRepository';
 import { ServiceUsageData } from '@/domain/models/Customer';
 import { Service } from '@/domain/models/Service';
@@ -9,6 +10,7 @@ import { format, subMonths, isWithinInterval, startOfMonth, endOfMonth } from 'd
 const customerRepository = new SupabaseCustomerRepository();
 const getAllCustomers = new GetAllCustomers(customerRepository);
 const getAllServices = new GetAllServices(customerRepository);
+const getCustomerEmails = new GetCustomerEmails(customerRepository);
 
 export type TimeRange = '1' | '3' | '12' | 'all';
 
@@ -37,7 +39,7 @@ export function useCustomers() {
     error: emailsError
   } = useQuery({
     queryKey: ['customer-emails'],
-    queryFn: () => customerRepository.getCustomerEmails(),
+    queryFn: () => getCustomerEmails.execute(),
   });
 
   const calculateServiceUsage = (): ServiceUsageData[] => {

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Application.Interfaces;
 using SurveyApp.Domain.Models;
 using SurveyApp.Web.Models;
+using SurveyApp.Domain.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,10 +15,12 @@ namespace SurveyApp.Web.Controllers
     public class EmailSettingsController : Controller
     {
         private readonly ISurveyService _surveyService;
+        private readonly ICustomerRepository _customerRepository;
 
-        public EmailSettingsController(ISurveyService surveyService)
+        public EmailSettingsController(ISurveyService surveyService, ICustomerRepository customerRepository)
         {
             _surveyService = surveyService;
+            _customerRepository = customerRepository;
         }
 
         [HttpGet]
@@ -25,6 +28,9 @@ namespace SurveyApp.Web.Controllers
         {
             // Obtener todas las encuestas para el selector
             var surveys = await _surveyService.GetAllSurveysAsync();
+            
+            // Obtener clientes reales de la base de datos
+            var customers = await _customerRepository.GetAllCustomersAsync();
             
             // Modelo para la vista
             var model = new EmailSettingsViewModel
@@ -40,7 +46,12 @@ namespace SurveyApp.Web.Controllers
                 DeliveryConfig = surveyId.HasValue 
                     ? await GetSurveyDeliveryConfig(surveyId.Value) 
                     : GetGlobalDeliveryConfig(),
-                Customers = GetSampleCustomers() // En un entorno real, estos datos vendrían de la base de datos
+                Customers = customers.Select(c => new CustomerViewModel
+                {
+                    Id = c.Id,
+                    Name = c.ContactName,
+                    Email = c.ContactEmail
+                }).ToList()
             };
 
             return View(model);
@@ -90,9 +101,16 @@ namespace SurveyApp.Web.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetCustomers(string search = "")
+        public async Task<IActionResult> GetCustomers(string search = "")
         {
-            var customers = GetSampleCustomers();
+            // Obtener clientes reales de la base de datos
+            var allCustomers = await _customerRepository.GetAllCustomersAsync();
+            var customers = allCustomers.Select(c => new CustomerViewModel
+            {
+                Id = c.Id,
+                Name = c.ContactName,
+                Email = c.ContactEmail
+            }).ToList();
             
             if (!string.IsNullOrEmpty(search))
             {
@@ -104,6 +122,13 @@ namespace SurveyApp.Web.Controllers
             }
             
             return Json(customers);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetCustomerEmails()
+        {
+            var emails = await _customerRepository.GetCustomerEmailsAsync();
+            return Json(emails);
         }
 
         // Helpers
@@ -200,24 +225,6 @@ namespace SurveyApp.Web.Controllers
                     DelayHours = config.Trigger.DelayHours,
                     SendAutomatically = config.Trigger.SendAutomatically
                 } : null
-            };
-        }
-
-        // Datos de muestra para clientes
-        private List<CustomerViewModel> GetSampleCustomers()
-        {
-            return new List<CustomerViewModel>
-            {
-                new CustomerViewModel { Id = 1, Name = "Juan Pérez", Email = "juan.perez@example.com" },
-                new CustomerViewModel { Id = 2, Name = "María García", Email = "maria.garcia@example.com" },
-                new CustomerViewModel { Id = 3, Name = "Carlos Rodríguez", Email = "carlos.rodriguez@example.com" },
-                new CustomerViewModel { Id = 4, Name = "Ana Martínez", Email = "ana.martinez@example.com" },
-                new CustomerViewModel { Id = 5, Name = "Pedro López", Email = "pedro.lopez@example.com" },
-                new CustomerViewModel { Id = 6, Name = "Laura Sánchez", Email = "laura.sanchez@example.com" },
-                new CustomerViewModel { Id = 7, Name = "José Gómez", Email = "jose.gomez@example.com" },
-                new CustomerViewModel { Id = 8, Name = "Sofía Torres", Email = "sofia.torres@example.com" },
-                new CustomerViewModel { Id = 9, Name = "Miguel Ruiz", Email = "miguel.ruiz@example.com" },
-                new CustomerViewModel { Id = 10, Name = "Carmen Díaz", Email = "carmen.diaz@example.com" }
             };
         }
     }
