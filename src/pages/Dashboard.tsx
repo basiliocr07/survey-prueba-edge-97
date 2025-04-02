@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -120,7 +121,7 @@ const Dashboard = () => {
                   <td className="px-4 py-4">{survey.responses}</td>
                   <td className="px-4 py-4">{survey.completionRate}%</td>
                   <td className="px-4 py-4">
-                    <Badge variant={survey.status === 'Active' ? 'success' : survey.status === 'Draft' ? 'warning' : 'default'}>
+                    <Badge variant={survey.status === 'Active' ? 'secondary' : survey.status === 'Draft' ? 'outline' : 'default'}>
                       {survey.status}
                     </Badge>
                   </td>
@@ -154,7 +155,7 @@ const Dashboard = () => {
                     </div>
                   </td>
                   <td className="px-4 py-4">
-                    <Badge variant={req.status === 'Done' ? 'success' : req.status === 'In Progress' ? 'warning' : 'default'}>
+                    <Badge variant={req.status === 'Done' ? 'secondary' : req.status === 'In Progress' ? 'outline' : 'default'}>
                       {req.status}
                     </Badge>
                   </td>
