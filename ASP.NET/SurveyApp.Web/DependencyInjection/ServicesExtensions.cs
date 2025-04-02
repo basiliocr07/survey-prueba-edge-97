@@ -3,7 +3,9 @@ using Microsoft.Extensions.DependencyInjection;
 using SurveyApp.Application.Interfaces;
 using SurveyApp.Application.Services;
 using SurveyApp.Domain.Repositories;
+using SurveyApp.Domain.Services;
 using SurveyApp.Infrastructure.Repositories;
+using SurveyApp.Infrastructure.Services;
 using System.Reflection;
 
 namespace SurveyApp.Web.DependencyInjection
@@ -34,8 +36,10 @@ namespace SurveyApp.Web.DependencyInjection
             services.AddScoped<ISurveyResponseRepository, SurveyResponseRepository>();
             services.AddScoped<ICustomerRepository, CustomerRepository>();
             
+            // Servicio de email
+            services.AddScoped<IEmailService, SmtpEmailService>();
+            
             // Otros servicios de infraestructura
-            // services.AddScoped<IEmailService, EmailService>();
             // services.AddScoped<IFileStorage, FileStorage>();
             
             return services;

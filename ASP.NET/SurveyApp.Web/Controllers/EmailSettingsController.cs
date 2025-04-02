@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Application.Interfaces;
 using SurveyApp.Domain.Models;
@@ -26,13 +25,8 @@ namespace SurveyApp.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(int? surveyId = null)
         {
-            // Obtener todas las encuestas para el selector
             var surveys = await _surveyService.GetAllSurveysAsync();
-            
-            // Obtener clientes reales de la base de datos
             var customers = await _customerRepository.GetAllCustomersAsync();
-            
-            // Modelo para la vista
             var model = new EmailSettingsViewModel
             {
                 Surveys = surveys.Select(s => new SurveyListItemViewModel
@@ -72,7 +66,6 @@ namespace SurveyApp.Web.Controllers
                 return BadRequest(ModelState);
             }
 
-            // Guardar en TempData para simular el localStorage del cliente
             TempData["GlobalEmailConfig"] = JsonSerializer.Serialize(config);
             TempData.Keep("GlobalEmailConfig");
 
@@ -100,10 +93,33 @@ namespace SurveyApp.Web.Controllers
             return Json(new { success, message = success ? "Configuración guardada exitosamente" : "Error al guardar la configuración" });
         }
 
+        [HttpPost]
+        public async Task<IActionResult> SendSurveyEmails(int surveyId, [FromBody] List<string> emailAddresses)
+        {
+            if (surveyId <= 0 || emailAddresses == null || !emailAddresses.Any())
+            {
+                return BadRequest(new { success = false, message = "Parámetros inválidos" });
+            }
+
+            try
+            {
+                var success = await _surveyService.SendSurveyEmailsAsync(surveyId, emailAddresses);
+                return Json(new { 
+                    success, 
+                    message = success ? 
+                        $"Correos enviados exitosamente a {emailAddresses.Count} destinatarios" : 
+                        "Error al enviar los correos"
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error: {ex.Message}" });
+            }
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetCustomers(string search = "")
         {
-            // Obtener clientes reales de la base de datos
             var allCustomers = await _customerRepository.GetAllCustomersAsync();
             var customers = allCustomers.Select(c => new CustomerViewModel
             {
@@ -131,10 +147,8 @@ namespace SurveyApp.Web.Controllers
             return Json(emails);
         }
 
-        // Helpers
         private DeliveryConfigViewModel GetGlobalDeliveryConfig()
         {
-            // Intentar cargar desde TempData (simulando localStorage)
             if (TempData.TryGetValue("GlobalEmailConfig", out var serializedConfig))
             {
                 try
@@ -145,11 +159,9 @@ namespace SurveyApp.Web.Controllers
                 }
                 catch
                 {
-                    // En caso de error, retornar configuración por defecto
                 }
             }
 
-            // Configuración por defecto
             return new DeliveryConfigViewModel
             {
                 Type = "manual",

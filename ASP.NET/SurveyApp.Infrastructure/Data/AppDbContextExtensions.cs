@@ -1,45 +1,76 @@
-
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using SurveyApp.Infrastructure.Data.Entities;
+using Microsoft.Extensions.Logging;
+using System;
+using System.IO;
+using System.Reflection;
 
 namespace SurveyApp.Infrastructure.Data
 {
     public static class AppDbContextExtensions
     {
-        public static void ConfigureCustomerEntities(this ModelBuilder modelBuilder)
+        public static void EnsureCreated(this AppDbContext context, ILogger logger)
         {
-            // Configuración de Customer
-            modelBuilder.Entity<Customer>(entity =>
+            try
             {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.BrandName).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.ContactName).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.ContactEmail).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
-                entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
-            });
-
-            // Configuración de Service
-            modelBuilder.Entity<Service>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
-            });
-
-            // Configuración de CustomerService (tabla de unión)
-            modelBuilder.Entity<CustomerService>(entity =>
-            {
-                entity.HasKey(e => new { e.CustomerId, e.ServiceId });
+                // Verificar si la base de datos existe
+                if (context.Database.EnsureCreated())
+                {
+                    logger.LogInformation("Database created successfully");
+                }
+                else
+                {
+                    logger.LogInformation("Database already exists");
+                }
                 
-                entity.HasOne(e => e.Customer)
-                      .WithMany(c => c.CustomerServices)
-                      .HasForeignKey(e => e.CustomerId);
-                      
-                entity.HasOne(e => e.Service)
-                      .WithMany(s => s.CustomerServices)
-                      .HasForeignKey(e => e.ServiceId);
-            });
+                // Ejecutar scripts SQL personalizados
+                ExecuteSqlScripts(context, logger);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An error occurred while creating/updating the database");
+                throw;
+            }
+        }
+        
+        private static void ExecuteSqlScripts(AppDbContext context, ILogger logger)
+        {
+            try
+            {
+                // Obtener la ruta de los scripts SQL
+                var assemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                var scriptsDirectory = Path.Combine(assemblyPath, "Data", "Migrations");
+                
+                // Si el directorio existe, ejecutar los scripts
+                if (Directory.Exists(scriptsDirectory))
+                {
+                    foreach (var scriptFile in Directory.GetFiles(scriptsDirectory, "*.sql"))
+                    {
+                        try
+                        {
+                            logger.LogInformation($"Executing SQL script: {Path.GetFileName(scriptFile)}");
+                            
+                            var sql = File.ReadAllText(scriptFile);
+                            context.Database.ExecuteSqlRaw(sql);
+                            
+                            logger.LogInformation($"SQL script executed successfully: {Path.GetFileName(scriptFile)}");
+                        }
+                        catch (Exception scriptEx)
+                        {
+                            // Loggear el error pero continuar con los siguientes scripts
+                            logger.LogError(scriptEx, $"Error executing SQL script {Path.GetFileName(scriptFile)}: {scriptEx.Message}");
+                        }
+                    }
+                }
+                else
+                {
+                    logger.LogWarning($"Migrations directory not found: {scriptsDirectory}");
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error loading or executing SQL scripts");
+            }
         }
     }
 }

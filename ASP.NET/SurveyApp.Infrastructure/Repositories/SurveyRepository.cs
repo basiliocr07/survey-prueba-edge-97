@@ -1,11 +1,17 @@
-
+using Dapper;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using SurveyApp.Domain.Models;
 using SurveyApp.Domain.Repositories;
+using SurveyApp.Domain.Services;
 using SurveyApp.Infrastructure.Data;
+using SurveyApp.Infrastructure.Data.Entities;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace SurveyApp.Infrastructure.Repositories
@@ -13,10 +19,14 @@ namespace SurveyApp.Infrastructure.Repositories
     public class SurveyRepository : ISurveyRepository
     {
         private readonly AppDbContext _context;
+        private readonly IConfiguration _configuration;
+        private readonly IEmailService _emailService;
 
-        public SurveyRepository(AppDbContext context)
+        public SurveyRepository(AppDbContext context, IConfiguration configuration, IEmailService emailService)
         {
             _context = context;
+            _configuration = configuration;
+            _emailService = emailService;
         }
 
         public async Task<IEnumerable<Survey>> GetAllAsync()
@@ -56,7 +66,6 @@ namespace SurveyApp.Infrastructure.Repositories
 
         public async Task<bool> UpdateAsync(Survey survey)
         {
-            // Para asegurar que Entity Framework rastree los cambios en las colecciones relacionadas
             var existingSurvey = await _context.Surveys
                 .Include(s => s.Questions)
                 .ThenInclude(q => q.Settings)
@@ -69,13 +78,10 @@ namespace SurveyApp.Infrastructure.Repositories
             if (existingSurvey == null)
                 return false;
 
-            // Actualizar propiedades principales
             _context.Entry(existingSurvey).CurrentValues.SetValues(survey);
 
-            // Actualizar Questions
             UpdateQuestions(existingSurvey, survey);
 
-            // Actualizar DeliveryConfig
             UpdateDeliveryConfig(existingSurvey, survey);
 
             return await _context.SaveChangesAsync() > 0;
@@ -83,7 +89,6 @@ namespace SurveyApp.Infrastructure.Repositories
 
         private void UpdateQuestions(Survey existingSurvey, Survey updatedSurvey)
         {
-            // Eliminar preguntas que ya no existen
             existingSurvey.Questions.RemoveAll(q => !updatedSurvey.Questions.Any(uq => uq.Id == q.Id));
 
             foreach (var updatedQuestion in updatedSurvey.Questions)
@@ -92,15 +97,12 @@ namespace SurveyApp.Infrastructure.Repositories
                 
                 if (existingQuestion == null)
                 {
-                    // Nueva pregunta
                     existingSurvey.Questions.Add(updatedQuestion);
                 }
                 else
                 {
-                    // Actualizar pregunta existente
                     _context.Entry(existingQuestion).CurrentValues.SetValues(updatedQuestion);
                     
-                    // Actualizar Settings si existe
                     if (updatedQuestion.Settings != null)
                     {
                         if (existingQuestion.Settings == null)
@@ -117,7 +119,6 @@ namespace SurveyApp.Infrastructure.Repositories
                         existingQuestion.Settings = null;
                     }
 
-                    // Actualizar Options
                     existingQuestion.Options = updatedQuestion.Options;
                 }
             }
@@ -137,10 +138,8 @@ namespace SurveyApp.Infrastructure.Repositories
                 return;
             }
 
-            // Actualizar propiedades principales de DeliveryConfig
             _context.Entry(existingSurvey.DeliveryConfig).CurrentValues.SetValues(updatedSurvey.DeliveryConfig);
 
-            // Actualizar Schedule
             if (updatedSurvey.DeliveryConfig.Schedule != null)
             {
                 if (existingSurvey.DeliveryConfig.Schedule == null)
@@ -157,7 +156,6 @@ namespace SurveyApp.Infrastructure.Repositories
                 existingSurvey.DeliveryConfig.Schedule = null;
             }
 
-            // Actualizar Trigger
             if (updatedSurvey.DeliveryConfig.Trigger != null)
             {
                 if (existingSurvey.DeliveryConfig.Trigger == null)
@@ -174,7 +172,6 @@ namespace SurveyApp.Infrastructure.Repositories
                 existingSurvey.DeliveryConfig.Trigger = null;
             }
 
-            // Actualizar EmailAddresses
             existingSurvey.DeliveryConfig.EmailAddresses = updatedSurvey.DeliveryConfig.EmailAddresses;
         }
 
@@ -212,13 +209,12 @@ namespace SurveyApp.Infrastructure.Repositories
             {
                 SurveyId = surveyId,
                 TotalResponses = responses.Count,
-                CompletionRate = responses.Count > 0 ? 100 : 0, // Simplificado para este ejemplo
+                CompletionRate = responses.Count > 0 ? 100 : 0,
                 AverageCompletionTime = responses.Count > 0 ? responses.Average(r => r.CompletionTime ?? 0) : 0,
                 StartDate = survey.CreatedAt,
                 EndDate = null
             };
 
-            // Obtener estadísticas por pregunta
             var fullSurvey = await GetByIdAsync(surveyId);
             if (fullSurvey?.Questions != null)
             {
@@ -266,10 +262,92 @@ namespace SurveyApp.Infrastructure.Repositories
 
         public async Task<bool> SendEmailsAsync(int surveyId, List<string> emailAddresses)
         {
-            // En una implementación real, esto enviaría correos electrónicos a través de un servicio
-            // Para este ejemplo, solo verificamos que la encuesta exista
-            var survey = await _context.Surveys.FindAsync(surveyId);
-            return survey != null && emailAddresses.Count > 0;
+            try
+            {
+                var survey = await GetByIdAsync(surveyId);
+                if (survey == null)
+                {
+                    return false;
+                }
+
+                var frontendUrl = _configuration["FrontendUrl"] ?? "http://localhost:5173";
+                var surveyUrl = $"{frontendUrl}/take-survey/{surveyId}";
+
+                string htmlContent = $@"
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+    .header {{ background-color: #4a56e2; color: white; padding: 15px; border-radius: 5px; margin-bottom: 20px; }}
+    .button {{ display: inline-block; background-color: #4a56e2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }}
+    .footer {{ margin-top: 30px; font-size: 12px; color: #666; }}
+  </style>
+</head>
+<body>
+  <div class=""container"">
+    <div class=""header"">
+      <h2>Te han invitado a responder una encuesta</h2>
+    </div>
+    
+    <p>Hola,</p>
+    <p>Has sido invitado a participar en la encuesta: <strong>{survey.Title}</strong></p>
+    
+    {(string.IsNullOrEmpty(survey.Description) ? "" : $"<p>{survey.Description}</p>")}
+    
+    <p>Tu opinión es muy importante para nosotros. Por favor haz clic en el botón de abajo para comenzar la encuesta:</p>
+    
+    <p><a href=""{surveyUrl}"" class=""button"">Responder Encuesta</a></p>
+    
+    <p>O copia y pega este enlace en tu navegador: {surveyUrl}</p>
+    
+    <div class=""footer"">
+      <p>Si recibiste este correo por error, por favor ignóralo.</p>
+    </div>
+  </div>
+</body>
+</html>";
+
+                var success = await _emailService.SendBulkEmailAsync(
+                    emailAddresses, 
+                    $"Encuesta: {survey.Title}", 
+                    htmlContent
+                );
+
+                var emailLog = new
+                {
+                    SurveyId = surveyId,
+                    Recipients = JsonSerializer.Serialize(emailAddresses),
+                    Status = success ? "sent" : "failed",
+                    ErrorMessage = success ? null : "Fallo en el envío de correos",
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                var sql = @"
+                INSERT INTO SurveyEmailLogs (SurveyId, Recipients, Status, ErrorMessage, CreatedAt)
+                VALUES (@SurveyId, @Recipients, @Status, @ErrorMessage, @CreatedAt)";
+
+                using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+                await connection.ExecuteAsync(sql, emailLog);
+
+                return success;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error sending survey emails: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateDeliveryConfigAsync(int surveyId, DeliveryConfiguration config)
+        {
+            var survey = await GetByIdAsync(surveyId);
+            if (survey == null)
+                return false;
+                
+            survey.DeliveryConfig = config;
+            return await UpdateAsync(survey);
         }
     }
 }
