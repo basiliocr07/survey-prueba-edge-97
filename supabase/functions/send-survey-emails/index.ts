@@ -74,7 +74,7 @@ serve(async (req) => {
       );
     }
 
-    // Usar la configuración proporcionada por el usuario
+    // Configuración SMTP para Gmail
     const smtpServer = "smtp.gmail.com";
     const smtpPort = 587;
     const smtpUsername = "crisant231@gmail.com";
@@ -82,7 +82,6 @@ serve(async (req) => {
     const senderEmail = "crisant231@gmail.com";
     const senderName = "Sistema de Encuestas";
     const frontendUrl = Deno.env.get("FRONTEND_URL") || "http://localhost:5173";
-    const useSsl = true;
 
     console.log("SMTP Configuration:", { 
       smtpServer, 
@@ -91,30 +90,30 @@ serve(async (req) => {
       smtpPassword: smtpPassword ? "Set" : "Not set",
       senderEmail,
       senderName,
-      useSsl,
       frontendUrl
     });
 
     try {
-      // Create an SMTP client with more robust configuration
+      // Intentar nuevo método de conexión
       const client = new SmtpClient();
       
       console.log("Connecting to SMTP server...");
       
-      // Establecer conexión con configuración específica
-      const connectionOptions = {
+      // En lugar de usar connectTLS directamente, usar connect primero
+      await client.connect({
         hostname: smtpServer,
-        port: smtpPort,
+        port: smtpPort
+      });
+      
+      console.log("Connected to SMTP server, attempting login...");
+      
+      // Iniciar sesión en el servidor SMTP
+      await client.login({
         username: smtpUsername,
-        password: smtpPassword,
-        tls: useSsl,
-        debug: true,
-      };
+        password: smtpPassword
+      });
       
-      console.log("Connection options:", { ...connectionOptions, password: "REDACTED" });
-      
-      await client.connectTLS(connectionOptions);
-      console.log("Connected to SMTP server successfully");
+      console.log("Logged in to SMTP server successfully");
 
       // Generate survey URL
       const surveyUrl = `${frontendUrl}/take-survey/${surveyId}`;
@@ -232,7 +231,7 @@ serve(async (req) => {
         JSON.stringify({ 
           success: false, 
           error: `SMTP Error: ${smtpError.message}`,
-          details: "Verifica que la contraseña de aplicación de Gmail es correcta y que tienes habilitado el acceso a aplicaciones menos seguras"
+          details: "Es posible que Gmail esté bloqueando el acceso. Verifica que tienes configurado el 'Acceso a aplicaciones menos seguras' o prueba usando una contraseña de aplicación específica para esta app."
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
