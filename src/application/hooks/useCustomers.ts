@@ -14,13 +14,13 @@ const getCustomerEmails = new GetCustomerEmails(customerRepository);
 
 export type TimeRange = '1' | '3' | '12' | 'all';
 
-export function useCustomers() {
+export function useCustomers(customerTypeFilter?: string) {
   const { 
     data: customers = [], 
     isLoading: isLoadingCustomers, 
     error: customersError 
   } = useQuery({
-    queryKey: ['customers'],
+    queryKey: ['customers', customerTypeFilter],
     queryFn: () => getAllCustomers.execute(),
   });
 
@@ -38,8 +38,10 @@ export function useCustomers() {
     isLoading: isLoadingEmails,
     error: emailsError
   } = useQuery({
-    queryKey: ['customer-emails'],
-    queryFn: () => getCustomerEmails.execute(),
+    queryKey: ['customer-emails', customerTypeFilter],
+    queryFn: () => getCustomerEmails.execute(
+      customerTypeFilter ? { customerType: customerTypeFilter } : undefined
+    ),
   });
 
   const calculateServiceUsage = (): ServiceUsageData[] => {

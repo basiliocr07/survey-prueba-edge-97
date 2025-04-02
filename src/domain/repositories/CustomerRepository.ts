@@ -6,5 +6,5 @@ export interface CustomerRepository {
   getAllCustomers(): Promise<Customer[]>;
   getAllServices(): Promise<Service[]>;
   addCustomerService(customerId: string, serviceId: string): Promise<void>;
-  getCustomerEmails(): Promise<string[]>;
+  getCustomerEmails(filter?: { customerType?: string }): Promise<string[]>;
 }
