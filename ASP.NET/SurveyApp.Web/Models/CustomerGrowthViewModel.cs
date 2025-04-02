@@ -18,6 +18,7 @@ namespace SurveyApp.Web.Models
 
     public class CustomerFormViewModel
     {
+        public string Id { get; set; } = string.Empty;
         public string BrandName { get; set; } = string.Empty;
         public string ContactName { get; set; } = string.Empty;
         public string ContactEmail { get; set; } = string.Empty;

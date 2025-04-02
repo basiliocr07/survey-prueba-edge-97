@@ -2,6 +2,13 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Application.Customers.Commands.AddCustomer;
+using SurveyApp.Application.Customers.Commands.DeleteCustomer;
+using SurveyApp.Application.Customers.Commands.UpdateCustomer;
+using SurveyApp.Application.Customers.Queries.GetAllCustomers;
+using SurveyApp.Application.Customers.Queries.GetAllServices;
+using SurveyApp.Application.Customers.Queries.GetCustomerById;
+using SurveyApp.Application.Customers.Queries.GetCustomersByType;
+using SurveyApp.Application.Customers.Queries.GetCustomerEmails;
 using SurveyApp.Application.Customers.Queries.GetCustomerGrowthData;
 using SurveyApp.Web.Models;
 using System;
@@ -88,6 +95,72 @@ namespace SurveyApp.Web.Controllers
             catch (Exception ex)
             {
                 TempData["ErrorMessage"] = $"Error al añadir cliente: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(Growth));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Delete(int id)
+        {
+            try
+            {
+                var command = new DeleteCustomerCommand { Id = id };
+                var result = await _mediator.Send(command);
+
+                if (result)
+                {
+                    TempData["SuccessMessage"] = "Cliente eliminado exitosamente.";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "No se pudo eliminar el cliente.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error al eliminar cliente: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(Growth));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Update(CustomerFormViewModel form)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["ErrorMessage"] = "Por favor complete todos los campos requeridos.";
+                return RedirectToAction(nameof(Growth));
+            }
+
+            try
+            {
+                var command = new UpdateCustomerCommand
+                {
+                    Id = int.Parse(form.Id),
+                    BrandName = form.BrandName,
+                    ContactName = form.ContactName,
+                    ContactEmail = form.ContactEmail,
+                    ContactPhone = form.ContactPhone,
+                    CustomerType = form.CustomerType,
+                    AcquiredServices = form.SelectedServices ?? new List<string>()
+                };
+
+                var result = await _mediator.Send(command);
+
+                if (result.Success)
+                {
+                    TempData["SuccessMessage"] = "Cliente actualizado exitosamente.";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = result.Message;
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error al actualizar cliente: {ex.Message}";
             }
 
             return RedirectToAction(nameof(Growth));

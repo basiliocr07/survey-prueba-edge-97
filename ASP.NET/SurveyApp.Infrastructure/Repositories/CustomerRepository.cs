@@ -25,38 +25,7 @@ namespace SurveyApp.Infrastructure.Repositories
         {
             using (IDbConnection db = new SqlConnection(_connectionString))
             {
-                const string sql = @"
-                    SELECT c.Id, c.BrandName, c.ContactName, c.ContactEmail, c.ContactPhone, 
-                           c.CreatedAt, c.UpdatedAt, c.CustomerType,
-                           s.Name as ServiceName
-                    FROM Customers c
-                    LEFT JOIN CustomerServices cs ON c.Id = cs.CustomerId
-                    LEFT JOIN Services s ON cs.ServiceId = s.Id
-                    ORDER BY c.CreatedAt DESC";
-
-                var customerDict = new Dictionary<int, Customer>();
-
-                await db.QueryAsync<Customer, string, Customer>(
-                    sql,
-                    (customer, serviceName) => {
-                        if (!customerDict.TryGetValue(customer.Id, out var customerEntry))
-                        {
-                            customerEntry = customer;
-                            customerEntry.AcquiredServices = new List<string>();
-                            customerDict.Add(customer.Id, customerEntry);
-                        }
-
-                        if (!string.IsNullOrEmpty(serviceName) && 
-                            !customerEntry.AcquiredServices.Contains(serviceName))
-                        {
-                            customerEntry.AcquiredServices.Add(serviceName);
-                        }
-
-                        return customerEntry;
-                    },
-                    splitOn: "ServiceName");
-
-                return customerDict.Values;
+                return await QueryCustomersWithServices(db, "");
             }
         }
 
@@ -64,40 +33,16 @@ namespace SurveyApp.Infrastructure.Repositories
         {
             using (IDbConnection db = new SqlConnection(_connectionString))
             {
-                const string sql = @"
-                    SELECT c.Id, c.BrandName, c.ContactName, c.ContactEmail, c.ContactPhone, 
-                           c.CreatedAt, c.UpdatedAt, c.CustomerType,
-                           s.Name as ServiceName
-                    FROM Customers c
-                    LEFT JOIN CustomerServices cs ON c.Id = cs.CustomerId
-                    LEFT JOIN Services s ON cs.ServiceId = s.Id
-                    WHERE c.CustomerType = @CustomerType
-                    ORDER BY c.CreatedAt DESC";
+                return await QueryCustomersWithServices(db, "WHERE c.CustomerType = @CustomerType", new { CustomerType = customerType });
+            }
+        }
 
-                var customerDict = new Dictionary<int, Customer>();
-
-                await db.QueryAsync<Customer, string, Customer>(
-                    sql,
-                    (customer, serviceName) => {
-                        if (!customerDict.TryGetValue(customer.Id, out var customerEntry))
-                        {
-                            customerEntry = customer;
-                            customerEntry.AcquiredServices = new List<string>();
-                            customerDict.Add(customer.Id, customerEntry);
-                        }
-
-                        if (!string.IsNullOrEmpty(serviceName) && 
-                            !customerEntry.AcquiredServices.Contains(serviceName))
-                        {
-                            customerEntry.AcquiredServices.Add(serviceName);
-                        }
-
-                        return customerEntry;
-                    },
-                    new { CustomerType = customerType },
-                    splitOn: "ServiceName");
-
-                return customerDict.Values;
+        public async Task<Customer> GetCustomerByIdAsync(int id)
+        {
+            using (IDbConnection db = new SqlConnection(_connectionString))
+            {
+                var customers = await QueryCustomersWithServices(db, "WHERE c.Id = @Id", new { Id = id });
+                return customers.FirstOrDefault();
             }
         }
 
@@ -122,46 +67,6 @@ namespace SurveyApp.Infrastructure.Repositories
                 customer.UpdatedAt = DateTime.UtcNow;
 
                 return await db.QuerySingleAsync<int>(sql, customer);
-            }
-        }
-
-        public async Task<Customer> GetCustomerByIdAsync(int id)
-        {
-            using (IDbConnection db = new SqlConnection(_connectionString))
-            {
-                const string sql = @"
-                    SELECT c.Id, c.BrandName, c.ContactName, c.ContactEmail, c.ContactPhone, 
-                           c.CreatedAt, c.UpdatedAt, c.CustomerType,
-                           s.Name as ServiceName
-                    FROM Customers c
-                    LEFT JOIN CustomerServices cs ON c.Id = cs.CustomerId
-                    LEFT JOIN Services s ON cs.ServiceId = s.Id
-                    WHERE c.Id = @Id";
-
-                var customerDict = new Dictionary<int, Customer>();
-
-                await db.QueryAsync<Customer, string, Customer>(
-                    sql,
-                    (customer, serviceName) => {
-                        if (!customerDict.TryGetValue(customer.Id, out var customerEntry))
-                        {
-                            customerEntry = customer;
-                            customerEntry.AcquiredServices = new List<string>();
-                            customerDict.Add(customer.Id, customerEntry);
-                        }
-
-                        if (!string.IsNullOrEmpty(serviceName) && 
-                            !customerEntry.AcquiredServices.Contains(serviceName))
-                        {
-                            customerEntry.AcquiredServices.Add(serviceName);
-                        }
-
-                        return customerEntry;
-                    },
-                    new { Id = id },
-                    splitOn: "ServiceName");
-
-                return customerDict.Values.FirstOrDefault();
             }
         }
 
@@ -219,12 +124,57 @@ namespace SurveyApp.Infrastructure.Repositories
             }
         }
 
-        public async Task<IEnumerable<string>> GetCustomerEmailsAsync()
+        public async Task<IEnumerable<string>> GetCustomerEmailsAsync(string customerType = null)
         {
             using (IDbConnection db = new SqlConnection(_connectionString))
             {
-                return await db.QueryAsync<string>("SELECT ContactEmail FROM Customers");
+                string sql = "SELECT ContactEmail FROM Customers";
+                if (!string.IsNullOrEmpty(customerType))
+                {
+                    sql += " WHERE CustomerType = @CustomerType";
+                    return await db.QueryAsync<string>(sql, new { CustomerType = customerType });
+                }
+                return await db.QueryAsync<string>(sql);
             }
+        }
+
+        // Método helper para consultar clientes con sus servicios
+        private async Task<IEnumerable<Customer>> QueryCustomersWithServices(IDbConnection db, string whereClause, object param = null)
+        {
+            string sql = $@"
+                SELECT c.Id, c.BrandName, c.ContactName, c.ContactEmail, c.ContactPhone, 
+                       c.CreatedAt, c.UpdatedAt, c.CustomerType,
+                       s.Name as ServiceName
+                FROM Customers c
+                LEFT JOIN CustomerServices cs ON c.Id = cs.CustomerId
+                LEFT JOIN Services s ON cs.ServiceId = s.Id
+                {whereClause}
+                ORDER BY c.CreatedAt DESC";
+
+            var customerDict = new Dictionary<int, Customer>();
+
+            await db.QueryAsync<Customer, string, Customer>(
+                sql,
+                (customer, serviceName) => {
+                    if (!customerDict.TryGetValue(customer.Id, out var customerEntry))
+                    {
+                        customerEntry = customer;
+                        customerEntry.AcquiredServices = new List<string>();
+                        customerDict.Add(customer.Id, customerEntry);
+                    }
+
+                    if (!string.IsNullOrEmpty(serviceName) && 
+                        !customerEntry.AcquiredServices.Contains(serviceName))
+                    {
+                        customerEntry.AcquiredServices.Add(serviceName);
+                    }
+
+                    return customerEntry;
+                },
+                param,
+                splitOn: "ServiceName");
+
+            return customerDict.Values;
         }
     }
 }
