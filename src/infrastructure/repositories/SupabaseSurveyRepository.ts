@@ -1,4 +1,3 @@
-
 import { SurveyRepository } from "@/domain/repositories/SurveyRepository";
 import { Survey, SurveyQuestion, SurveyStatistics, DeliveryConfig } from "@/domain/models/Survey";
 import { supabase } from "@/integrations/supabase/client";
@@ -135,7 +134,7 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       const survey = await this.getSurveyById(surveyId);
       if (!survey) {
         console.error('Survey not found');
-        return false;
+        throw new Error('Encuesta no encontrada');
       }
       
       // Llamar a la función de Supabase para enviar los correos
@@ -149,14 +148,25 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       
       if (error) {
         console.error('Error calling Supabase function to send emails:', error);
-        return false;
+        // Extraer mensaje de error más específico si está disponible
+        if (typeof error === 'object' && error.message) {
+          throw new Error(`Error al enviar correos: ${error.message}`);
+        }
+        throw new Error('Error al enviar los correos electrónicos');
+      }
+      
+      // Verificar si la función tuvo éxito pero reportó un error en la respuesta
+      if (data && data.success === false && data.error) {
+        console.error('Email sending failed with error:', data.error);
+        throw new Error(`Error al enviar correos: ${data.error}`);
       }
       
       console.log('Email sending result:', data);
       return data?.success === true;
     } catch (error) {
       console.error('Error sending survey emails:', error);
-      return false;
+      // Propagar el error para que pueda ser manejado por el hook o componente
+      throw error;
     }
   }
 
@@ -166,7 +176,7 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       const survey = await this.getSurveyById(surveyId);
       if (!survey) {
         console.error('Survey not found for scheduling');
-        return false;
+        throw new Error('Encuesta no encontrada');
       }
       
       // Actualizamos la encuesta con la nueva configuración
@@ -177,7 +187,7 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       
       if (!updated) {
         console.error('Failed to update survey with delivery config');
-        return false;
+        throw new Error('No se pudo actualizar la configuración de la encuesta');
       }
       
       // Llamamos a la función de Supabase para programar los envíos
@@ -190,14 +200,24 @@ export class SupabaseSurveyRepository implements SurveyRepository {
       
       if (error) {
         console.error('Error calling Supabase function to schedule emails:', error);
-        return false;
+        if (typeof error === 'object' && error.message) {
+          throw new Error(`Error al programar correos: ${error.message}`);
+        }
+        throw new Error('Error al programar los correos electrónicos');
+      }
+      
+      // Verificar si la función tuvo éxito pero reportó un error en la respuesta
+      if (data && data.success === false && data.error) {
+        console.error('Email scheduling failed with error:', data.error);
+        throw new Error(`Error al programar correos: ${data.error}`);
       }
       
       console.log('Email scheduling result:', data);
       return data?.success === true;
     } catch (error) {
       console.error('Error scheduling survey emails:', error);
-      return false;
+      // Propagar el error para que pueda ser manejado por el hook o componente
+      throw error;
     }
   }
 

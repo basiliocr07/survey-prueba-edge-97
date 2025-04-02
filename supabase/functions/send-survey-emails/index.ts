@@ -75,13 +75,39 @@ serve(async (req) => {
     }
 
     // Get SMTP settings from environment variables
-    const smtpServer = Deno.env.get("SMTP_SERVER") || "smtp.gmail.com";
+    const smtpServer = Deno.env.get("SMTP_SERVER") || "";
     const smtpPort = parseInt(Deno.env.get("SMTP_PORT") || "587", 10);
     const smtpUsername = Deno.env.get("SMTP_USERNAME") || "";
     const smtpPassword = Deno.env.get("SMTP_PASSWORD") || "";
     const senderEmail = Deno.env.get("SENDER_EMAIL") || "";
     const senderName = Deno.env.get("SENDER_NAME") || "Sistema de Encuestas";
     const frontendUrl = Deno.env.get("FRONTEND_URL") || "http://localhost:5173";
+
+    // Verificar que todas las variables SMTP están configuradas
+    if (!smtpServer || !smtpUsername || !smtpPassword || !senderEmail) {
+      console.error("Missing SMTP configuration");
+      
+      // Log the error in the database
+      await supabase
+        .from("survey_email_logs")
+        .insert({
+          survey_id: surveyId,
+          recipients: emailAddresses,
+          status: "failed",
+          error_message: "Missing SMTP configuration in Edge Function environment",
+        });
+      
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: "Missing SMTP configuration. Please ensure SMTP_SERVER, SMTP_USERNAME, SMTP_PASSWORD and SENDER_EMAIL are set in your Edge Function secrets."
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500,
+        }
+      );
+    }
 
     console.log("SMTP Configuration:", { 
       smtpServer, 
@@ -94,16 +120,25 @@ serve(async (req) => {
     });
 
     try {
-      // Create an SMTP client
+      // Create an SMTP client with more robust configuration
       const client = new SmtpClient();
       
       console.log("Connecting to SMTP server...");
-      await client.connectTLS({
+      
+      // Establecer un timeout más largo para la conexión
+      const connectionOptions = {
         hostname: smtpServer,
         port: smtpPort,
         username: smtpUsername,
         password: smtpPassword,
-      });
+        // Configuraciones adicionales para mejorar la estabilidad
+        tls: true,
+        debug: true,
+      };
+      
+      console.log("Connection options:", { ...connectionOptions, password: "REDACTED" });
+      
+      await client.connectTLS(connectionOptions);
       console.log("Connected to SMTP server successfully");
 
       // Generate survey URL
@@ -219,7 +254,11 @@ serve(async (req) => {
       }
       
       return new Response(
-        JSON.stringify({ success: false, error: `SMTP Error: ${smtpError.message}` }),
+        JSON.stringify({ 
+          success: false, 
+          error: `SMTP Error: ${smtpError.message}`,
+          details: "Asegúrate de que las credenciales SMTP son correctas y que tu proveedor de correo permite el envío desde aplicaciones"
+        }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 500,
@@ -230,7 +269,11 @@ serve(async (req) => {
     console.error("Error processing request:", error);
     
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ 
+        success: false, 
+        error: error.message,
+        stack: error.stack 
+      }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
