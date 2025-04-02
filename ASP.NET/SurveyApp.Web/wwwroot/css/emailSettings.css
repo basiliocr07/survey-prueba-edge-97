@@ -1,0 +1,82 @@
+
+/* Estilos para EmailSettings */
+
+/* Estilo para los radio buttons */
+.delivery-type-radio:checked + label {
+    border-color: var(--primary-color, #4f46e5);
+    box-shadow: 0 0 0 2px var(--primary-color, #4f46e5);
+}
+
+input[name="frequency"]:checked + label,
+input[name="day-of-week"]:checked + label {
+    border-color: var(--primary-color, #4f46e5);
+    background-color: rgba(79, 70, 229, 0.1);
+    color: var(--primary-color, #4f46e5);
+}
+
+/* Toggle switch */
+input[type="checkbox"] {
+    transition: all 0.3s;
+}
+
+input[type="checkbox"]:checked {
+    background-color: var(--primary-color, #4f46e5);
+    transform: translateX(100%);
+}
+
+input[type="checkbox"] + label {
+    transition: background-color 0.3s;
+}
+
+input[type="checkbox"]:checked + label {
+    background-color: var(--primary-color, #4f46e5);
+}
+
+/* Email list animation */
+#email-list {
+    transition: all 0.3s ease;
+}
+
+/* Customer result hover */
+.customer-result:hover {
+    background-color: rgba(79, 70, 229, 0.05);
+}
+
+/* Animación para alertas */
+.transition-opacity {
+    transition: opacity 0.5s ease;
+}
+
+/* Primary colors */
+:root {
+    --primary-color: #4f46e5;
+    --primary-color-dark: #4338ca;
+    --primary-color-light: #e0e7ff;
+}
+
+.bg-primary-50 { background-color: #f5f3ff; }
+.bg-primary-100 { background-color: #ede9fe; }
+.bg-primary-200 { background-color: #ddd6fe; }
+.bg-primary-300 { background-color: #c4b5fd; }
+.bg-primary-400 { background-color: #a78bfa; }
+.bg-primary-500 { background-color: #8b5cf6; }
+.bg-primary-600 { background-color: #7c3aed; }
+.bg-primary-700 { background-color: #6d28d9; }
+.bg-primary-800 { background-color: #5b21b6; }
+.bg-primary-900 { background-color: #4c1d95; }
+
+.text-primary-500 { color: #8b5cf6; }
+.text-primary-600 { color: #7c3aed; }
+.text-primary-700 { color: #6d28d9; }
+
+.border-primary-500 { border-color: #8b5cf6; }
+
+.ring-primary-500 { box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.5); }
+
+.hover\:bg-primary-50:hover { background-color: #f5f3ff; }
+.hover\:bg-primary-100:hover { background-color: #ede9fe; }
+.hover\:bg-primary-600:hover { background-color: #7c3aed; }
+.hover\:bg-primary-700:hover { background-color: #6d28d9; }
+
+.focus\:ring-primary-500:focus { box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.5); }
+.focus\:border-primary-500:focus { border-color: #8b5cf6; }

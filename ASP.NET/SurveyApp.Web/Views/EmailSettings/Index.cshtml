@@ -1,0 +1,493 @@
+@model EmailSettingsViewModel
+@{
+    ViewData["Title"] = "Configuración de Email";
+}
+
+<link rel="stylesheet" href="~/css/emailSettings.css" />
+
+<div class="min-h-screen flex flex-col bg-background">
+    <main class="flex-1 w-full max-w-7xl mx-auto pt-24 px-6 pb-16">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold">Configuración de Email</h1>
+                <p class="text-muted-foreground">
+                    Administra la configuración de entrega de emails para tus encuestas
+                </p>
+            </div>
+            
+            <div class="flex space-x-3">
+                <a href="@Url.Action("Index", "Surveys")" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                    <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m15 18-6-6 6-6"/>
+                    </svg>
+                    Volver
+                </a>
+                <button id="save-settings-btn" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                    <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                        <polyline points="17 21 17 13 7 13 7 21"/>
+                        <polyline points="7 3 7 8 15 8"/>
+                    </svg>
+                    Guardar configuración
+                </button>
+            </div>
+        </div>
+        
+        <div id="alert-container" class="mb-4"></div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-1 bg-white rounded-lg shadow">
+                <div class="px-4 py-5 border-b border-gray-200 sm:px-6">
+                    <h3 class="text-lg font-medium leading-6 text-gray-900 flex items-center">
+                        <svg class="mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"/>
+                            <path d="m21 9-9-6-9 6"/>
+                            <path d="M12 13v5"/>
+                            <path d="m8 13 8 0"/>
+                        </svg>
+                        Encuestas
+                    </h3>
+                </div>
+                <div class="px-4 py-5 sm:p-6 overflow-auto max-h-[500px]">
+                    @if (Model.Surveys != null && Model.Surveys.Any())
+                    {
+                        <table class="min-w-full divide-y divide-gray-200 survey-table">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Título</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr id="global-config-row" class="@(Model.SelectedSurveyId == null ? "bg-gray-50" : "")">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        Configuración global
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button class="select-survey-btn inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                                                data-survey-id="0">
+                                            Seleccionar
+                                        </button>
+                                    </td>
+                                </tr>
+                                @foreach (var survey in Model.Surveys)
+                                {
+                                    <tr class="@(Model.SelectedSurveyId == survey.Id ? "bg-gray-50" : "")">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            <div>
+                                                @survey.Title
+                                                @if (survey.HasCustomDeliveryConfig)
+                                                {
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 ml-2">
+                                                        Personalizada
+                                                    </span>
+                                                }
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            @survey.CreatedAt.ToString("dd MMM yyyy")
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <button class="select-survey-btn inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                                                    data-survey-id="@survey.Id">
+                                                Seleccionar
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <div class="text-center py-8">
+                            <p class="text-sm text-gray-500">No hay encuestas disponibles</p>
+                            <a href="@Url.Action("Create", "SurveyBuilder")" class="mt-4 inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                                Crear una encuesta
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+            
+            <div class="lg:col-span-2 bg-white rounded-lg shadow">
+                <div class="px-4 py-5 border-b border-gray-200 sm:px-6">
+                    <h3 class="text-lg font-medium leading-6 text-gray-900">
+                        <span id="config-title">Configuración global de email</span>
+                    </h3>
+                    <p class="mt-1 text-sm text-gray-500" id="config-subtitle">
+                        Esta configuración se aplicará como predeterminada para todas las nuevas encuestas
+                    </p>
+                </div>
+                <div class="px-4 py-5 sm:p-6">
+                    <form id="email-settings-form">
+                        <input type="hidden" id="selected-survey-id" value="0" />
+                        
+                        <div class="mb-6">
+                            <h4 class="text-base font-medium text-gray-900 mb-3">Método de entrega</h4>
+                            <div class="flex flex-col sm:flex-row gap-3 mb-4">
+                                <div class="flex-1">
+                                    <input type="radio" id="delivery-manual" name="delivery-type" value="manual" class="delivery-type-radio hidden" @(Model.DeliveryConfig.Type == "manual" ? "checked" : "") />
+                                    <label for="delivery-manual" class="block w-full h-full p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 transition-colors">
+                                        <div class="flex items-center">
+                                            <div class="w-5 h-5 border border-gray-400 rounded-full flex items-center justify-center mr-3">
+                                                <div class="w-3 h-3 bg-primary-600 rounded-full hidden delivery-radio-dot"></div>
+                                            </div>
+                                            <div class="flex-1">
+                                                <div class="font-medium">Manual</div>
+                                                <div class="text-sm text-gray-500">Envía esta encuesta manualmente a destinatarios específicos</div>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="flex-1">
+                                    <input type="radio" id="delivery-scheduled" name="delivery-type" value="scheduled" class="delivery-type-radio hidden" @(Model.DeliveryConfig.Type == "scheduled" ? "checked" : "") />
+                                    <label for="delivery-scheduled" class="block w-full h-full p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 transition-colors">
+                                        <div class="flex items-center">
+                                            <div class="w-5 h-5 border border-gray-400 rounded-full flex items-center justify-center mr-3">
+                                                <div class="w-3 h-3 bg-primary-600 rounded-full hidden delivery-radio-dot"></div>
+                                            </div>
+                                            <div class="flex-1">
+                                                <div class="font-medium">Programado</div>
+                                                <div class="text-sm text-gray-500">Programa envíos automáticos a intervalos regulares</div>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="flex-1">
+                                    <input type="radio" id="delivery-triggered" name="delivery-type" value="triggered" class="delivery-type-radio hidden" @(Model.DeliveryConfig.Type == "triggered" ? "checked" : "") />
+                                    <label for="delivery-triggered" class="block w-full h-full p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 transition-colors">
+                                        <div class="flex items-center">
+                                            <div class="w-5 h-5 border border-gray-400 rounded-full flex items-center justify-center mr-3">
+                                                <div class="w-3 h-3 bg-primary-600 rounded-full hidden delivery-radio-dot"></div>
+                                            </div>
+                                            <div class="flex-1">
+                                                <div class="font-medium">Disparado</div>
+                                                <div class="text-sm text-gray-500">Envía la encuesta cuando ocurran eventos específicos</div>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Configuraciones específicas según el tipo de entrega -->
+                            <div id="delivery-settings-container" class="mt-6">
+                                <!-- Delivery Settings Content -->
+                                <div id="scheduled-settings" class="delivery-settings hidden">
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Frecuencia</label>
+                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                            <div>
+                                                <input type="radio" id="freq-daily" name="frequency" value="daily" class="hidden" />
+                                                <label for="freq-daily" class="block w-full p-2 border border-gray-300 rounded-md text-center cursor-pointer hover:bg-gray-50 transition-colors">
+                                                    Diario
+                                                </label>
+                                            </div>
+                                            <div>
+                                                <input type="radio" id="freq-weekly" name="frequency" value="weekly" class="hidden" />
+                                                <label for="freq-weekly" class="block w-full p-2 border border-gray-300 rounded-md text-center cursor-pointer hover:bg-gray-50 transition-colors">
+                                                    Semanal
+                                                </label>
+                                            </div>
+                                            <div>
+                                                <input type="radio" id="freq-monthly" name="frequency" value="monthly" class="hidden" />
+                                                <label for="freq-monthly" class="block w-full p-2 border border-gray-300 rounded-md text-center cursor-pointer hover:bg-gray-50 transition-colors">
+                                                    Mensual
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="day-of-week-container" class="mb-4 hidden">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Día de la semana</label>
+                                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                            @{
+                                                var daysOfWeek = new[] { "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo" };
+                                                for (int i = 0; i < daysOfWeek.Length; i++)
+                                                {
+                                                    <div>
+                                                        <input type="radio" id="dow-@(i+1)" name="day-of-week" value="@(i+1)" class="hidden" />
+                                                        <label for="dow-@(i+1)" class="block w-full p-2 border border-gray-300 rounded-md text-center cursor-pointer hover:bg-gray-50 transition-colors">
+                                                            @daysOfWeek[i]
+                                                        </label>
+                                                    </div>
+                                                }
+                                            }
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="day-of-month-container" class="mb-4 hidden">
+                                        <label for="day-of-month" class="block text-sm font-medium text-gray-700 mb-1">Día del mes</label>
+                                        <input type="number" id="day-of-month" name="day-of-month" min="1" max="31" value="1" class="w-20 shadow-sm focus:ring-primary-500 focus:border-primary-500 block sm:text-sm border-gray-300 rounded-md" />
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label for="schedule-time" class="block text-sm font-medium text-gray-700 mb-1">Hora</label>
+                                        <input type="time" id="schedule-time" name="schedule-time" value="09:00" class="w-32 shadow-sm focus:ring-primary-500 focus:border-primary-500 block sm:text-sm border-gray-300 rounded-md" />
+                                    </div>
+                                </div>
+
+                                <div id="triggered-settings" class="delivery-settings hidden">
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Evento disparador</label>
+                                        <div class="space-y-2">
+                                            <div>
+                                                <input type="radio" id="trigger-ticket-closed" name="trigger-type" value="ticket-closed" class="hidden" />
+                                                <label for="trigger-ticket-closed" class="flex items-center p-2 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 transition-colors">
+                                                    <div class="w-5 h-5 border border-gray-400 rounded-full flex items-center justify-center mr-3">
+                                                        <div class="w-3 h-3 bg-primary-600 rounded-full hidden trigger-radio-dot"></div>
+                                                    </div>
+                                                    <span>Después de cerrar un ticket</span>
+                                                </label>
+                                            </div>
+                                            <div>
+                                                <input type="radio" id="trigger-purchase-completed" name="trigger-type" value="purchase-completed" class="hidden" />
+                                                <label for="trigger-purchase-completed" class="flex items-center p-2 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 transition-colors">
+                                                    <div class="w-5 h-5 border border-gray-400 rounded-full flex items-center justify-center mr-3">
+                                                        <div class="w-3 h-3 bg-primary-600 rounded-full hidden trigger-radio-dot"></div>
+                                                    </div>
+                                                    <span>Después de completar una compra</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label for="delay-hours" class="block text-sm font-medium text-gray-700 mb-1">Retraso (horas)</label>
+                                        <input type="number" id="delay-hours" name="delay-hours" min="0" max="168" value="24" class="w-20 shadow-sm focus:ring-primary-500 focus:border-primary-500 block sm:text-sm border-gray-300 rounded-md" />
+                                    </div>
+                                    
+                                    <div class="flex items-center mb-4">
+                                        <div class="relative inline-block w-10 mr-2 align-middle select-none">
+                                            <input type="checkbox" id="send-automatically" name="send-automatically" class="absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                                            <label for="send-automatically" class="block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                                        </div>
+                                        <span class="text-sm text-gray-700">Enviar automáticamente</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="border-t pt-6">
+                            <h4 class="text-base font-medium text-gray-900 mb-3">Destinatarios de correo electrónico</h4>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                                <div class="md:col-span-2">
+                                    <label for="email-input" class="sr-only">Dirección de correo electrónico</label>
+                                    <div class="flex rounded-md shadow-sm">
+                                        <input type="email" name="email-input" id="email-input" class="flex-1 focus:ring-primary-500 focus:border-primary-500 block w-full min-w-0 rounded-none rounded-l-md sm:text-sm border-gray-300" placeholder="Ingrese dirección de correo electrónico">
+                                        <button type="button" id="add-email-btn" class="-ml-px relative inline-flex items-center space-x-2 px-4 py-2 border border-gray-300 text-sm font-medium rounded-r-md text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500">
+                                            Agregar
+                                        </button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <button type="button" id="search-customers-btn" class="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                                        <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="11" cy="11" r="8"></circle>
+                                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                        </svg>
+                                        Buscar Clientes
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4" id="email-validation-error" style="display: none;">
+                                <p class="text-sm text-red-600">Por favor, ingrese una dirección de correo electrónico válida</p>
+                            </div>
+                            
+                            <div class="flex space-x-2 mb-4">
+                                <button type="button" id="select-all-btn" class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                                    <svg class="mr-1.5 h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                    </svg>
+                                    Seleccionar Todos
+                                </button>
+                                <button type="button" id="deselect-all-btn" class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                                    <svg class="mr-1.5 h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                                    </svg>
+                                    Deseleccionar Todos
+                                </button>
+                            </div>
+                            
+                            <div id="email-list-container" class="border rounded-md p-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h5 class="text-sm font-medium text-gray-900" id="email-count">0 Destinatarios</h5>
+                                    <button type="button" id="toggle-email-list" class="text-gray-400 hover:text-gray-500">
+                                        <svg id="chevron-down" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="6 9 12 15 18 9"></polyline>
+                                        </svg>
+                                        <svg id="chevron-up" class="h-5 w-5 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="18 15 12 9 6 15"></polyline>
+                                        </svg>
+                                    </button>
+                                </div>
+                                
+                                <div id="email-list" class="mt-2 hidden">
+                                    <div class="text-center py-4 text-sm text-gray-500">
+                                        No hay direcciones de correo electrónico agregadas todavía.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Modal de Búsqueda de Clientes -->
+<div id="customer-search-modal" class="fixed inset-0 z-10 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <div>
+                <div class="mt-3 sm:mt-5">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                        Buscar Clientes
+                    </h3>
+                    <div class="mt-2">
+                        <input type="text" id="customer-search-input" class="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="Buscar por nombre o correo electrónico">
+                    </div>
+                </div>
+            </div>
+            <div class="mt-5 sm:mt-6">
+                <div class="border rounded-md divide-y max-h-60 overflow-y-auto" id="customer-results">
+                    <!-- Customer results will be inserted here -->
+                </div>
+            </div>
+            <div class="mt-5 sm:mt-6 flex space-x-3">
+                <button type="button" id="close-customer-modal" class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:text-sm">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Sample customer data for demo purposes
+        const customerData = [
+            { id: 1, name: "Juan Pérez", email: "juan.perez@example.com" },
+            { id: 2, name: "María García", email: "maria.garcia@example.com" },
+            { id: 3, name: "Carlos Rodríguez", email: "carlos.rodriguez@example.com" },
+            { id: 4, name: "Ana Martínez", email: "ana.martinez@example.com" },
+            { id: 5, name: "Pedro López", email: "pedro.lopez@example.com" }
+        ];
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initial data
+            let selectedSurveyId = 0;
+            let emails = [];
+            
+            @if (Model.DeliveryConfig.EmailAddresses != null && Model.DeliveryConfig.EmailAddresses.Any())
+            {
+                @:emails = [@string.Join(",", Model.DeliveryConfig.EmailAddresses.Select(e => $"'{e}'"))];
+                @:updateEmailList();
+            }
+            
+            // Initialize select survey buttons
+            const selectSurveyBtns = document.querySelectorAll('.select-survey-btn');
+            selectSurveyBtns.forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const surveyId = parseInt(this.getAttribute('data-survey-id'));
+                    
+                    // Save current config before switching
+                    if (selectedSurveyId !== surveyId) {
+                        await saveCurrentConfig();
+                    }
+                    
+                    selectedSurveyId = surveyId;
+                    document.getElementById('selected-survey-id').value = surveyId;
+                    
+                    // Update UI
+                    const rows = document.querySelectorAll('.survey-table tbody tr');
+                    rows.forEach(row => row.classList.remove('bg-gray-50'));
+                    
+                    if (surveyId === 0) {
+                        document.getElementById('global-config-row').classList.add('bg-gray-50');
+                        document.getElementById('config-title').textContent = 'Configuración global de email';
+                        document.getElementById('config-subtitle').textContent = 'Esta configuración se aplicará como predeterminada para todas las nuevas encuestas';
+                        
+                        // Cargar configuración global
+                        loadGlobalConfig();
+                    } else {
+                        this.closest('tr').classList.add('bg-gray-50');
+                        const surveyTitle = this.closest('tr').querySelector('td:first-child').textContent.trim();
+                        document.getElementById('config-title').textContent = 'Configuración específica de encuesta';
+                        document.getElementById('config-subtitle').textContent = `Configurando encuesta: ${surveyTitle}`;
+                        
+                        // Cargar configuración de la encuesta
+                        loadSurveyConfig(surveyId);
+                    }
+                });
+            });
+            
+            // Initialize delivery type radios
+            const deliveryTypeRadios = document.querySelectorAll('.delivery-type-radio');
+            deliveryTypeRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    updateDeliverySettings();
+                });
+                
+                // Initialize radio button styling
+                const label = document.querySelector(`label[for="${radio.id}"]`);
+                if (radio.checked) {
+                    label.classList.add('border-primary-500', 'ring-2', 'ring-primary-500');
+                    label.querySelector('.delivery-radio-dot').classList.remove('hidden');
+                }
+            });
+            
+            // Initialize trigger type radios
+            document.querySelectorAll('input[name="trigger-type"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const dots = document.querySelectorAll('.trigger-radio-dot');
+                    dots.forEach(dot => dot.classList.add('hidden'));
+                    
+                    if (this.checked) {
+                        const label = document.querySelector(`label[for="${this.id}"]`);
+                        label.querySelector('.trigger-radio-dot').classList.remove('hidden');
+                    }
+                });
+            });
+            
+            // Initialize frequency radios
+            document.querySelectorAll('input[name="frequency"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    updateFrequencySettings();
+                });
+            });
+            
+            // Set up email list functionality
+            const addEmailBtn = document.getElementById('add-email-btn');
+            const emailInput = document.getElementById('email-input');
+            
+            addEmailBtn.addEventListener('click', function() {
+                addEmail();
+            });
+            
+            emailInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addEmail();
+                }
+            });
+            
+            // Toggle email list
+            document.getElementById('toggle-email-list').addEventListener('click', function() {
+                const emailList = document.getElementById('email-list');
+                const chevronDown = document.getElementById('chevron-down');
+                const chevronUp = document.getElementById('chevron-up');
+                
+                if (emailList.classList.contains('hidden')) {
+                    emailList.classList.remove('hidden');
+                    chevronDown.classList.add('hidden');
+                    chevronUp.

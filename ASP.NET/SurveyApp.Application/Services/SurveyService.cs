@@ -85,5 +85,15 @@ namespace SurveyApp.Application.Services
             // Todavía usamos el repositorio directo para esta operación
             return await _surveyRepository.GetStatisticsAsync(surveyId);
         }
+
+        public async Task<bool> UpdateSurveyDeliveryConfigAsync(int surveyId, DeliveryConfiguration deliveryConfig)
+        {
+            var survey = await GetSurveyByIdAsync(surveyId);
+            if (survey == null)
+                return false;
+
+            survey.DeliveryConfig = deliveryConfig;
+            return await UpdateSurveyAsync(survey);
+        }
     }
 }
