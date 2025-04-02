@@ -1,6 +1,6 @@
 
 import { SurveyRepository } from "@/domain/repositories/SurveyRepository";
-import { Survey, SurveyQuestion, SurveyStatistics } from "@/domain/models/Survey";
+import { Survey, SurveyQuestion, SurveyStatistics, DeliveryConfig } from "@/domain/models/Survey";
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from "@/integrations/supabase/types";
 
@@ -129,14 +129,74 @@ export class SupabaseSurveyRepository implements SurveyRepository {
 
   async sendSurveyEmails(surveyId: string, emailAddresses: string[]): Promise<boolean> {
     try {
-      // In a real implementation, this would call a Supabase Edge Function
-      // or another service to send emails
-      console.log(`Would send emails for survey ${surveyId} to:`, emailAddresses);
+      console.log(`Sending emails for survey ${surveyId} to:`, emailAddresses);
       
-      // For now, simulate success
-      return true;
+      // Obtener los detalles de la encuesta
+      const survey = await this.getSurveyById(surveyId);
+      if (!survey) {
+        console.error('Survey not found');
+        return false;
+      }
+      
+      // Llamar a la función de Supabase para enviar los correos
+      const { data, error } = await supabase.functions.invoke('send-survey-emails', {
+        body: {
+          surveyId,
+          emailAddresses,
+          surveyTitle: survey.title
+        }
+      });
+      
+      if (error) {
+        console.error('Error calling Supabase function to send emails:', error);
+        return false;
+      }
+      
+      console.log('Email sending result:', data);
+      return data?.success === true;
     } catch (error) {
       console.error('Error sending survey emails:', error);
+      return false;
+    }
+  }
+
+  async scheduleEmailDelivery(surveyId: string, config: DeliveryConfig): Promise<boolean> {
+    try {
+      // Primero actualizamos la configuración de la encuesta
+      const survey = await this.getSurveyById(surveyId);
+      if (!survey) {
+        console.error('Survey not found for scheduling');
+        return false;
+      }
+      
+      // Actualizamos la encuesta con la nueva configuración
+      const updated = await this.updateSurvey({
+        ...survey,
+        deliveryConfig: config
+      });
+      
+      if (!updated) {
+        console.error('Failed to update survey with delivery config');
+        return false;
+      }
+      
+      // Llamamos a la función de Supabase para programar los envíos
+      const { data, error } = await supabase.functions.invoke('schedule-survey-emails', {
+        body: {
+          surveyId,
+          config
+        }
+      });
+      
+      if (error) {
+        console.error('Error calling Supabase function to schedule emails:', error);
+        return false;
+      }
+      
+      console.log('Email scheduling result:', data);
+      return data?.success === true;
+    } catch (error) {
+      console.error('Error scheduling survey emails:', error);
       return false;
     }
   }

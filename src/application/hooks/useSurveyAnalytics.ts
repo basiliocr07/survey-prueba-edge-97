@@ -51,13 +51,13 @@ export function useSurveyAnalytics() {
     onSuccess: (success) => {
       if (success) {
         toast({
-          title: "Success",
-          description: "Survey emails have been sent successfully",
+          title: "Éxito",
+          description: "Los correos de la encuesta han sido enviados correctamente",
         });
       } else {
         toast({
           title: "Error",
-          description: "Failed to send survey emails",
+          description: "Error al enviar los correos de la encuesta",
           variant: "destructive",
         });
       }
@@ -65,7 +65,35 @@ export function useSurveyAnalytics() {
     onError: (error) => {
       toast({
         title: "Error",
-        description: `Failed to send survey emails: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        description: `Error al enviar los correos: ${error instanceof Error ? error.message : 'Error desconocido'}`,
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Mutation for scheduling email delivery
+  const scheduleEmailsMutation = useMutation({
+    mutationFn: ({ surveyId, config }: { surveyId: string, config: DeliveryConfig }) => {
+      return surveyRepository.scheduleEmailDelivery(surveyId, config);
+    },
+    onSuccess: (success) => {
+      if (success) {
+        toast({
+          title: "Éxito",
+          description: "La programación de correos ha sido configurada correctamente",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Error al configurar la programación de correos",
+          variant: "destructive",
+        });
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Error al programar envío: ${error instanceof Error ? error.message : 'Error desconocido'}`,
         variant: "destructive",
       });
     }
@@ -85,14 +113,14 @@ export function useSurveyAnalytics() {
     onSuccess: (success) => {
       if (success) {
         toast({
-          title: "Success",
-          description: "Survey delivery configuration has been updated",
+          title: "Éxito",
+          description: "La configuración de entrega ha sido actualizada",
         });
         queryClient.invalidateQueries({ queryKey: ['surveys'] });
       } else {
         toast({
           title: "Error",
-          description: "Failed to update survey delivery configuration",
+          description: "Error al actualizar la configuración de entrega",
           variant: "destructive",
         });
       }
@@ -100,7 +128,7 @@ export function useSurveyAnalytics() {
     onError: (error) => {
       toast({
         title: "Error",
-        description: `Failed to update delivery config: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        description: `Error al actualizar la configuración: ${error instanceof Error ? error.message : 'Error desconocido'}`,
         variant: "destructive",
       });
     }
@@ -115,6 +143,9 @@ export function useSurveyAnalytics() {
     sendSurveyEmails: (surveyId: string, emailAddresses: string[]) => 
       sendEmailsMutation.mutateAsync({ surveyId, emailAddresses }),
     isSendingEmails: sendEmailsMutation.isPending,
+    scheduleEmailDelivery: (surveyId: string, config: DeliveryConfig) =>
+      scheduleEmailsMutation.mutateAsync({ surveyId, config }),
+    isSchedulingEmails: scheduleEmailsMutation.isPending,
     updateDeliveryConfig: (surveyId: string, deliveryConfig: DeliveryConfig) =>
       updateDeliveryConfigMutation.mutateAsync({ surveyId, deliveryConfig }),
     isUpdatingDeliveryConfig: updateDeliveryConfigMutation.isPending

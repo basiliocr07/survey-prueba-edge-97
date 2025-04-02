@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft, Save, List } from 'lucide-react';
+import { ArrowLeft, Save, List, Send, Calendar } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import EmailDeliverySettings from '@/components/survey/EmailDeliverySettings';
@@ -12,6 +12,7 @@ import { DeliveryConfig, Survey } from '@/types/surveyTypes';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
 import { useSurveyAnalytics } from '@/application/hooks/useSurveyAnalytics';
 import { Badge } from '@/components/ui/badge';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 export default function EmailSettings() {
   const navigate = useNavigate();
@@ -22,7 +23,16 @@ export default function EmailSettings() {
   });
   
   const [selectedSurveyId, setSelectedSurveyId] = useState<string | null>(null);
-  const { surveys, isLoadingSurveys, updateDeliveryConfig, isUpdatingDeliveryConfig } = useSurveyAnalytics();
+  const { 
+    surveys, 
+    isLoadingSurveys, 
+    updateDeliveryConfig, 
+    isUpdatingDeliveryConfig, 
+    sendSurveyEmails, 
+    isSendingEmails,
+    scheduleEmailDelivery,
+    isSchedulingEmails
+  } = useSurveyAnalytics();
   
   // Cargar configuración guardada al iniciar
   useEffect(() => {
@@ -81,6 +91,77 @@ export default function EmailSettings() {
         title: "Configuración global guardada",
         description: "La configuración de entrega de emails ha sido guardada exitosamente"
       });
+    }
+  };
+
+  const handleSendEmails = async () => {
+    if (!selectedSurveyId) {
+      toast({
+        title: "Error",
+        description: "Selecciona una encuesta primero",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!deliveryConfig.emailAddresses || deliveryConfig.emailAddresses.length === 0) {
+      toast({
+        title: "Error",
+        description: "No hay destinatarios seleccionados",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      await sendSurveyEmails(selectedSurveyId, deliveryConfig.emailAddresses);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Error al enviar los emails",
+        variant: "destructive"
+      });
+      console.error("Error sending emails:", error);
+    }
+  };
+
+  const handleScheduleEmails = async () => {
+    if (!selectedSurveyId) {
+      toast({
+        title: "Error",
+        description: "Selecciona una encuesta primero",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!deliveryConfig.emailAddresses || deliveryConfig.emailAddresses.length === 0) {
+      toast({
+        title: "Error",
+        description: "No hay destinatarios seleccionados",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (deliveryConfig.type !== 'scheduled' && deliveryConfig.type !== 'triggered') {
+      toast({
+        title: "Error",
+        description: "Selecciona un método de entrega programado o por eventos",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      await scheduleEmailDelivery(selectedSurveyId, deliveryConfig);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Error al programar los emails",
+        variant: "destructive"
+      });
+      console.error("Error scheduling emails:", error);
     }
   };
 
@@ -242,6 +323,83 @@ export default function EmailSettings() {
                 deliveryConfig={deliveryConfig}
                 onConfigChange={(config) => setDeliveryConfig(config)}
               />
+
+              {/* Acciones de envío de emails */}
+              {selectedSurveyId && (
+                <div className="mt-6 border-t pt-6 flex flex-wrap gap-4">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button 
+                        className="flex items-center" 
+                        disabled={isSendingEmails || !deliveryConfig.emailAddresses || deliveryConfig.emailAddresses.length === 0}
+                      >
+                        <Send className="mr-2 h-4 w-4" />
+                        {isSendingEmails ? 'Enviando...' : 'Enviar ahora'}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Confirmar envío de emails</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Se enviarán correos electrónicos a {deliveryConfig.emailAddresses?.length || 0} destinatarios.
+                          <br />
+                          <br />
+                          ¿Estás seguro de que quieres proceder?
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleSendEmails}>Confirmar envío</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+
+                  {(deliveryConfig.type === 'scheduled' || deliveryConfig.type === 'triggered') && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          className="flex items-center"
+                          disabled={isSchedulingEmails || !deliveryConfig.emailAddresses || deliveryConfig.emailAddresses.length === 0}
+                        >
+                          <Calendar className="mr-2 h-4 w-4" />
+                          {isSchedulingEmails ? 'Programando...' : 'Programar envío'}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Confirmar programación de emails</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            {deliveryConfig.type === 'scheduled' ? (
+                              <>
+                                Se programará el envío de correos a {deliveryConfig.emailAddresses?.length || 0} destinatarios
+                                {deliveryConfig.schedule?.frequency === 'daily' && ' diariamente'}
+                                {deliveryConfig.schedule?.frequency === 'weekly' && ' semanalmente'}
+                                {deliveryConfig.schedule?.frequency === 'monthly' && ' mensualmente'}
+                                {deliveryConfig.schedule?.time && ` a las ${deliveryConfig.schedule.time}`}.
+                              </>
+                            ) : (
+                              <>
+                                Se configurará el envío automático a {deliveryConfig.emailAddresses?.length || 0} destinatarios
+                                cuando se produzca el evento "{deliveryConfig.trigger?.type === 'ticket-closed' ? 'cierre de ticket' : 'compra completada'}"
+                                {deliveryConfig.trigger?.delayHours && deliveryConfig.trigger?.delayHours > 0 ? 
+                                  ` con un retraso de ${deliveryConfig.trigger.delayHours} horas.` : '.'}
+                              </>
+                            )}
+                            <br />
+                            <br />
+                            ¿Estás seguro de que quieres programar estos envíos?
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleScheduleEmails}>Confirmar programación</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
