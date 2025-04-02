@@ -1,4 +1,3 @@
-
 @model SurveyApp.Web.Models.EmailSettingsViewModel
 @{
     ViewData["Title"] = "Configuración de Email";
@@ -13,7 +12,6 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Lista de encuestas -->
         <div class="bg-white rounded-lg shadow p-6">
             <h2 class="text-xl font-semibold mb-4">Encuestas</h2>
             
@@ -71,12 +69,18 @@
             </div>
         </div>
         
-        <!-- Configuración de email -->
         <div class="bg-white rounded-lg shadow p-6 lg:col-span-2">
             <h2 class="text-xl font-semibold mb-4">
                 <span id="configTitle">Configuración global de email</span>
             </h2>
             <p id="surveyName" class="text-sm text-gray-600 mb-4 hidden"></p>
+            
+            <div class="mb-4">
+                <button type="button" id="testConnection" class="btn-secondary flex items-center">
+                    <i class="fas fa-plug mr-2"></i> Probar conexión SMTP
+                </button>
+                <div id="connectionResult" class="mt-2 hidden"></div>
+            </div>
             
             <div id="configForm">
                 <div class="mb-4">
@@ -113,7 +117,6 @@
                     </div>
                 </div>
                 
-                <!-- Configuración de programación -->
                 <div id="scheduleSettings" class="mb-4 hidden">
                     <h3 class="font-medium mb-2">Configuración de programación</h3>
                     
@@ -160,7 +163,6 @@
                     </div>
                 </div>
                 
-                <!-- Configuración de eventos -->
                 <div id="triggerSettings" class="mb-4 hidden">
                     <h3 class="font-medium mb-2">Configuración de eventos</h3>
                     
@@ -204,7 +206,6 @@
     </div>
 </div>
 
-<!-- Modal de confirmación -->
 <div id="confirmationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
     <div class="bg-white rounded-lg p-6 max-w-md w-full">
         <h3 class="text-xl font-bold mb-4">Confirmar acción</h3>
@@ -228,57 +229,46 @@
             let currentAction = '';
             let deliveryConfig = @Html.Raw(Json.Serialize(Model.DeliveryConfig));
             
-            // Inicializar formulario con datos
             initFormWithConfig(deliveryConfig);
             
-            // Cambiar entre configuración global y específica
             $('#surveySelector, .btn-select-survey').on('click', function() {
                 const surveyId = $(this).is('select') ? $(this).val() : $(this).data('id');
                 selectedSurveyId = surveyId;
                 
                 if (surveyId) {
-                    // Cargar configuración de encuesta específica
                     fetch(`/EmailSettings/GetSurveyConfig?surveyId=${surveyId}`)
                         .then(response => response.json())
                         .then(data => {
                             deliveryConfig = data;
                             initFormWithConfig(data);
                             
-                            // Actualizar título y mostrar nombre de encuesta
                             $('#configTitle').text('Configuración específica de encuesta');
                             const surveyName = $(`#surveySelector option[value="${surveyId}"]`).text().replace('[Personalizada]', '').trim();
                             $('#surveyName').text(`Configurando encuesta: ${surveyName}`).show();
                             
-                            // Mostrar botones de acción
                             $('#actionButtons').show();
                         });
                 } else {
-                    // Configuración global
                     fetch('/EmailSettings/GetSurveyConfig')
                         .then(response => response.json())
                         .then(data => {
                             deliveryConfig = data;
                             initFormWithConfig(data);
                             
-                            // Actualizar título y ocultar nombre de encuesta
                             $('#configTitle').text('Configuración global de email');
                             $('#surveyName').hide();
                             
-                            // Ocultar botones de acción
                             $('#actionButtons').hide();
                         });
                 }
             });
             
-            // Cambiar tipo de entrega
             $('input[name="deliveryType"]').on('change', function() {
                 const type = $(this).val();
                 
-                // Ocultar todas las configuraciones específicas
                 $('#scheduleSettings, #triggerSettings').addClass('hidden');
                 $('#scheduleEmails').addClass('hidden');
                 
-                // Mostrar configuración según tipo seleccionado
                 if (type === 'scheduled') {
                     $('#scheduleSettings').removeClass('hidden');
                     $('#scheduleEmails').removeClass('hidden');
@@ -288,7 +278,6 @@
                 }
             });
             
-            // Cambiar frecuencia de programación
             $('#frequency').on('change', function() {
                 const frequency = $(this).val();
                 
@@ -303,7 +292,6 @@
                 }
             });
             
-            // Agregar email manualmente
             $('#addEmail').on('click', function() {
                 const email = $('#newEmail').val().trim();
                 if (email && validateEmail(email) && !emailAddresses.includes(email)) {
@@ -317,7 +305,6 @@
                 }
             });
             
-            // Búsqueda de clientes
             $('#searchCustomers').on('click', function() {
                 const search = $('#customerSearch').val().trim();
                 
@@ -357,12 +344,10 @@
                     });
             });
             
-            // Guardar configuración
             $('#saveConfig').on('click', function() {
                 const config = collectFormData();
                 
                 if (selectedSurveyId) {
-                    // Guardar configuración específica de encuesta
                     fetch(`/EmailSettings/SaveSurveyConfig?surveyId=${selectedSurveyId}`, {
                         method: 'POST',
                         headers: {
@@ -374,9 +359,7 @@
                         .then(data => {
                             if (data.success) {
                                 showToast('Configuración guardada exitosamente');
-                                // Marcar encuesta como personalizada
                                 $(`#surveySelector option[value="${selectedSurveyId}"]`).attr('data-has-config', 'true');
-                                // Actualizar texto si es necesario
                                 if (!$(`#surveySelector option[value="${selectedSurveyId}"]`).text().includes('[Personalizada]')) {
                                     const text = $(`#surveySelector option[value="${selectedSurveyId}"]`).text();
                                     $(`#surveySelector option[value="${selectedSurveyId}"]`).text(`${text} [Personalizada]`);
@@ -386,7 +369,6 @@
                             }
                         });
                 } else {
-                    // Guardar configuración global
                     fetch('/EmailSettings/SaveGlobalConfig', {
                         method: 'POST',
                         headers: {
@@ -405,7 +387,6 @@
                 }
             });
             
-            // Enviar emails ahora
             $('#sendEmails').on('click', function() {
                 if (!selectedSurveyId) {
                     showToast('Selecciona una encuesta primero', true);
@@ -417,13 +398,11 @@
                     return;
                 }
                 
-                // Mostrar modal de confirmación
                 $('#confirmationMessage').text(`Se enviarán correos electrónicos a ${emailAddresses.length} destinatarios. ¿Estás seguro de que quieres proceder?`);
                 $('#confirmationModal').removeClass('hidden');
                 currentAction = 'send';
             });
             
-            // Programar envío
             $('#scheduleEmails').on('click', function() {
                 if (!selectedSurveyId) {
                     showToast('Selecciona una encuesta primero', true);
@@ -441,7 +420,6 @@
                     return;
                 }
                 
-                // Mostrar modal de confirmación
                 let message = '';
                 if (type === 'scheduled') {
                     const frequency = $('#frequency').val();
@@ -472,7 +450,6 @@
                 currentAction = 'schedule';
             });
             
-            // Confirmación de acción
             $('#confirmAction').on('click', function() {
                 $('#confirmationModal').addClass('hidden');
                 
@@ -483,21 +460,54 @@
                 }
             });
             
-            // Cancelar acción
             $('#cancelAction').on('click', function() {
                 $('#confirmationModal').addClass('hidden');
             });
             
-            // Funciones auxiliares
-            function initFormWithConfig(config) {
-                // Tipo de entrega
-                $(`input[name="deliveryType"][value="${config.type}"]`).prop('checked', true).trigger('change');
+            $('#testConnection').on('click', function() {
+                $(this).prop('disabled', true);
+                $(this).html('<i class="fas fa-spinner fa-spin mr-2"></i> Probando...');
                 
-                // Emails
+                fetch('/EmailSettings/TestEmailConnection')
+                    .then(response => response.json())
+                    .then(data => {
+                        const resultEl = $('#connectionResult');
+                        resultEl.removeClass('hidden bg-green-100 bg-red-100');
+                        
+                        if (data.success) {
+                            resultEl.addClass('bg-green-100 border-l-4 border-green-500 p-4');
+                            resultEl.html(`<div class="flex items-center">
+                                <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                                <span>${data.message}</span>
+                            </div>`);
+                        } else {
+                            resultEl.addClass('bg-red-100 border-l-4 border-red-500 p-4');
+                            resultEl.html(`<div class="flex items-center">
+                                <i class="fas fa-exclamation-circle text-red-500 mr-2"></i>
+                                <span>${data.message}</span>
+                            </div>`);
+                        }
+                        
+                        resultEl.removeClass('hidden');
+                    })
+                    .catch(error => {
+                        $('#connectionResult').removeClass('hidden').addClass('bg-red-100 border-l-4 border-red-500 p-4');
+                        $('#connectionResult').html(`<div class="flex items-center">
+                            <i class="fas fa-exclamation-circle text-red-500 mr-2"></i>
+                            <span>Error al probar la conexión: ${error}</span>
+                        </div>`);
+                    })
+                    .finally(() => {
+                        $('#testConnection').prop('disabled', false);
+                        $('#testConnection').html('<i class="fas fa-plug mr-2"></i> Probar conexión SMTP');
+                    });
+            });
+            
+            function initFormWithConfig(config) {
+                $(`input[name="deliveryType"][value="${config.type}"]`).prop('checked', true).trigger('change');
                 emailAddresses = config.emailAddresses || [];
                 updateEmailList();
                 
-                // Configuración de programación
                 if (config.schedule) {
                     $('#frequency').val(config.schedule.frequency).trigger('change');
                     $('#dayOfWeek').val(config.schedule.dayOfWeek || 1);
@@ -509,7 +519,6 @@
                     }
                 }
                 
-                // Configuración de eventos
                 if (config.trigger) {
                     $('#triggerType').val(config.trigger.type);
                     $('#delayHours').val(config.trigger.delayHours);
@@ -601,7 +610,6 @@
             function executeScheduleEmails() {
                 const config = collectFormData();
                 
-                // Guardar la configuración y programar los emails
                 fetch(`/EmailSettings/SaveSurveyConfig?surveyId=${selectedSurveyId}`, {
                     method: 'POST',
                     headers: {
@@ -613,7 +621,6 @@
                     .then(data => {
                         if (data.success) {
                             showToast('Programación de emails configurada exitosamente');
-                            // Marcar encuesta como personalizada
                             $(`#surveySelector option[value="${selectedSurveyId}"]`).attr('data-has-config', 'true');
                         } else {
                             showToast('Error al configurar la programación de emails', true);
@@ -649,12 +656,10 @@
                 
                 $('body').append(toast);
                 
-                // Auto-cerrar después de 5 segundos
                 setTimeout(() => {
                     toast.fadeOut(300, function() { $(this).remove(); });
                 }, 5000);
                 
-                // Cerrar al hacer clic
                 toast.find('.close-toast').on('click', function() {
                     toast.fadeOut(300, function() { $(this).remove(); });
                 });

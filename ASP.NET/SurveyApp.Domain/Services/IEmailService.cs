@@ -8,5 +8,6 @@ namespace SurveyApp.Domain.Services
     {
         Task<bool> SendEmailAsync(string to, string subject, string htmlContent);
         Task<bool> SendBulkEmailAsync(List<string> to, string subject, string htmlContent);
+        Task<(bool Success, string ErrorMessage)> TestConnectionAsync();
     }
 }

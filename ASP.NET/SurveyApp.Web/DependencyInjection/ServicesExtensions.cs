@@ -1,4 +1,3 @@
-
 using Microsoft.Extensions.DependencyInjection;
 using SurveyApp.Application.Interfaces;
 using SurveyApp.Application.Services;
@@ -6,7 +5,6 @@ using SurveyApp.Domain.Repositories;
 using SurveyApp.Domain.Services;
 using SurveyApp.Infrastructure.Repositories;
 using SurveyApp.Infrastructure.Services;
-using System.Reflection;
 
 namespace SurveyApp.Web.DependencyInjection
 {
@@ -14,33 +12,21 @@ namespace SurveyApp.Web.DependencyInjection
     {
         public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
-            // Servicios de aplicación
-            services.AddScoped<ISurveyService, SurveyService>();
-            services.AddScoped<ISurveyResponseService, SurveyResponseService>();
-            
-            // CQRS - Registrar todos los manejadores de comandos y consultas desde el assembly de Application
-            services.AddMediatR(cfg => 
-            {
-                cfg.RegisterServicesFromAssembly(typeof(SurveyService).Assembly);
-                // Registrar comportamientos de pipeline si es necesario (validación, logging, etc.)
-                // cfg.AddBehavior<IPipelineBehavior<,>, ValidationBehavior<,>>();
-            });
-            
-            return services;
-        }
-
-        public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
-        {
-            // Repositorios
+            // Register Repositories
             services.AddScoped<ISurveyRepository, SurveyRepository>();
-            services.AddScoped<ISurveyResponseRepository, SurveyResponseRepository>();
+            services.AddScoped<IResponseRepository, ResponseRepository>();
             services.AddScoped<ICustomerRepository, CustomerRepository>();
+            services.AddScoped<IUserRepository, UserRepository>();
             
-            // Servicio de email
-            services.AddScoped<IEmailService, SmtpEmailService>();
+            // Register Application Services
+            services.AddScoped<ISurveyService, SurveyService>();
+            services.AddScoped<IResponseService, ResponseService>();
+            services.AddScoped<ICustomerService, CustomerService>();
+            services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IAuthService, AuthService>();
             
-            // Otros servicios de infraestructura
-            // services.AddScoped<IFileStorage, FileStorage>();
+            // Register Email Services
+            services.AddScoped<IEmailService, MailKitEmailService>();
             
             return services;
         }

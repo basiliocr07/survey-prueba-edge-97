@@ -3,6 +3,7 @@ using SurveyApp.Application.Interfaces;
 using SurveyApp.Domain.Models;
 using SurveyApp.Web.Models;
 using SurveyApp.Domain.Repositories;
+using SurveyApp.Domain.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,11 +16,16 @@ namespace SurveyApp.Web.Controllers
     {
         private readonly ISurveyService _surveyService;
         private readonly ICustomerRepository _customerRepository;
+        private readonly IEmailService _emailService;
 
-        public EmailSettingsController(ISurveyService surveyService, ICustomerRepository customerRepository)
+        public EmailSettingsController(
+            ISurveyService surveyService, 
+            ICustomerRepository customerRepository,
+            IEmailService emailService)
         {
             _surveyService = surveyService;
             _customerRepository = customerRepository;
+            _emailService = emailService;
         }
 
         [HttpGet]
@@ -145,6 +151,23 @@ namespace SurveyApp.Web.Controllers
         {
             var emails = await _customerRepository.GetCustomerEmailsAsync();
             return Json(emails);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> TestEmailConnection()
+        {
+            try
+            {
+                var result = await _emailService.TestConnectionAsync();
+                return Json(new { 
+                    success = result.Success, 
+                    message = result.Success ? "Conexión SMTP exitosa" : result.ErrorMessage 
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error: {ex.Message}" });
+            }
         }
 
         private DeliveryConfigViewModel GetGlobalDeliveryConfig()
