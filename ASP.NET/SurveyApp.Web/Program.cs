@@ -5,6 +5,12 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
 using SurveyApp.Infrastructure.Data;
 using SurveyApp.Web.DependencyInjection;
+using System;
+using Microsoft.Extensions.Logging;
+using SurveyApp.Application.Interfaces;
+using SurveyApp.Application.Services;
+using SurveyApp.Domain.Repositories;
+using SurveyApp.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +27,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Register application and infrastructure services
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices();
+
+// Additional service registrations from extensions file
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
+builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+builder.Services.AddScoped<ISurveyResponseRepository, SurveyResponseRepository>();
+builder.Services.AddScoped<ISurveyResponseService, SurveyResponseService>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -50,8 +64,21 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// NOTA: Aquí deberían incluirse las rutas adicionales de Program.cs.extensions
-// El archivo Program.cs.extensions contiene rutas que deberían incorporarse aquí
+// Additional routes from extensions file
+app.MapControllerRoute(
+    name: "customers",
+    pattern: "customers/{action=Index}/{id?}",
+    defaults: new { controller = "Customers" });
+
+app.MapControllerRoute(
+    name: "analytics",
+    pattern: "analytics/{action=Index}/{id?}",
+    defaults: new { controller = "Analytics" });
+
+app.MapControllerRoute(
+    name: "surveyResponses",
+    pattern: "survey-responses/{action=Index}/{id?}",
+    defaults: new { controller = "SurveyResponses" });
 
 // Ensure the database is created when the application starts
 using (var scope = app.Services.CreateScope())
