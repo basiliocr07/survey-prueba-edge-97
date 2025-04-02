@@ -74,40 +74,15 @@ serve(async (req) => {
       );
     }
 
-    // Get SMTP settings from environment variables
-    const smtpServer = Deno.env.get("SMTP_SERVER") || "";
-    const smtpPort = parseInt(Deno.env.get("SMTP_PORT") || "587", 10);
-    const smtpUsername = Deno.env.get("SMTP_USERNAME") || "";
-    const smtpPassword = Deno.env.get("SMTP_PASSWORD") || "";
-    const senderEmail = Deno.env.get("SENDER_EMAIL") || "";
-    const senderName = Deno.env.get("SENDER_NAME") || "Sistema de Encuestas";
+    // Usar la configuración proporcionada por el usuario
+    const smtpServer = "smtp.gmail.com";
+    const smtpPort = 587;
+    const smtpUsername = "crisant231@gmail.com";
+    const smtpPassword = "avufrkhruqddomsh";
+    const senderEmail = "crisant231@gmail.com";
+    const senderName = "Sistema de Encuestas";
     const frontendUrl = Deno.env.get("FRONTEND_URL") || "http://localhost:5173";
-
-    // Verificar que todas las variables SMTP están configuradas
-    if (!smtpServer || !smtpUsername || !smtpPassword || !senderEmail) {
-      console.error("Missing SMTP configuration");
-      
-      // Log the error in the database
-      await supabase
-        .from("survey_email_logs")
-        .insert({
-          survey_id: surveyId,
-          recipients: emailAddresses,
-          status: "failed",
-          error_message: "Missing SMTP configuration in Edge Function environment",
-        });
-      
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: "Missing SMTP configuration. Please ensure SMTP_SERVER, SMTP_USERNAME, SMTP_PASSWORD and SENDER_EMAIL are set in your Edge Function secrets."
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 500,
-        }
-      );
-    }
+    const useSsl = true;
 
     console.log("SMTP Configuration:", { 
       smtpServer, 
@@ -116,6 +91,7 @@ serve(async (req) => {
       smtpPassword: smtpPassword ? "Set" : "Not set",
       senderEmail,
       senderName,
+      useSsl,
       frontendUrl
     });
 
@@ -125,14 +101,13 @@ serve(async (req) => {
       
       console.log("Connecting to SMTP server...");
       
-      // Establecer un timeout más largo para la conexión
+      // Establecer conexión con configuración específica
       const connectionOptions = {
         hostname: smtpServer,
         port: smtpPort,
         username: smtpUsername,
         password: smtpPassword,
-        // Configuraciones adicionales para mejorar la estabilidad
-        tls: true,
+        tls: useSsl,
         debug: true,
       };
       
@@ -257,7 +232,7 @@ serve(async (req) => {
         JSON.stringify({ 
           success: false, 
           error: `SMTP Error: ${smtpError.message}`,
-          details: "Asegúrate de que las credenciales SMTP son correctas y que tu proveedor de correo permite el envío desde aplicaciones"
+          details: "Verifica que la contraseña de aplicación de Gmail es correcta y que tienes habilitado el acceso a aplicaciones menos seguras"
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
