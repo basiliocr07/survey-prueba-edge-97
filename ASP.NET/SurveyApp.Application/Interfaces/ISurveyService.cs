@@ -15,5 +15,10 @@ namespace SurveyApp.Application.Interfaces
         Task<IEnumerable<Survey>> GetSurveysByStatusAsync(string status);
         Task<bool> SendSurveyEmailsAsync(int surveyId, List<string> emailAddresses);
         Task<SurveyStatistics> GetSurveyStatisticsAsync(int surveyId);
+        
+        // Nuevos métodos
+        Task<bool> UpdateSurveyDeliveryConfigAsync(int surveyId, DeliveryConfiguration deliveryConfig);
+        Task<IEnumerable<Survey>> GetSurveysForCustomerAsync(int customerId);
+        Task<bool> AssignSurveyToCustomersAsync(int surveyId, List<int> customerIds);
     }
 }

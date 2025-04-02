@@ -95,5 +95,16 @@ namespace SurveyApp.Application.Services
             survey.DeliveryConfig = deliveryConfig;
             return await UpdateSurveyAsync(survey);
         }
+        
+        // Implementaciones de los nuevos métodos
+        public async Task<IEnumerable<Survey>> GetSurveysForCustomerAsync(int customerId)
+        {
+            return await _surveyRepository.GetSurveysForCustomerAsync(customerId);
+        }
+        
+        public async Task<bool> AssignSurveyToCustomersAsync(int surveyId, List<int> customerIds)
+        {
+            return await _surveyRepository.AssignSurveyToCustomersAsync(surveyId, customerIds);
+        }
     }
 }

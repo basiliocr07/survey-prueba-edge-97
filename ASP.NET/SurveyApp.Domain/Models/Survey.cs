@@ -17,8 +17,17 @@ namespace SurveyApp.Domain.Models
         public List<Question> Questions { get; set; } = new List<Question>();
         public DeliveryConfiguration? DeliveryConfig { get; set; }
         
+        // Propiedad para vincular con clientes específicos (opcional)
+        public List<int>? TargetCustomerIds { get; set; }
+        
         // Navigation property
         public List<SurveyResponse>? Responses { get; set; }
+        
+        // Método para verificar si esta encuesta está dirigida a un cliente específico
+        public bool IsTargetedToCustomer(int customerId)
+        {
+            return TargetCustomerIds == null || TargetCustomerIds.Count == 0 || TargetCustomerIds.Contains(customerId);
+        }
     }
 
     public class Question
@@ -51,6 +60,12 @@ namespace SurveyApp.Domain.Models
         public List<string> EmailAddresses { get; set; } = new List<string>();
         public ScheduleSettings? Schedule { get; set; }
         public TriggerSettings? Trigger { get; set; }
+        
+        // Añadido para indicar si se deben incluir todos los clientes
+        public bool IncludeAllCustomers { get; set; } = false;
+        
+        // Añadido para filtrar clientes por tipo
+        public string? CustomerTypeFilter { get; set; }
     }
 
     public class ScheduleSettings
