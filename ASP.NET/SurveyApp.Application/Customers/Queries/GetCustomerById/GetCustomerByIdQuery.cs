@@ -8,6 +8,8 @@ namespace SurveyApp.Application.Customers.Queries.GetCustomerById
     {
         public int Id { get; set; }
         
+        // Esta propiedad no parece estar siendo utilizada en los handlers
+        // Mantenerla comentada hasta que se confirme su uso
         public bool IncludeSurveyResponses { get; set; } = false;
     }
     

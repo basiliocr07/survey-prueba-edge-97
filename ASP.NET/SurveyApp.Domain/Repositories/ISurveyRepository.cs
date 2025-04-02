@@ -16,7 +16,7 @@ namespace SurveyApp.Domain.Repositories
         Task<SurveyStatistics> GetStatisticsAsync(int surveyId);
         Task<bool> SendEmailsAsync(int surveyId, List<string> emailAddresses);
         
-        // Nuevos métodos para conectar surveys y customers
+        // Métodos para conectar surveys y customers
         Task<IEnumerable<Survey>> GetSurveysForCustomerAsync(int customerId);
         Task<bool> AssignSurveyToCustomersAsync(int surveyId, List<int> customerIds);
         Task<bool> UpdateDeliveryConfigAsync(int surveyId, DeliveryConfiguration config);

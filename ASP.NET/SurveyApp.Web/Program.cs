@@ -50,6 +50,9 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
+// NOTA: Aquí deberían incluirse las rutas adicionales de Program.cs.extensions
+// El archivo Program.cs.extensions contiene rutas que deberían incorporarse aquí
+
 // Ensure the database is created when the application starts
 using (var scope = app.Services.CreateScope())
 {

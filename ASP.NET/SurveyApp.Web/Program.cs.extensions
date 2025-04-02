@@ -23,3 +23,4 @@ app.MapControllerRoute(
     pattern: "survey-responses/{action=Index}/{id?}",
     defaults: new { controller = "SurveyResponses" });
 
+// Nota: Este archivo posiblemente duplica rutas definidas en Program.cs
