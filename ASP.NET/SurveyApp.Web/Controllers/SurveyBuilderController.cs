@@ -89,14 +89,13 @@ namespace SurveyApp.Web.Controllers
                 else
                 {
                     // Creación
-                    var createCommand = new CreateSurveyCommand
-                    {
-                        Title = model.Title,
-                        Description = model.Description,
-                        Status = model.Status,
-                        Questions = model.Questions.Select(q => q.ToDomainModel()).ToList(),
-                        DeliveryConfig = MapDeliveryConfig(model.DeliveryConfig)
-                    };
+                    var createCommand = new CreateSurveyCommand(
+                        model.Title,
+                        model.Description,
+                        model.Questions.Select(q => q.ToDomainModel()).ToList(),
+                        model.Status,
+                        MapDeliveryConfig(model.DeliveryConfig)
+                    );
 
                     var surveyId = await _mediator.Send(createCommand);
                     
@@ -210,6 +209,7 @@ namespace SurveyApp.Web.Controllers
                 {
                     Frequency = viewModel.Schedule.Frequency,
                     DayOfMonth = viewModel.Schedule.DayOfMonth ?? 1,
+                    DayOfWeek = viewModel.Schedule.DayOfWeek,
                     Time = viewModel.Schedule.Time ?? "09:00"
                 } : null,
                 Trigger = viewModel.Trigger != null ? new TriggerSettings
@@ -233,6 +233,7 @@ namespace SurveyApp.Web.Controllers
                 {
                     Frequency = config.Schedule.Frequency,
                     DayOfMonth = config.Schedule.DayOfMonth,
+                    DayOfWeek = config.Schedule.DayOfWeek,
                     Time = config.Schedule.Time
                 } : null,
                 Trigger = config.Trigger != null ? new TriggerSettingsViewModel

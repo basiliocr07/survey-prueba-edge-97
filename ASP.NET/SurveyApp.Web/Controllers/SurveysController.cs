@@ -1,5 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
+using MediatR;
 using SurveyApp.Application.Interfaces;
+using SurveyApp.Application.Surveys.Commands.CreateSurvey;
+using SurveyApp.Application.Surveys.Commands.UpdateSurvey;
+using SurveyApp.Application.Surveys.Queries.GetAllSurveys;
+using SurveyApp.Application.Surveys.Queries.GetSurveyById;
 using SurveyApp.Domain.Models;
 using SurveyApp.Web.Models;
 using System;
@@ -12,10 +17,12 @@ namespace SurveyApp.Web.Controllers
     public class SurveysController : Controller
     {
         private readonly ISurveyService _surveyService;
+        private readonly IMediator _mediator;
 
-        public SurveysController(ISurveyService surveyService)
+        public SurveysController(ISurveyService surveyService, IMediator mediator)
         {
             _surveyService = surveyService;
+            _mediator = mediator;
         }
 
         // GET: Surveys
@@ -163,42 +170,46 @@ namespace SurveyApp.Web.Controllers
                         }
                     }
 
-                    var survey = new SurveyApp.Domain.Models.Survey
-                    {
-                        Title = model.Title,
-                        Description = model.Description,
-                        CreatedAt = DateTime.Now,
-                        Status = model.Status,
-                        Questions = model.Questions.Select(q => q.ToDomainModel()).ToList(),
-                        DeliveryConfig = new SurveyApp.Domain.Models.DeliveryConfiguration
-                        {
-                            Type = model.DeliveryConfig.Type,
-                            EmailAddresses = model.DeliveryConfig.EmailAddresses ?? new List<string>(),
-                            Schedule = model.DeliveryConfig.Schedule != null 
-                                ? new SurveyApp.Domain.Models.ScheduleSettings
-                                {
-                                    Frequency = model.DeliveryConfig.Schedule.Frequency,
-                                    DayOfMonth = model.DeliveryConfig.Schedule.DayOfMonth ?? 1,
-                                    DayOfWeek = model.DeliveryConfig.Schedule.DayOfWeek,
-                                    Time = model.DeliveryConfig.Schedule.Time ?? "09:00"
-                                }
-                                : null,
-                            Trigger = model.DeliveryConfig.Trigger != null
-                                ? new SurveyApp.Domain.Models.TriggerSettings
-                                {
-                                    Type = model.DeliveryConfig.Trigger.Type,
-                                    DelayHours = model.DeliveryConfig.Trigger.DelayHours,
-                                    SendAutomatically = model.DeliveryConfig.Trigger.SendAutomatically
-                                }
-                                : null
-                        }
-                    };
-
                     bool success;
+                    
                     if (model.Id > 0)
                     {
-                        survey.Id = model.Id;
-                        success = await _surveyService.UpdateSurveyAsync(survey);
+                        // Update existing survey through CQRS command
+                        var updateCommand = new UpdateSurveyCommand
+                        {
+                            Id = model.Id,
+                            Title = model.Title,
+                            Description = model.Description,
+                            Status = model.Status,
+                            Questions = model.Questions.Select(q => q.ToDomainModel()).ToList(),
+                            DeliveryConfig = model.DeliveryConfig != null
+                                ? new DeliveryConfiguration
+                                {
+                                    Type = model.DeliveryConfig.Type,
+                                    EmailAddresses = model.DeliveryConfig.EmailAddresses ?? new List<string>(),
+                                    Schedule = model.DeliveryConfig.Schedule != null
+                                        ? new ScheduleSettings
+                                        {
+                                            Frequency = model.DeliveryConfig.Schedule.Frequency,
+                                            DayOfMonth = model.DeliveryConfig.Schedule.DayOfMonth ?? 1,
+                                            DayOfWeek = model.DeliveryConfig.Schedule.DayOfWeek,
+                                            Time = model.DeliveryConfig.Schedule.Time ?? "09:00"
+                                        }
+                                        : null,
+                                    Trigger = model.DeliveryConfig.Trigger != null
+                                        ? new TriggerSettings
+                                        {
+                                            Type = model.DeliveryConfig.Trigger.Type,
+                                            DelayHours = model.DeliveryConfig.Trigger.DelayHours,
+                                            SendAutomatically = model.DeliveryConfig.Trigger.SendAutomatically
+                                        }
+                                        : null
+                                }
+                                : null
+                        };
+                        
+                        success = await _mediator.Send(updateCommand);
+                        
                         if (success)
                             TempData["SuccessMessage"] = "Survey updated successfully.";
                         else
@@ -206,7 +217,41 @@ namespace SurveyApp.Web.Controllers
                     }
                     else
                     {
-                        success = await _surveyService.CreateSurveyAsync(survey);
+                        // Create new survey through CQRS command
+                        var createCommand = new CreateSurveyCommand(
+                            model.Title,
+                            model.Description,
+                            model.Questions.Select(q => q.ToDomainModel()).ToList(),
+                            model.Status,
+                            model.DeliveryConfig != null
+                                ? new DeliveryConfiguration
+                                {
+                                    Type = model.DeliveryConfig.Type,
+                                    EmailAddresses = model.DeliveryConfig.EmailAddresses ?? new List<string>(),
+                                    Schedule = model.DeliveryConfig.Schedule != null
+                                        ? new ScheduleSettings
+                                        {
+                                            Frequency = model.DeliveryConfig.Schedule.Frequency,
+                                            DayOfMonth = model.DeliveryConfig.Schedule.DayOfMonth ?? 1,
+                                            DayOfWeek = model.DeliveryConfig.Schedule.DayOfWeek,
+                                            Time = model.DeliveryConfig.Schedule.Time ?? "09:00"
+                                        }
+                                        : null,
+                                    Trigger = model.DeliveryConfig.Trigger != null
+                                        ? new TriggerSettings
+                                        {
+                                            Type = model.DeliveryConfig.Trigger.Type,
+                                            DelayHours = model.DeliveryConfig.Trigger.DelayHours,
+                                            SendAutomatically = model.DeliveryConfig.Trigger.SendAutomatically
+                                        }
+                                        : null
+                                }
+                                : null
+                        );
+                        
+                        var surveyId = await _mediator.Send(createCommand);
+                        success = surveyId > 0;
+                        
                         if (success)
                             TempData["SuccessMessage"] = "Survey created successfully.";
                         else
@@ -229,7 +274,9 @@ namespace SurveyApp.Web.Controllers
         // GET: Surveys/Edit/5
         public async Task<IActionResult> Edit(int id)
         {
-            var survey = await _surveyService.GetSurveyByIdAsync(id);
+            var query = new GetSurveyByIdQuery(id);
+            var survey = await _mediator.Send(query);
+            
             if (survey == null)
             {
                 return NotFound();
@@ -267,6 +314,7 @@ namespace SurveyApp.Web.Controllers
                             {
                                 Frequency = survey.DeliveryConfig.Schedule.Frequency,
                                 DayOfMonth = survey.DeliveryConfig.Schedule.DayOfMonth,
+                                DayOfWeek = survey.DeliveryConfig.Schedule.DayOfWeek,
                                 Time = survey.DeliveryConfig.Schedule.Time
                             }
                             : new ScheduleSettingsViewModel(),
@@ -442,7 +490,9 @@ namespace SurveyApp.Web.Controllers
         {
             try
             {
-                var surveys = await _surveyService.GetAllSurveysAsync();
+                var query = new GetAllSurveysQuery();
+                var surveys = await _mediator.Send(query);
+                
                 return surveys.Select(s => new SurveyViewModel
                 {
                     Id = s.Id.ToString(),

@@ -28,6 +28,11 @@ namespace SurveyApp.Application.Services
             return await _mediator.Send(new GetAllSurveysQuery());
         }
 
+        public async Task<IEnumerable<Survey>> GetSurveysByStatusAsync(string status)
+        {
+            return await _mediator.Send(new GetAllSurveysQuery(status));
+        }
+
         public async Task<Survey?> GetSurveyByIdAsync(int id)
         {
             return await _mediator.Send(new GetSurveyByIdQuery(id));
@@ -35,14 +40,13 @@ namespace SurveyApp.Application.Services
 
         public async Task<bool> CreateSurveyAsync(Survey survey)
         {
-            var command = new CreateSurveyCommand
-            {
-                Title = survey.Title,
-                Description = survey.Description,
-                Status = survey.Status,
-                Questions = survey.Questions,
-                DeliveryConfig = survey.DeliveryConfig
-            };
+            var command = new CreateSurveyCommand(
+                survey.Title,
+                survey.Description,
+                survey.Questions,
+                survey.Status,
+                survey.DeliveryConfig
+            );
 
             var id = await _mediator.Send(command);
             return id > 0;
@@ -68,12 +72,6 @@ namespace SurveyApp.Application.Services
             // Todavía usamos el repositorio directo para esta operación
             // En un futuro podríamos migrarla a un comando DeleteSurveyCommand
             return await _surveyRepository.DeleteAsync(id);
-        }
-
-        public async Task<IEnumerable<Survey>> GetSurveysByStatusAsync(string status)
-        {
-            // Todavía usamos el repositorio directo para esta operación
-            return await _surveyRepository.GetByStatusAsync(status);
         }
 
         public async Task<bool> SendSurveyEmailsAsync(int surveyId, List<string> emailAddresses)
