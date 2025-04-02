@@ -1,35 +1,131 @@
 
 /* Estilos para EmailSettings */
 
+/* Estilos base y variables */
+:root {
+    --primary-color: #4f46e5;
+    --primary-color-dark: #4338ca;
+    --primary-color-light: #e0e7ff;
+    --background-color: #f9fafb;
+    --card-background: #ffffff;
+    --text-color: #111827;
+    --text-muted: #6b7280;
+    --border-color: #e5e7eb;
+    --error-color: #ef4444;
+    --success-color: #10b981;
+}
+
+/* Contenedor principal */
+.email-settings-container {
+    background-color: var(--background-color);
+    min-height: 100vh;
+}
+
+/* Estilo para las tarjetas */
+.card {
+    background-color: var(--card-background);
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos para las pestañas */
+.tabs {
+    display: flex;
+    padding: 0.25rem;
+    background-color: #f3f4f6;
+    border-radius: 0.5rem;
+}
+
+.tab {
+    flex: 1;
+    text-align: center;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border-radius: 0.375rem;
+    transition: all 0.2s;
+}
+
+.tab.active {
+    background-color: white;
+    color: var(--primary-color);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.tab-content {
+    display: none;
+    padding: 1rem 0;
+}
+
+.tab-content.active {
+    display: block;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
 /* Estilo para los radio buttons */
 .delivery-type-radio:checked + label {
-    border-color: var(--primary-color, #4f46e5);
-    box-shadow: 0 0 0 2px var(--primary-color, #4f46e5);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-color);
+}
+
+.delivery-radio-dot {
+    display: none;
+}
+
+.delivery-type-radio:checked + label .delivery-radio-dot {
+    display: block;
 }
 
 input[name="frequency"]:checked + label,
 input[name="day-of-week"]:checked + label {
-    border-color: var(--primary-color, #4f46e5);
+    border-color: var(--primary-color);
     background-color: rgba(79, 70, 229, 0.1);
-    color: var(--primary-color, #4f46e5);
+    color: var(--primary-color);
 }
 
 /* Toggle switch */
-input[type="checkbox"] {
-    transition: all 0.3s;
+.toggle-container {
+    position: relative;
+    display: inline-block;
+    width: 2.5rem;
+    height: 1.5rem;
 }
 
-input[type="checkbox"]:checked {
-    background-color: var(--primary-color, #4f46e5);
-    transform: translateX(100%);
+.toggle {
+    opacity: 0;
+    width: 0;
+    height: 0;
 }
 
-input[type="checkbox"] + label {
-    transition: background-color 0.3s;
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 1.5rem;
 }
 
-input[type="checkbox"]:checked + label {
-    background-color: var(--primary-color, #4f46e5);
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 1rem;
+    width: 1rem;
+    left: 0.25rem;
+    bottom: 0.25rem;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+.toggle:checked + .toggle-slider {
+    background-color: var(--primary-color);
+}
+
+.toggle:checked + .toggle-slider:before {
+    transform: translateX(1rem);
 }
 
 /* Email list animation */
@@ -43,40 +139,129 @@ input[type="checkbox"]:checked + label {
 }
 
 /* Animación para alertas */
+.alert {
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    margin-bottom: 1rem;
+    border: 1px solid transparent;
+}
+
+.alert-success {
+    background-color: #d1fae5;
+    border-color: #a7f3d0;
+    color: #065f46;
+}
+
+.alert-error {
+    background-color: #fee2e2;
+    border-color: #fecaca;
+    color: #b91c1c;
+}
+
 .transition-opacity {
     transition: opacity 0.5s ease;
 }
 
-/* Primary colors */
-:root {
-    --primary-color: #4f46e5;
-    --primary-color-dark: #4338ca;
-    --primary-color-light: #e0e7ff;
+/* Estilos para tablas */
+.survey-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
-.bg-primary-50 { background-color: #f5f3ff; }
-.bg-primary-100 { background-color: #ede9fe; }
-.bg-primary-200 { background-color: #ddd6fe; }
-.bg-primary-300 { background-color: #c4b5fd; }
-.bg-primary-400 { background-color: #a78bfa; }
-.bg-primary-500 { background-color: #8b5cf6; }
-.bg-primary-600 { background-color: #7c3aed; }
-.bg-primary-700 { background-color: #6d28d9; }
-.bg-primary-800 { background-color: #5b21b6; }
-.bg-primary-900 { background-color: #4c1d95; }
+.survey-table th {
+    text-align: left;
+    padding: 0.75rem 1rem;
+    font-weight: 500;
+    border-bottom: 1px solid var(--border-color);
+}
 
-.text-primary-500 { color: #8b5cf6; }
-.text-primary-600 { color: #7c3aed; }
-.text-primary-700 { color: #6d28d9; }
+.survey-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
 
-.border-primary-500 { border-color: #8b5cf6; }
+.survey-table tr.selected {
+    background-color: rgba(79, 70, 229, 0.05);
+}
 
-.ring-primary-500 { box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.5); }
+/* Animaciones */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
 
-.hover\:bg-primary-50:hover { background-color: #f5f3ff; }
-.hover\:bg-primary-100:hover { background-color: #ede9fe; }
-.hover\:bg-primary-600:hover { background-color: #7c3aed; }
-.hover\:bg-primary-700:hover { background-color: #6d28d9; }
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 
-.focus\:ring-primary-500:focus { box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.5); }
-.focus\:border-primary-500:focus { border-color: #8b5cf6; }
+/* Botones */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    border-radius: 0.375rem;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-color-dark);
+}
+
+.btn-outline {
+    border: 1px solid var(--border-color);
+    background-color: transparent;
+}
+
+.btn-outline:hover {
+    background-color: #f9fafb;
+}
+
+/* Estilos para el modal */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: white;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    max-width: 32rem;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+/* Email list badges */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.badge-outline {
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+}

@@ -17,8 +17,8 @@ namespace SurveyApp.Web.Models
         public string Frequency { get; set; } = "daily";
         public int? DayOfMonth { get; set; }
         public int? DayOfWeek { get; set; }
-        public string Time { get; set; } = "09:00";
-        public string StartDate { get; set; }
+        public string? Time { get; set; } = "09:00";
+        public string? StartDate { get; set; }
     }
 
     public class TriggerSettingsViewModel
