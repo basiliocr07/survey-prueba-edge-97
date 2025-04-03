@@ -6,16 +6,45 @@ using SurveyApp.Domain.Repositories;
 
 namespace SurveyApp.Web.Models
 {
+    /// <summary>
+    /// ViewModel para la configuración de entrega de encuestas
+    /// </summary>
     public class DeliveryConfigViewModel
     {
+        /// <summary>
+        /// Tipo de entrega: manual, scheduled, triggered
+        /// </summary>
         public string Type { get; set; } = "manual";
+        
+        /// <summary>
+        /// Lista de direcciones de correo electrónico para enviar la encuesta
+        /// </summary>
         public List<string> EmailAddresses { get; set; } = new List<string>();
+        
+        /// <summary>
+        /// Configuración para envíos programados
+        /// </summary>
         public ScheduleSettingsViewModel Schedule { get; set; } = new ScheduleSettingsViewModel();
+        
+        /// <summary>
+        /// Configuración para envíos desencadenados por eventos
+        /// </summary>
         public TriggerSettingsViewModel Trigger { get; set; } = new TriggerSettingsViewModel();
+        
+        /// <summary>
+        /// Indica si se deben incluir todos los clientes en el envío
+        /// </summary>
         public bool IncludeAllCustomers { get; set; }
+        
+        /// <summary>
+        /// Filtro de tipo de cliente para incluir solo ciertos tipos
+        /// </summary>
         public string CustomerTypeFilter { get; set; }
         
-        // Método para cargar emails de clientes según el filtro
+        /// <summary>
+        /// Carga los correos electrónicos de los clientes según el filtro configurado
+        /// </summary>
+        /// <param name="customerRepository">Repositorio de clientes para obtener los emails</param>
         public async Task LoadCustomerEmails(ICustomerRepository customerRepository)
         {
             if (IncludeAllCustomers)
@@ -35,7 +64,9 @@ namespace SurveyApp.Web.Models
             }
         }
         
-        // Método para mapear a DeliveryConfiguration del dominio
+        /// <summary>
+        /// Convierte este ViewModel a un modelo DeliveryConfiguration del dominio
+        /// </summary>
         public SurveyApp.Domain.Models.DeliveryConfiguration ToDeliveryConfiguration()
         {
             return new SurveyApp.Domain.Models.DeliveryConfiguration
@@ -61,7 +92,9 @@ namespace SurveyApp.Web.Models
             };
         }
         
-        // Método para crear desde DeliveryConfiguration del dominio
+        /// <summary>
+        /// Crea un ViewModel desde un modelo DeliveryConfiguration del dominio
+        /// </summary>
         public static DeliveryConfigViewModel FromDeliveryConfiguration(SurveyApp.Domain.Models.DeliveryConfiguration config)
         {
             if (config == null)
@@ -93,6 +126,9 @@ namespace SurveyApp.Web.Models
         }
     }
 
+    /// <summary>
+    /// Configuración para envíos programados
+    /// </summary>
     public class ScheduleSettingsViewModel
     {
         public string Frequency { get; set; } = "monthly";
@@ -102,6 +138,9 @@ namespace SurveyApp.Web.Models
         public DateTime? StartDate { get; set; }
     }
 
+    /// <summary>
+    /// Configuración para envíos desencadenados por eventos
+    /// </summary>
     public class TriggerSettingsViewModel
     {
         public string Type { get; set; } = "ticket-closed";

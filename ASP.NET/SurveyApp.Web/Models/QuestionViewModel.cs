@@ -5,6 +5,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SurveyApp.Web.Models
 {
+    /// <summary>
+    /// Modelo de vista para preguntas de encuesta
+    /// </summary>
     public class QuestionViewModel
     {
         public string Id { get; set; }
@@ -23,13 +26,18 @@ namespace SurveyApp.Web.Models
         
         public QuestionSettingsViewModel Settings { get; set; }
         
-        // Title property for compatibility with React version
+        /// <summary>
+        /// Propiedad Title para compatibilidad con la versión React
+        /// Internamente, siempre se debe usar Text para la pregunta
+        /// </summary>
         public string Title { 
             get { return Text; } 
             set { Text = value; } 
         }
         
-        // Método para convertir a modelo de dominio
+        /// <summary>
+        /// Convierte el ViewModel a un modelo de dominio Question
+        /// </summary>
         public SurveyApp.Domain.Models.Question ToDomainModel()
         {
             int questionId = 0;
@@ -61,7 +69,9 @@ namespace SurveyApp.Web.Models
             };
         }
         
-        // Método para crear desde modelo de dominio
+        /// <summary>
+        /// Crea un ViewModel desde un modelo de dominio Question
+        /// </summary>
         public static QuestionViewModel FromDomainModel(SurveyApp.Domain.Models.Question question)
         {
             return new QuestionViewModel
@@ -80,7 +90,9 @@ namespace SurveyApp.Web.Models
             };
         }
         
-        // Método para asegurar la consistencia del modelo
+        /// <summary>
+        /// Asegura la consistencia del modelo, inicializando valores por defecto según el tipo de pregunta
+        /// </summary>
         public void EnsureConsistency()
         {
             // Ensure text is not null

@@ -4,6 +4,9 @@ using System;
 
 namespace SurveyApp.Web.Models
 {
+    /// <summary>
+    /// ViewModel detallado para mostrar una encuesta completa
+    /// </summary>
     public class SurveyDetailViewModel
     {
         public int Id { get; set; }
@@ -11,9 +14,20 @@ namespace SurveyApp.Web.Models
         public string Description { get; set; }
         public DateTime CreatedAt { get; set; }
         public string Status { get; set; }
+        
+        /// <summary>
+        /// Lista de preguntas de la encuesta usando SurveyQuestionViewModel
+        /// </summary>
         public List<SurveyQuestionViewModel> Questions { get; set; } = new List<SurveyQuestionViewModel>();
+        
+        /// <summary>
+        /// Configuración de entrega de la encuesta
+        /// </summary>
         public DeliveryConfigViewModel DeliveryConfig { get; set; }
         
+        /// <summary>
+        /// Crea un SurveyDetailViewModel desde un modelo de dominio Survey
+        /// </summary>
         public static SurveyDetailViewModel FromDomainModel(SurveyApp.Domain.Models.Survey survey)
         {
             var viewModel = new SurveyDetailViewModel
@@ -25,40 +39,17 @@ namespace SurveyApp.Web.Models
                 Status = survey.Status,
                 Questions = new List<SurveyQuestionViewModel>(),
                 DeliveryConfig = survey.DeliveryConfig != null 
-                    ? new DeliveryConfigViewModel
-                    {
-                        Type = survey.DeliveryConfig.Type,
-                        EmailAddresses = survey.DeliveryConfig.EmailAddresses,
-                        IncludeAllCustomers = survey.DeliveryConfig.IncludeAllCustomers,
-                        CustomerTypeFilter = survey.DeliveryConfig.CustomerTypeFilter,
-                        Schedule = survey.DeliveryConfig.Schedule != null 
-                            ? new ScheduleSettingsViewModel
-                            {
-                                Frequency = survey.DeliveryConfig.Schedule.Frequency,
-                                DayOfMonth = survey.DeliveryConfig.Schedule.DayOfMonth,
-                                DayOfWeek = survey.DeliveryConfig.Schedule.DayOfWeek,
-                                Time = survey.DeliveryConfig.Schedule.Time,
-                                StartDate = survey.DeliveryConfig.Schedule.StartDate
-                            } 
-                            : null,
-                        Trigger = survey.DeliveryConfig.Trigger != null
-                            ? new TriggerSettingsViewModel
-                            {
-                                Type = survey.DeliveryConfig.Trigger.Type,
-                                DelayHours = survey.DeliveryConfig.Trigger.DelayHours,
-                                SendAutomatically = survey.DeliveryConfig.Trigger.SendAutomatically
-                            }
-                            : null
-                    }
+                    ? DeliveryConfigViewModel.FromDeliveryConfiguration(survey.DeliveryConfig)
                     : null
             };
             
+            // Convertir las preguntas del dominio a viewmodels
             foreach (var question in survey.Questions)
             {
                 var questionViewModel = new SurveyQuestionViewModel
                 {
                     Id = question.Id.ToString(),
-                    Title = question.Text,
+                    Title = question.Text, // Mapeamos Text del dominio a Title del viewmodel
                     Description = question.Description,
                     Type = question.Type,
                     Required = question.Required,
@@ -77,6 +68,9 @@ namespace SurveyApp.Web.Models
             return viewModel;
         }
         
+        /// <summary>
+        /// Convierte este SurveyDetailViewModel a un modelo de dominio Survey
+        /// </summary>
         public SurveyApp.Domain.Models.Survey ToDomainModel()
         {
             var domainModel = new SurveyApp.Domain.Models.Survey
@@ -89,6 +83,7 @@ namespace SurveyApp.Web.Models
                 Questions = new List<SurveyApp.Domain.Models.Question>()
             };
             
+            // Convertir las preguntas del viewmodel a dominio
             if (this.Questions != null)
             {
                 foreach (var question in this.Questions)
@@ -96,7 +91,7 @@ namespace SurveyApp.Web.Models
                     var domainQuestion = new SurveyApp.Domain.Models.Question
                     {
                         Id = int.TryParse(question.Id, out int id) ? id : 0,
-                        Text = question.Title,
+                        Text = question.Title, // Mapeamos Title del viewmodel a Text del dominio
                         Description = question.Description ?? "",
                         Type = question.Type,
                         Required = question.Required,
@@ -116,37 +111,10 @@ namespace SurveyApp.Web.Models
                 }
             }
             
+            // Configuración de entrega
             if (this.DeliveryConfig != null)
             {
-                domainModel.DeliveryConfig = new SurveyApp.Domain.Models.DeliveryConfiguration
-                {
-                    Type = this.DeliveryConfig.Type,
-                    EmailAddresses = this.DeliveryConfig.EmailAddresses ?? new List<string>(),
-                    IncludeAllCustomers = this.DeliveryConfig.IncludeAllCustomers,
-                    CustomerTypeFilter = this.DeliveryConfig.CustomerTypeFilter
-                };
-                
-                if (this.DeliveryConfig.Schedule != null)
-                {
-                    domainModel.DeliveryConfig.Schedule = new SurveyApp.Domain.Models.ScheduleSettings
-                    {
-                        Frequency = this.DeliveryConfig.Schedule.Frequency,
-                        DayOfMonth = this.DeliveryConfig.Schedule.DayOfMonth ?? 1,
-                        DayOfWeek = this.DeliveryConfig.Schedule.DayOfWeek,
-                        Time = this.DeliveryConfig.Schedule.Time ?? "09:00",
-                        StartDate = this.DeliveryConfig.Schedule.StartDate
-                    };
-                }
-                
-                if (this.DeliveryConfig.Trigger != null)
-                {
-                    domainModel.DeliveryConfig.Trigger = new SurveyApp.Domain.Models.TriggerSettings
-                    {
-                        Type = this.DeliveryConfig.Trigger.Type,
-                        DelayHours = this.DeliveryConfig.Trigger.DelayHours,
-                        SendAutomatically = this.DeliveryConfig.Trigger.SendAutomatically
-                    };
-                }
+                domainModel.DeliveryConfig = this.DeliveryConfig.ToDeliveryConfiguration();
             }
             
             return domainModel;
