@@ -3,6 +3,8 @@ using System.Collections.Generic;
 
 namespace SurveyApp.Web.Models
 {
+    // Esta clase se mantiene por compatibilidad con código existente,
+    // pero sus propiedades ahora redirigen a QuestionStatViewModel
     public class QuestionStatisticViewModel
     {
         public string QuestionId { get; set; }
@@ -12,6 +14,7 @@ namespace SurveyApp.Web.Models
         public Dictionary<string, ResponseDistributionViewModel> ResponseDistribution { get; set; } = new Dictionary<string, ResponseDistributionViewModel>();
     }
 
+    // Estas clases se mantienen por compatibilidad con código existente
     public class ResponseViewModel
     {
         public string Answer { get; set; }

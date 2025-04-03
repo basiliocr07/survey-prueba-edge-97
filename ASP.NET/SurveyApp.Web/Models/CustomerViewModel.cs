@@ -4,7 +4,7 @@ using SurveyApp.Domain.Models;
 
 namespace SurveyApp.Web.Models
 {
-    public class CustomerViewModel
+    public class CustomersViewModel
     {
         public List<Customer> Customers { get; set; } = new List<Customer>();
         public List<Service> Services { get; set; } = new List<Service>();

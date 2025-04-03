@@ -27,7 +27,7 @@ namespace SurveyApp.Web.Models
         /// <summary>
         /// Lista de clientes disponibles para enviar encuestas
         /// </summary>
-        public List<CustomerViewModel> Customers { get; set; } = new List<CustomerViewModel>();
+        public List<EmailRecipientViewModel> Recipients { get; set; } = new List<EmailRecipientViewModel>();
         
         /// <summary>
         /// Lista de tipos de clientes para el filtrado
@@ -49,7 +49,7 @@ namespace SurveyApp.Web.Models
     /// <summary>
     /// Modelo simplificado de cliente para selección en pantalla de envío de emails
     /// </summary>
-    public class CustomerViewModel
+    public class EmailRecipientViewModel
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;

@@ -11,12 +11,12 @@ namespace SurveyApp.Web.Models
         public IEnumerable<ServiceUsageData> ServiceUsageData { get; set; } = new List<ServiceUsageData>();
         public IEnumerable<MonthlyGrowthData> MonthlyGrowthData { get; set; } = new List<MonthlyGrowthData>();
         public IEnumerable<BrandGrowthData> BrandGrowthData { get; set; } = new List<BrandGrowthData>();
-        public CustomerFormViewModel CustomerForm { get; set; } = new CustomerFormViewModel();
+        public CustomerFormDataViewModel CustomerForm { get; set; } = new CustomerFormDataViewModel();
         public string? SelectedTimeRange { get; set; }
         public string? SelectedChartType { get; set; }
     }
 
-    public class CustomerFormViewModel
+    public class CustomerFormDataViewModel
     {
         public string Id { get; set; } = string.Empty;
         public string BrandName { get; set; } = string.Empty;
