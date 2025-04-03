@@ -14,5 +14,8 @@ namespace SurveyApp.Domain.Models
     {
         public string Name { get; set; } = string.Empty;
         public int Count { get; set; }
+        
+        // Propiedad Id para compatibilidad con la vista
+        public string Id { get; set; } = string.Empty;
     }
 }
