@@ -93,9 +93,9 @@ namespace SurveyApp.Web.Controllers
                 return NotFound();
             }
 
-            survey.DeliveryConfig = MapViewModelToDeliveryConfig(config);
-
-            bool success = await _surveyService.UpdateSurveyDeliveryConfigAsync(surveyId, survey.DeliveryConfig);
+            // Usar el método ToDeliveryConfiguration de DeliveryConfigViewModel
+            var deliveryConfig = config.ToDeliveryConfiguration();
+            bool success = await _surveyService.UpdateSurveyDeliveryConfigAsync(surveyId, deliveryConfig);
 
             return Json(new { success, message = success ? "Configuración guardada exitosamente" : "Error al guardar la configuración" });
         }
@@ -299,55 +299,14 @@ namespace SurveyApp.Web.Controllers
                 return GetGlobalDeliveryConfig();
             }
 
-            return MapDeliveryConfigToViewModel(survey.DeliveryConfig);
+            // Usar el método FromDeliveryConfiguration
+            return DeliveryConfigViewModel.FromDeliveryConfiguration(survey.DeliveryConfig);
         }
 
         private DeliveryConfiguration MapViewModelToDeliveryConfig(DeliveryConfigViewModel viewModel)
         {
-            return new DeliveryConfiguration
-            {
-                Type = viewModel.Type,
-                EmailAddresses = viewModel.EmailAddresses ?? new List<string>(),
-                Schedule = viewModel.Schedule != null ? new ScheduleSettings
-                {
-                    Frequency = viewModel.Schedule.Frequency,
-                    DayOfMonth = viewModel.Schedule.DayOfMonth ?? 1,
-                    DayOfWeek = viewModel.Schedule.DayOfWeek ?? 1,
-                    Time = viewModel.Schedule.Time ?? "09:00",
-                    StartDate = !string.IsNullOrEmpty(viewModel.Schedule.StartDate) 
-                        ? DateTime.Parse(viewModel.Schedule.StartDate) 
-                        : null
-                } : null,
-                Trigger = viewModel.Trigger != null ? new TriggerSettings
-                {
-                    Type = viewModel.Trigger.Type,
-                    DelayHours = viewModel.Trigger.DelayHours,
-                    SendAutomatically = viewModel.Trigger.SendAutomatically
-                } : null
-            };
-        }
-
-        private DeliveryConfigViewModel MapDeliveryConfigToViewModel(DeliveryConfiguration config)
-        {
-            return new DeliveryConfigViewModel
-            {
-                Type = config.Type,
-                EmailAddresses = config.EmailAddresses,
-                Schedule = config.Schedule != null ? new ScheduleSettingsViewModel
-                {
-                    Frequency = config.Schedule.Frequency,
-                    DayOfMonth = config.Schedule.DayOfMonth,
-                    DayOfWeek = config.Schedule.DayOfWeek,
-                    Time = config.Schedule.Time,
-                    StartDate = config.Schedule.StartDate?.ToString("yyyy-MM-dd")
-                } : null,
-                Trigger = config.Trigger != null ? new TriggerSettingsViewModel
-                {
-                    Type = config.Trigger.Type,
-                    DelayHours = config.Trigger.DelayHours,
-                    SendAutomatically = config.Trigger.SendAutomatically
-                } : null
-            };
+            // Usar el método ToDeliveryConfiguration
+            return viewModel.ToDeliveryConfiguration();
         }
     }
 }

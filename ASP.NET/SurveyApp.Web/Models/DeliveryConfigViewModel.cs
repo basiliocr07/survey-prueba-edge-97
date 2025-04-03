@@ -12,6 +12,63 @@ namespace SurveyApp.Web.Models
         public TriggerSettingsViewModel Trigger { get; set; } = new TriggerSettingsViewModel();
         public bool IncludeAllCustomers { get; set; }
         public string CustomerTypeFilter { get; set; }
+        
+        // Método para mapear a DeliveryConfiguration del dominio
+        public SurveyApp.Domain.Models.DeliveryConfiguration ToDeliveryConfiguration()
+        {
+            return new SurveyApp.Domain.Models.DeliveryConfiguration
+            {
+                Type = this.Type,
+                EmailAddresses = this.EmailAddresses ?? new List<string>(),
+                IncludeAllCustomers = this.IncludeAllCustomers,
+                CustomerTypeFilter = this.CustomerTypeFilter,
+                Schedule = this.Schedule != null ? new SurveyApp.Domain.Models.ScheduleSettings
+                {
+                    Frequency = this.Schedule.Frequency,
+                    DayOfMonth = this.Schedule.DayOfMonth ?? 1,
+                    DayOfWeek = this.Schedule.DayOfWeek,
+                    Time = this.Schedule.Time ?? "09:00",
+                    StartDate = this.Schedule.StartDate
+                } : null,
+                Trigger = this.Trigger != null ? new SurveyApp.Domain.Models.TriggerSettings
+                {
+                    Type = this.Trigger.Type,
+                    DelayHours = this.Trigger.DelayHours,
+                    SendAutomatically = this.Trigger.SendAutomatically
+                } : null
+            };
+        }
+        
+        // Método para crear desde DeliveryConfiguration del dominio
+        public static DeliveryConfigViewModel FromDeliveryConfiguration(SurveyApp.Domain.Models.DeliveryConfiguration config)
+        {
+            if (config == null)
+            {
+                return new DeliveryConfigViewModel();
+            }
+            
+            return new DeliveryConfigViewModel
+            {
+                Type = config.Type,
+                EmailAddresses = config.EmailAddresses,
+                IncludeAllCustomers = config.IncludeAllCustomers,
+                CustomerTypeFilter = config.CustomerTypeFilter,
+                Schedule = config.Schedule != null ? new ScheduleSettingsViewModel
+                {
+                    Frequency = config.Schedule.Frequency,
+                    DayOfMonth = config.Schedule.DayOfMonth,
+                    DayOfWeek = config.Schedule.DayOfWeek,
+                    Time = config.Schedule.Time,
+                    StartDate = config.Schedule.StartDate
+                } : null,
+                Trigger = config.Trigger != null ? new TriggerSettingsViewModel
+                {
+                    Type = config.Trigger.Type,
+                    DelayHours = config.Trigger.DelayHours,
+                    SendAutomatically = config.Trigger.SendAutomatically
+                } : null
+            };
+        }
     }
 
     public class ScheduleSettingsViewModel
