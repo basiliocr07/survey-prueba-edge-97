@@ -79,5 +79,36 @@ namespace SurveyApp.Web.Models
                 } : null
             };
         }
+        
+        // Método para asegurar la consistencia del modelo
+        public void EnsureConsistency()
+        {
+            // Ensure text is not null
+            Text = Text ?? string.Empty;
+            
+            // Add sample options for choice-based questions if none exist
+            if ((Type == "multiple-choice" || Type == "single-choice" || Type == "dropdown" || Type == "ranking") && 
+                (Options == null || Options.Count == 0))
+            {
+                Options = new List<string> { "Option 1", "Option 2" };
+            }
+
+            // Create default settings for special question types
+            if (Settings == null)
+            {
+                Settings = new QuestionSettingsViewModel();
+                
+                if (Type == "rating")
+                {
+                    Settings.Min = 1;
+                    Settings.Max = 5;
+                }
+                else if (Type == "nps")
+                {
+                    Settings.Min = 0;
+                    Settings.Max = 10;
+                }
+            }
+        }
     }
 }

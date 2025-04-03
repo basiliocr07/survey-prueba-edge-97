@@ -26,6 +26,23 @@ namespace SurveyApp.Web.Models
                 Settings = question.Settings
             };
         }
+        
+        public QuestionViewModel ToQuestionViewModel()
+        {
+            var questionViewModel = new QuestionViewModel
+            {
+                Id = Id,
+                Text = Title, // Map Title back to Text
+                Description = Description,
+                Type = Type,
+                Required = Required,
+                Options = Options ?? new List<string>(),
+                Settings = Settings
+            };
+            
+            questionViewModel.EnsureConsistency();
+            return questionViewModel;
+        }
 
         public void EnsureConsistency()
         {
