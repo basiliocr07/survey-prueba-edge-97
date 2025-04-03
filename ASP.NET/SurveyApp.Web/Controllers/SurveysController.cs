@@ -87,26 +87,26 @@ namespace SurveyApp.Web.Controllers
                     TotalResponses = statistics.TotalResponses,
                     AverageCompletionTime = statistics.AverageCompletionTime,
                     CompletionRate = statistics.CompletionRate,
-                    QuestionStats = statistics.QuestionStats?.Select(q => new QuestionStatisticViewModel
+                    QuestionStats = statistics.QuestionStats?.Select(q => new QuestionStatViewModel
                     {
                         QuestionId = q.QuestionId,
                         QuestionTitle = q.QuestionTitle,
                         QuestionText = q.QuestionText,
-                        Responses = q.Responses?.Select(r => new ResponseViewModel
+                        Responses = q.Responses?.Select(r => new StatResponseViewModel
                         {
                             Answer = r.Answer,
                             Count = r.Count,
                             Percentage = r.Percentage
-                        }).ToList() ?? new List<ResponseViewModel>(),
+                        }).ToList() ?? new List<StatResponseViewModel>(),
                         ResponseDistribution = q.ResponseDistribution?.ToDictionary(
                             kvp => kvp.Key,
-                            kvp => new ResponseDistributionViewModel
+                            kvp => new ResponseDistribution
                             {
                                 Count = kvp.Value.Count,
                                 Percentage = kvp.Value.Percentage
                             }
-                        ) ?? new Dictionary<string, ResponseDistributionViewModel>()
-                    }).ToList() ?? new List<QuestionStatisticViewModel>()
+                        ) ?? new Dictionary<string, ResponseDistribution>()
+                    }).ToList() ?? new List<QuestionStatViewModel>()
                 };
             }
             

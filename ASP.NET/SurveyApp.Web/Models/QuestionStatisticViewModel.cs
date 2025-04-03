@@ -3,8 +3,7 @@ using System.Collections.Generic;
 
 namespace SurveyApp.Web.Models
 {
-    // Esta clase se mantiene por compatibilidad con código existente,
-    // pero sus propiedades ahora redirigen a QuestionStatViewModel
+    // Esta clase contiene las estadísticas de una pregunta individual
     public class QuestionStatisticViewModel
     {
         public string QuestionId { get; set; }
@@ -14,7 +13,7 @@ namespace SurveyApp.Web.Models
         public Dictionary<string, ResponseDistributionViewModel> ResponseDistribution { get; set; } = new Dictionary<string, ResponseDistributionViewModel>();
     }
 
-    // Estas clases se mantienen por compatibilidad con código existente
+    // Modelo para representar una respuesta y su distribución estadística
     public class ResponseViewModel
     {
         public string Answer { get; set; }
@@ -22,6 +21,7 @@ namespace SurveyApp.Web.Models
         public double Percentage { get; set; }
     }
 
+    // Modelo para representar la distribución de respuestas
     public class ResponseDistributionViewModel
     {
         public int Count { get; set; }

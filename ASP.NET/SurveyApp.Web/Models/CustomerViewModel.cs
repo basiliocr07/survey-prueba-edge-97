@@ -13,4 +13,16 @@ namespace SurveyApp.Web.Models
         public string ChartType { get; set; } = "services";
         public string SearchTerm { get; set; } = "";
     }
+
+    // Modelo para representar un cliente individual (eliminamos duplicidad)
+    public class CustomerViewModel
+    {
+        public int Id { get; set; }
+        public string BrandName { get; set; }
+        public string ContactName { get; set; }
+        public string ContactEmail { get; set; }
+        public string ContactPhone { get; set; }
+        public string CustomerType { get; set; }
+        public List<string> Services { get; set; } = new List<string>();
+    }
 }
