@@ -9,9 +9,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, UserCircle2 } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { MoreHorizontal, UserCircle2, ChevronDown, ChevronUp, MessageSquare } from "lucide-react";
+import { useSurveyResponse } from "@/application/hooks/useSurveyResponse";
 
 const Dashboard = () => {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const { responses, isLoading } = useSurveyResponse();
+  
+  // Tomar solo las últimas 5 respuestas
+  const latestResponses = responses?.slice(0, 5) || [];
+  
   const surveyData = [
     {
       id: 1,
@@ -66,6 +74,17 @@ const Dashboard = () => {
     }
   ];
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('es-ES', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+  };
+
   return (
     <div className="container py-8">
       <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
@@ -99,6 +118,72 @@ const Dashboard = () => {
           <CardContent>
             <div className="text-3xl font-bold">450</div>
           </CardContent>
+        </Card>
+      </div>
+
+      {/* Contenedor de últimas respuestas de encuestas */}
+      <div className="mb-6">
+        <Card className="shadow-md">
+          <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+            <CardHeader className="py-3">
+              <div className="flex justify-between items-center">
+                <CardTitle className="text-lg flex items-center">
+                  <MessageSquare className="h-5 w-5 mr-2" />
+                  Últimas Respuestas
+                </CardTitle>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                    {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </Button>
+                </CollapsibleTrigger>
+              </div>
+              <CardDescription>
+                {latestResponses.length > 0 
+                  ? `Mostrando las últimas ${latestResponses.length} respuestas recibidas` 
+                  : "No hay respuestas recientes"}
+              </CardDescription>
+            </CardHeader>
+            
+            <CollapsibleContent>
+              <CardContent>
+                {isLoading ? (
+                  <div className="text-center py-4">
+                    <p className="text-sm text-muted-foreground">Cargando respuestas...</p>
+                  </div>
+                ) : latestResponses.length === 0 ? (
+                  <div className="text-center py-4">
+                    <p className="text-sm text-muted-foreground">No hay respuestas recientes</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {latestResponses.map((response) => (
+                      <div key={response.id} className="border rounded-md p-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <div className="font-medium">{response.respondentName}</div>
+                            <div className="text-sm text-muted-foreground">{response.respondentEmail}</div>
+                            {response.respondentCompany && (
+                              <div className="text-xs text-muted-foreground mt-1">
+                                {response.respondentCompany}
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {formatDate(response.submittedAt)}
+                          </div>
+                        </div>
+                        <div className="mt-2">
+                          <div className="text-xs text-muted-foreground">
+                            {response.answers.length} respuestas enviadas
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </CollapsibleContent>
+          </Collapsible>
         </Card>
       </div>
 
