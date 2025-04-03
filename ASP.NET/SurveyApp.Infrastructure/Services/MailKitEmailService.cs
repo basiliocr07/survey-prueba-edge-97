@@ -29,14 +29,14 @@ namespace SurveyApp.Infrastructure.Services
             _configuration = configuration;
             _logger = logger;
 
-            // Cargar configuración desde appsettings.json
-            _smtpServer = _configuration["Email:SmtpServer"] ?? "smtp.gmail.com";
-            _smtpPort = int.Parse(_configuration["Email:SmtpPort"] ?? "587");
-            _smtpUsername = _configuration["Email:SmtpUsername"] ?? "";
-            _smtpPassword = _configuration["Email:SmtpPassword"] ?? "";
-            _fromEmail = _configuration["Email:FromEmail"] ?? _configuration["Email:SenderEmail"] ?? "";
-            _fromName = _configuration["Email:FromName"] ?? _configuration["Email:SenderName"] ?? "Sistema de Encuestas";
-            _useSsl = bool.Parse(_configuration["Email:UseSsl"] ?? "true");
+            // Cargar configuración desde appsettings.json usando EmailSettings
+            _smtpServer = _configuration["EmailSettings:SmtpServer"] ?? "smtp.gmail.com";
+            _smtpPort = int.Parse(_configuration["EmailSettings:SmtpPort"] ?? "587");
+            _smtpUsername = _configuration["EmailSettings:SmtpUsername"] ?? "";
+            _smtpPassword = _configuration["EmailSettings:SmtpPassword"] ?? "";
+            _fromEmail = _configuration["EmailSettings:SenderEmail"] ?? "";
+            _fromName = _configuration["EmailSettings:SenderName"] ?? "Sistema de Encuestas";
+            _useSsl = bool.Parse(_configuration["EmailSettings:UseSsl"] ?? "true");
         }
 
         public async Task<bool> SendEmailAsync(string to, string subject, string htmlContent)

@@ -7,8 +7,10 @@ using MediatR;
 using SurveyApp.Domain.Repositories;
 using SurveyApp.Domain.Services;
 using SurveyApp.Infrastructure.Repositories;
+using SurveyApp.Infrastructure.Services;
 using SurveyApp.Infrastructure.EmailService;
 using SurveyApp.Application.Customers.Queries.GetAllCustomers;
+using SurveyApp.Web.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,7 +24,13 @@ builder.Services.AddMediatR(cfg => {
 
 // Registrar servicios de infraestructura
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+
+// Registrar servicios de email
+builder.Services.AddScoped<IEmailService, MailKitEmailService>();
 builder.Services.AddScoped<IEmailSender, EmailSender>();
+
+// Agregar servicios de aplicación
+builder.Services.AddApplicationServices();
 
 // Agregar las conexiones a la base de datos
 builder.Services.AddDbContext<SurveyApp.Infrastructure.Data.ApplicationDbContext>();
