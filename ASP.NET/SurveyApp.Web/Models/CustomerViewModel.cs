@@ -24,5 +24,11 @@ namespace SurveyApp.Web.Models
         public string ContactPhone { get; set; }
         public string CustomerType { get; set; }
         public List<string> Services { get; set; } = new List<string>();
+        
+        // Añadimos las propiedades faltantes
+        public List<Customer> Customers { get; set; } = new List<Customer>();
+        public string TimeRange { get; set; } = "3";
+        public string ChartType { get; set; } = "services";
+        public List<ServiceUsageData> ServiceUsageData { get; set; } = new List<ServiceUsageData>();
     }
 }
