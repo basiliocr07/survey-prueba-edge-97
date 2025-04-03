@@ -1,602 +1,606 @@
 
-/**
- * Survey Creation JavaScript
- * Handles the interactive functionality for the survey creation page
- */
+// Survey Creation JavaScript
 document.addEventListener('DOMContentLoaded', function() {
-    // Tab functionality
-    const tabButtons = document.querySelectorAll('.tab-button');
-    const tabContents = document.querySelectorAll('.tab-content');
+    // Main elements
+    const surveyForm = document.getElementById('surveyForm');
+    const questionsContainer = document.getElementById('questionsContainer');
+    const emptyQuestionsState = document.getElementById('emptyQuestionsState');
+    const questionBuilderTemplate = document.getElementById('questionBuilderTemplate').innerHTML;
+    const optionTemplate = document.getElementById('optionTemplate').innerHTML;
     
-    tabButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const target = this.dataset.tab;
-            
-            // Update active tab button
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            this.classList.add('active');
-            
-            // Show the selected tab content
-            tabContents.forEach(content => {
-                if (content.id === target) {
-                    content.classList.remove('hidden');
-                } else {
-                    content.classList.add('hidden');
-                }
-            });
-        });
-    });
-    
-    // Question type toggle dropdown
-    document.addEventListener('click', function(e) {
-        if (e.target && (e.target.classList.contains('question-type-toggle') || e.target.closest('.question-type-toggle'))) {
-            const button = e.target.classList.contains('question-type-toggle') ? e.target : e.target.closest('.question-type-toggle');
-            const dropdown = button.nextElementSibling;
-            
-            // Toggle this dropdown
-            if (dropdown.classList.contains('hidden')) {
-                dropdown.classList.remove('hidden');
-                
-                // Close all other dropdowns
-                document.querySelectorAll('.question-types-dropdown:not(.hidden)').forEach(otherDropdown => {
-                    if (otherDropdown !== dropdown) {
-                        otherDropdown.classList.add('hidden');
-                    }
-                });
-            } else {
-                dropdown.classList.add('hidden');
-            }
-        } else if (e.target && e.target.classList.contains('question-type-option')) {
-            // Handle question type selection
-            const option = e.target;
-            const type = option.dataset.type;
-            const questionCard = option.closest('.question-card');
-            const questionIndex = questionCard.dataset.questionIndex;
-            
-            // Update the hidden type input
-            const typeInput = questionCard.querySelector(`[name="Questions[${questionIndex}].Type"]`);
-            if (typeInput) {
-                typeInput.value = type;
-                
-                // Update the display text
-                const typeToggle = questionCard.querySelector('.question-type-toggle');
-                if (typeToggle) {
-                    const typeText = typeToggle.querySelector('span');
-                    if (typeText) {
-                        typeText.innerHTML = `Question Type: <span class="font-medium">${type.replace('-', ' ')}</span>`;
-                    }
-                }
-                
-                // Update UI based on question type
-                updateQuestionTypeUI(questionCard, type);
-                
-                // Hide dropdown
-                option.closest('.question-types-dropdown').classList.add('hidden');
-                
-                // Mark this option as selected
-                option.closest('.question-types-dropdown').querySelectorAll('.question-type-option').forEach(opt => {
-                    opt.classList.remove('selected');
-                });
-                option.classList.add('selected');
-            }
-        } else if (!e.target.closest('.question-types-dropdown')) {
-            // Close all dropdowns when clicking outside
-            document.querySelectorAll('.question-types-dropdown:not(.hidden)').forEach(dropdown => {
-                dropdown.classList.add('hidden');
-            });
-        }
-    });
-    
-    // Toggle question card expand/collapse
-    document.addEventListener('click', function(e) {
-        if (e.target && (e.target.classList.contains('toggle-question-btn') || e.target.closest('.toggle-question-btn'))) {
-            const button = e.target.classList.contains('toggle-question-btn') ? e.target : e.target.closest('.toggle-question-btn');
-            const questionCard = button.closest('.question-card');
-            const content = questionCard.querySelector('.question-content');
-            
-            if (content.classList.contains('hidden')) {
-                content.classList.remove('hidden');
-                button.querySelector('svg').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>';
-            } else {
-                content.classList.add('hidden');
-                button.querySelector('svg').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>';
-            }
-        }
-    });
-    
-    function updateQuestionTypeUI(questionCard, type) {
-        const index = questionCard.dataset.questionIndex;
-        const optionsContainer = questionCard.querySelector(`#options_${index}`);
-        const ratingContainer = questionCard.querySelector(`#rating_${index}`);
-        const npsContainer = questionCard.querySelector(`#nps_${index}`);
-        
-        // Hide all containers first
-        if (optionsContainer) optionsContainer.classList.add('hidden');
-        if (ratingContainer) ratingContainer.classList.add('hidden');
-        if (npsContainer) npsContainer.classList.add('hidden');
-        
-        // Show container based on question type
-        if (['multiple-choice', 'single-choice', 'dropdown', 'ranking'].includes(type)) {
-            if (optionsContainer) {
-                optionsContainer.classList.remove('hidden');
-                
-                // Ensure at least 2 options exist
-                const optionsList = questionCard.querySelector(`#optionsList_${index}`);
-                if (optionsList && optionsList.children.length < 2) {
-                    for (let i = optionsList.children.length; i < 2; i++) {
-                        addOptionToQuestion(index);
-                    }
-                }
-            }
-        } else if (type === 'rating') {
-            if (ratingContainer) {
-                ratingContainer.classList.remove('hidden');
-            }
-        } else if (type === 'nps') {
-            if (npsContainer) {
-                npsContainer.classList.remove('hidden');
-            }
-        }
-    }
-    
-    // Add option buttons
-    document.addEventListener('click', function(e) {
-        if (e.target && (e.target.classList.contains('add-option-btn') || e.target.closest('.add-option-btn'))) {
-            const button = e.target.classList.contains('add-option-btn') ? e.target : e.target.closest('.add-option-btn');
-            const questionIndex = button.dataset.questionId;
-            addOptionToQuestion(questionIndex);
-        }
-    });
-    
-    function addOptionToQuestion(questionIndex) {
-        const optionsContainer = document.getElementById(`optionsList_${questionIndex}`);
-        if (!optionsContainer) return;
-        
-        const optionCount = optionsContainer.querySelectorAll('.option-item').length;
-        
-        const newOption = document.createElement('div');
-        newOption.className = 'option-item flex items-center gap-2 mb-2';
-        newOption.innerHTML = `
-            <input type="text" name="Questions[${questionIndex}].Options[${optionCount}]" 
-                  class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" 
-                  value="New Option">
-            <button type="button" class="remove-option-btn text-gray-500 hover:text-red-500 p-1 rounded-full" 
-                   data-question-id="${questionIndex}" data-option-index="${optionCount}">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-            </button>
-        `;
-        
-        optionsContainer.appendChild(newOption);
-        updateOptionIndices(questionIndex);
-    }
-    
-    // Remove option buttons
-    document.addEventListener('click', function(e) {
-        if (e.target && (e.target.classList.contains('remove-option-btn') || e.target.closest('.remove-option-btn'))) {
-            const button = e.target.classList.contains('remove-option-btn') ? e.target : e.target.closest('.remove-option-btn');
-            const questionId = button.dataset.questionId;
-            const optionsContainer = document.getElementById(`optionsList_${questionId}`);
-            
-            // No eliminar si solo quedan 2 opciones
-            if (optionsContainer.querySelectorAll('.option-item').length <= 2) {
-                alert('Cannot remove option. At least 2 options are required.');
-                return;
-            }
-            
-            button.closest('.option-item').remove();
-            updateOptionIndices(questionId);
-        }
-    });
-    
-    function updateOptionIndices(questionId) {
-        const optionsContainer = document.getElementById(`optionsList_${questionId}`);
-        const options = optionsContainer.querySelectorAll('.option-item');
-        
-        options.forEach((item, index) => {
-            const input = item.querySelector('input');
-            input.name = `Questions[${questionId}].Options[${index}]`;
-            
-            const removeBtn = item.querySelector('.remove-option-btn');
-            removeBtn.dataset.optionIndex = index;
-        });
-    }
-    
-    // Delivery method selection
-    const deliveryTypeRadios = document.querySelectorAll('input[name="DeliveryConfig.Type"]');
-    const deliverySettings = {
-        manual: document.getElementById('manualSettings'),
-        scheduled: document.getElementById('scheduledSettings'),
-        triggered: document.getElementById('triggerSettings')
-    };
-    
-    deliveryTypeRadios.forEach(radio => {
-        radio.addEventListener('change', function() {
-            const selectedType = this.value;
-            
-            // Show the selected delivery settings
-            Object.keys(deliverySettings).forEach(type => {
-                if (type === selectedType) {
-                    deliverySettings[type].classList.remove('hidden');
-                } else {
-                    deliverySettings[type].classList.add('hidden');
-                }
-            });
-        });
-    });
-    
-    // Schedule frequency selection
-    const frequencyRadios = document.querySelectorAll('input[name="DeliveryConfig.Schedule.Frequency"]');
-    const dayOfMonthContainer = document.getElementById('dayOfMonthContainer');
-    const dayOfWeekContainer = document.getElementById('dayOfWeekContainer');
-    
-    frequencyRadios.forEach(radio => {
-        radio.addEventListener('change', function() {
-            const selectedFrequency = this.value;
-            
-            if (selectedFrequency === 'monthly') {
-                dayOfMonthContainer.classList.remove('hidden');
-                dayOfWeekContainer.classList.add('hidden');
-            } else if (selectedFrequency === 'weekly') {
-                dayOfMonthContainer.classList.add('hidden');
-                dayOfWeekContainer.classList.remove('hidden');
-            } else {
-                dayOfMonthContainer.classList.add('hidden');
-                dayOfWeekContainer.classList.add('hidden');
-            }
-        });
-    });
-    
-    // Email address list management
-    const emailInput = document.getElementById('emailInput');
-    const addEmailBtn = document.getElementById('addEmailBtn');
-    const emailListContainer = document.getElementById('emailList');
-    
-    if (addEmailBtn) {
-        addEmailBtn.addEventListener('click', function() {
-            if (!emailInput) return;
-            
-            const email = emailInput.value.trim();
-            
-            if (email && validateEmail(email)) {
-                // Add email to the list
-                addEmailToList(email);
-                
-                // Clear the input
-                emailInput.value = '';
-                emailInput.focus();
-            } else {
-                alert('Please enter a valid email address');
-            }
-        });
-    }
-    
-    // Also handle pressing Enter in the email input
-    if (emailInput) {
-        emailInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                addEmailBtn.click();
-            }
-        });
-    }
-    
-    function validateEmail(email) {
-        const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        return re.test(email);
-    }
-    
-    function addEmailToList(email) {
-        const emailCount = emailListContainer.querySelectorAll('.email-item').length;
-        
-        // Create new email item
-        const emailItem = document.createElement('div');
-        emailItem.className = 'email-item flex items-center gap-2 mb-2';
-        emailItem.innerHTML = `
-            <input type="hidden" name="DeliveryConfig.EmailAddresses[${emailCount}]" value="${email}" />
-            <div class="flex-1 px-3 py-2 bg-gray-100 border border-gray-300 rounded-md">
-                ${email}
-            </div>
-            <button type="button" class="remove-email-btn text-gray-500 hover:text-red-500 p-1 rounded-full" title="Remove Email">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-            </button>
-        `;
-        
-        // Add to container
-        emailListContainer.appendChild(emailItem);
-        
-        // Add event listener to the remove button
-        const removeBtn = emailItem.querySelector('.remove-email-btn');
-        removeBtn.addEventListener('click', function() {
-            emailItem.remove();
-            updateEmailIndices();
-        });
-    }
-    
-    function updateEmailIndices() {
-        const emailItems = emailListContainer.querySelectorAll('.email-item');
-        
-        emailItems.forEach((item, index) => {
-            const input = item.querySelector('input');
-            input.name = `DeliveryConfig.EmailAddresses[${index}]`;
-        });
-    }
-    
-    // Load existing emails from hidden inputs
-    const existingEmails = document.querySelectorAll('input[name^="DeliveryConfig.EmailAddresses["]');
-    existingEmails.forEach(input => {
-        const email = input.value;
-        if (email && validateEmail(email)) {
-            addEmailToList(email);
-        }
-    });
-    
-    // Add question button
+    // Buttons
     const addQuestionBtn = document.getElementById('addQuestionBtn');
     const addFirstQuestionBtn = document.getElementById('addFirstQuestionBtn');
-    
-    function addNewQuestion() {
-        const questionCount = document.querySelectorAll('.question-card').length;
-        
-        // Use AJAX to add a new question
-        fetch(`/Surveys/AddQuestion?index=${questionCount}&id=new-${Date.now()}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok: ' + response.statusText);
-                }
-                return response.text();
-            })
-            .then(html => {
-                const questionsContainer = document.getElementById('questionsContainer');
-                
-                if (questionsContainer) {
-                    // If there are no questions and there's a "No questions yet" message, replace it
-                    if (questionsContainer.querySelector('h3') && questionsContainer.querySelector('h3').textContent.includes('No questions yet')) {
-                        questionsContainer.innerHTML = '';
-                    }
-                    
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = html.trim();
-                    
-                    // Append the new question to the container
-                    questionsContainer.appendChild(tempDiv.firstChild);
-                }
-            })
-            .catch(error => {
-                console.error('Error adding question:', error);
-                alert('Error adding question: ' + error.message);
-            });
-    }
-    
-    if (addQuestionBtn) {
-        addQuestionBtn.addEventListener('click', addNewQuestion);
-    }
-    
-    if (addFirstQuestionBtn) {
-        addFirstQuestionBtn.addEventListener('click', addNewQuestion);
-    }
-    
-    // Add sample questions button
     const addSampleQuestionsBtn = document.getElementById('addSampleQuestionsBtn');
-    if (addSampleQuestionsBtn) {
-        addSampleQuestionsBtn.addEventListener('click', function() {
-            const questionCount = document.querySelectorAll('.question-card').length;
-            
-            // Use AJAX to add sample questions
-            fetch(`/Surveys/AddSampleQuestions?startIndex=${questionCount}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok: ' + response.statusText);
-                    }
-                    return response.text();
-                })
-                .then(html => {
-                    const questionsContainer = document.getElementById('questionsContainer');
-                    
-                    if (questionsContainer) {
-                        // If there are no questions and there's a "No questions yet" message, replace it
-                        if (questionsContainer.querySelector('h3') && questionsContainer.querySelector('h3').textContent.includes('No questions yet')) {
-                            questionsContainer.innerHTML = '';
-                        }
-                        
-                        const tempDiv = document.createElement('div');
-                        tempDiv.innerHTML = html.trim();
-                        
-                        // Append each sample question to the container
-                        while (tempDiv.firstChild) {
-                            questionsContainer.appendChild(tempDiv.firstChild);
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('Error adding sample questions:', error);
-                    alert('Error adding sample questions: ' + error.message);
-                });
+    const saveSurveyBtn = document.getElementById('saveSurveyBtn');
+    
+    // Current question count and mapping
+    let questionCount = document.querySelectorAll('.question-card').length;
+    
+    // Question types mapping
+    const questionTypes = [
+        { type: 'text', name: 'Text Input', description: 'Collect open-ended responses', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="16" y2="6"></line><line x1="3" y1="18" x2="14" y2="18"></line></svg>' },
+        { type: 'multiple-choice', name: 'Multiple Choice', description: 'Allow multiple selections', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>' },
+        { type: 'single-choice', name: 'Single Choice', description: 'Allow only one selection', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4"></circle></svg>' },
+        { type: 'rating', name: 'Rating Scale', description: 'Collect ratings on a scale', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>' },
+        { type: 'dropdown', name: 'Dropdown', description: 'Selection from a dropdown', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>' },
+        { type: 'matrix', name: 'Matrix', description: 'Grid-based responses', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>' },
+        { type: 'ranking', name: 'Ranking', description: 'Order items by preference', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"></path><path d="M18 14l-6-6-6 6"></path></svg>' },
+        { type: 'nps', name: 'Net Promoter Score', description: 'Measure satisfaction', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>' },
+        { type: 'date', name: 'Date', description: 'Collect date information', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>' },
+        { type: 'file-upload', name: 'File Upload', description: 'Allow file uploads', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>' }
+    ];
+    
+    // Initialize event handlers
+    function initEventHandlers() {
+        // Add question handlers
+        if (addQuestionBtn) addQuestionBtn.addEventListener('click', addNewQuestion);
+        if (addFirstQuestionBtn) addFirstQuestionBtn.addEventListener('click', addNewQuestion);
+        if (addSampleQuestionsBtn) addSampleQuestionsBtn.addEventListener('click', addSampleQuestions);
+        if (saveSurveyBtn) saveSurveyBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('surveyForm').submit();
+        });
+        
+        // Delegate events for dynamically created elements
+        document.addEventListener('click', handleDelegatedEvents);
+        document.addEventListener('input', handleDelegatedInputEvents);
+        
+        // Submit form handler
+        if (surveyForm) {
+            surveyForm.addEventListener('submit', validateAndSubmit);
+        }
+        
+        // Initialize existing questions if any
+        initExistingQuestions();
+    }
+    
+    // Initialize existing questions
+    function initExistingQuestions() {
+        const questionCards = document.querySelectorAll('.question-card');
+        questionCards.forEach((card, index) => {
+            updateQuestionIndex(card, index);
+            initQuestionTypeDropdown(card);
+            updateQuestionOptionsVisibility(card);
+            updateQuestionPreview(card);
+            bindQuestionEvents(card);
         });
     }
     
-    // Question deletion
-    document.addEventListener('click', function(e) {
-        if (e.target && (e.target.classList.contains('delete-question-btn') || e.target.closest('.delete-question-btn'))) {
-            const button = e.target.classList.contains('delete-question-btn') ? e.target : e.target.closest('.delete-question-btn');
-            const questionCard = button.closest('.question-card');
+    // Handle delegated events
+    function handleDelegatedEvents(e) {
+        // Toggle question expansion
+        if (e.target.closest('.toggle-question-btn')) {
+            const questionCard = e.target.closest('.question-card');
+            const content = questionCard.querySelector('.question-content');
+            const chevron = questionCard.querySelector('.chevron-icon');
             
-            if (confirm('Are you sure you want to delete this question?')) {
-                questionCard.remove();
-                
-                // If no questions remain, show the empty state
-                const questionsContainer = document.getElementById('questionsContainer');
-                if (questionsContainer && !questionsContainer.querySelector('.question-card')) {
-                    questionsContainer.innerHTML = `
-                        <div class="bg-white rounded-lg shadow-sm p-8 text-center">
-                            <div class="mx-auto rounded-full bg-primary/10 p-4 w-16 h-16 flex items-center justify-center mb-4">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                            </div>
-                            <h3 class="text-lg font-semibold mb-1">No questions yet</h3>
-                            <p class="text-gray-500 mb-4">Add questions to your survey</p>
-                            <button type="button" id="addFirstQuestionBtn" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark">
-                                Add First Question
-                            </button>
-                        </div>
-                    `;
-                    
-                    // Re-attach event listener
-                    const newAddFirstBtn = document.getElementById('addFirstQuestionBtn');
-                    if (newAddFirstBtn) {
-                        newAddFirstBtn.addEventListener('click', addNewQuestion);
-                    }
-                } else {
-                    updateQuestionIndices();
-                }
-            }
-        }
-    });
-    
-    // Question movement (up/down)
-    document.addEventListener('click', function(e) {
-        if (e.target && (e.target.classList.contains('move-question-up') || e.target.closest('.move-question-up'))) {
-            const button = e.target.classList.contains('move-question-up') ? e.target : e.target.closest('.move-question-up');
-            const questionCard = button.closest('.question-card');
-            const prevQuestion = questionCard.previousElementSibling;
-            
-            if (prevQuestion && prevQuestion.classList.contains('question-card')) {
-                questionCard.parentNode.insertBefore(questionCard, prevQuestion);
-                updateQuestionIndices();
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                chevron.innerHTML = '<polyline points="18 15 12 9 6 15"></polyline>';
+            } else {
+                content.style.display = 'none';
+                chevron.innerHTML = '<polyline points="6 9 12 15 18 9"></polyline>';
             }
         }
         
-        if (e.target && (e.target.classList.contains('move-question-down') || e.target.closest('.move-question-down'))) {
-            const button = e.target.classList.contains('move-question-down') ? e.target : e.target.closest('.move-question-down');
-            const questionCard = button.closest('.question-card');
-            const nextQuestion = questionCard.nextElementSibling;
+        // Delete question
+        if (e.target.closest('.delete-question-btn')) {
+            const questionCard = e.target.closest('.question-card');
+            removeQuestion(questionCard);
+        }
+        
+        // Move question up
+        if (e.target.closest('.move-up-btn')) {
+            const questionCard = e.target.closest('.question-card');
+            moveQuestion(questionCard, 'up');
+        }
+        
+        // Move question down
+        if (e.target.closest('.move-down-btn')) {
+            const questionCard = e.target.closest('.question-card');
+            moveQuestion(questionCard, 'down');
+        }
+        
+        // Toggle question type dropdown
+        if (e.target.closest('.question-type-toggle')) {
+            const questionCard = e.target.closest('.question-card');
+            toggleQuestionTypeDropdown(questionCard);
+        }
+        
+        // Select question type
+        if (e.target.closest('.question-type-option')) {
+            const typeOption = e.target.closest('.question-type-option');
+            const questionCard = e.target.closest('.question-card');
+            selectQuestionType(questionCard, typeOption.dataset.type);
+        }
+        
+        // Add option to question
+        if (e.target.closest('.add-option-btn')) {
+            const questionCard = e.target.closest('.question-card');
+            addOption(questionCard);
+        }
+        
+        // Remove option from question
+        if (e.target.closest('.remove-option-btn')) {
+            const optionItem = e.target.closest('.option-item');
+            const questionCard = e.target.closest('.question-card');
+            removeOption(questionCard, optionItem);
+        }
+    }
+    
+    // Handle delegated input events
+    function handleDelegatedInputEvents(e) {
+        // Update question title preview when question title changes
+        if (e.target.classList.contains('question-title-input')) {
+            const questionCard = e.target.closest('.question-card');
+            const titlePreview = questionCard.querySelector('.question-title-preview');
+            titlePreview.textContent = e.target.value || 'Untitled Question';
+        }
+        
+        // Update required state when checkbox changes
+        if (e.target.classList.contains('question-required-checkbox')) {
+            const questionCard = e.target.closest('.question-card');
+            const hiddenRequiredInput = questionCard.querySelector('input[name^="Questions"][name$="].Required"]');
+            hiddenRequiredInput.value = e.target.checked;
+        }
+    }
+    
+    // Add a new question
+    function addNewQuestion() {
+        // Create new question with UUID
+        const newQuestion = {
+            id: 'new-' + generateUUID(),
+            title: 'New Question',
+            description: '',
+            type: 'text',
+            required: true,
+            options: []
+        };
+        
+        // Add question to UI
+        appendQuestion(newQuestion);
+        
+        // Hide empty state if visible
+        if (emptyQuestionsState) {
+            emptyQuestionsState.style.display = 'none';
+        }
+    }
+    
+    // Add sample questions
+    function addSampleQuestions() {
+        const sampleQuestions = [
+            {
+                id: 'new-' + generateUUID(),
+                title: 'How satisfied are you with our service?',
+                description: '',
+                type: 'rating',
+                required: true,
+                options: []
+            },
+            {
+                id: 'new-' + generateUUID(),
+                title: 'What features do you like most?',
+                description: '',
+                type: 'multiple-choice',
+                required: true,
+                options: ['User Interface', 'Performance', 'Customer Support', 'Price']
+            },
+            {
+                id: 'new-' + generateUUID(),
+                title: 'Please provide any additional feedback',
+                description: '',
+                type: 'text',
+                required: false,
+                options: []
+            }
+        ];
+        
+        sampleQuestions.forEach(question => {
+            appendQuestion(question);
+        });
+        
+        // Hide empty state if visible
+        if (emptyQuestionsState) {
+            emptyQuestionsState.style.display = 'none';
+        }
+    }
+    
+    // Append a question to the container
+    function appendQuestion(question) {
+        const index = questionCount++;
+        
+        // Prepare question type info
+        const typeInfo = questionTypes.find(t => t.type === question.type) || questionTypes[0];
+        
+        // Replace template placeholders
+        let questionHtml = questionBuilderTemplate
+            .replace(/{{index}}/g, index)
+            .replace(/{{id}}/g, question.id)
+            .replace(/{{title}}/g, question.title || '')
+            .replace(/{{description}}/g, question.description || '')
+            .replace(/{{type}}/g, question.type)
+            .replace(/{{typeName}}/g, typeInfo.name)
+            .replace(/{{requiredChecked}}/g, question.required ? 'checked' : '');
+        
+        // Create temporary element to hold the HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = questionHtml;
+        const questionCard = tempDiv.firstElementChild;
+        
+        // Add to questions container
+        if (questionsContainer) {
+            questionsContainer.appendChild(questionCard);
+        }
+        
+        // Initialize the new question
+        initQuestionTypeDropdown(questionCard);
+        updateQuestionOptionsVisibility(questionCard);
+        
+        // Add options if present
+        if (question.options && question.options.length) {
+            question.options.forEach(optionText => {
+                addOption(questionCard, optionText);
+            });
+        } else if (['multiple-choice', 'single-choice', 'dropdown', 'ranking'].includes(question.type)) {
+            // Add default options for choice-based questions
+            addOption(questionCard, 'Option 1');
+            addOption(questionCard, 'Option 2');
+        }
+        
+        // Update question preview based on type
+        updateQuestionPreview(questionCard);
+        
+        // Bind events
+        bindQuestionEvents(questionCard);
+        
+        // Update move buttons state for all questions
+        updateMoveButtonsState();
+    }
+    
+    // Remove a question
+    function removeQuestion(questionCard) {
+        // Ask for confirmation
+        if (confirm('Are you sure you want to remove this question?')) {
+            questionCard.remove();
             
-            if (nextQuestion && nextQuestion.classList.contains('question-card')) {
-                questionCard.parentNode.insertBefore(nextQuestion, questionCard);
-                updateQuestionIndices();
+            // Reindex remaining questions
+            reindexQuestions();
+            
+            // Show empty state if no questions left
+            if (questionsContainer.childElementCount === 0 && emptyQuestionsState) {
+                emptyQuestionsState.style.display = 'block';
+            }
+            
+            // Update move buttons state
+            updateMoveButtonsState();
+        }
+    }
+    
+    // Move a question up or down
+    function moveQuestion(questionCard, direction) {
+        if (direction === 'up') {
+            const previousSibling = questionCard.previousElementSibling;
+            if (previousSibling) {
+                questionsContainer.insertBefore(questionCard, previousSibling);
+            }
+        } else {
+            const nextSibling = questionCard.nextElementSibling;
+            if (nextSibling) {
+                questionsContainer.insertBefore(nextSibling, questionCard);
             }
         }
-    });
+        
+        // Reindex questions
+        reindexQuestions();
+        
+        // Update move buttons state
+        updateMoveButtonsState();
+    }
     
-    function updateQuestionIndices() {
-        const questionCards = document.querySelectorAll('.question-card');
+    // Update move buttons state (disable if at top/bottom)
+    function updateMoveButtonsState() {
+        const questionCards = questionsContainer.querySelectorAll('.question-card');
         
         questionCards.forEach((card, index) => {
-            // Update data attribute
-            card.dataset.questionIndex = index;
+            const isFirst = index === 0;
+            const isLast = index === questionCards.length - 1;
             
-            // Update question number in header
-            const questionNumber = card.querySelector('.question-number');
-            if (questionNumber) {
-                questionNumber.textContent = `Question ${index + 1}`;
-            }
-            
-            // Update input names
-            const inputs = card.querySelectorAll('input, textarea, select');
-            inputs.forEach(input => {
-                const name = input.name;
-                if (name && name.startsWith('Questions[')) {
-                    const newName = name.replace(/Questions\[\d+\]/, `Questions[${index}]`);
-                    input.name = newName;
-                }
-            });
-            
-            // Update button data attributes
-            const buttons = card.querySelectorAll('button[data-question-id]');
-            buttons.forEach(button => {
-                button.dataset.questionId = index;
-            });
-            
-            // Update container IDs
-            const containersToUpdate = [
-                card.querySelector(`#options_${card.dataset.questionIndex}`),
-                card.querySelector(`#optionsList_${card.dataset.questionIndex}`),
-                card.querySelector(`#rating_${card.dataset.questionIndex}`),
-                card.querySelector(`#nps_${card.dataset.questionIndex}`)
-            ];
-            
-            containersToUpdate.forEach(container => {
-                if (container) {
-                    const oldId = container.id;
-                    const newId = oldId.replace(/\d+$/, index);
-                    container.id = newId;
-                }
-            });
-            
-            // Update move buttons state based on position
-            const moveUpBtn = card.querySelector('.move-question-up');
-            const moveDownBtn = card.querySelector('.move-question-down');
+            const moveUpBtn = card.querySelector('.move-up-btn');
+            const moveDownBtn = card.querySelector('.move-down-btn');
             
             if (moveUpBtn) {
-                if (index === 0) {
-                    moveUpBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                    moveUpBtn.disabled = true;
-                } else {
-                    moveUpBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                    moveUpBtn.disabled = false;
-                }
+                moveUpBtn.disabled = isFirst;
+                moveUpBtn.classList.toggle('opacity-50', isFirst);
             }
             
             if (moveDownBtn) {
-                if (index === questionCards.length - 1) {
-                    moveDownBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                    moveDownBtn.disabled = true;
-                } else {
-                    moveDownBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                    moveDownBtn.disabled = false;
-                }
+                moveDownBtn.disabled = isLast;
+                moveDownBtn.classList.toggle('opacity-50', isLast);
             }
         });
     }
     
-    // Form validation
-    const createSurveyForm = document.getElementById('createSurveyForm');
-    
-    if (createSurveyForm) {
-        createSurveyForm.addEventListener('submit', function(e) {
-            const title = document.getElementById('Title').value.trim();
-            
-            if (!title) {
-                e.preventDefault();
-                alert('Please provide a title for your survey');
-                return false;
-            }
-            
-            // Ensure at least one question exists
-            const questions = document.querySelectorAll('.question-card');
-            if (questions.length === 0) {
-                e.preventDefault();
-                alert('Please add at least one question to your survey');
-                return false;
-            }
-            
-            // Validate required fields for each question
-            let isValid = true;
-            questions.forEach((questionCard, index) => {
-                const questionText = questionCard.querySelector(`[name="Questions[${index}].Text"]`).value.trim();
-                if (!questionText) {
-                    isValid = false;
-                    const questionNumber = index + 1;
-                    alert(`Question ${questionNumber} text is required`);
-                }
-            });
-            
-            if (!isValid) {
-                e.preventDefault();
-                return false;
-            }
-            
-            return true;
+    // Reindex questions after adding/removing/moving
+    function reindexQuestions() {
+        const questionCards = questionsContainer.querySelectorAll('.question-card');
+        questionCards.forEach((card, index) => {
+            updateQuestionIndex(card, index);
         });
     }
     
-    // Initialize UI state for existing questions
-    document.querySelectorAll('.question-card').forEach(questionCard => {
-        const questionIndex = questionCard.dataset.questionIndex;
-        const typeSelect = questionCard.querySelector(`[name="Questions[${questionIndex}].Type"]`);
+    // Update question index in all form fields
+    function updateQuestionIndex(questionCard, newIndex) {
+        questionCard.dataset.index = newIndex;
         
-        if (typeSelect) {
-            updateQuestionTypeUI(questionCard, typeSelect.value);
+        // Update all input names that contain the index
+        const inputs = questionCard.querySelectorAll('input, textarea, select');
+        inputs.forEach(input => {
+            if (input.name) {
+                input.name = input.name.replace(/Questions\[\d+\]/, `Questions[${newIndex}]`);
+            }
+        });
+        
+        // Update option indices
+        const options = questionCard.querySelectorAll('.option-item');
+        options.forEach((option, optIndex) => {
+            const input = option.querySelector('input');
+            if (input && input.name) {
+                input.name = `Questions[${newIndex}].Options[${optIndex}]`;
+            }
+        });
+    }
+    
+    // Initialize question type dropdown
+    function initQuestionTypeDropdown(questionCard) {
+        const dropdown = questionCard.querySelector('.question-types-dropdown');
+        if (!dropdown) return;
+        
+        // Clear existing content
+        dropdown.innerHTML = '';
+        
+        // Add question types
+        questionTypes.forEach(type => {
+            const typeButton = document.createElement('button');
+            typeButton.type = 'button';
+            typeButton.className = 'question-type-option';
+            typeButton.dataset.type = type.type;
+            
+            // Get current question type
+            const currentType = questionCard.querySelector('input[name$="].Type"]').value;
+            if (currentType === type.type) {
+                typeButton.classList.add('selected');
+            }
+            
+            typeButton.innerHTML = `
+                <div class="question-type-icon">${type.icon}</div>
+                <div class="question-type-name">${type.name}</div>
+                <div class="question-type-desc">${type.description}</div>
+            `;
+            
+            dropdown.appendChild(typeButton);
+        });
+    }
+    
+    // Toggle question type dropdown visibility
+    function toggleQuestionTypeDropdown(questionCard) {
+        const dropdown = questionCard.querySelector('.question-types-dropdown');
+        const chevron = questionCard.querySelector('.question-type-chevron');
+        
+        dropdown.classList.toggle('hidden');
+        
+        if (!dropdown.classList.contains('hidden')) {
+            chevron.innerHTML = '<polyline points="18 15 12 9 6 15"></polyline>';
+        } else {
+            chevron.innerHTML = '<polyline points="6 9 12 15 18 9"></polyline>';
         }
-    });
+    }
+    
+    // Select a question type
+    function selectQuestionType(questionCard, type) {
+        // Update hidden input
+        const typeInput = questionCard.querySelector('input[name$="].Type"]');
+        if (typeInput) {
+            typeInput.value = type;
+        }
+        
+        // Update type name display
+        const typeNameElement = questionCard.querySelector('.question-type-name');
+        const typeInfo = questionTypes.find(t => t.type === type);
+        if (typeNameElement && typeInfo) {
+            typeNameElement.textContent = typeInfo.name;
+        }
+        
+        // Hide dropdown
+        const dropdown = questionCard.querySelector('.question-types-dropdown');
+        dropdown.classList.add('hidden');
+        
+        // Update options visibility based on type
+        updateQuestionOptionsVisibility(questionCard);
+        
+        // Add default options if needed
+        const optionsList = questionCard.querySelector('.options-list');
+        if (['multiple-choice', 'single-choice', 'dropdown', 'ranking'].includes(type) && (!optionsList || optionsList.children.length === 0)) {
+            addOption(questionCard, 'Option 1');
+            addOption(questionCard, 'Option 2');
+        }
+        
+        // Update question preview
+        updateQuestionPreview(questionCard);
+    }
+    
+    // Update question options visibility based on type
+    function updateQuestionOptionsVisibility(questionCard) {
+        const type = questionCard.querySelector('input[name$="].Type"]').value;
+        const optionsContainer = questionCard.querySelector('.question-options-container');
+        
+        // Show options for certain question types
+        if (['multiple-choice', 'single-choice', 'dropdown', 'ranking'].includes(type)) {
+            if (optionsContainer) {
+                optionsContainer.classList.remove('hidden');
+            }
+        } else {
+            if (optionsContainer) {
+                optionsContainer.classList.add('hidden');
+            }
+        }
+    }
+    
+    // Update question preview based on type
+    function updateQuestionPreview(questionCard) {
+        const type = questionCard.querySelector('input[name$="].Type"]').value;
+        const previewContainer = questionCard.querySelector('.question-preview-container');
+        const previewContent = questionCard.querySelector('.preview-content');
+        
+        if (!previewContainer || !previewContent) return;
+        
+        // Show preview for specific question types
+        if (['rating', 'nps'].includes(type)) {
+            previewContainer.classList.remove('hidden');
+            
+            if (type === 'rating') {
+                // Generate star rating preview
+                const starRatingTemplate = document.getElementById('starRatingPreviewTemplate').innerHTML;
+                const stars = [];
+                for (let i = 1; i <= 5; i++) {
+                    stars.push(`
+                        <div class="star-rating-option">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                            </svg>
+                        </div>
+                    `);
+                }
+                previewContent.innerHTML = starRatingTemplate.replace('{{starIcons}}', stars.join(''));
+                
+            } else if (type === 'nps') {
+                // Generate NPS preview
+                const npsTemplate = document.getElementById('npsRatingPreviewTemplate').innerHTML;
+                const npsOptions = [];
+                for (let i = 0; i <= 10; i++) {
+                    npsOptions.push(`
+                        <div class="nps-label">
+                            ${i}
+                        </div>
+                    `);
+                }
+                previewContent.innerHTML = npsTemplate.replace('{{npsOptions}}', npsOptions.join(''));
+            }
+        } else {
+            previewContainer.classList.add('hidden');
+        }
+    }
+    
+    // Add option to a question
+    function addOption(questionCard, optionText = 'New option') {
+        const index = parseInt(questionCard.dataset.index);
+        const optionsList = questionCard.querySelector('.options-list');
+        if (!optionsList) return;
+        
+        // Count existing options
+        const optionCount = optionsList.children.length;
+        
+        // Replace template placeholders
+        let optionHtml = optionTemplate
+            .replace(/{{questionIndex}}/g, index)
+            .replace(/{{optionIndex}}/g, optionCount)
+            .replace(/{{optionValue}}/g, optionText)
+            .replace(/{{disabledAttr}}/g, optionCount < 2 ? 'disabled' : '');
+        
+        // Create temporary element to hold the HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = optionHtml;
+        const optionElement = tempDiv.firstElementChild;
+        
+        // Add to options list
+        optionsList.appendChild(optionElement);
+        
+        // Update disabled state on remove buttons (minimum 2 options)
+        updateRemoveOptionButtonsState(questionCard);
+    }
+    
+    // Remove option from a question
+    function removeOption(questionCard, optionElement) {
+        const optionsList = questionCard.querySelector('.options-list');
+        if (!optionsList) return;
+        
+        optionElement.remove();
+        
+        // Reindex remaining options
+        const options = optionsList.querySelectorAll('.option-item');
+        const questionIndex = parseInt(questionCard.dataset.index);
+        options.forEach((option, optionIndex) => {
+            const input = option.querySelector('input');
+            if (input) {
+                input.name = `Questions[${questionIndex}].Options[${optionIndex}]`;
+            }
+        });
+        
+        // Update disabled state on remove buttons (minimum 2 options)
+        updateRemoveOptionButtonsState(questionCard);
+    }
+    
+    // Update disabled state on remove option buttons
+    function updateRemoveOptionButtonsState(questionCard) {
+        const optionsList = questionCard.querySelector('.options-list');
+        if (!optionsList) return;
+        
+        const options = optionsList.querySelectorAll('.option-item');
+        const removeButtons = optionsList.querySelectorAll('.remove-option-btn');
+        
+        removeButtons.forEach(button => {
+            button.disabled = options.length <= 2;
+            button.classList.toggle('opacity-50', options.length <= 2);
+        });
+    }
+    
+    // Bind events to question card
+    function bindQuestionEvents(questionCard) {
+        // Add any extra event binding here if needed
+    }
+    
+    // Form validation and submission
+    function validateAndSubmit(event) {
+        let valid = true;
+        
+        // Basic validation
+        const title = document.querySelector('input[name="Title"]');
+        if (!title || !title.value.trim()) {
+            alert('Please provide a title for your survey');
+            event.preventDefault();
+            valid = false;
+        }
+        
+        // Check if there are questions
+        const questionCards = questionsContainer.querySelectorAll('.question-card');
+        if (questionCards.length === 0) {
+            alert('Your survey must have at least one question');
+            event.preventDefault();
+            valid = false;
+        }
+        
+        // Validate each question has a title
+        questionCards.forEach((card, index) => {
+            const questionTitle = card.querySelector('input[name^="Questions"][name$="].Text"]');
+            if (!questionTitle || !questionTitle.value.trim()) {
+                alert(`Question ${index + 1} must have a title`);
+                event.preventDefault();
+                valid = false;
+            }
+        });
+        
+        return valid;
+    }
+    
+    // Utility function to generate UUID
+    function generateUUID() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0, 
+                v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+    
+    // Initialize everything
+    initEventHandlers();
 });

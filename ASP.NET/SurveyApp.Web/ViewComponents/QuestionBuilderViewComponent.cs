@@ -7,23 +7,16 @@ namespace SurveyApp.Web.ViewComponents
 {
     public class QuestionBuilderViewComponent : ViewComponent
     {
-        public async Task<IViewComponentResult> InvokeAsync(QuestionViewModel question, int index, int total = 0)
+        public IViewComponentResult Invoke(QuestionViewModel question, int index, int total)
         {
-            // Safely convert QuestionViewModel to SurveyQuestionViewModel
-            // and ensure all properties are properly mapped
-            var surveyQuestion = SurveyQuestionViewModel.FromQuestionViewModel(question);
-            
-            // Ensure consistency across all fields
-            surveyQuestion.EnsureConsistency();
-            
-            return View(new QuestionBuilderViewModel
+            // Ensure question and options are properly initialized
+            if (question.Options == null)
             {
-                Question = surveyQuestion,
-                Index = index,
-                Total = total,
-                IsFirst = index == 0,
-                IsLast = index == total - 1
-            });
+                question.Options = new System.Collections.Generic.List<string>();
+            }
+
+            var model = new Tuple<QuestionViewModel, int, int>(question, index, total);
+            return View(model);
         }
     }
 }

@@ -1,57 +1,54 @@
 
-@model SurveyApp.Web.Models.SurveyViewModel
+@model SurveyApp.Web.Models.CreateSurveyViewModel
 @{
-    ViewData["Title"] = Model?.Id != null ? "Edit Survey" : "Create Survey";
-    var isEdit = Model?.Id != null;
+    ViewData["Title"] = "Create Survey";
 }
 
 <div class="min-h-screen flex flex-col bg-background">
-    <main class="flex-1 w-full max-w-7xl mx-auto pt-24 px-6 pb-16">
-        <form id="survey-form" method="post" asp-controller="Surveys" asp-action="@(isEdit ? "Edit" : "Create")">
-            @if (isEdit)
-            {
-                <input type="hidden" asp-for="Id" />
-                <input type="hidden" asp-for="CreatedAt" />
-            }
-
-            <div class="flex justify-between items-center mb-8">
-                <div>
-                    <h1 class="text-3xl font-bold">@(isEdit ? "Edit Survey" : "Create Survey")</h1>
-                    <p class="text-muted-foreground">
-                        @(isEdit 
-                            ? "Update your existing survey" 
-                            : "Design a new survey for your users")
-                    </p>
-                </div>
-                
-                <div class="flex space-x-3">
-                    <a asp-controller="Surveys" asp-action="Index" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
-                        Cancel
-                    </a>
-                    <button type="submit" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                        @(isEdit ? "Update Survey" : "Create Survey")
-                    </button>
-                </div>
+    <main class="flex-1 w-full max-w-7xl mx-auto pt-8 px-6 pb-16">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold">@(Model.Id > 0 ? "Edit Survey" : "Create Survey")</h1>
+                <p class="text-muted-foreground">
+                    @(Model.Id > 0 
+                        ? "Update your existing survey" 
+                        : "Design a new survey for your users")
+                </p>
             </div>
             
-            <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-                <div class="p-6">
-                    <h2 class="text-xl font-semibold mb-4">Survey Details</h2>
-                    <div class="space-y-4">
-                        <div>
-                            <label asp-for="Title" class="block text-sm font-medium mb-1">
-                                Title <span class="text-destructive">*</span>
-                            </label>
-                            <input asp-for="Title" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" placeholder="Enter survey title" required />
-                            <span asp-validation-for="Title" class="text-sm text-destructive"></span>
-                        </div>
-                        <div>
-                            <label asp-for="Description" class="block text-sm font-medium mb-1">
-                                Description (optional)
-                            </label>
-                            <textarea asp-for="Description" class="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" placeholder="Enter a description for your survey"></textarea>
-                        </div>
+            <div class="flex space-x-3">
+                <a asp-action="Index" class="px-4 py-2 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                    Cancel
+                </a>
+                <button id="saveSurveyBtn" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-save mr-2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                    <span>@(Model.Id > 0 ? "Update Survey" : "Create Survey")</span>
+                </button>
+            </div>
+        </div>
+        
+        <form id="surveyForm" asp-action="Create" method="post" class="space-y-8">
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="Status" value="draft" />
+            
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold">Survey Details</h2>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div>
+                        <label asp-for="Title" class="block text-sm font-medium mb-1">
+                            Title <span class="text-destructive">*</span>
+                        </label>
+                        <input asp-for="Title" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Enter survey title" />
+                        <span asp-validation-for="Title" class="text-sm text-destructive"></span>
+                    </div>
+                    <div>
+                        <label asp-for="Description" class="block text-sm font-medium mb-1">
+                            Description (optional)
+                        </label>
+                        <textarea asp-for="Description" class="w-full min-h-[100px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Enter a description for your survey"></textarea>
+                        <span asp-validation-for="Description" class="text-sm text-destructive"></span>
                     </div>
                 </div>
             </div>
@@ -59,264 +56,166 @@
             <div class="flex justify-between items-center mt-8 mb-4">
                 <h2 class="text-xl font-semibold">Questions</h2>
                 <div class="flex space-x-2">
-                    <button type="button" id="add-sample-questions-btn" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+                    <button type="button" id="addSampleQuestionsBtn" class="px-4 py-2 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
                         Add Sample Questions
                     </button>
-                    <button type="button" id="add-question-btn" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                    <button type="button" id="addQuestionBtn" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark">
                         Add Question
                     </button>
                 </div>
             </div>
             
-            <div id="questions-container" class="space-y-4">
-                @if (Model?.Questions != null && Model.Questions.Any())
+            <div id="questionsContainer" class="space-y-4">
+                @if (Model.Questions == null || !Model.Questions.Any())
                 {
-                    @for (var i = 0; i < Model.Questions.Count; i++)
-                    {
-                        var question = Model.Questions[i];
-                        <partial name="_QuestionBuilder" model="@question" view-data="@(new ViewDataDictionary(ViewData) { { "Index", i }, { "Total", Model.Questions.Count } })" />
-                    }
-                }
-                @if (Model?.Questions == null || !Model.Questions.Any())
-                {
-                    <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
+                    <div id="emptyQuestionsState" class="bg-white rounded-lg shadow-sm border border-gray-200">
                         <div class="flex flex-col items-center justify-center p-8 text-center">
-                            <div class="rounded-full bg-primary/10 p-4 mb-4">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-primary"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                            <div class="rounded-full bg-primary-light p-4 mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
                             </div>
                             <h3 class="text-lg font-semibold mb-1">No questions yet</h3>
                             <p class="text-muted-foreground mb-4">Add questions to your survey</p>
-                            <button type="button" class="add-first-question-btn inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                            <button type="button" id="addFirstQuestionBtn" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark">
                                 Add First Question
                             </button>
                         </div>
                     </div>
                 }
+                else
+                {
+                    @for (var i = 0; i < Model.Questions.Count; i++)
+                    {
+                        <input type="hidden" name="Questions[@i].Id" value="@Model.Questions[i].Id" />
+                        @await Html.PartialAsync("_QuestionBuilderPartial", new Tuple<SurveyApp.Web.Models.QuestionViewModel, int, int>(Model.Questions[i], i, Model.Questions.Count))
+                    }
+                }
             </div>
             
             <div class="mt-8 flex justify-end">
-                <button type="submit" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                    @(isEdit ? "Update Survey" : "Create Survey")
+                <button type="submit" id="submitSurveyBtn" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-save mr-2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                    <span>@(Model.Id > 0 ? "Update Survey" : "Create Survey")</span>
                 </button>
             </div>
         </form>
     </main>
 </div>
 
-@section Scripts {
-    <script src="~/js/uuid-v4.min.js"></script>
-    <script src="~/js/survey-builder.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Handle Add First Question button
-            const addFirstQuestionBtn = document.querySelector('.add-first-question-btn');
-            if (addFirstQuestionBtn) {
-                addFirstQuestionBtn.addEventListener('click', function() {
-                    // Remove the empty state message
-                    const emptyState = this.closest('.rounded-lg');
-                    if (emptyState) {
-                        emptyState.remove();
-                    }
-                    
-                    // Call the add question function
-                    if (typeof SurveyBuilder !== 'undefined') {
-                        SurveyBuilder.addQuestion();
-                    }
-                });
-            }
-            
-            // Handle Add Sample Questions button
-            const addSampleQuestionsBtn = document.getElementById('add-sample-questions-btn');
-            if (addSampleQuestionsBtn) {
-                addSampleQuestionsBtn.addEventListener('click', function() {
-                    // Remove the empty state if present
-                    const emptyState = document.querySelector('#questions-container .rounded-lg');
-                    if (emptyState) {
-                        emptyState.remove();
-                    }
-                    
-                    // Add sample questions
-                    if (typeof SurveyBuilder !== 'undefined') {
-                        // First sample question: Rating
-                        const ratingQuestion = {
-                            id: uuidv4(),
-                            title: 'How satisfied are you with our service?',
-                            type: 'rating',
-                            required: true,
-                            settings: { min: 1, max: 5 }
-                        };
-                        
-                        // Second sample question: Multiple Choice
-                        const mcQuestion = {
-                            id: uuidv4(),
-                            title: 'What features do you like most?',
-                            type: 'multiple-choice',
-                            required: true,
-                            options: ['User Interface', 'Performance', 'Customer Support', 'Price']
-                        };
-                        
-                        // Third sample question: Text
-                        const textQuestion = {
-                            id: uuidv4(),
-                            title: 'Please provide any additional feedback',
-                            type: 'text',
-                            required: false
-                        };
-                        
-                        // Add the questions through the builder
-                        const questions = SurveyBuilder.getQuestions();
-                        
-                        // Add each sample question if it doesn't exist
-                        if (!questions.find(q => q.title === ratingQuestion.title)) {
-                            SurveyBuilder.addQuestion(ratingQuestion);
-                        }
-                        
-                        if (!questions.find(q => q.title === mcQuestion.title)) {
-                            SurveyBuilder.addQuestion(mcQuestion);
-                        }
-                        
-                        if (!questions.find(q => q.title === textQuestion.title)) {
-                            SurveyBuilder.addQuestion(textQuestion);
-                        }
-                    }
-                });
-            }
-        });
-    </script>
-}
-
-<!-- Question Template -->
-<template id="question-template">
-    <div class="question-card rounded-lg border bg-card text-card-foreground shadow-sm w-full transition-all duration-300 mb-4">
+<!-- Templates for dynamic content -->
+<template id="questionBuilderTemplate">
+    <div class="question-card" data-index="{{index}}">
+        <input type="hidden" name="Questions[{{index}}].Id" value="{{id}}" />
+        <input type="hidden" name="Questions[{{index}}].Type" value="{{type}}" />
+        <input type="hidden" name="Questions[{{index}}].Required" value="{{required}}" />
+        
         <div class="flex items-center px-4 py-3 border-b bg-muted/30">
-            <div class="mr-2 text-muted-foreground cursor-grab">
+            <div class="mr-2 text-muted-foreground cursor-grab draggable-handle">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>
             </div>
-            <button type="button" class="toggle-question-btn p-0 h-auto mr-2" onclick="toggleQuestionExpand(this)">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15l7-7 7 7" /></svg>
+            <button type="button" class="toggle-question-btn p-0 h-auto mr-2" aria-label="Toggle question">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="chevron-icon"><polyline points="18 15 12 9 6 15"></polyline></svg>
             </button>
-            <div class="flex-1 font-medium truncate question-title-display">
-                Untitled Question
-            </div>
+            <div class="flex-1 font-medium truncate question-title-preview">Untitled Question</div>
             <div class="flex items-center gap-1">
-                <button type="button" class="move-up-btn inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-background h-8 w-8 p-0 border border-input hover:bg-accent hover:text-accent-foreground" title="Move Up">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                <button type="button" class="move-up-btn px-2 py-2 rounded-md hover:bg-gray-100" aria-label="Move up">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
                 </button>
-                <button type="button" class="move-down-btn inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-background h-8 w-8 p-0 border border-input hover:bg-accent hover:text-accent-foreground" title="Move Down">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                <button type="button" class="move-down-btn px-2 py-2 rounded-md hover:bg-gray-100" aria-label="Move down">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                 </button>
-                <button type="button" class="delete-question-btn inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-background h-8 w-8 p-0 border border-input hover:bg-accent hover:text-destructive" title="Delete Question">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-destructive"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                <button type="button" class="delete-question-btn px-2 py-2 rounded-md hover:bg-gray-100 text-muted-foreground hover:text-destructive" aria-label="Delete question">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                 </button>
             </div>
         </div>
 
-        <div class="question-content p-4 space-y-4 animate-slide-down">
+        <div class="question-content p-4 space-y-4 animate-fade-in">
             <div class="space-y-2">
                 <div>
-                    <label class="text-sm font-medium">Question</label>
-                    <input type="text" class="question-title-input flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1" placeholder="Enter your question" value="Untitled Question" />
+                    <label class="block text-sm font-medium mb-1">Question</label>
+                    <input type="text" name="Questions[{{index}}].Text" class="question-title-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Enter your question" value="{{title}}" />
                 </div>
                 
                 <div>
-                    <label class="text-sm font-medium">Description (optional)</label>
-                    <textarea class="question-description-input flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1" placeholder="Add a description to provide more context"></textarea>
+                    <label class="block text-sm font-medium mb-1">Description (optional)</label>
+                    <textarea name="Questions[{{index}}].Description" class="w-full min-h-[80px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Add a description to provide more context">{{description}}</textarea>
                 </div>
             </div>
 
             <div>
-                <button type="button" class="question-type-toggle inline-flex items-center justify-between rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 w-full group">
-                    <span>Question Type: <span class="font-medium question-type-display">text</span></span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="transition-transform"><path d="m6 9 6 6 6-6"/></svg>
+                <button type="button" class="question-type-toggle w-full px-4 py-2 bg-white border border-gray-300 rounded-md text-left flex items-center justify-between">
+                    <span>Question Type: <span class="font-medium question-type-name">{{typeName}}</span></span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="question-type-chevron"><polyline points="6 9 12 15 18 9"></polyline></svg>
                 </button>
                 
-                <div class="question-types-dropdown mt-3 p-3 border rounded-md hidden animate-fade-in">
-                    <div class="grid grid-cols-2 gap-2">
-                        <label class="question-type-option flex items-start p-3 rounded-md border cursor-pointer hover:bg-accent/10 transition-colors">
-                            <input type="radio" name="question-type" class="mt-1 mr-2" value="text" data-type="text" />
-                            <div>
-                                <div class="font-medium">Text</div>
-                                <div class="text-xs text-muted-foreground">Free text response</div>
-                            </div>
-                        </label>
-                        <label class="question-type-option flex items-start p-3 rounded-md border cursor-pointer hover:bg-accent/10 transition-colors">
-                            <input type="radio" name="question-type" class="mt-1 mr-2" value="multiple-choice" data-type="multiple-choice" />
-                            <div>
-                                <div class="font-medium">Multiple Choice</div>
-                                <div class="text-xs text-muted-foreground">Select multiple options</div>
-                            </div>
-                        </label>
-                        <label class="question-type-option flex items-start p-3 rounded-md border cursor-pointer hover:bg-accent/10 transition-colors">
-                            <input type="radio" name="question-type" class="mt-1 mr-2" value="single-choice" data-type="single-choice" />
-                            <div>
-                                <div class="font-medium">Single Choice</div>
-                                <div class="text-xs text-muted-foreground">Select one option</div>
-                            </div>
-                        </label>
-                        <label class="question-type-option flex items-start p-3 rounded-md border cursor-pointer hover:bg-accent/10 transition-colors">
-                            <input type="radio" name="question-type" class="mt-1 mr-2" value="rating" data-type="rating" />
-                            <div>
-                                <div class="font-medium">Rating</div>
-                                <div class="text-xs text-muted-foreground">Star rating scale</div>
-                            </div>
-                        </label>
-                        <label class="question-type-option flex items-start p-3 rounded-md border cursor-pointer hover:bg-accent/10 transition-colors">
-                            <input type="radio" name="question-type" class="mt-1 mr-2" value="dropdown" data-type="dropdown" />
-                            <div>
-                                <div class="font-medium">Dropdown</div>
-                                <div class="text-xs text-muted-foreground">Select from a dropdown</div>
-                            </div>
-                        </label>
-                        <label class="question-type-option flex items-start p-3 rounded-md border cursor-pointer hover:bg-accent/10 transition-colors">
-                            <input type="radio" name="question-type" class="mt-1 mr-2" value="nps" data-type="nps" />
-                            <div>
-                                <div class="font-medium">NPS</div>
-                                <div class="text-xs text-muted-foreground">Net Promoter Score</div>
-                            </div>
-                        </label>
-                        <label class="question-type-option flex items-start p-3 rounded-md border cursor-pointer hover:bg-accent/10 transition-colors">
-                            <input type="radio" name="question-type" class="mt-1 mr-2" value="ranking" data-type="ranking" />
-                            <div>
-                                <div class="font-medium">Ranking</div>
-                                <div class="text-xs text-muted-foreground">Order options by preference</div>
-                            </div>
-                        </label>
-                        <label class="question-type-option flex items-start p-3 rounded-md border cursor-pointer hover:bg-accent/10 transition-colors">
-                            <input type="radio" name="question-type" class="mt-1 mr-2" value="date" data-type="date" />
-                            <div>
-                                <div class="font-medium">Date</div>
-                                <div class="text-xs text-muted-foreground">Date picker response</div>
-                            </div>
-                        </label>
-                    </div>
-                    <input type="hidden" class="current-question-type" value="text" />
+                <div class="question-types-dropdown mt-3 p-3 border rounded-md hidden question-type-grid">
+                    <!-- Filled dynamically with JavaScript -->
                 </div>
             </div>
 
             <div class="question-options-container space-y-3 mt-4 hidden">
-                <!-- Options will be dynamically added here -->
-                <label class="block text-sm font-medium">Options</label>
-                <button type="button" class="add-option-btn inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 mt-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1 h-4 w-4"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                <label class="block text-sm font-medium mb-1">Options</label>
+                <div class="options-list">
+                    <!-- Filled dynamically with JavaScript -->
+                </div>
+                <button type="button" class="add-option-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                     Add Option
                 </button>
             </div>
 
             <div class="question-preview-container mt-4 border rounded-md p-4 bg-muted/20 hidden">
-                <!-- Preview will be dynamically added here -->
-                <label class="block text-sm font-medium mb-2">Preview</label>
+                <label class="mb-2 block text-sm font-medium">Preview</label>
+                <div class="preview-content">
+                    <!-- Filled dynamically with JavaScript -->
+                </div>
             </div>
 
             <div class="flex items-center space-x-2 pt-2">
-                <label class="inline-flex items-center space-x-2 cursor-pointer">
-                    <input type="checkbox" class="question-required-toggle sr-only peer" checked />
-                    <span class="relative inline-flex h-5 w-10 items-center rounded-full bg-input transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 peer-checked:bg-primary peer-disabled:cursor-not-allowed peer-disabled:opacity-50">
-                        <span class="inline-block h-4 w-4 translate-x-0.5 rounded-full bg-background transition-transform peer-checked:translate-x-5"></span>
-                    </span>
-                    <span class="text-sm font-medium">Required question</span>
-                </label>
+                <input type="checkbox" name="Questions[{{index}}].Required" id="question-{{id}}-required" class="question-required-checkbox" {{requiredChecked}} />
+                <label for="question-{{id}}-required" class="text-sm">Required question</label>
             </div>
         </div>
     </div>
 </template>
+
+<template id="optionTemplate">
+    <div class="option-item flex items-center gap-2 mb-2">
+        <input type="text" name="Questions[{{questionIndex}}].Options[{{optionIndex}}]" class="option-input flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" value="{{optionValue}}" />
+        <button type="button" class="remove-option-btn px-2 py-2 rounded-md hover:bg-gray-100 text-muted-foreground hover:text-destructive" {{disabledAttr}}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        </button>
+    </div>
+</template>
+
+<template id="starRatingPreviewTemplate">
+    <div class="star-rating">
+        <div class="flex justify-between w-full">
+            {{starIcons}}
+        </div>
+        <div class="star-labels mt-2">
+            <span>Poor</span>
+            <span></span>
+            <span>Average</span>
+            <span></span>
+            <span>Excellent</span>
+        </div>
+    </div>
+</template>
+
+<template id="npsRatingPreviewTemplate">
+    <div>
+        <div class="nps-grid">
+            {{npsOptions}}
+        </div>
+        <div class="nps-labels">
+            <span>Not at all likely</span>
+            <span>Very likely</span>
+        </div>
+    </div>
+</template>
+
+@section Scripts {
+    <script src="~/js/survey-create.js" asp-append-version="true"></script>
+    <partial name="_ValidationScriptsPartial" />
+}
