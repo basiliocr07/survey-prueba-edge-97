@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
 import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
@@ -14,7 +13,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle OPTIONS request for CORS
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -22,7 +20,6 @@ serve(async (req) => {
   try {
     console.log("Received request to send survey emails");
     
-    // Parse the request body
     const requestData = await req.json();
     const { surveyId, emailAddresses } = requestData as RequestData;
 
@@ -39,7 +36,6 @@ serve(async (req) => {
       );
     }
 
-    // Create a Supabase client
     const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
     
@@ -56,7 +52,6 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get the survey from the database
     const { data: survey, error: surveyError } = await supabase
       .from("surveys")
       .select("*")
@@ -74,7 +69,6 @@ serve(async (req) => {
       );
     }
 
-    // Configuración SMTP para Gmail
     const smtpServer = "smtp.gmail.com";
     const smtpPort = 587;
     const smtpUsername = "crisant231@gmail.com";
@@ -94,12 +88,10 @@ serve(async (req) => {
     });
 
     try {
-      // Intentar nuevo método de conexión
       const client = new SmtpClient();
       
       console.log("Connecting to SMTP server...");
       
-      // En lugar de usar connectTLS directamente, usar connect primero
       await client.connect({
         hostname: smtpServer,
         port: smtpPort
@@ -107,7 +99,6 @@ serve(async (req) => {
       
       console.log("Connected to SMTP server, attempting login...");
       
-      // Iniciar sesión en el servidor SMTP
       await client.login({
         username: smtpUsername,
         password: smtpPassword
@@ -115,11 +106,9 @@ serve(async (req) => {
       
       console.log("Logged in to SMTP server successfully");
 
-      // Generate survey URL
       const surveyUrl = `${frontendUrl}/take-survey/${surveyId}`;
       console.log("Survey URL:", surveyUrl);
 
-      // Send email to each recipient
       const emailResults = [];
       for (const email of emailAddresses) {
         try {
@@ -132,38 +121,139 @@ serve(async (req) => {
 <!DOCTYPE html>
 <html>
 <head>
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background-color: #4a56e2; color: white; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-    .button { display: inline-block; background-color: #4a56e2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }
-    .footer { margin-top: 30px; font-size: 12px; color: #666; }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Invitación a Encuesta: ${survey.title}</title>
+    <style>
+        * {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #f9fafb;
+            line-height: 1.5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background-color: #4f46e5;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        .content {
+            padding: 30px 20px;
+            color: #374151;
+        }
+        .survey-info {
+            background-color: #f3f4f6;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .survey-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 10px;
+        }
+        .button-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .button {
+            display: inline-block;
+            background-color: #4f46e5;
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #4338ca;
+        }
+        .survey-link {
+            background-color: #f3f4f6;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 20px;
+            word-break: break-all;
+            font-size: 14px;
+            text-align: center;
+        }
+        .footer {
+            border-top: 1px solid #e5e7eb;
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #6b7280;
+        }
+        .logo {
+            max-width: 120px;
+            margin-bottom: 10px;
+        }
+        @media only screen and (max-width: 550px) {
+            .container {
+                width: 100%;
+                margin: 0;
+                border-radius: 0;
+            }
+            .header h1 {
+                font-size: 20px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h2>Te han invitado a responder una encuesta</h2>
+    <div class="container">
+        <div class="header">
+            <h1>Invitación a Encuesta</h1>
+            <p>Tu opinión es importante para nosotros</p>
+        </div>
+        
+        <div class="content">
+            <p>Hola,</p>
+            <p>Te invitamos a participar en nuestra encuesta:</p>
+            
+            <div class="survey-info">
+                <div class="survey-title">${survey.title}</div>
+                ${survey.description ? `<p>${survey.description}</p>` : ''}
+            </div>
+            
+            <p>Tus respuestas nos ayudarán a mejorar nuestros servicios. La encuesta solo tomará unos minutos de tu tiempo.</p>
+            
+            <div class="button-container">
+                <a href="${surveyUrl}" class="button">Comenzar Encuesta</a>
+            </div>
+            
+            <p>O si prefieres, puedes copiar y pegar este enlace en tu navegador:</p>
+            <div class="survey-link">
+                ${surveyUrl}
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Si recibiste este correo por error, puedes ignorarlo.</p>
+            <p>&copy; ${new Date().getFullYear()} Sistema de Encuestas</p>
+        </div>
     </div>
-    
-    <p>Hola,</p>
-    <p>Has sido invitado a participar en la encuesta: <strong>${survey.title}</strong></p>
-    
-    ${survey.description ? `<p>${survey.description}</p>` : ''}
-    
-    <p>Tu opinión es muy importante para nosotros. Por favor haz clic en el botón de abajo para comenzar la encuesta:</p>
-    
-    <p><a href="${surveyUrl}" class="button">Responder Encuesta</a></p>
-    
-    <p>O copia y pega este enlace en tu navegador: ${surveyUrl}</p>
-    
-    <div class="footer">
-      <p>Si recibiste este correo por error, por favor ignóralo.</p>
-    </div>
-  </div>
 </body>
 </html>
-          `,
+            `,
             html: true,
           });
           console.log(`Email sent to ${email} successfully`);
@@ -174,11 +264,9 @@ serve(async (req) => {
         }
       }
 
-      // Close the SMTP connection
       await client.close();
       console.log("SMTP connection closed");
 
-      // Log the email sending in the database
       try {
         const { error: logError } = await supabase
           .from("survey_email_logs")
@@ -195,7 +283,6 @@ serve(async (req) => {
           console.log("Email sending logged successfully");
         }
       } catch (logError) {
-        // Just log the error but don't fail the request if logging fails
         console.error("Failed to log email sending:", logError);
       }
 
@@ -213,7 +300,6 @@ serve(async (req) => {
     } catch (smtpError) {
       console.error("SMTP Error:", smtpError);
       
-      // Try to log the failed email attempt
       try {
         await supabase
           .from("survey_email_logs")
