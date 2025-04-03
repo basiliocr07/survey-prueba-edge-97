@@ -10,6 +10,7 @@ namespace SurveyApp.Web.Models
         public DeliveryConfigViewModel DeliveryConfig { get; set; } = new DeliveryConfigViewModel();
         public int? SelectedSurveyId { get; set; }
         public List<CustomerViewModel> Customers { get; set; } = new List<CustomerViewModel>();
+        public List<string> CustomerTypes { get; set; } = new List<string>(); // Nueva propiedad para tipos de clientes
     }
 
     public class SurveyListItemViewModel
@@ -25,5 +26,6 @@ namespace SurveyApp.Web.Models
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
+        public string CustomerType { get; set; } = string.Empty; // Añadido para mostrar el tipo de cliente
     }
 }

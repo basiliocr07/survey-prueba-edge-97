@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Application.Interfaces;
 using SurveyApp.Domain.Models;
@@ -38,6 +39,24 @@ namespace SurveyApp.Web.Controllers
         {
             var surveys = await _surveyService.GetAllSurveysAsync();
             var customers = await _customerRepository.GetAllCustomersAsync();
+            
+            // Obtener tipos de clientes únicos para el filtro
+            var customerTypes = customers
+                .Select(c => c.CustomerType)
+                .Where(t => !string.IsNullOrEmpty(t))
+                .Distinct()
+                .ToList();
+                
+            var config = surveyId.HasValue 
+                ? await GetSurveyDeliveryConfig(surveyId.Value) 
+                : GetGlobalDeliveryConfig();
+                
+            // Si está configurado para incluir todos los clientes, cargar emails automáticamente
+            if (config.IncludeAllCustomers)
+            {
+                await config.LoadCustomerEmails(_customerRepository);
+            }
+            
             var model = new EmailSettingsViewModel
             {
                 Surveys = surveys.Select(s => new SurveyListItemViewModel
@@ -48,15 +67,14 @@ namespace SurveyApp.Web.Controllers
                     HasCustomDeliveryConfig = s.DeliveryConfig != null
                 }).ToList(),
                 SelectedSurveyId = surveyId,
-                DeliveryConfig = surveyId.HasValue 
-                    ? await GetSurveyDeliveryConfig(surveyId.Value) 
-                    : GetGlobalDeliveryConfig(),
+                DeliveryConfig = config,
                 Customers = customers.Select(c => new CustomerViewModel
                 {
                     Id = c.Id,
                     Name = c.ContactName,
                     Email = c.ContactEmail
-                }).ToList()
+                }).ToList(),
+                CustomerTypes = customerTypes
             };
 
             return View(model);
@@ -75,6 +93,12 @@ namespace SurveyApp.Web.Controllers
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
+            }
+            
+            // Si se configura para incluir todos los clientes, cargar los emails
+            if (config.IncludeAllCustomers)
+            {
+                await config.LoadCustomerEmails(_customerRepository);
             }
 
             TempData["GlobalEmailConfig"] = JsonSerializer.Serialize(config);
@@ -95,6 +119,12 @@ namespace SurveyApp.Web.Controllers
             if (survey == null)
             {
                 return NotFound();
+            }
+            
+            // Si se configura para incluir todos los clientes, cargar los emails
+            if (config.IncludeAllCustomers)
+            {
+                await config.LoadCustomerEmails(_customerRepository);
             }
 
             var deliveryConfig = config.ToDeliveryConfiguration();
@@ -135,7 +165,8 @@ namespace SurveyApp.Web.Controllers
             {
                 Id = c.Id,
                 Name = c.ContactName,
-                Email = c.ContactEmail
+                Email = c.ContactEmail,
+                CustomerType = c.CustomerType
             }).ToList();
             
             if (!string.IsNullOrEmpty(search))
