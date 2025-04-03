@@ -13,6 +13,26 @@ namespace SurveyApp.Web.Models
         public bool IncludeAllCustomers { get; set; }
         public string CustomerTypeFilter { get; set; }
         
+        // Método para cargar emails de clientes según el filtro
+        public async Task LoadCustomerEmails(ICustomerRepository customerRepository)
+        {
+            if (IncludeAllCustomers)
+            {
+                var emails = await customerRepository.GetCustomerEmailsAsync(CustomerTypeFilter);
+                if (EmailAddresses == null)
+                    EmailAddresses = new List<string>();
+                
+                // Agregar los emails que no estén ya en la lista
+                foreach (var email in emails)
+                {
+                    if (!EmailAddresses.Contains(email))
+                    {
+                        EmailAddresses.Add(email);
+                    }
+                }
+            }
+        }
+        
         // Método para mapear a DeliveryConfiguration del dominio
         public SurveyApp.Domain.Models.DeliveryConfiguration ToDeliveryConfiguration()
         {

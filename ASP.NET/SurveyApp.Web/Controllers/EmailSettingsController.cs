@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Application.Interfaces;
 using SurveyApp.Domain.Models;
@@ -10,6 +9,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Text.Json;
+using MediatR;
+using SurveyApp.Application.Customers.Queries.GetCustomerEmails;
 
 namespace SurveyApp.Web.Controllers
 {
@@ -18,15 +19,18 @@ namespace SurveyApp.Web.Controllers
         private readonly ISurveyService _surveyService;
         private readonly ICustomerRepository _customerRepository;
         private readonly IEmailService _emailService;
+        private readonly IMediator _mediator;
 
         public EmailSettingsController(
             ISurveyService surveyService, 
             ICustomerRepository customerRepository,
-            IEmailService emailService)
+            IEmailService emailService,
+            IMediator mediator)
         {
             _surveyService = surveyService;
             _customerRepository = customerRepository;
             _emailService = emailService;
+            _mediator = mediator;
         }
 
         [HttpGet]
@@ -93,7 +97,6 @@ namespace SurveyApp.Web.Controllers
                 return NotFound();
             }
 
-            // Usar el método ToDeliveryConfiguration de DeliveryConfigViewModel
             var deliveryConfig = config.ToDeliveryConfiguration();
             bool success = await _surveyService.UpdateSurveyDeliveryConfigAsync(surveyId, deliveryConfig);
 
@@ -148,10 +151,18 @@ namespace SurveyApp.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetCustomerEmails()
+        public async Task<IActionResult> GetCustomerEmails(string customerType = null)
         {
-            var emails = await _customerRepository.GetCustomerEmailsAsync();
-            return Json(emails);
+            try
+            {
+                var query = new GetCustomerEmailsQuery { CustomerType = customerType };
+                var emails = await _mediator.Send(query);
+                return Json(emails);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error obteniendo emails: {ex.Message}" });
+            }
         }
 
         [HttpGet]
@@ -180,7 +191,6 @@ namespace SurveyApp.Web.Controllers
                 
                 if (result.Success && result.Messages.Count > 0)
                 {
-                    // Enviar notificación por cada mensaje nuevo
                     foreach (var message in result.Messages)
                     {
                         await _emailService.SendNotificationAsync(message);
@@ -299,13 +309,11 @@ namespace SurveyApp.Web.Controllers
                 return GetGlobalDeliveryConfig();
             }
 
-            // Usar el método FromDeliveryConfiguration
             return DeliveryConfigViewModel.FromDeliveryConfiguration(survey.DeliveryConfig);
         }
 
         private DeliveryConfiguration MapViewModelToDeliveryConfig(DeliveryConfigViewModel viewModel)
         {
-            // Usar el método ToDeliveryConfiguration
             return viewModel.ToDeliveryConfiguration();
         }
     }
