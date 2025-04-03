@@ -5,8 +5,7 @@ using System.Collections.Generic;
 
 namespace SurveyApp.Application.Customers.Queries.GetAllServices
 {
-    public class GetAllServicesQuery : IRequest<List<Service>>
+    public class GetAllServicesQuery : IRequest<IEnumerable<Service>>
     {
-        // Sin parámetros, devuelve todos los servicios
     }
 }

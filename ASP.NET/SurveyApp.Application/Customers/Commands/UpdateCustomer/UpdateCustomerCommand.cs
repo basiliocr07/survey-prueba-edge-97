@@ -1,6 +1,6 @@
 
-using MediatR;
 using System.Collections.Generic;
+using MediatR;
 
 namespace SurveyApp.Application.Customers.Commands.UpdateCustomer
 {
@@ -18,6 +18,6 @@ namespace SurveyApp.Application.Customers.Commands.UpdateCustomer
     public class UpdateCustomerResult
     {
         public bool Success { get; set; }
-        public string Message { get; set; } = string.Empty;
+        public string Message { get; set; }
     }
 }

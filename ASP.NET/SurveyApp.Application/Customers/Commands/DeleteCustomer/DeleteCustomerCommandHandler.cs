@@ -1,8 +1,9 @@
 
-using MediatR;
-using SurveyApp.Domain.Repositories;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
+using MediatR;
+using SurveyApp.Domain.Repositories;
 
 namespace SurveyApp.Application.Customers.Commands.DeleteCustomer
 {
@@ -22,7 +23,7 @@ namespace SurveyApp.Application.Customers.Commands.DeleteCustomer
                 await _customerRepository.DeleteCustomerAsync(request.Id);
                 return true;
             }
-            catch
+            catch (Exception)
             {
                 return false;
             }

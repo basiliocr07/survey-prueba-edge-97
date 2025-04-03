@@ -1,10 +1,11 @@
 
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using MediatR;
 using SurveyApp.Domain.Models;
 using SurveyApp.Domain.Repositories;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace SurveyApp.Application.Customers.Commands.UpdateCustomer
 {
@@ -21,8 +22,21 @@ namespace SurveyApp.Application.Customers.Commands.UpdateCustomer
         {
             try
             {
-                var customer = await _customerRepository.GetCustomerByIdAsync(request.Id);
-                if (customer == null)
+                // Validar datos
+                if (string.IsNullOrWhiteSpace(request.BrandName) || 
+                    string.IsNullOrWhiteSpace(request.ContactName) || 
+                    string.IsNullOrWhiteSpace(request.ContactEmail))
+                {
+                    return new UpdateCustomerResult
+                    {
+                        Success = false,
+                        Message = "Los campos BrandName, ContactName y ContactEmail son obligatorios."
+                    };
+                }
+
+                // Obtener el cliente actual
+                var existingCustomer = await _customerRepository.GetCustomerByIdAsync(request.Id);
+                if (existingCustomer == null)
                 {
                     return new UpdateCustomerResult
                     {
@@ -31,22 +45,24 @@ namespace SurveyApp.Application.Customers.Commands.UpdateCustomer
                     };
                 }
 
-                customer.BrandName = request.BrandName;
-                customer.ContactName = request.ContactName;
-                customer.ContactEmail = request.ContactEmail;
-                customer.ContactPhone = request.ContactPhone;
-                customer.CustomerType = request.CustomerType;
-                customer.UpdatedAt = DateTime.UtcNow;
+                // Actualizar datos del cliente
+                existingCustomer.BrandName = request.BrandName;
+                existingCustomer.ContactName = request.ContactName;
+                existingCustomer.ContactEmail = request.ContactEmail;
+                existingCustomer.ContactPhone = request.ContactPhone;
+                existingCustomer.CustomerType = request.CustomerType ?? "client";
+                existingCustomer.UpdatedAt = DateTime.UtcNow;
 
-                await _customerRepository.UpdateCustomerAsync(customer);
+                // Actualizar el cliente
+                await _customerRepository.UpdateCustomerAsync(existingCustomer);
 
-                // TODO: Actualizar servicios del cliente (eliminar existentes y agregar nuevos)
-                // Esto requeriría métodos adicionales en el repositorio
+                // Aquí podría implementarse la actualización de los servicios asociados al cliente
+                // Se necesitaría un método adicional en el repositorio para manejar esto
 
                 return new UpdateCustomerResult
                 {
                     Success = true,
-                    Message = "Cliente actualizado exitosamente."
+                    Message = "Cliente actualizado correctamente."
                 };
             }
             catch (Exception ex)

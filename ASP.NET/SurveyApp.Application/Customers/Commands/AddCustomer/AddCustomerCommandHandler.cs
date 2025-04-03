@@ -1,5 +1,6 @@
 
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
@@ -21,7 +22,7 @@ namespace SurveyApp.Application.Customers.Commands.AddCustomer
         {
             try
             {
-                // Validar entrada
+                // Validar datos
                 if (string.IsNullOrWhiteSpace(request.BrandName) || 
                     string.IsNullOrWhiteSpace(request.ContactName) || 
                     string.IsNullOrWhiteSpace(request.ContactEmail))
@@ -29,37 +30,35 @@ namespace SurveyApp.Application.Customers.Commands.AddCustomer
                     return new AddCustomerResult
                     {
                         Success = false,
-                        Message = "Los campos Marca, Nombre de Contacto y Email son obligatorios."
+                        Message = "Los campos BrandName, ContactName y ContactEmail son obligatorios."
                     };
                 }
 
-                // Crear entidad de cliente
+                // Crear nuevo cliente
                 var customer = new Customer
                 {
                     BrandName = request.BrandName,
                     ContactName = request.ContactName,
                     ContactEmail = request.ContactEmail,
                     ContactPhone = request.ContactPhone,
-                    CustomerType = request.CustomerType ?? "client", // Valor por defecto si es nulo
+                    CustomerType = request.CustomerType ?? "client",
+                    AcquiredServices = request.AcquiredServices ?? new List<string>(),
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
 
-                // Agregar cliente a la base de datos
+                // Guardar el cliente
                 var customerId = await _customerRepository.AddCustomerAsync(customer);
 
-                // Agregar relaciones con servicios
-                if (request.AcquiredServices != null && request.AcquiredServices.Count > 0)
+                // Relacionar el cliente con los servicios seleccionados
+                if (request.AcquiredServices != null && request.AcquiredServices.Any())
                 {
                     foreach (var serviceName in request.AcquiredServices)
                     {
-                        if (!string.IsNullOrEmpty(serviceName))
+                        var serviceId = await _customerRepository.GetServiceIdByNameAsync(serviceName);
+                        if (!string.IsNullOrEmpty(serviceId))
                         {
-                            var serviceId = await _customerRepository.GetServiceIdByNameAsync(serviceName);
-                            if (!string.IsNullOrEmpty(serviceId))
-                            {
-                                await _customerRepository.AddCustomerServiceAsync(customerId, serviceId);
-                            }
+                            await _customerRepository.AddCustomerServiceAsync(customerId, serviceId);
                         }
                     }
                 }
@@ -67,7 +66,7 @@ namespace SurveyApp.Application.Customers.Commands.AddCustomer
                 return new AddCustomerResult
                 {
                     Success = true,
-                    Message = "Cliente agregado con éxito.",
+                    Message = "Cliente añadido correctamente.",
                     CustomerId = customerId
                 };
             }
@@ -76,7 +75,7 @@ namespace SurveyApp.Application.Customers.Commands.AddCustomer
                 return new AddCustomerResult
                 {
                     Success = false,
-                    Message = $"Error al agregar cliente: {ex.Message}"
+                    Message = $"Error al añadir cliente: {ex.Message}"
                 };
             }
         }

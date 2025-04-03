@@ -1,0 +1,322 @@
+
+@model SurveyApp.Web.Models.CustomerViewModel
+@{
+    ViewData["Title"] = "Directorio de Clientes";
+}
+
+<div class="min-h-screen bg-gradient-to-b from-white to-gray-50">
+    <main class="p-6 mx-auto max-w-7xl">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="bg-green-100 border-l-4 border-green-500 text-green-700 px-4 py-3 rounded shadow-sm mb-6 animate-fade-in">
+                <div class="flex">
+                    <div class="py-1">
+                        <svg class="h-6 w-6 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                    <div>@TempData["SuccessMessage"]</div>
+                </div>
+            </div>
+        }
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="bg-red-100 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded shadow-sm mb-6 animate-fade-in">
+                <div class="flex">
+                    <div class="py-1">
+                        <svg class="h-6 w-6 text-red-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </div>
+                    <div>@TempData["ErrorMessage"]</div>
+                </div>
+            </div>
+        }
+
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight sm:text-4xl mb-2">Directorio de Clientes</h1>
+                <p class="text-muted-foreground">
+                    Gestione la información de sus clientes y servicios
+                </p>
+            </div>
+            
+            <button type="button" class="bg-primary hover:bg-primary/80 text-white px-4 py-2 rounded-lg shadow-md flex items-center gap-2 transition-all" data-bs-toggle="modal" data-bs-target="#customerFormModal">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Añadir Cliente
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 gap-8">
+            <!-- Gráfico de uso de servicios -->
+            <div class="bg-white border rounded-xl shadow-sm overflow-hidden">
+                <div class="p-5 border-b">
+                    <h5 class="text-xl font-semibold flex items-center text-gray-800">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        Análisis de Servicios
+                    </h5>
+                    <div class="text-sm text-gray-600 mt-1">
+                        Analice el uso de servicios
+                    </div>
+                </div>
+                <div class="p-5">
+                    <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <a href="@Url.Action("Index", new { chartType = "services", timeRange = Model.TimeRange })" 
+                               class="px-4 py-2 rounded-lg transition-all @(Model.ChartType == "services" ? "bg-primary text-white shadow-md" : "bg-gray-100 hover:bg-gray-200")">
+                                Uso de Servicios (Barra)
+                            </a>
+                            <a href="@Url.Action("Index", new { chartType = "servicesPie", timeRange = Model.TimeRange })" 
+                               class="px-4 py-2 rounded-lg transition-all @(Model.ChartType == "servicesPie" ? "bg-primary text-white shadow-md" : "bg-gray-100 hover:bg-gray-200")">
+                                Uso de Servicios (Pie)
+                            </a>
+                        </div>
+                        
+                        <div class="flex items-center gap-2 ml-auto">
+                            <label for="timeRangeSelect" class="text-sm font-medium text-gray-700">Período:</label>
+                            <select id="timeRangeSelect" 
+                                    class="border border-gray-300 rounded-lg px-3 py-2 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" 
+                                    onchange="window.location.href = '@Url.Action("Index")?chartType=@Model.ChartType&timeRange=' + this.value">
+                                <option value="1" @(Model.TimeRange == "1" ? "selected" : "")>Último Mes</option>
+                                <option value="3" @(Model.TimeRange == "3" ? "selected" : "")>Últimos 3 Meses</option>
+                                <option value="12" @(Model.TimeRange == "12" ? "selected" : "")>Último Año</option>
+                                <option value="all" @(Model.TimeRange == "all" ? "selected" : "")>Todo el Tiempo</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-inner">
+                        <div class="h-[300px] w-full" id="chartContainer">
+                            <canvas id="chartCanvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de clientes -->
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden border">
+                <div class="p-5 border-b">
+                    <h5 class="text-xl font-semibold flex items-center text-gray-800">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        Listado de Clientes
+                    </h5>
+                </div>
+                
+                <partial name="_CustomerTable" model="Model.Customers" />
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Modal para añadir cliente -->
+<div class="modal fade" id="customerFormModal" tabindex="-1" aria-labelledby="customerFormModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form asp-action="AddCustomer" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="customerFormModalLabel">Añadir Nuevo Cliente</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="brandName" class="form-label">Nombre de Marca</label>
+                        <input type="text" class="form-control" id="brandName" name="BrandName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="contactName" class="form-label">Persona de Contacto</label>
+                        <input type="text" class="form-control" id="contactName" name="ContactName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="contactEmail" class="form-label">Email de Contacto</label>
+                        <input type="email" class="form-control" id="contactEmail" name="ContactEmail" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="contactPhone" class="form-label">Teléfono de Contacto</label>
+                        <input type="text" class="form-control" id="contactPhone" name="ContactPhone">
+                    </div>
+                    <div class="mb-3">
+                        <label for="customerType" class="form-label">Tipo de Cliente</label>
+                        <select class="form-select" id="customerType" name="CustomerType">
+                            <option value="client" selected>Cliente</option>
+                            <option value="admin">Administrador</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Servicios Adquiridos</label>
+                        <div class="row">
+                            @foreach (var service in Model.Services)
+                            {
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="SelectedServices" value="@service.Name" id="service-@service.Id">
+                                        <label class="form-check-label" for="service-@service.Id">
+                                            @service.Name
+                                        </label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Añadir Cliente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const ctx = document.getElementById('chartCanvas').getContext('2d');
+            let chart;
+            
+            const chartType = '@Model.ChartType';
+            
+            // Configurar animaciones y estilos comunes
+            Chart.defaults.font.family = "'Inter', 'Helvetica', 'Arial', sans-serif";
+            Chart.defaults.font.size = 12;
+            Chart.defaults.color = "#6B7280";
+            
+            // Colores personalizados para gráficos
+            const customColors = [
+                '#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088FE', 
+                '#00C49F', '#FFBB28', '#FF8042', '#a4de6c', '#d0ed57', 
+                '#8dd1e1', '#83a6ed', '#8884d8', '#a4de6c', '#d0ed57'
+            ];
+            
+            const serviceData = @Json.Serialize(Model.ServiceUsageData);
+            
+            if (chartType === 'services' || chartType === '') {
+                // Gráfico de barras horizontal para uso de servicios
+                chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: serviceData.map(item => item.Name),
+                        datasets: [{
+                            label: 'Número de Clientes',
+                            data: serviceData.map(item => item.Count),
+                            backgroundColor: customColors,
+                            borderColor: customColors.map(color => color),
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 15
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                titleColor: '#111827',
+                                bodyColor: '#4B5563',
+                                titleFont: {
+                                    size: 14,
+                                    weight: 'bold'
+                                },
+                                bodyFont: {
+                                    size: 13
+                                },
+                                borderColor: 'rgba(0, 0, 0, 0.1)',
+                                borderWidth: 1,
+                                padding: 10,
+                                boxPadding: 5,
+                                usePointStyle: true,
+                                callbacks: {
+                                    label: function(context) {
+                                        return `Clientes: ${context.parsed.x}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                },
+                                ticks: {
+                                    precision: 0
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    },
+                });
+            } 
+            else if (chartType === 'servicesPie') {
+                // Gráfico de pastel para uso de servicios
+                chart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: serviceData.map(item => item.Name),
+                        datasets: [{
+                            data: serviceData.map(item => item.Count),
+                            backgroundColor: customColors,
+                            borderColor: 'white',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 15
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                titleColor: '#111827',
+                                bodyColor: '#4B5563',
+                                titleFont: {
+                                    size: 14,
+                                    weight: 'bold'
+                                },
+                                bodyFont: {
+                                    size: 13
+                                },
+                                borderColor: 'rgba(0, 0, 0, 0.1)',
+                                borderWidth: 1,
+                                padding: 10,
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label;
+                                        const value = context.raw;
+                                        const total = context.dataset.data.reduce((acc, val) => acc + val, 0);
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        return `${label}: ${value} (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+}

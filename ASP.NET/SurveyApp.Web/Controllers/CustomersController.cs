@@ -9,9 +9,10 @@ using SurveyApp.Application.Customers.Queries.GetAllServices;
 using SurveyApp.Application.Customers.Queries.GetCustomerById;
 using SurveyApp.Application.Customers.Queries.GetCustomersByType;
 using SurveyApp.Application.Customers.Queries.GetCustomerEmails;
-using SurveyApp.Application.Customers.Queries.GetCustomerGrowthData;
+using SurveyApp.Application.Customers.Queries.GetServiceUsageData;
 using SurveyApp.Web.Models;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace SurveyApp.Web.Controllers
@@ -25,38 +26,43 @@ namespace SurveyApp.Web.Controllers
             _mediator = mediator;
         }
 
-        public async Task<IActionResult> Growth(string timeRange = "3", string chartType = "services", string customerType = null)
+        public async Task<IActionResult> Index(string timeRange = "3", string chartType = "services", string customerType = null)
         {
             try
             {
-                int? timeRangeInMonths = timeRange != "all" ? int.Parse(timeRange) : null;
+                // Obtener datos de clientes
+                var getAllCustomersQuery = new GetAllCustomersQuery();
+                var customers = await _mediator.Send(getAllCustomersQuery);
 
-                var query = new GetCustomerGrowthDataQuery
-                {
-                    TimeRangeInMonths = timeRangeInMonths,
-                    CustomerType = customerType
+                // Obtener datos de servicios
+                var getAllServicesQuery = new GetAllServicesQuery();
+                var services = await _mediator.Send(getAllServicesQuery);
+
+                // Obtener datos de uso de servicios
+                var getServiceUsageDataQuery = new GetServiceUsageDataQuery 
+                { 
+                    TimeRange = timeRange, 
+                    CustomerType = customerType 
                 };
+                var serviceUsageData = await _mediator.Send(getServiceUsageDataQuery);
 
-                var growthData = await _mediator.Send(query);
-                
-                var viewModel = new CustomerGrowthViewModel
+                // Construir el modelo para la vista
+                var viewModel = new CustomerViewModel
                 {
-                    Customers = growthData.Customers,
-                    Services = growthData.Services,
-                    ServiceUsageData = growthData.ServiceUsageData,
-                    MonthlyGrowthData = growthData.MonthlyGrowthData,
-                    BrandGrowthData = growthData.BrandGrowthData,
-                    SelectedTimeRange = timeRange,
-                    SelectedChartType = chartType
+                    Customers = new List<SurveyApp.Domain.Models.Customer>(customers),
+                    Services = new List<SurveyApp.Domain.Models.Service>(services),
+                    ServiceUsageData = new List<SurveyApp.Domain.Models.ServiceUsageData>(serviceUsageData),
+                    TimeRange = timeRange,
+                    ChartType = chartType
                 };
 
                 return View(viewModel);
             }
             catch (Exception ex)
             {
-                // Log the error
+                // Registrar el error
                 TempData["ErrorMessage"] = $"Error cargando datos: {ex.Message}";
-                return View(new CustomerGrowthViewModel());
+                return View(new CustomerViewModel());
             }
         }
 
@@ -66,7 +72,7 @@ namespace SurveyApp.Web.Controllers
             if (!ModelState.IsValid)
             {
                 TempData["ErrorMessage"] = "Por favor complete todos los campos requeridos.";
-                return RedirectToAction(nameof(Growth));
+                return RedirectToAction(nameof(Index));
             }
 
             try
@@ -97,11 +103,11 @@ namespace SurveyApp.Web.Controllers
                 TempData["ErrorMessage"] = $"Error al añadir cliente: {ex.Message}";
             }
 
-            return RedirectToAction(nameof(Growth));
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> DeleteCustomer(int id)
         {
             try
             {
@@ -122,23 +128,23 @@ namespace SurveyApp.Web.Controllers
                 TempData["ErrorMessage"] = $"Error al eliminar cliente: {ex.Message}";
             }
 
-            return RedirectToAction(nameof(Growth));
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
-        public async Task<IActionResult> Update(CustomerFormViewModel form)
+        public async Task<IActionResult> UpdateCustomer(UpdateCustomerViewModel form)
         {
             if (!ModelState.IsValid)
             {
                 TempData["ErrorMessage"] = "Por favor complete todos los campos requeridos.";
-                return RedirectToAction(nameof(Growth));
+                return RedirectToAction(nameof(Index));
             }
 
             try
             {
                 var command = new UpdateCustomerCommand
                 {
-                    Id = int.Parse(form.Id),
+                    Id = form.Id,
                     BrandName = form.BrandName,
                     ContactName = form.ContactName,
                     ContactEmail = form.ContactEmail,
@@ -163,7 +169,7 @@ namespace SurveyApp.Web.Controllers
                 TempData["ErrorMessage"] = $"Error al actualizar cliente: {ex.Message}";
             }
 
-            return RedirectToAction(nameof(Growth));
+            return RedirectToAction(nameof(Index));
         }
     }
 }

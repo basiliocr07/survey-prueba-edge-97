@@ -2,98 +2,49 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.EntityFrameworkCore;
-using SurveyApp.Infrastructure.Data;
-using SurveyApp.Web.DependencyInjection;
-using System;
-using Microsoft.Extensions.Logging;
-using SurveyApp.Application.Interfaces;
-using SurveyApp.Application.Services;
+using System.Reflection;
+using MediatR;
 using SurveyApp.Domain.Repositories;
+using SurveyApp.Domain.Services;
 using SurveyApp.Infrastructure.Repositories;
+using SurveyApp.Infrastructure.EmailService;
+using SurveyApp.Application.Customers.Queries.GetAllCustomers;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container
+// Agregar servicios al contenedor
 builder.Services.AddControllersWithViews();
 
-// Configure DbContext with SQL Server
-builder.Services.AddDbContext<AppDbContext>(options =>
-{
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-    options.UseSqlServer(connectionString);
+// Registrar MediatR
+builder.Services.AddMediatR(cfg => {
+    cfg.RegisterServicesFromAssembly(typeof(GetAllCustomersQuery).Assembly);
 });
 
-// Register application and infrastructure services
-builder.Services.AddApplicationServices();
-builder.Services.AddInfrastructureServices();
-
-// Additional service registrations from extensions file
+// Registrar servicios de infraestructura
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
-builder.Services.AddScoped<ICustomerService, CustomerService>();
-builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
-builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
-builder.Services.AddScoped<ISurveyResponseRepository, SurveyResponseRepository>();
-builder.Services.AddScoped<ISurveyResponseService, SurveyResponseService>();
+builder.Services.AddScoped<IEmailSender, EmailSender>();
 
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// Agregar las conexiones a la base de datos
+builder.Services.AddDbContext<SurveyApp.Infrastructure.Data.ApplicationDbContext>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
-if (app.Environment.IsDevelopment())
+// Configurar pipeline de solicitudes HTTP
+if (!app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-    app.UseDeveloperExceptionPage();
-}
-else
-{
-    app.UseExceptionHandler("/Error");
+    app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
 
-app.UseStaticFiles();
 app.UseHttpsRedirection();
+app.UseStaticFiles();
+
 app.UseRouting();
+
 app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-
-// Additional routes from extensions file
-app.MapControllerRoute(
-    name: "customers",
-    pattern: "customers/{action=Index}/{id?}",
-    defaults: new { controller = "Customers" });
-
-app.MapControllerRoute(
-    name: "analytics",
-    pattern: "analytics/{action=Index}/{id?}",
-    defaults: new { controller = "Analytics" });
-
-app.MapControllerRoute(
-    name: "surveyResponses",
-    pattern: "survey-responses/{action=Index}/{id?}",
-    defaults: new { controller = "SurveyResponses" });
-
-// Ensure the database is created when the application starts
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    try
-    {
-        var context = services.GetRequiredService<AppDbContext>();
-        context.Database.EnsureCreated();
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while creating the database.");
-    }
-}
 
 app.Run();

@@ -5,8 +5,7 @@ using System.Collections.Generic;
 
 namespace SurveyApp.Application.Customers.Queries.GetAllCustomers
 {
-    public class GetAllCustomersQuery : IRequest<List<Customer>>
+    public class GetAllCustomersQuery : IRequest<IEnumerable<Customer>>
     {
-        // Sin parámetros, devuelve todos los clientes
     }
 }
