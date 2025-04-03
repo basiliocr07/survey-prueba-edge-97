@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Application.Interfaces;
 using SurveyApp.Domain.Models;
@@ -162,6 +163,92 @@ namespace SurveyApp.Web.Controllers
                 return Json(new { 
                     success = result.Success, 
                     message = result.Success ? "Conexión SMTP exitosa" : result.ErrorMessage 
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error: {ex.Message}" });
+            }
+        }
+        
+        [HttpGet]
+        public async Task<IActionResult> CheckEmails()
+        {
+            try
+            {
+                var result = await _emailService.CheckEmailsAsync();
+                
+                if (result.Success && result.Messages.Count > 0)
+                {
+                    // Enviar notificación por cada mensaje nuevo
+                    foreach (var message in result.Messages)
+                    {
+                        await _emailService.SendNotificationAsync(message);
+                    }
+                }
+                
+                return Json(new { 
+                    success = result.Success, 
+                    count = result.Messages.Count,
+                    messages = result.Messages.Select(m => new {
+                        from = m.From,
+                        subject = m.Subject,
+                        date = m.Date,
+                        hasAttachments = m.Attachments.Count > 0
+                    }),
+                    message = result.Success ? 
+                        $"Se encontraron {result.Messages.Count} mensajes" : 
+                        result.ErrorMessage
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error: {ex.Message}" });
+            }
+        }
+        
+        [HttpGet]
+        public async Task<IActionResult> SendTestEmail(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+            {
+                return BadRequest(new { success = false, message = "Email inválido" });
+            }
+
+            try
+            {
+                string subject = "Prueba de conexión SMTP";
+                string htmlContent = @"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='UTF-8'>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #4F46E5; color: white; padding: 10px 20px; text-align: center; }
+        .content { padding: 20px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h2>Correo de prueba</h2>
+        </div>
+        <div class='content'>
+            <p>Este es un correo de prueba enviado desde tu sistema de encuestas.</p>
+            <p>La configuración SMTP está funcionando correctamente.</p>
+            <p>Fecha y hora: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + @"</p>
+        </div>
+    </div>
+</body>
+</html>";
+
+                var success = await _emailService.SendEmailAsync(email, subject, htmlContent);
+                
+                return Json(new { 
+                    success, 
+                    message = success ? "Correo de prueba enviado correctamente" : "Error al enviar el correo de prueba"
                 });
             }
             catch (Exception ex)
