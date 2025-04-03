@@ -210,7 +210,7 @@ namespace SurveyApp.Infrastructure.Repositories
                 SurveyId = surveyId,
                 TotalResponses = responses.Count,
                 CompletionRate = responses.Count > 0 ? 100 : 0,
-                AverageCompletionTime = responses.Count > 0 ? responses.Average(r => r.CompletionTime ?? 0) : 0,
+                AverageCompletionTime = responses.Count > 0 ? (int)responses.Average(r => r.CompletionTime ?? 0) : 0,
                 StartDate = survey.CreatedAt,
                 EndDate = null
             };
