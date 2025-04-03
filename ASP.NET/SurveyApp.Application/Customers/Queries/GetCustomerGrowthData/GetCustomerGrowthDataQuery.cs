@@ -55,16 +55,6 @@ namespace SurveyApp.Application.Customers.Queries.GetCustomerGrowthData
         /// Datos de crecimiento por marca
         /// </summary>
         public IEnumerable<BrandGrowthData> BrandGrowthData { get; set; } = new List<BrandGrowthData>();
-        
-        /// <summary>
-        /// Tipo de gráfico a mostrar
-        /// </summary>
-        public string ChartType { get; set; } = "bar";
-        
-        /// <summary>
-        /// Período de tiempo seleccionado para los datos (en meses)
-        /// </summary>
-        public string TimeRange { get; set; } = "12";
     }
     
     /// <summary>

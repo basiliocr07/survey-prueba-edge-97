@@ -97,7 +97,7 @@ namespace SurveyApp.Application.Services
         }
         
         // Implementaciones de los nuevos métodos
-        /*public async Task<IEnumerable<Survey>> GetSurveysForCustomerAsync(int customerId)
+        public async Task<IEnumerable<Survey>> GetSurveysForCustomerAsync(int customerId)
         {
             return await _surveyRepository.GetSurveysForCustomerAsync(customerId);
         }
@@ -105,6 +105,6 @@ namespace SurveyApp.Application.Services
         public async Task<bool> AssignSurveyToCustomersAsync(int surveyId, List<int> customerIds)
         {
             return await _surveyRepository.AssignSurveyToCustomersAsync(surveyId, customerIds);
-        }*/
+        }
     }
 }
