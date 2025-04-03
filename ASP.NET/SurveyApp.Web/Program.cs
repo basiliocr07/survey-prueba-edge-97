@@ -8,7 +8,6 @@ using SurveyApp.Domain.Repositories;
 using SurveyApp.Domain.Services;
 using SurveyApp.Infrastructure.Repositories;
 using SurveyApp.Infrastructure.Services;
-using SurveyApp.Infrastructure.EmailService;
 using SurveyApp.Application.Customers.Queries.GetAllCustomers;
 using SurveyApp.Web.DependencyInjection;
 
@@ -27,7 +26,6 @@ builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 
 // Registrar servicios de email
 builder.Services.AddScoped<IEmailService, MailKitEmailService>();
-builder.Services.AddScoped<IEmailSender, EmailSender>();
 
 // Agregar servicios de aplicación
 builder.Services.AddApplicationServices();

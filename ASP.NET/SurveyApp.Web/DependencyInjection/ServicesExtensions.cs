@@ -6,7 +6,6 @@ using SurveyApp.Domain.Repositories;
 using SurveyApp.Domain.Services;
 using SurveyApp.Infrastructure.Repositories;
 using SurveyApp.Infrastructure.Services;
-using SurveyApp.Infrastructure.EmailService;
 
 namespace SurveyApp.Web.DependencyInjection
 {
@@ -29,7 +28,6 @@ namespace SurveyApp.Web.DependencyInjection
             
             // Register Email Services
             services.AddScoped<IEmailService, MailKitEmailService>();
-            services.AddScoped<IEmailSender, EmailSender>();
             
             return services;
         }
